@@ -19,13 +19,14 @@ import { DiagnosisResult, ResultPage, YogaPoseRecommendation } from './component
 import { FieldConfig, FormSectionConfig, RegisterForm } from './components/RegisterForm';
 import { ProYogaPage } from './components/ProYogaPage';
 import { ProDrillPage } from './ProDrillPage';
+import DiagnosisV2Page from './DiagnosisV2Page';
 import { SacredSitesPage } from './components/SacredSitesPage';
 import { StaticInfoPage } from './components/StaticInfoPage';
 import { TeacherDiagnosisPage } from './components/TeacherDiagnosisPage';
 import { TopBackLink } from './components/TopBackLink';
 import { MyPage, type DiagnosisHistoryRecord, type WellnessScores } from './components/MyPage';
 
-type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy';
+type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy'| 'diagnosis-v2';
 
 type FilterType = SearchItem['type'] | 'all';
 
@@ -1386,6 +1387,7 @@ export default function App() {
         )}
         {page === 'pro-yoga' && <ProYogaPage onStartDiagnosis={() => moveTo('diagnosis')} onBackHome={() => moveTo('home')} onOpenDrill={() => moveTo('pro-drill')} />}
         {page === 'pro-drill' && <ProDrillPage onBackHome={() => moveTo('home')} />}
+        {page === 'diagnosis-v2' && <DiagnosisV2Page />}
         {page === 'sacred-sites' && <SacredSitesPage onBackHome={() => moveTo('home')} />}
         {page === 'terms' && (
           <StaticInfoPage
