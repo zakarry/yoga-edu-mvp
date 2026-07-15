@@ -1150,6 +1150,7 @@ export default function App() {
                 <div className="hero-secondary-search-entry">
                   <span className="hero-secondary-search-label">すでにヨガをしている方へ</span>
                   <button className="ghost-button hero-secondary-search-button" onClick={() => moveTo('search')}>ヨガを探す</button>
+              <button className="ghost-button" onClick={() => moveTo('diagnosis-v2')}>新診断（テスト）</button>
                 </div>
               </div>
               <p className="hero-support-copy">
