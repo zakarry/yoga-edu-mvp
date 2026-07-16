@@ -1388,7 +1388,7 @@ export default function App() {
         )}
         {page === 'pro-yoga' && <ProYogaPage onStartDiagnosis={() => moveTo('diagnosis')} onBackHome={() => moveTo('home')} onOpenDrill={() => moveTo('pro-drill')} />}
         {page === 'pro-drill' && <ProDrillPage onBackHome={() => moveTo('home')} />}
-        {page === 'diagnosis-v2' && <DiagnosisV2Page />}
+        {page === 'diagnosis-v2' && <DiagnosisV2Page onMoveToSearch={() => moveTo('search')} />}
         {page === 'sacred-sites' && <SacredSitesPage onBackHome={() => moveTo('home')} />}
         {page === 'terms' && (
           <StaticInfoPage

@@ -2,6 +2,87 @@
 // YOAGAI 診断フロー (v4.5.1) — 新ページとして既存アプリに追加するTSX版
 // 既存の診断には一切影響しません。App.tsx から <DiagnosisV2Page /> として呼び出します。
 import React, { useState, useEffect } from "react";
+import { drillEntries } from "./drillData";
+
+// ── 図鑑から「今日の一語」を日替わりで選出するヘルパー ──
+// stars が小さいほどやさしい。stars <= 3 の項目プールから日替わりで1つ選ぶ。
+// ランダムではなく、日付と記録回数をキーに「少しずつ進む」ローテーション。
+// TODO: 後でサーバー保存に移行（現在は localStorage で仮実装）
+
+const EASY_STARS_MAX = 3;
+const DRILL_POOL = drillEntries.filter((e) => e.stars <= EASY_STARS_MAX);
+
+function todayKey(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function dayIndexFromDate(dateStr: string): number {
+  const epoch = new Date(2024, 0, 1).getTime();
+  const target = new Date(dateStr).getTime();
+  return Math.max(0, Math.floor((target - epoch) / 86400000));
+}
+
+function shortDef(def: string): string {
+  const firstSentence = def.split(/。|．/)[0];
+  return firstSentence.length > 120 ? firstSentence.slice(0, 117) + "…" : firstSentence;
+}
+
+interface StreakData {
+  seenIds: string[];
+  lastDate: string;
+  streak: number;
+  totalWords: number;
+}
+
+function loadStreak(): StreakData {
+  try {
+    const raw = localStorage.getItem("yogai_drill_streak");
+    if (raw) {
+      const parsed = JSON.parse(raw) as StreakData;
+      if (parsed && Array.isArray(parsed.seenIds)) return parsed;
+    }
+  } catch {
+    // ignore
+  }
+  return { seenIds: [], lastDate: "", streak: 0, totalWords: 0 };
+}
+
+function saveStreak(data: StreakData): void {
+  try {
+    localStorage.setItem("yogai_drill_streak", JSON.stringify(data));
+  } catch {
+    // ignore
+  }
+}
+
+function pickDailyEntry(streak: StreakData) {
+  const dKey = todayKey();
+  const dIdx = dayIndexFromDate(dKey);
+  const offset = (dIdx + streak.totalWords) % DRILL_POOL.length;
+  const entry = DRILL_POOL[offset];
+  return entry;
+}
+
+function recordStreakUpdate(prev: StreakData): StreakData {
+  const dKey = todayKey();
+  if (prev.lastDate === dKey) return prev;
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, "0")}-${String(yesterday.getDate()).padStart(2, "0")}`;
+  const continued = prev.lastDate === yKey;
+  const newStreak = continued ? prev.streak + 1 : 1;
+  const dIdx = dayIndexFromDate(dKey);
+  const offset = (dIdx + prev.totalWords) % DRILL_POOL.length;
+  const entry = DRILL_POOL[offset];
+  const seenIds = prev.seenIds.includes(entry.id) ? prev.seenIds : [...prev.seenIds, entry.id];
+  return {
+    seenIds,
+    lastDate: dKey,
+    streak: newStreak,
+    totalWords: seenIds.length,
+  };
+}
 
 /*
   YOAGAI — ヨガ診断フロー v4
@@ -508,7 +589,7 @@ function buildMirror(reasons, issue, goal) {
   return { line1, line2 };
 }
 
-export default function DiagnosisV2Page() {
+export default function DiagnosisV2Page({ onMoveToSearch }: { onMoveToSearch?: () => void }) {
   const [stage, setStage] = useState("intro");
   const [ans, setAns] = useState({ reason: [] });
   const [demoReturning, setDemoReturning] = useState(false);
@@ -766,8 +847,8 @@ export default function DiagnosisV2Page() {
 
         {stage === "result" && (
           ans.primaryWish === "lose_weight"
-            ? <WeightResult ans={ans} onSave={() => setStage("wall")} />
-            : <Result ans={ans} track={track} onSave={() => setStage("wall")} />
+            ? <WeightResult ans={ans} onSave={() => setStage("wall")} onMoveToSearch={onMoveToSearch} />
+            : <Result ans={ans} track={track} onSave={() => setStage("wall")} onMoveToSearch={onMoveToSearch} />
         )}
 
         {stage === "wall" && (
@@ -982,7 +1063,7 @@ function Analyzing({ onDone }) {
   );
 }
 
-function Result({ ans, track, onSave }) {
+function Result({ ans, track, onSave, onMoveToSearch }) {
   const style = pickStyle(track, ans.pref);
   const issue = ISSUE_LABEL[ans.current_issue];
   const reasons = (ans.reason || []).map((r) => REASON_LABEL[r]).filter(Boolean);
@@ -1057,6 +1138,8 @@ function Result({ ans, track, onSave }) {
           なぜ呼吸が土台なのか、もっと知る →
         </a>
       </div>
+
+      <NextStepsBlock onMoveToSearch={onMoveToSearch} />
 
       <Primary onClick={onSave}>この結果を記録する</Primary>
       <p style={{ fontSize: 12.5, color: C.muted, marginTop: 14, textAlign: "center", lineHeight: 1.7 }}>
@@ -1372,7 +1455,7 @@ function PracticeSaved({ ans, onReset, onTeach }) {
 }
 
 // 痩せ主軸の結果。流派を固定せず候補表示、呼吸は継続の土台に限定、断定しない
-function WeightResult({ ans, onSave }) {
+function WeightResult({ ans, onSave, onMoveToSearch }) {
   const recipe = buildPracticeRecipe(ans);
   const styles = candidateStyles(recipe, ans);
   const focusLabel = W_FOCUS_LABEL[ans.weightFocus];
@@ -1431,6 +1514,8 @@ function WeightResult({ ans, onSave }) {
         </p>
       </div>
 
+      <NextStepsBlock onMoveToSearch={onMoveToSearch} />
+
       <Primary onClick={onSave}>この結果を記録する</Primary>
       <p style={{ fontSize: 12.5, color: C.muted, marginTop: 14, textAlign: "center", lineHeight: 1.7 }}>
         記録すると、次に診断したとき<br />変化を並べて見られます
@@ -1487,6 +1572,81 @@ function Primary({ children, onClick, disabled }) {
       style={{ width: "100%", padding: "16px", borderRadius: 12, border: "none", background: disabled ? C.line : C.indigo, color: disabled ? C.muted : "#fff", fontSize: 16, fontWeight: 600, fontFamily: sans, cursor: disabled ? "not-allowed" : "pointer", boxShadow: disabled ? "none" : "0 2px 12px rgba(28,61,90,0.18)" }}>
       {children}
     </button>
+  );
+}
+
+// ── 初心者向け「次の一歩」3ブロック: 今日の一語 / 明日への予告 / 先生を探す ──
+// TODO: 後でサーバー保存に移行（現在は localStorage で仮実装）
+function NextStepsBlock({ onMoveToSearch }: { onMoveToSearch?: () => void }) {
+  const [streak, setStreak] = useState<StreakData>(() => loadStreak());
+  const [entry, setEntry] = useState(() => pickDailyEntry(loadStreak()));
+
+  useEffect(() => {
+    const prev = loadStreak();
+    const updated = recordStreakUpdate(prev);
+    saveStreak(updated);
+    setStreak(updated);
+    setEntry(pickDailyEntry(updated));
+  }, []);
+
+  return (
+    <>
+      {/* ブロック1: 今日の一歩（知識の一語） */}
+      <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: "20px", marginBottom: 14 }}>
+        <p style={{ fontSize: 11, color: C.saffron, letterSpacing: "0.12em", margin: "0 0 10px", fontWeight: 600 }}>今日の一歩</p>
+        <h3 style={{ fontFamily: serif, fontSize: 20, color: C.ink, margin: "0 0 4px", fontWeight: 600, lineHeight: 1.4 }}>
+          {entry.title}
+        </h3>
+        {entry.iast && (
+          <p style={{ fontSize: 13, color: C.muted, margin: "0 0 12px", fontStyle: "italic" }}>{entry.iast}</p>
+        )}
+        <p style={{ fontSize: 14.5, lineHeight: 1.9, color: C.ink, margin: 0 }}>{shortDef(entry.def)}</p>
+      </div>
+
+      {/* ブロック2: 明日への予告（回遊のしかけ） */}
+      <div style={{ background: C.saffronSoft, borderRadius: 14, padding: "18px 20px", marginBottom: 14 }}>
+        <p style={{ fontSize: 11, color: C.indigo, letterSpacing: "0.1em", margin: "0 0 8px", fontWeight: 600 }}>明日への予告</p>
+        <p style={{ fontSize: 14.5, color: C.indigoDeep, lineHeight: 1.85, margin: "0 0 10px" }}>
+          明日もまた、新しい一語が届きます。毎日少しずつ、ヨガの知識が積み上がっていきます。
+        </p>
+        <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontFamily: serif, fontSize: 22, color: C.indigo, fontWeight: 700 }}>{streak.streak}</span>
+            <span style={{ fontSize: 12.5, color: C.indigoDeep }}>日続いた</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontFamily: serif, fontSize: 22, color: C.indigo, fontWeight: 700 }}>{streak.totalWords}</span>
+            <span style={{ fontSize: 12.5, color: C.indigoDeep }}>個の言葉を知った</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ブロック3: 実践への導線（先生に渡す） */}
+      <div style={{ background: C.indigoDeep, borderRadius: 14, padding: "20px", marginBottom: 28 }}>
+        <p style={{ fontSize: 11, color: C.saffron, letterSpacing: "0.12em", margin: "0 0 10px", fontWeight: 600 }}>実践への導線</p>
+        <p style={{ fontSize: 14.5, color: "#F3EBD8", lineHeight: 1.85, margin: "0 0 16px" }}>
+          体を動かして習いたくなったら、あなたに合う先生を探しましょう。実践はアプリが教えるのではなく、先生に繋ぐのがヨガの本来のかたちです。
+        </p>
+        <button
+          onClick={() => onMoveToSearch?.()}
+          style={{
+            width: "100%",
+            padding: "14px",
+            borderRadius: 12,
+            border: "none",
+            background: C.saffron,
+            color: C.indigoDeep,
+            fontSize: 15,
+            fontWeight: 700,
+            fontFamily: sans,
+            cursor: onMoveToSearch ? "pointer" : "default",
+            opacity: onMoveToSearch ? 1 : 0.6,
+          }}
+        >
+          先生を探す
+        </button>
+      </div>
+    </>
   );
 }
 
