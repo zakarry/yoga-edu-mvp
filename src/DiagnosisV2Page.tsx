@@ -600,9 +600,11 @@ export default function DiagnosisV2Page({ onMoveToSearch, onSaved }: { onMoveToS
   // Supabase へ診断を保存（未ログイン・未許可時は localStorage へ）
   const handleSaveDiagnosis = (payload: any, conditionRecord: any, styleId: string | null) => {
     const safetyState: SafetyState =
-      ans.safetyOutcome === "urgent" || ans.safetyOutcome === "prompt" || ans.safetyOutcome === "routine"
+      ans.safetyOutcome === "urgent"
         ? "stop_and_refer"
-        : "normal";
+        : ans.safetyOutcome === "prompt"
+          ? "caution"
+          : "normal";
 
     const safetyCategory: SafetyCategory | null =
       safetyState !== "normal" ? "red_flag" : null;
