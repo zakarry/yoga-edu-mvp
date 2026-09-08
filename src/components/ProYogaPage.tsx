@@ -70,7 +70,12 @@ export function ProYogaPage({ onStartDiagnosis, onBackHome, onOpenDrill }: ProYo
         </div>
         <div className="hero-actions pro-yoga-mobile-actions">
           <button className="secondary-button" onClick={onStartDiagnosis}>無料診断を始める</button>
-          {auth.user ? (
+          {!auth.user ? (
+            <>
+              <p className="pro-yoga-login-hint">学習履歴を保存するにはログインしてください</p>
+              <button className="gold-button" disabled>学習を始める</button>
+            </>
+          ) : auth.profile?.role === 'teacher' || auth.profile?.role === 'both' ? (
             started ? (
               <button className="gold-button" disabled>学習を開始しました</button>
             ) : (
@@ -79,7 +84,9 @@ export function ProYogaPage({ onStartDiagnosis, onBackHome, onOpenDrill }: ProYo
               </button>
             )
           ) : (
-            <button className="gold-button" disabled>ログインが必要です</button>
+            <p className="pro-yoga-student-hint">
+              プロフェッショナルYoga検定は、ヨガ指導者・指導者を目指す方向けです。
+            </p>
           )}
           {startError && <p className="auth-unavailable-text">{startError}</p>}
         </div>

@@ -4266,3 +4266,10 @@ h1 {
   font-weight: 600;
   color: var(--green-strong, #2D7D46);
 }
+.pro-yoga-login-hint,
+.pro-yoga-student-hint {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 4px 0;
+}

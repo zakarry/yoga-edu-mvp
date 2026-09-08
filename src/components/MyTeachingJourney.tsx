@@ -72,6 +72,10 @@ export function MyTeachingJourney({ onStartTeacherDiagnosis, onOpenProYoga }: My
     })();
   }, [auth.user]);
 
+  if (auth.profile?.role === 'student') {
+    return null;
+  }
+
   if (!isSupabaseConfigured) {
     return (
       <section className="panel mypage-section">
