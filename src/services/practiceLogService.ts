@@ -1,6 +1,6 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { PrivacySettings } from '../lib/auth';
-import type { SafetyState, SafetyCategory } from './diagnosisService';
+import type { SafetyState, SafetyUrgency, SafetyCategory } from './diagnosisService';
 
 export interface PracticeLog {
   id: string;
@@ -13,6 +13,7 @@ export interface PracticeLog {
   note: string | null;
   ai_teacher_used: boolean;
   safety_state: SafetyState;
+  safety_urgency: SafetyUrgency;
   requires_human_review: boolean;
   safety_category: SafetyCategory | null;
   created_at: string;
@@ -27,6 +28,7 @@ export interface SavePracticeLogParams {
   note?: string | null;
   ai_teacher_used?: boolean;
   safety_state?: SafetyState;
+  safety_urgency?: SafetyUrgency;
   requires_human_review?: boolean;
   safety_category?: SafetyCategory | null;
 }
@@ -65,6 +67,7 @@ export async function savePracticeLog(
       note: noteToSave,
       ai_teacher_used: params.ai_teacher_used ?? false,
       safety_state: params.safety_state ?? 'normal',
+      safety_urgency: params.safety_urgency ?? 'none',
       requires_human_review: params.requires_human_review ?? false,
       safety_category: params.safety_category ?? null,
     })

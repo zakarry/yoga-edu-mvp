@@ -2,6 +2,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { PrivacySettings } from '../lib/auth';
 
 export type SafetyState = 'normal' | 'caution' | 'stop_and_refer';
+export type SafetyUrgency = 'none' | 'routine' | 'prompt' | 'urgent';
 export type SafetyCategory = 'pain' | 'injury' | 'medical_condition' | 'pregnancy_postpartum' | 'exercise_restriction' | 'red_flag' | 'other';
 
 export interface DiagnosisRecord {
@@ -15,6 +16,7 @@ export interface DiagnosisRecord {
   result_type: string | null;
   score_json: Record<string, unknown> | null;
   safety_state: SafetyState;
+  safety_urgency: SafetyUrgency;
   requires_human_review: boolean;
   safety_category: SafetyCategory | null;
   created_at: string;
@@ -29,6 +31,7 @@ export interface SaveDiagnosisParams {
   result_type?: string | null;
   score_json?: Record<string, unknown> | null;
   safety_state?: SafetyState;
+  safety_urgency?: SafetyUrgency;
   requires_human_review?: boolean;
   safety_category?: SafetyCategory | null;
 }
@@ -78,6 +81,7 @@ export async function saveDiagnosis(
       result_type: params.result_type ?? null,
       score_json: params.score_json ?? null,
       safety_state: params.safety_state ?? 'normal',
+      safety_urgency: params.safety_urgency ?? 'none',
       requires_human_review: params.requires_human_review ?? false,
       safety_category: params.safety_category ?? null,
     })

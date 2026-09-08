@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { drillEntries } from "./drillData";
 import { useAuth } from "./lib/auth";
-import { saveDiagnosis, type SafetyState, type SafetyCategory } from "./services/diagnosisService";
+import { saveDiagnosis, type SafetyState, type SafetyUrgency, type SafetyCategory } from "./services/diagnosisService";
 
 // ── 図鑑から「今日の一語」を日替わりで選出するヘルパー ──
 // stars が小さいほどやさしい。stars <= 3 の項目プールから日替わりで1つ選ぶ。
@@ -602,9 +602,20 @@ export default function DiagnosisV2Page({ onMoveToSearch, onSaved }: { onMoveToS
     const safetyState: SafetyState =
       ans.safetyOutcome === "urgent"
         ? "stop_and_refer"
-        : ans.safetyOutcome === "prompt"
+        : ans.safetyOutcome === "prompt" || ans.safetyOutcome === "routine"
           ? "caution"
           : "normal";
+
+    const safetyUrgency: SafetyUrgency =
+      ans.safetyOutcome === "urgent"
+        ? "urgent"
+        : ans.safetyOutcome === "prompt"
+          ? "prompt"
+          : ans.safetyOutcome === "routine"
+            ? "routine"
+            : "none";
+
+    const requiresHumanReview = safetyUrgency !== "none";
 
     const safetyCategory: SafetyCategory | null =
       safetyState !== "normal" ? "red_flag" : null;
@@ -619,7 +630,8 @@ export default function DiagnosisV2Page({ onMoveToSearch, onSaved }: { onMoveToS
         result_type: styleId,
         score_json: null,
         safety_state: safetyState,
-        requires_human_review: safetyState === "stop_and_refer",
+        safety_urgency: safetyUrgency,
+        requires_human_review: requiresHumanReview,
         safety_category: safetyCategory,
       }).then(({ error, savedToCloud }) => {
         if (error) console.warn("[diagnosis save error]", error);
