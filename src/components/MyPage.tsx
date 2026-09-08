@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { SearchItem, StudentDiagnosisInput } from '../data';
 import type { DiagnosisResult } from './ResultPage';
 import { CardList } from './CardList';
@@ -28,6 +29,8 @@ interface MyPageProps {
   history: DiagnosisHistoryRecord[];
   onRestart: () => void;
   onDetail: (item: SearchItem) => void;
+  cloudDiagnosisSection?: ReactNode;
+  cloudPracticeSection?: ReactNode;
 }
 
 const scoreDefinitions: Array<{
@@ -146,7 +149,7 @@ function buildChangeComment(latest: DiagnosisHistoryRecord, previous?: Diagnosis
   return '少しずつ変化が見えています。数字は目安として受け取りながら、その時の体調や気分、毎日の過ごし方に合わせて使ってみてください。';
 }
 
-export function MyPage({ history, onRestart, onDetail }: MyPageProps) {
+export function MyPage({ history, onRestart, onDetail, cloudDiagnosisSection, cloudPracticeSection }: MyPageProps) {
   const auth = useAuth();
   const latest = history[0];
   const previous = history[1];
@@ -185,6 +188,8 @@ export function MyPage({ history, onRestart, onDetail }: MyPageProps) {
         {authStatusSection}
         <ProfileSection />
         <PrivacySection />
+        {cloudDiagnosisSection}
+        {cloudPracticeSection}
       </div>
     );
   }
@@ -332,6 +337,8 @@ export function MyPage({ history, onRestart, onDetail }: MyPageProps) {
       {authStatusSection}
       <ProfileSection />
       <PrivacySection />
+      {cloudDiagnosisSection}
+      {cloudPracticeSection}
     </div>
   );
 }

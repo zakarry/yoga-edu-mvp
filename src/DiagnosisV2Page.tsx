@@ -3,6 +3,8 @@
 // 既存の診断には一切影響しません。App.tsx から <DiagnosisV2Page /> として呼び出します。
 import React, { useState, useEffect } from "react";
 import { drillEntries } from "./drillData";
+import { useAuth } from "./lib/auth";
+import { saveDiagnosis, type SafetyState, type SafetyCategory } from "./services/diagnosisService";
 
 // ── 図鑑から「今日の一語」を日替わりで選出するヘルパー ──
 // stars が小さいほどやさしい。stars <= 3 の項目プールから日替わりで1つ選ぶ。
@@ -589,10 +591,42 @@ function buildMirror(reasons, issue, goal) {
   return { line1, line2 };
 }
 
-export default function DiagnosisV2Page({ onMoveToSearch }: { onMoveToSearch?: () => void }) {
+export default function DiagnosisV2Page({ onMoveToSearch, onSaved }: { onMoveToSearch?: () => void; onSaved?: () => void }) {
   const [stage, setStage] = useState("intro");
   const [ans, setAns] = useState({ reason: [] });
   const [demoReturning, setDemoReturning] = useState(false);
+  const auth = useAuth();
+
+  // Supabase へ診断を保存（未ログイン・未許可時は localStorage へ）
+  const handleSaveDiagnosis = (payload: any, conditionRecord: any, styleId: string | null) => {
+    const safetyState: SafetyState =
+      ans.safetyOutcome === "urgent" || ans.safetyOutcome === "prompt" || ans.safetyOutcome === "routine"
+        ? "stop_and_refer"
+        : "normal";
+
+    const safetyCategory: SafetyCategory | null =
+      safetyState !== "normal" ? "red_flag" : null;
+
+    if (auth.user && auth.privacy?.save_diagnosis) {
+      saveDiagnosis(auth.user.id, auth.privacy, {
+        diagnosis_type: ans.activeRoute === "teach" ? "teacher" : "student",
+        schema_version: "student-v2",
+        answers_json: payload,
+        condition_record_json: conditionRecord,
+        learning_record_json: null,
+        result_type: styleId,
+        score_json: null,
+        safety_state: safetyState,
+        requires_human_review: safetyState === "stop_and_refer",
+        safety_category: safetyCategory,
+      }).then(({ error, savedToCloud }) => {
+        if (error) console.warn("[diagnosis save error]", error);
+        if (savedToCloud && onSaved) {
+          // optionally navigate to myYOGAカルテ after cloud save
+        }
+      });
+    }
+  };
 
   const track = ans.track;
   const merge = (obj) => setAns((a) => ({ ...a, ...obj }));
@@ -853,12 +887,11 @@ export default function DiagnosisV2Page({ onMoveToSearch }: { onMoveToSearch?: (
 
         {stage === "wall" && (
           <Wall onRegister={() => {
-            // v4.1: 保存されるのは conditionRecord のみ(learningRecordには入れない)
             const styleId = pickStyleId(track, ans.pref);
             const payload = buildDiagnosisPayload(ans);
             const record = buildConditionRecord(ans, styleId);
             if (typeof console !== "undefined") { console.log("[diagnosis payload]", payload); console.log("[conditionRecord]", record); }
-            // TODO(Supabase): ここで condition_record テーブルへ upsert
+            handleSaveDiagnosis(payload, record, styleId);
             setStage("saved");
           }} onBack={() => setStage("result")} />
         )}
@@ -927,7 +960,7 @@ export default function DiagnosisV2Page({ onMoveToSearch }: { onMoveToSearch?: (
             const profile = buildPracticeProfile(ans);
             const record = buildConditionRecord(ans, null, null, null, "practice", "baseline");
             if (typeof console !== "undefined") { console.log("[practiceProfile]", profile); console.log("[conditionRecord/baseline]", record); }
-            // TODO(Supabase): practice_profile を upsert + condition_record(baseline) を insert
+            handleSaveDiagnosis(buildDiagnosisPayload({ ...ans, karteType: "practice" }), record, null);
             setStage("p_studio");
           }} onBack={() => setStage("p_result")} />
         )}

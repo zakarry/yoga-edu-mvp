@@ -26,6 +26,7 @@ import { TeacherDiagnosisPage } from './components/TeacherDiagnosisPage';
 import { TopBackLink } from './components/TopBackLink';
 import { MyPage, type DiagnosisHistoryRecord, type WellnessScores } from './components/MyPage';
 import { AuthPanel } from './components/AuthPanel';
+import { CloudDiagnosisSection, CloudPracticeSection } from './components/MyYogaCloudSections';
 
 type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy'| 'diagnosis-v2';
 
@@ -1230,6 +1231,8 @@ export default function App() {
             history={diagnosisHistory}
             onRestart={() => moveTo('diagnosis')}
             onDetail={setDetailItem}
+            cloudDiagnosisSection={<CloudDiagnosisSection onStartDiagnosis={() => moveTo('diagnosis-v2')} />}
+            cloudPracticeSection={<CloudPracticeSection />}
           />
         )}
 
@@ -1392,7 +1395,7 @@ export default function App() {
         )}
         {page === 'pro-yoga' && <ProYogaPage onStartDiagnosis={() => moveTo('diagnosis')} onBackHome={() => moveTo('home')} onOpenDrill={() => moveTo('pro-drill')} />}
         {page === 'pro-drill' && <ProDrillPage onBackHome={() => moveTo('home')} />}
-        {page === 'diagnosis-v2' && <DiagnosisV2Page onMoveToSearch={() => moveTo('search')} />}
+        {page === 'diagnosis-v2' && <DiagnosisV2Page onMoveToSearch={() => moveTo('search')} onSaved={() => moveTo('my-page')} />}
         {page === 'sacred-sites' && <SacredSitesPage onBackHome={() => moveTo('home')} />}
         {page === 'terms' && (
           <StaticInfoPage
