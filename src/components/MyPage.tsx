@@ -1,6 +1,9 @@
 import type { SearchItem, StudentDiagnosisInput } from '../data';
 import type { DiagnosisResult } from './ResultPage';
 import { CardList } from './CardList';
+import { useAuth } from '../lib/auth';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { ProfileSection, PrivacySection } from './ProfilePrivacy';
 
 export type WellnessScores = {
   flexibility: number;
@@ -144,16 +147,32 @@ function buildChangeComment(latest: DiagnosisHistoryRecord, previous?: Diagnosis
 }
 
 export function MyPage({ history, onRestart, onDetail }: MyPageProps) {
+  const auth = useAuth();
   const latest = history[0];
   const previous = history[1];
+
+  const authStatusSection = (
+    <section className="panel mypage-section">
+      <div className="section-inline-header tight">
+        <h3>ログイン状態</h3>
+      </div>
+      {auth.cloudUnavailable ? (
+        <p className="auth-unavailable-text">現在クラウド保存を利用できません。診断・検索・ドリルは引き続きご利用いただけます。</p>
+      ) : auth.user ? (
+        <p>ログイン中: {auth.profile?.display_name || auth.user.email}</p>
+      ) : (
+        <p>未ログイン — ログインするとクラウド保存とプロフィール設定が利用できます。</p>
+      )}
+    </section>
+  );
 
   if (!latest) {
     return (
       <div className="page-shell mypage-shell">
         <section className="hero-panel compact-hero mypage-hero">
           <div>
-            <span className="eyebrow">My Page</span>
-            <h2>マイページ</h2>
+            <span className="eyebrow">myYOGAカルテ</span>
+            <h2>myYOGAカルテ</h2>
             <p>
               診断結果をこの端末に保存し、前回との違いを見返せるページです。身体だけでなく、心・呼吸・理解・実践までまとめて確認できます。まだ履歴がないため、まずは無料診断から始めてみましょう。
             </p>
@@ -162,6 +181,10 @@ export function MyPage({ history, onRestart, onDetail }: MyPageProps) {
             <button type="button" className="primary-button" onClick={onRestart}>無料診断を始める</button>
           </div>
         </section>
+
+        {authStatusSection}
+        <ProfileSection />
+        <PrivacySection />
       </div>
     );
   }
@@ -170,8 +193,8 @@ export function MyPage({ history, onRestart, onDetail }: MyPageProps) {
     <div className="page-shell mypage-shell">
       <section className="hero-panel compact-hero mypage-hero">
         <div>
-          <span className="eyebrow">My Page</span>
-          <h2>身体だけでなく、生活全体の変化を見る</h2>
+          <span className="eyebrow">myYOGAカルテ</span>
+          <h2>myYOGAカルテ</h2>
           <p>
             診断履歴をローカル保存し、最新スコアと前回との差分を見ながら今の傾向を確認できます。医療的な判定ではなく、運動・呼吸・日々の整え方を振り返るための体験設計です。
           </p>
@@ -305,6 +328,10 @@ export function MyPage({ history, onRestart, onDetail }: MyPageProps) {
           <button type="button" className="primary-button" onClick={onRestart}>もう一度診断する</button>
         </div>
       </section>
+
+      {authStatusSection}
+      <ProfileSection />
+      <PrivacySection />
     </div>
   );
 }

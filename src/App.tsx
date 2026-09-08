@@ -25,6 +25,7 @@ import { StaticInfoPage } from './components/StaticInfoPage';
 import { TeacherDiagnosisPage } from './components/TeacherDiagnosisPage';
 import { TopBackLink } from './components/TopBackLink';
 import { MyPage, type DiagnosisHistoryRecord, type WellnessScores } from './components/MyPage';
+import { AuthPanel } from './components/AuthPanel';
 
 type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy'| 'diagnosis-v2';
 
@@ -1127,10 +1128,13 @@ export default function App() {
         </div>
         <div className="topbar-actions">
           <button className="primary-button header-main-button" onClick={() => moveTo('diagnosis')}>無料診断を始める</button>
+          <div className="auth-area">
+            <AuthPanel onOpenMyPage={() => moveTo('my-page')} />
+          </div>
           <nav className={`nav-row nav-secondary-menu ${mobileMenuOpen ? 'is-open' : ''}`}>
             <button className="nav-mobile-home" onClick={() => moveTo('home')}>TOPへ戻る</button>
             <button onClick={() => openSearchWithType('all', page === 'results')}>検索・一覧</button>
-            <button onClick={() => moveTo('my-page')}>マイページ</button>
+            <button onClick={() => moveTo('my-page')}>myYOGAカルテ</button>
             <button onClick={() => moveTo('pro-yoga')}>プロYoga検定</button>
           </nav>
         </div>
