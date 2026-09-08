@@ -32,6 +32,7 @@ interface MyPageProps {
   cloudDiagnosisSection?: ReactNode;
   cloudPracticeSection?: ReactNode;
   teachingJourneySection?: ReactNode;
+  myTeacherSection?: ReactNode;
 }
 
 const scoreDefinitions: Array<{
@@ -150,7 +151,7 @@ function buildChangeComment(latest: DiagnosisHistoryRecord, previous?: Diagnosis
   return '少しずつ変化が見えています。数字は目安として受け取りながら、その時の体調や気分、毎日の過ごし方に合わせて使ってみてください。';
 }
 
-export function MyPage({ history, onRestart, onDetail, cloudDiagnosisSection, cloudPracticeSection, teachingJourneySection }: MyPageProps) {
+export function MyPage({ history, onRestart, onDetail, cloudDiagnosisSection, cloudPracticeSection, teachingJourneySection, myTeacherSection }: MyPageProps) {
   const auth = useAuth();
   const latest = history[0];
   const previous = history[1];
@@ -192,6 +193,7 @@ export function MyPage({ history, onRestart, onDetail, cloudDiagnosisSection, cl
         {cloudDiagnosisSection}
         {cloudPracticeSection}
         {teachingJourneySection}
+        {myTeacherSection}
       </div>
     );
   }
@@ -342,6 +344,7 @@ export function MyPage({ history, onRestart, onDetail, cloudDiagnosisSection, cl
       {cloudDiagnosisSection}
       {cloudPracticeSection}
       {teachingJourneySection}
+      {myTeacherSection}
     </div>
   );
 }

@@ -4,6 +4,7 @@ interface CardListProps {
   title: string;
   items: SearchItem[];
   onDetail?: (item: SearchItem) => void;
+  onAddTeacher?: (item: Extract<SearchItem, { type: 'teacher' }>) => void;
   emptyMessage?: string;
   variant?: 'default' | 'prioritySchool';
   stepLabel?: string;
@@ -125,6 +126,7 @@ export function CardList({
   title,
   items,
   onDetail,
+  onAddTeacher,
   emptyMessage = '該当データがありません。',
   variant = 'default',
   stepLabel,
@@ -185,6 +187,11 @@ export function CardList({
         {onDetail && (
           <button className={`detail-button ${item.type}`} onClick={() => onDetail(item)} type="button">
             {detailLabel(item)}
+          </button>
+        )}
+        {item.type === 'teacher' && onAddTeacher && (
+          <button className="secondary-button teacher-relationship-button" onClick={() => onAddTeacher(item)} type="button">
+            この先生をMy Teacherに登録
           </button>
         )}
       </article>

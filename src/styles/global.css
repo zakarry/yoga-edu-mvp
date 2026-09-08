@@ -4273,3 +4273,26 @@ h1 {
   line-height: 1.5;
   margin: 4px 0;
 }
+.my-teacher-section {
+  display: grid;
+  gap: 16px;
+}
+.my-teacher-list {
+  display: grid;
+  gap: 12px;
+}
+.my-teacher-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid rgba(16, 37, 66, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.62);
+}
+.my-teacher-card h4 { margin: 4px 0; color: var(--navy); }
+.my-teacher-card p { color: var(--muted); font-size: 14px; margin: 0; }
+.my-teacher-card dl { margin: 0; }
+.my-teacher-card dt { color: var(--muted); font-size: 12px; }
+.my-teacher-card dd { margin: 2px 0 0; color: var(--navy); font-weight: 600; }
+.my-teacher-card.ended { opacity: 0.82; }
+.teacher-relationship-button { margin-top: 8px; }

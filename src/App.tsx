@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   AREAS,
   Club,
@@ -28,6 +28,10 @@ import { MyPage, type DiagnosisHistoryRecord, type WellnessScores } from './comp
 import { AuthPanel } from './components/AuthPanel';
 import { CloudDiagnosisSection, CloudPracticeSection } from './components/MyYogaCloudSections';
 import { MyTeachingJourney } from './components/MyTeachingJourney';
+import { MyTeacherSection } from './components/MyTeacherSection';
+import { useAuth } from './lib/auth';
+import { addTeacherRelationship } from './services/teacherRelationshipService';
+import { fetchDirectory } from './services/directoryService';
 
 type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy'| 'diagnosis-v2';
 
@@ -1004,6 +1008,20 @@ export default function App() {
   const [searchFeatures, setSearchFeatures] = useState<string[]>([]);
   const [detailItem, setDetailItem] = useState<SearchItem | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [teacherRelationshipRefresh, setTeacherRelationshipRefresh] = useState(0);
+  const auth = useAuth();
+
+  useEffect(() => {
+    let active = true;
+    void fetchDirectory().then((directory) => {
+      if (!active) return;
+      setTeacherList(directory.teachers);
+      setSchoolList(directory.schools);
+      setEventList(directory.events);
+      setClubList(directory.clubs);
+    });
+    return () => { active = false; };
+  }, []);
 
   const allItems = useMemo<SearchItem[]>(() => [...schoolList, ...teacherList, ...eventList, ...clubList], [schoolList, teacherList, eventList, clubList]);
 
@@ -1046,6 +1064,20 @@ export default function App() {
     });
 
     moveTo('results');
+  };
+
+  const handleAddTeacher = async (item: Extract<SearchItem, { type: 'teacher' }>) => {
+    if (!auth.user) {
+      window.alert('My Teacherへの登録にはログインが必要です。');
+      return;
+    }
+    const result = await addTeacherRelationship(auth.user.id, item.id, 'regular');
+    if (result.error) {
+      window.alert(result.error.includes('duplicate') ? 'この先生はすでにMy Teacherに登録されています。' : '先生を登録できませんでした。');
+      return;
+    }
+    setTeacherRelationshipRefresh((value) => value + 1);
+    window.alert('My Teacherに登録しました。');
   };
 
   const applySearchPreset = (preset: SearchFilterPreset, type: FilterType = 'all') => {
@@ -1235,6 +1267,7 @@ export default function App() {
             cloudDiagnosisSection={<CloudDiagnosisSection onStartDiagnosis={() => moveTo('diagnosis-v2')} />}
             cloudPracticeSection={<CloudPracticeSection />}
             teachingJourneySection={<MyTeachingJourney onStartTeacherDiagnosis={() => moveTo('teacher-diagnosis')} onOpenProYoga={() => moveTo('pro-yoga')} />}
+            myTeacherSection={<MyTeacherSection refreshToken={teacherRelationshipRefresh} />}
           />
         )}
 
@@ -1344,7 +1377,7 @@ export default function App() {
               </div>
             </section>
             <MapView items={filteredItems} selectedType={searchType} onSelectItem={setDetailItem} />
-            <CardList title="検索結果一覧" items={filteredItems} onDetail={setDetailItem} emptyMessage="条件に合う候補が見つかりませんでした。フィルターを少し減らしてみてください。" />
+            <CardList title="検索結果一覧" items={filteredItems} onDetail={setDetailItem} onAddTeacher={handleAddTeacher} emptyMessage="条件に合う候補が見つかりませんでした。フィルターを少し減らしてみてください。" />
           </div>
         )}
 
