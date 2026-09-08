@@ -1,5 +1,7 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { TopBackLink } from './TopBackLink';
+import { useAuth } from '../lib/auth';
+import { saveDiagnosis, type SafetyState, type SafetyUrgency, type SafetyCategory } from '../services/diagnosisService';
 
 interface TeacherDiagnosisPageProps {
   onOpenListingSelect: () => void;
@@ -427,6 +429,7 @@ function QuestionBlock({
 export function TeacherDiagnosisPage({ onOpenListingSelect, onOpenTeacherRegister, onOpenProYoga, onBackHome }: TeacherDiagnosisPageProps) {
   const [form, setForm] = useState<TeacherDiagnosisInput>(initialInput);
   const [result, setResult] = useState<TeacherDiagnosisResult | null>(null);
+  const auth = useAuth();
 
   const selectedCount = useMemo(() => {
     return Object.values(form).reduce((count, value) => {
@@ -439,8 +442,29 @@ export function TeacherDiagnosisPage({ onOpenListingSelect, onOpenTeacherRegiste
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    setResult(buildTeacherDiagnosisResult(form));
+    const diagResult = buildTeacherDiagnosisResult(form);
+    setResult(diagResult);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    if (auth.user && auth.privacy?.save_diagnosis) {
+      const scoreJson: Record<string, number> = {};
+      (Object.keys(diagResult.scores) as TeacherScoreKey[]).forEach((k) => {
+        scoreJson[k] = diagResult.scores[k];
+      });
+      saveDiagnosis(auth.user.id, auth.privacy, {
+        diagnosis_type: 'teacher',
+        schema_version: 'teacher-v1',
+        answers_json: { ...form } as unknown as Record<string, unknown>,
+        result_type: diagResult.typeName,
+        score_json: scoreJson,
+        safety_state: 'normal' as SafetyState,
+        safety_urgency: 'none' as SafetyUrgency,
+        requires_human_review: false,
+        safety_category: null as SafetyCategory | null,
+      }).then(({ error }) => {
+        if (error) console.warn('[teacher diagnosis save error]', error);
+      });
+    }
   };
 
   if (result) {

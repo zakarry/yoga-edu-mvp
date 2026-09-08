@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { TopBackLink } from './TopBackLink';
+import { useAuth } from '../lib/auth';
+import { startProYogaLearning } from '../services/proYogaService';
 
 interface ProYogaPageProps {
   onStartDiagnosis: () => void;
@@ -7,6 +10,20 @@ interface ProYogaPageProps {
 }
 
 export function ProYogaPage({ onStartDiagnosis, onBackHome, onOpenDrill }: ProYogaPageProps) {
+  const auth = useAuth();
+  const [starting, setStarting] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
+  const [started, setStarted] = useState(false);
+
+  const handleStartLearning = async () => {
+    if (!auth.user) return;
+    setStarting(true);
+    setStartError(null);
+    const { error } = await startProYogaLearning(auth.user.id);
+    setStarting(false);
+    if (error) { setStartError(error); return; }
+    setStarted(true);
+  };
   return (
     <div className="page-shell pro-yoga-page">
       <section className="hero-panel federation-hero pro-yoga-hero">
@@ -53,7 +70,18 @@ export function ProYogaPage({ onStartDiagnosis, onBackHome, onOpenDrill }: ProYo
         </div>
         <div className="hero-actions pro-yoga-mobile-actions">
           <button className="secondary-button" onClick={onStartDiagnosis}>無料診断を始める</button>
-          <button className="gold-button">受験申込ボタン</button>
+          {auth.user ? (
+            started ? (
+              <button className="gold-button" disabled>学習を開始しました</button>
+            ) : (
+              <button className="gold-button" onClick={handleStartLearning} disabled={starting}>
+                {starting ? '処理中…' : '学習を始める'}
+              </button>
+            )
+          ) : (
+            <button className="gold-button" disabled>ログインが必要です</button>
+          )}
+          {startError && <p className="auth-unavailable-text">{startError}</p>}
         </div>
       </section>
     </div>

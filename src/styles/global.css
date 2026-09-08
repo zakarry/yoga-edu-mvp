@@ -4193,3 +4193,76 @@ h1 {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================
+   My Teaching Journey
+   ============================================================ */
+.teaching-journey-section {
+  display: grid;
+  gap: 16px;
+}
+.teaching-journey-latest {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(16,37,66,.08);
+  background: rgba(255,255,255,.6);
+}
+.teaching-journey-latest strong {
+  font-size: 18px;
+  color: var(--navy);
+}
+.teaching-journey-latest p {
+  font-size: 14px;
+  color: var(--muted);
+}
+.teaching-journey-latest .hero-actions {
+  margin-top: 8px;
+}
+.teaching-journey-proyoga {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(16,37,66,.08);
+  background: rgba(255,255,255,.4);
+}
+.teaching-journey-proyoga .eyebrow {
+  font-size: 12px;
+}
+.proyoga-status-card {
+  display: grid;
+  gap: 8px;
+}
+.proyoga-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.proyoga-status-row span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.proyoga-status-row strong {
+  font-size: 16px;
+  color: var(--navy);
+}
+.proyoga-progress-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(16,37,66,.08);
+  overflow: hidden;
+}
+.proyoga-progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--saffron, #C8902A);
+  transition: width 0.3s ease;
+}
+.proyoga-certified-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--green-strong, #2D7D46);
+}

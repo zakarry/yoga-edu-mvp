@@ -27,6 +27,7 @@ import { TopBackLink } from './components/TopBackLink';
 import { MyPage, type DiagnosisHistoryRecord, type WellnessScores } from './components/MyPage';
 import { AuthPanel } from './components/AuthPanel';
 import { CloudDiagnosisSection, CloudPracticeSection } from './components/MyYogaCloudSections';
+import { MyTeachingJourney } from './components/MyTeachingJourney';
 
 type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy'| 'diagnosis-v2';
 
@@ -1233,6 +1234,7 @@ export default function App() {
             onDetail={setDetailItem}
             cloudDiagnosisSection={<CloudDiagnosisSection onStartDiagnosis={() => moveTo('diagnosis-v2')} />}
             cloudPracticeSection={<CloudPracticeSection />}
+            teachingJourneySection={<MyTeachingJourney onStartTeacherDiagnosis={() => moveTo('teacher-diagnosis')} onOpenProYoga={() => moveTo('pro-yoga')} />}
           />
         )}
 

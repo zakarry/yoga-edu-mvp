@@ -103,6 +103,18 @@ export async function getDiagnosisHistory(userId: string): Promise<{ data: Diagn
   return { data: data as DiagnosisRecord[], error: null };
 }
 
+export async function getTeacherDiagnosisHistory(userId: string): Promise<{ data: DiagnosisRecord[] | null; error: string | null }> {
+  if (!supabase) return { data: null, error: '現在クラウド保存を利用できません' };
+  const { data, error } = await supabase
+    .from('diagnoses')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('diagnosis_type', 'teacher')
+    .order('created_at', { ascending: false });
+  if (error) return { data: null, error: error.message };
+  return { data: data as DiagnosisRecord[], error: null };
+}
+
 export async function getLatestDiagnosis(userId: string): Promise<{ data: DiagnosisRecord | null; error: string | null }> {
   if (!supabase) return { data: null, error: '現在クラウド保存を利用できません' };
   const { data, error } = await supabase
