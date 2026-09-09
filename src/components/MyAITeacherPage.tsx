@@ -683,7 +683,23 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     setPracticeDuration(item.durationMin);
                     setStep('step6');
                   }}>{safetyBlocked ? '安全確認が必要です' : '実践する'}</button>
-                  {showKnowledgeLink && (
+                  {showKnowledgeLink && planItem?.knowledgeLinks && planItem.knowledgeLinks.length > 0 ? (
+                    planItem.knowledgeLinks.map((link, linkIdx) => (
+                      <button
+                        key={linkIdx}
+                        className="knowledge-link-button"
+                        onClick={async () => {
+                          setKnowledgeLoading(true);
+                          setKnowledgeExplanation(null);
+                          const entry = await fetchKnowledgeExplanation(link.masterId);
+                          setKnowledgeExplanation(entry);
+                          setKnowledgeLoading(false);
+                        }}
+                      >
+                        {link.label}
+                      </button>
+                    ))
+                  ) : showKnowledgeLink && planItem?.knowledgeMasterId ? (
                     <button
                       className="knowledge-link-button"
                       onClick={async () => {
@@ -697,7 +713,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     >
                       この実践について
                     </button>
-                  )}
+                  ) : null}
                   {!auth.user && (
                     <span className="knowledge-login-hint">ログインで解説を見る</span>
                   )}
