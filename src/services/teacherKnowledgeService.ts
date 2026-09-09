@@ -5,17 +5,6 @@ export interface KnowledgeExplanation {
   title: string;
   category: string;
   publicContent: string;
-  usageStatus: string;
-  sourceCount: number;
-}
-
-interface ExplanationRow {
-  masterId: string;
-  title: string;
-  category: string;
-  publicContent: string;
-  usageStatus: string;
-  sourceCount: number;
 }
 
 function getSupabase() {
