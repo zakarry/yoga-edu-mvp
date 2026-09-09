@@ -4707,6 +4707,19 @@ h1 {
   margin-top: 12px;
   font-size: 13px;
 }
+.dry-run-payload-json {
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 10px;
+  background: rgba(16,37,66,.04);
+  border: 1px solid rgba(16,37,66,.1);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--navy);
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-x: auto;
+}
 .ai-teacher-save-status { color: var(--green-strong); font-weight: 600; }
 .ai-teacher-persona-display {
   display: grid;

@@ -18,6 +18,7 @@ import { generateTodayPlan, type TodayPlan } from '../services/todayPlannerServi
 import { generateTeacherResponse, generateNextSuggestion, type ConversationContext } from '../services/teacherResponseService';
 import { attachKnowledgeToTodayPlan, fetchKnowledgeExplanation, type TodayPlanWithKnowledge } from '../services/todayPlanKnowledgeService';
 import type { KnowledgeExplanation } from '../services/teacherKnowledgeService';
+import { runLLMRequestDryRun, type DryRunResult } from '../services/llmRequestDryRun';
 
 interface MyAITeacherPageProps {
   onBackHome: () => void;
@@ -257,6 +258,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [nextSuggestion, setNextSuggestion] = useState<NextSuggestion | null>(loadNextSuggestion());
   const [showContextSignals, setShowContextSignals] = useState(false);
   const [showMemorySummary, setShowMemorySummary] = useState(false);
+  const [dryRunInput, setDryRunInput] = useState('');
+  const [dryRunResult, setDryRunResult] = useState<DryRunResult | null>(null);
+  const [dryRunLoading, setDryRunLoading] = useState(false);
+  const dryRunMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('testPlan') === 'llm-dry-run';
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -407,6 +412,15 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPersona(newPersona);
     setEditingPersona(false);
   }, [formName, formAvatar, formPersonality, formSpecialty, formUiLang, formTeachingLang, persona]);
+
+  const handleDryRun = useCallback(async () => {
+    if (!dryRunInput.trim()) return;
+    setDryRunLoading(true);
+    setDryRunResult(null);
+    const result = await runLLMRequestDryRun(dryRunInput.trim(), !!auth.user);
+    setDryRunResult(result);
+    setDryRunLoading(false);
+  }, [dryRunInput, auth.user]);
 
   const handleSendChat = useCallback(() => {
     if (!chatInput.trim()) return;
@@ -1289,6 +1303,36 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         </section>
       )}
 
+      {dryRunMode && (
+        <section className="panel ai-teacher-step-panel">
+          <h3>LLM Request Dry Run（LLM未送信）</h3>
+          <p className="ai-teacher-safety-note">この画面は開発・受入テスト用です。LLM APIへの通信は行いません。Guard通過後のpayloadだけを表示します。</p>
+          <div className="ai-teacher-chat-input-row">
+            <input
+              value={dryRunInput}
+              onChange={(e) => setDryRunInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleDryRun(); }}
+              placeholder="質問を入力（例: タダーサナとは？）"
+            />
+            <button className="primary-button" onClick={handleDryRun} disabled={dryRunLoading}>{dryRunLoading ? '…' : 'Dry Run実行'}</button>
+          </div>
+          {dryRunResult && (
+            <div className="knowledge-explanation-box">
+              <p><strong>結果:</strong> {dryRunResult.reasonLabel}</p>
+              <p><strong>採用件数:</strong> {dryRunResult.adoptedCount}</p>
+              {dryRunResult.adoptedMasterIds.length > 0 && (
+                <p><strong>採用master_id:</strong> {dryRunResult.adoptedMasterIds.join(', ')}</p>
+              )}
+              <p><strong>LLM送信:</strong> なし（Dry Run）</p>
+              {dryRunResult.payloadJson && (
+                <pre className="dry-run-payload-json">{dryRunResult.payloadJson}</pre>
+              )}
+            </div>
+          )}
+        </section>
+      )
+
+      }
       {/* Quick links */}
       <section className="panel ai-teacher-quick-links">
         <div className="section-inline-header tight">
