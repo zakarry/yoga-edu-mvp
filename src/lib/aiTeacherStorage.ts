@@ -13,8 +13,8 @@ export interface AITeacherPersona {
   avatar: string;
   personality: string;
   specialty: string;
-  uiLanguage: 'ja' | 'en';
-  teachingLanguage: 'ja' | 'en';
+  uiLanguage: 'ja' | 'en' | 'zh' | 'ko';
+  teachingLanguage: 'ja' | 'en' | 'zh' | 'ko';
   createdAt: string;
 }
 

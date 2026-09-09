@@ -4955,6 +4955,92 @@ h1 {
 }
 .ai-teacher-adapt-default { font-size: 14px; color: var(--muted); }
 
+/* === P2: Camera, chat typing === */
+.ai-teacher-video-container {
+  position: relative;
+  display: grid;
+  gap: 0;
+}
+.ai-teacher-video-mirror {
+  transform: scaleX(-1);
+}
+.ai-teacher-camera-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(16, 37, 66, 0.7);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+.ai-teacher-overlay-eye { font-size: 18px; }
+.ai-teacher-overlay-text {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+.ai-teacher-demo-fb {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(108, 138, 118, 0.85);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  pointer-events: none;
+  animation: demoFbFade .4s ease;
+}
+@keyframes demoFbFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.ai-teacher-camera-teacher {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(16, 37, 66, 0.08);
+  background: rgba(255, 255, 255, 0.7);
+}
+.ai-teacher-camera-avatar { font-size: 32px; }
+.ai-teacher-camera-teacher-info {
+  display: grid;
+  gap: 2px;
+}
+.ai-teacher-camera-teacher-info strong { font-size: 16px; color: var(--navy); }
+.ai-teacher-camera-teacher-info span { font-size: 13px; color: var(--muted); }
+
+.chat-typing-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.chat-typing-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  animation: typingDot 1.2s infinite ease-in-out;
+}
+.chat-typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.chat-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingDot {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
 @media (max-width: 768px) {
   .ai-teacher-step-nav { gap: 4px; }
   .ai-teacher-step-nav button { padding: 6px 10px; font-size: 12px; }
@@ -4962,6 +5048,8 @@ h1 {
   .ai-teacher-hero { grid-template-columns: 1fr; }
   .ai-teacher-hero-kpis { flex-direction: row; }
   .ai-teacher-hero-kpi { flex: 1; }
+  .ai-teacher-overlay-text { font-size: 11px; }
+  .ai-teacher-demo-fb { font-size: 13px; }
 }
 @media (max-width: 480px) {
   .ai-teacher-step-nav button { padding: 6px 8px; font-size: 11px; }

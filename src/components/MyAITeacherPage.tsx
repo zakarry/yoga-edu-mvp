@@ -22,21 +22,78 @@ interface MyAITeacherPageProps {
 
 type StepId = 'home' | 'step1' | 'step2' | 'step3' | 'step4' | 'step5' | 'step6' | 'step7' | 'step8';
 
-const AVATAR_OPTIONS = ['🧘', '🌸', '🌿', '🌅', '🪷', '⚡'];
+type LangCode = 'ja' | 'en' | 'zh' | 'ko';
+
+const AVATAR_OPTIONS = ['🧘‍♀️', '🧘‍♂️', '🧑‍🏫', '🧘', '🌸', '🌿', '🌅', '🪷', '⚡'];
 
 const PERSONALITY_OPTIONS = [
-  { v: 'gentle', label: 'やさしく寄り添う' },
-  { v: 'encouraging', label: '前向きに励ます' },
-  { v: 'calm', label: '静かで落ち着いた' },
-  { v: 'precise', label: '丁寧に説明する' },
+  { v: 'gentle', label: '穏やかで寄り添う' },
+  { v: 'encouraging', label: '明るく励ます' },
+  { v: 'precise', label: '論理的で丁寧' },
+  { v: 'philosophical', label: '静かで哲学的' },
+  { v: 'strict', label: '少し厳しく導く' },
 ];
 
 const SPECIALTY_OPTIONS = [
-  { v: 'relax', label: 'リラックス・呼吸法' },
-  { v: 'flow', label: 'フロー・体を動かす' },
-  { v: 'meditation', label: '瞑想・マインドフルネス' },
-  { v: 'alignment', label: 'アライメント・姿勢' },
+  { v: 'pranayama', label: '呼吸法' },
+  { v: 'hatha', label: 'ハタヨガ' },
+  { v: 'vinyasa', label: 'ヴィンヤサ' },
+  { v: 'yin', label: '陰ヨガ' },
+  { v: 'meditation', label: '瞑想' },
+  { v: 'philosophy', label: 'ヨガ哲学' },
 ];
+
+const LANG_OPTIONS: { v: LangCode; label: string }[] = [
+  { v: 'ja', label: '日本語' },
+  { v: 'en', label: 'English' },
+  { v: 'zh', label: '中文' },
+  { v: 'ko', label: '한국어' },
+];
+
+const CAMERA_GUIDE: Record<LangCode, string> = {
+  ja: '全身が入る位置にスマホを置いてください。',
+  en: 'Place your phone so your whole body is visible.',
+  zh: '请把手机放在能拍到全身的位置。',
+  ko: '전신이 화면에 들어오도록 휴대폰을 놓아 주세요.',
+};
+
+const PRACTICE_START_GUIDE: Record<LangCode, string> = {
+  ja: 'それでは、ゆっくり始めましょう。',
+  en: 'Let\'s begin slowly.',
+  zh: '那么，慢慢开始吧。',
+  ko: '그럼, 천천히 시작해 봅시다.',
+};
+
+const DEMO_FEEDBACK: Record<LangCode, string[]> = {
+  ja: [
+    'ゆっくり呼吸を続けましょう',
+    '無理のない範囲で続けてください',
+    '呼吸に意識を向けてみましょう',
+    '急がず、自分のペースで',
+    '現在はデモフィードバックです',
+  ],
+  en: [
+    'Let\'s keep breathing slowly',
+    'Continue within your comfortable range',
+    'Bring awareness to your breath',
+    'No rush, go at your own pace',
+    'This is demo feedback for now',
+  ],
+  zh: [
+    '请继续缓慢呼吸',
+    '请在不要勉强的范围内继续',
+    '把注意力放在呼吸上',
+    '不要着急，按自己的节奏',
+    '目前是演示反馈',
+  ],
+  ko: [
+    '천천히 호흡을 계속해 봅시다',
+    '무리하지 않는 범위에서 계속하세요',
+    '호흡에 의식을 향해 보세요',
+    '서두르지 말고 자신의 페이스로',
+    '현재는 데모 피드백입니다',
+  ],
+};
 
 const PREF_EXPLANATION_OPTIONS: { v: PrefExplanation; label: string }[] = [
   { v: 'short', label: '短め' },
@@ -199,8 +256,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [formAvatar, setFormAvatar] = useState('🧘');
   const [formPersonality, setFormPersonality] = useState('gentle');
   const [formSpecialty, setFormSpecialty] = useState('relax');
-  const [formUiLang, setFormUiLang] = useState<'ja' | 'en'>('ja');
-  const [formTeachingLang, setFormTeachingLang] = useState<'ja' | 'en'>('ja');
+  const [formUiLang, setFormUiLang] = useState<LangCode>('ja');
+  const [formTeachingLang, setFormTeachingLang] = useState<LangCode>('ja');
+  const [demoMsgIdx, setDemoMsgIdx] = useState(0);
+  const [chatTyping, setChatTyping] = useState(false);
 
   useEffect(() => {
     const p = loadPersona();
@@ -215,6 +274,17 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     }
     setProgram(loadTodayProgram());
   }, []);
+
+  // Demo feedback rotation during active practice
+  useEffect(() => {
+    if (!cameraOn || !practiceActive) return;
+    const lang = persona?.teachingLanguage ?? 'ja';
+    const msgs = DEMO_FEEDBACK[lang] ?? DEMO_FEEDBACK.ja;
+    const interval = setInterval(() => {
+      setDemoMsgIdx((prev) => (prev + 1) % msgs.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [cameraOn, practiceActive, persona]);
 
   // Camera management
   useEffect(() => {
@@ -282,9 +352,15 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const handleSendChat = useCallback(() => {
     if (!chatInput.trim()) return;
     const userMsg: ChatMessage = { role: 'user', text: chatInput };
-    const reply = generateChatResponse(chatInput, persona);
-    setChatMessages((prev) => [...prev, userMsg, reply]);
+    setChatMessages((prev) => [...prev, userMsg]);
     setChatInput('');
+    setChatTyping(true);
+    const delay = 150 + Math.random() * 150;
+    setTimeout(() => {
+      const reply = generateChatResponse(userMsg.text, persona);
+      setChatMessages((prev) => [...prev, reply]);
+      setChatTyping(false);
+    }, delay);
   }, [chatInput, persona]);
 
   const handleCompletePractice = useCallback(async () => {
@@ -546,9 +622,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   setPersona(null);
                   setEditingPersona(true);
                   setFormName('');
-                  setFormAvatar('🧘');
+                  setFormAvatar('🧘‍♀️');
                   setFormPersonality('gentle');
-                  setFormSpecialty('relax');
+                  setFormSpecialty('pranayama');
                 }}>削除する</button>
               </div>
               <p className="ai-teacher-memory-note">
@@ -584,16 +660,14 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               <div className="field-grid">
                 <div className="field">
                   <label>画面言語</label>
-                  <select value={formUiLang} onChange={(e) => setFormUiLang(e.target.value as 'ja' | 'en')}>
-                    <option value="ja">日本語</option>
-                    <option value="en">English</option>
+                  <select value={formUiLang} onChange={(e) => setFormUiLang(e.target.value as LangCode)}>
+                    {LANG_OPTIONS.map((l) => <option key={l.v} value={l.v}>{l.label}</option>)}
                   </select>
                 </div>
                 <div className="field">
                   <label>指導言語</label>
-                  <select value={formTeachingLang} onChange={(e) => setFormTeachingLang(e.target.value as 'ja' | 'en')}>
-                    <option value="ja">日本語</option>
-                    <option value="en">English</option>
+                  <select value={formTeachingLang} onChange={(e) => setFormTeachingLang(e.target.value as LangCode)}>
+                    {LANG_OPTIONS.map((l) => <option key={l.v} value={l.v}>{l.label}</option>)}
                   </select>
                 </div>
               </div>
@@ -611,7 +685,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             <div className="ai-teacher-chat-messages">
               {chatMessages.length === 0 && (
                 <p className="ai-teacher-chat-empty">
-                  {persona?.name ?? 'AI先生'}に話しかけてみましょう。「今日は短く」「瞑想をしたい」「呼吸中心にしたい」など、一般的な希望なら対応できます。
+                  {growth.sessions === 0
+                    ? `${persona?.name ?? 'AI先生'}です。今日のプログラムについて、変えたいことはありますか？`
+                    : `${persona?.name ?? 'AI先生'}です。これまでの好みも参考にしながら調整します。今日はどんな実践にしますか？`}
                 </p>
               )}
               {chatMessages.map((msg, idx) => (
@@ -620,6 +696,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   <p>{msg.text}</p>
                 </div>
               ))}
+              {chatTyping && (
+                <div className="chat-message teacher chat-typing">
+                  <span className="chat-role">{persona?.name ?? 'AI先生'}</span>
+                  <p className="chat-typing-dots"><span /><span /><span /></p>
+                </div>
+              )}
             </div>
             <div className="ai-teacher-chat-input-row">
               <input
@@ -628,7 +710,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 onKeyDown={(e) => { if (e.key === 'Enter') handleSendChat(); }}
                 placeholder="メッセージを入力…"
               />
-              <button className="primary-button" onClick={handleSendChat}>送信</button>
+              <button className="primary-button" onClick={handleSendChat} disabled={chatTyping}>{chatTyping ? '…' : '送信'}</button>
             </div>
             <p className="ai-teacher-safety-note">
               痛み・怪我・妊娠・既往症などについては個別提案を行いません。専門家にご相談ください。
@@ -686,10 +768,38 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             </div>
             {cameraOn && (
               <div className="ai-teacher-video-wrap">
-                <video ref={videoRef} autoPlay muted playsInline className="ai-teacher-video" />
+                <div className="ai-teacher-video-container">
+                  <video ref={videoRef} autoPlay muted playsInline className="ai-teacher-video ai-teacher-video-mirror" />
+                  <div className="ai-teacher-camera-overlay">
+                    <span className="ai-teacher-overlay-eye">👁</span>
+                    <span className="ai-teacher-overlay-text">{persona?.name ?? 'AI先生'} があなたの実践を見守っています</span>
+                  </div>
+                  {practiceActive && (
+                    <div className="ai-teacher-demo-fb">
+                      {(DEMO_FEEDBACK[persona?.teachingLanguage ?? 'ja'] ?? DEMO_FEEDBACK.ja)[demoMsgIdx]}
+                    </div>
+                  )}
+                </div>
+                {persona && (
+                  <div className="ai-teacher-camera-teacher">
+                    <span className="ai-teacher-camera-avatar">{persona.avatar}</span>
+                    <div className="ai-teacher-camera-teacher-info">
+                      <strong>{persona.name}</strong>
+                      <span>{PERSONALITY_OPTIONS.find((p) => p.v === persona.personality)?.label ?? persona.personality}</span>
+                    </div>
+                  </div>
+                )}
+                <p className="ai-teacher-demo-note">
+                  {CAMERA_GUIDE[persona?.teachingLanguage ?? 'ja'] ?? CAMERA_GUIDE.ja}
+                </p>
                 <p className="ai-teacher-demo-note">
                   現在はデモ機能です。姿勢や安全性を医学的・専門的に判定するものではありません。
                 </p>
+                {practiceActive && (
+                  <p className="ai-teacher-demo-note">
+                    {PRACTICE_START_GUIDE[persona?.teachingLanguage ?? 'ja'] ?? PRACTICE_START_GUIDE.ja}
+                  </p>
+                )}
               </div>
             )}
           </div>
