@@ -15,8 +15,23 @@ const HIGH_CONFIDENCE_SCORE = 75;
 
 const AMBIGUOUS_PLAN_NAMES = ['瞑想', '呼吸', 'ヨガ', 'アーサナ', 'ストレッチ'];
 
+const TODAY_PLAN_KNOWLEDGE_ALIASES: Record<string, string> = {
+  '1分間マインドフルネス': 'マインドフルネス瞑想',
+  '交替鼻呼吸': 'アヌローマ・ヴィローマ／ナーディー・ショーダナ',
+};
+
 export async function findKnowledgeForPlanItem(name: string): Promise<RankedCandidate | null> {
   if (AMBIGUOUS_PLAN_NAMES.includes(name)) return null;
+
+  const aliasTarget = TODAY_PLAN_KNOWLEDGE_ALIASES[name];
+  if (aliasTarget) {
+    const ranked = await getKnowledgeRanking(aliasTarget);
+    const exact = ranked.find(
+      (c) => c.matchType === 'title_exact' || c.matchType === 'alias_exact',
+    );
+    if (exact) return exact;
+  }
+
   const ranked = await getKnowledgeRanking(name);
   if (ranked.length === 0) return null;
 

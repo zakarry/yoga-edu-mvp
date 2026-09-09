@@ -669,7 +669,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             <div className="ai-teacher-program-list">
               {program.items.map((item, idx) => {
                 const planItem = todayPlan?.items[idx];
-                const showKnowledgeLink = auth.user && planItem?.knowledgeAvailable;
+                const showKnowledgeLink = auth.user && planItem?.knowledgeAvailable && !safetyBlocked;
                 return (
                 <div key={idx} className="ai-teacher-program-item">
                   <span className={`type-pill ${item.type}`}>
