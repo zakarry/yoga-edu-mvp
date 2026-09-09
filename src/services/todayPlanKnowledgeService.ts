@@ -13,7 +13,10 @@ export interface TodayPlanWithKnowledge extends Omit<TodayPlan, 'items'> {
 
 const HIGH_CONFIDENCE_SCORE = 75;
 
+const AMBIGUOUS_PLAN_NAMES = ['瞑想', '呼吸', 'ヨガ', 'アーサナ', 'ストレッチ'];
+
 export async function findKnowledgeForPlanItem(name: string): Promise<RankedCandidate | null> {
+  if (AMBIGUOUS_PLAN_NAMES.includes(name)) return null;
   const ranked = await getKnowledgeRanking(name);
   if (ranked.length === 0) return null;
 
