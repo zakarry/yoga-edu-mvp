@@ -1,0 +1,57 @@
+﻿item,title,decision,reason
+YKC-0235,筋肉の“付着点”は非常に頻繁に動く骨にあります,remove,本文の一文を見出しと誤抽出。削除。
+YKC-0244,目的：首の関節の柔軟性の改善,remove,実践中の『目的』行であり独立Knowledgeではないため削除。
+YKC-0260,易しいアーサナ,remove,『易しいアーサナ』は分類見出しであり個別Knowledgeではないため削除。
+YKC-0213,声,rename → ヨガ指導における声,原稿7.5の独立見出し『声』を意味が分かる表題に整理。
+YKC-0242,骨 Ｐ２０４,rename → 骨,原稿のページメモ『P204』を除去。
+YKC-0254+YKC-0255,スーリヤ・ナマスカーラ（太陽礼拝）序論,merge,同一章内の旧見出し/改訂見出しの重複を統合。
+YKC-0256+YKC-0257,スーリヤ・ナマスカーラのテクニック,merge,同一章内の旧見出し/改訂見出しの重複を統合。
+YKC-0028,アーサナ,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0034,プラーナーヤーマ,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0035,ヤマ,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0083,サットヴァ・グナ,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0084,タマス・グナ,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0085,トリグナ,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0094,ラジャス・グナ,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0113,シャット・クリヤー,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0119,イーシュヴァラ・プラニダーナ,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0170,アステーヤ（盗むのをやめること）,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0171,アパリグラハ,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0172,アヒンサー（非暴力、他者を傷つけない）,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0173,サティヤ（真理）,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0174,サントーシャ（満足）,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0175,シャウチャ（浄化）,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0177,タパス（苦行）,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0178,ブラフマチャリヤ,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0243,スークシュマ・ヴャヤヤーマ,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0281,瞑想の概念,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0295,瞑想の実践的テクニック,keep / normalize,概念Knowledgeとして統合。実行可能Practiceとは分離。
+YKC-0312,パドマーサナ（padmāsana 蓮華座）,add,第10章の明示された実践項目を個別entry化。
+YKC-0313,アルダ・パドマーサナ（ardha-padmāsana 半分の蓮華座）,add,第10章の明示された実践項目を個別entry化。
+YKC-0314,スヴァスティカーサナ（svastikāsana 吉祥座）,add,第10章の明示された実践項目を個別entry化。
+YKC-0315,スカーサナ（skhāsana 安楽座）,add,第10章の明示された実践項目を個別entry化。
+YKC-0316,ヴァジラーサナ（vajrāsana 金剛座、正座）,add,第10章の明示された実践項目を個別entry化。
+YKC-0317,アヌローマ・ヴィローマ／ナーディー・ショーダナ,add,第10章の明示された実践項目を個別entry化。
+YKC-0318,チャンドラ・ベーダナ・プラーナーヤーマ,add,第10章の明示された実践項目を個別entry化。
+YKC-0319,マツヤーサナ（matsyāsana 魚のポーズ）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0320,パスチモッタナーサナ（paścimottānāsana 座位前屈ポーズ）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0321,トリコーナーサナ（trikoṇāsana 三角形のポーズ）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0322,ブジャンガーサナ（bhujaṅgāsana コブラのポーズ）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0323,シャラバーサナ（śalabhāsana バッタのポーズ）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0324,ダヌラーサナ（dhnurāsana 弓のポーズ）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0325,アルダ・マッツェンドラーサナ（ardha-matsyendrāsana 半分のアルダ・マッツェンドラのポーズ、半分の背骨をねじるポーズ）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0326,パーダハスターサナ（pādahastāsana 立ちながら前方に曲げる）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0327,クールマーサナ（kūrmāsana 亀のポーズ）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0328,バッダ・パドマーサナ（baddha-padmāsana 固定の蓮華座）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0329,シャヴァーサナ（śavāsana 屍のポーズ）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0330,シールシャーサナ（śīrṣāsana 頭立ち）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0331,サルヴァーンガーサナ（sarvāṅgāsana 全身のポーズ、肩立ち）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0332,ハラーサナ（halāsana 鋤のポーズ）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0333,チャクラーサナ（cakrāsana 車輪のポーズ）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0334,カカーサナ（kakāsana カラスのポーズ）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0335,マユラーサナ（mayurāsana 孔雀のポーズ）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0336,タダーサナ（tāḍāsana）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0337,ウトゥカターサナ、またはウッカターサナ（utkaṭāsana 椅子のポーズ）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0338,ウシュトラーサナ（uṣṭrāsana ラクダのポーズ）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0339,パヴァナムクターサナ（pavana-muktāsana ガス抜きのポーズ）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
+YKC-0340,ヴルクシャーサナ（vṛkṣāsana 木のポーズ）,add,第9章9.3の番号付き個別アーサナを1 practice candidate = 1 entryとして明示抽出。
