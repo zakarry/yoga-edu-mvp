@@ -1,4 +1,4 @@
-﻿master_id,canonical_id,entry_title,category,content_type,ai_use_scope,practice_candidate,teacher_candidate,safety_sensitive,source_occurrence_count,source_statuses,editorial_status,review_reason,db_ready,publish_recommendation
+master_id,canonical_id,entry_title,category,content_type,ai_use_scope,practice_candidate,teacher_candidate,safety_sensitive,source_occurrence_count,source_statuses,editorial_status,review_reason,db_ready,publish_recommendation
 YK-0001,YKC-0021,アタルヴァ・ヴェーダ（atharvaveda 医学を扱う）,philosophy,concept,guru_future,False,False,False,1,checked,candidate_ready,,True,eligible_after_content_import
 YK-0002,YKC-0028,アーサナ,asana,concept,ai_teacher_explanation,False,False,False,4,"checked, review_required",review_needed,merged_from_multiple_source_occurrences; category_conflict; contains_review_required_source; practice_candidate_requires_safety_editorial_review,False,unpublished
 YK-0003,YKC-0008,アーサナ（āsana）：体の姿勢（ポーズ）,philosophy,concept,guru_future,False,False,False,1,checked,candidate_ready,,True,eligible_after_content_import

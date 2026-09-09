@@ -1,4 +1,4 @@
-﻿item,title,decision,reason
+item,title,decision,reason
 YKC-0235,筋肉の“付着点”は非常に頻繁に動く骨にあります,remove,本文の一文を見出しと誤抽出。削除。
 YKC-0244,目的：首の関節の柔軟性の改善,remove,実践中の『目的』行であり独立Knowledgeではないため削除。
 YKC-0260,易しいアーサナ,remove,『易しいアーサナ』は分類見出しであり個別Knowledgeではないため削除。
