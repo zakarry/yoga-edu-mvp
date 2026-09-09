@@ -250,7 +250,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [knowledgeExplanation, setKnowledgeExplanation] = useState<KnowledgeExplanation | null>(null);
   const [knowledgeLoading, setKnowledgeLoading] = useState(false);
   const [sessionSafetyBlocked, setSessionSafetyBlocked] = useState(false);
-  const testPlanMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('testPlan') === 'knowledge-k6';
+  const testPlanParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('testPlan') : null;
+  const testPlanMode = testPlanParam === 'knowledge-k6';
+  const testPlanCompositeMode = testPlanParam === 'knowledge-k6-composite';
   const [teacherContext, setTeacherContext] = useState<TeacherContext | null>(null);
   const [nextSuggestion, setNextSuggestion] = useState<NextSuggestion | null>(loadNextSuggestion());
   const [showContextSignals, setShowContextSignals] = useState(false);
@@ -363,6 +365,19 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         adaptationNotes: [],
         sourceSignals: ['testPlan=knowledge-k6'],
       };
+    } else if (testPlanCompositeMode) {
+      plan = {
+        title: 'K6.3.1複合practiceテストプラン',
+        summary: '複合practice 2リンク確認用テストプラン',
+        totalMinutes: 7,
+        items: [
+          { type: 'asana' as const, name: '山のポーズから立ち木のポーズ', minutes: 3 },
+          { type: 'pranayama' as const, name: '腹式呼吸', minutes: 3 },
+          { type: 'dhyana' as const, name: '瞑想', minutes: 1 },
+        ],
+        adaptationNotes: [],
+        sourceSignals: ['testPlan=knowledge-k6-composite'],
+      };
     } else {
       plan = generateTodayPlan(ctx);
     }
@@ -371,12 +386,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     const newProgram: TodayProgram = {
       items: plan.items.map((i) => ({ name: i.name, type: i.type, durationMin: i.minutes })),
       generatedAt: new Date().toISOString(),
-      basedOn: testPlanMode ? 'default' : (ctx.practiceSummary.totalSessions > 0 ? 'history' : 'default'),
+      basedOn: (testPlanMode || testPlanCompositeMode) ? 'default' : (ctx.practiceSummary.totalSessions > 0 ? 'history' : 'default'),
     };
     setProgram(newProgram);
     saveTodayProgram(newProgram);
     setStep('step2');
-  }, [safetyBlocked, auth.user, growth, conversationContext, testPlanMode]);
+  }, [safetyBlocked, auth.user, growth, conversationContext, testPlanMode, testPlanCompositeMode]);
 
   const handleSavePersona = useCallback(() => {
     const newPersona: AITeacherPersona = {
