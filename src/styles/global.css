@@ -5175,3 +5175,130 @@ h1 {
   .ai-teacher-growth-grid { grid-template-columns: 1fr; }
   .ai-teacher-hero-kpis { flex-wrap: wrap; }
 }
+
+/* === P4.6: Context signals, next suggestion, memory summary === */
+.ai-teacher-context-signals {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(16, 37, 66, 0.08);
+  background: rgba(245, 236, 210, 0.25);
+}
+.ai-teacher-collapse-toggle {
+  border: 0;
+  background: transparent;
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 0;
+  width: 100%;
+  text-align: left;
+}
+.ai-teacher-signal-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+.ai-teacher-signal-list li {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.ai-teacher-plan-reasons {
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(108, 138, 118, 0.15);
+  background: rgba(220, 236, 225, 0.3);
+}
+.ai-teacher-plan-reasons h4 {
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+.ai-teacher-plan-reasons ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+.ai-teacher-plan-reasons li {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.ai-teacher-next-suggestion {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(201, 165, 76, 0.25);
+  background: rgba(245, 236, 210, 0.3);
+  display: grid;
+  gap: 10px;
+}
+.ai-teacher-next-suggestion h4 {
+  font-size: 15px;
+  color: var(--navy);
+}
+.ai-teacher-next-suggestion p {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+}
+.ai-teacher-next-suggestion button {
+  width: fit-content;
+}
+
+.ai-teacher-memory-section {
+  margin-top: 20px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(16, 37, 66, 0.08);
+  background: rgba(255, 255, 255, 0.6);
+}
+.ai-teacher-memory-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+.ai-teacher-memory-list li {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .ai-teacher-context-signals,
+  .ai-teacher-plan-reasons,
+  .ai-teacher-next-suggestion,
+  .ai-teacher-memory-section {
+    padding: 10px 12px;
+  }
+  .ai-teacher-signal-list li,
+  .ai-teacher-plan-reasons li,
+  .ai-teacher-memory-list li {
+    font-size: 12px;
+  }
+  .ai-teacher-next-suggestion p {
+    font-size: 13px;
+  }
+}
+@media (max-width: 480px) {
+  .ai-teacher-context-signals,
+  .ai-teacher-plan-reasons,
+  .ai-teacher-next-suggestion,
+  .ai-teacher-memory-section {
+    padding: 8px 10px;
+    border-radius: 10px;
+  }
+  .ai-teacher-collapse-toggle {
+    font-size: 13px;
+  }
+  .ai-teacher-next-suggestion button {
+    width: 100%;
+  }
+}

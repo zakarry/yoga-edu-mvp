@@ -7,7 +7,7 @@ import {
   loadGrowth, saveGrowth,
   saveLocalPracticeLog, loadLocalPracticeLogs,
   loadNextSuggestion, saveNextSuggestion, clearNextSuggestion,
-  type AITeacherPersona, type TodayProgram, type ProgramItem,
+  type AITeacherPersona, type TodayProgram,
   type AITeacherGrowth, type LocalPracticeLog,
   type AITeacherPrefs, type PrefExplanation, type PrefCue, type PrefPraise,
   type NextSuggestion,
@@ -147,48 +147,6 @@ function getAdaptMessages(prefs: AITeacherPrefs): string[] {
   if (prefs.praise === 'more') msgs.push('励ましを少し多めにします');
   else if (prefs.praise === 'less') msgs.push('励ましを控えめにします');
   return msgs;
-}
-
-// ── Program generation (rule-based, non-medical) ──
-
-function generateProgram(opts: {
-  preferredStyle: string | null;
-  recentTypes: string[];
-  sessionCount: number;
-}): TodayProgram {
-  const items: ProgramItem[] = [];
-  const { preferredStyle, recentTypes } = opts;
-
-  // Asana
-  const asanaPool: Record<string, ProgramItem> = {
-    relax: { name: 'やさしいストレッチ', type: 'asana', durationMin: 10 },
-    flow: { name: 'サンフロウ', type: 'asana', durationMin: 15 },
-    alignment: { name: '山のポーズから立ち木のポーズ', type: 'asana', durationMin: 10 },
-    default: { name: '初心者向けアーサナ', type: 'asana', durationMin: 10 },
-  };
-  const asanaKey = preferredStyle && asanaPool[preferredStyle] ? preferredStyle : 'default';
-  items.push(asanaPool[asanaKey]);
-
-  // Pranayama
-  const pranayamaRecent = recentTypes.filter((t) => t === 'pranayama').length;
-  items.push({
-    name: pranayamaRecent > 0 ? 'ボックスブリージング' : '腹式呼吸',
-    type: 'pranayama',
-    durationMin: 5,
-  });
-
-  // Dhyana
-  items.push({
-    name: '1分間マインドフルネス',
-    type: 'dhyana',
-    durationMin: 3,
-  });
-
-  return {
-    items,
-    generatedAt: new Date().toISOString(),
-    basedOn: opts.sessionCount > 0 ? 'history' : 'default',
-  };
 }
 
 // ── Safety check ──
@@ -621,7 +579,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   setStep('step6');
                   clearNextSuggestion();
                   setNextSuggestion(null);
-                }}">
+                }}>
                   この提案で始める
                 </button>
               )}
