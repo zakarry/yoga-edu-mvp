@@ -76,9 +76,17 @@ export function rankKnowledgeCandidates(
 
 export async function getBestExplanation(query: string): Promise<KnowledgeExplanation | null> {
   const client = getSupabase();
+  const { data: sessionData } = await client.auth.getSession();
+  if (!sessionData.session) return null;
+
   const { data, error } = await client.rpc('lookup_teacher_explanation', { p_search: null });
   if (error) {
-    console.error('lookup_teacher_explanation error:', error);
+    console.error('lookup_teacher_explanation error:', {
+      message: error.message,
+      code: (error as { code?: string }).code,
+      details: (error as { details?: string }).details,
+      hint: (error as { hint?: string }).hint,
+    });
     return null;
   }
   const candidates = (data ?? []) as KnowledgeExplanation[];
@@ -91,9 +99,17 @@ export async function getBestExplanation(query: string): Promise<KnowledgeExplan
 
 async function fetchAllCandidates(): Promise<KnowledgeExplanation[]> {
   const client = getSupabase();
+  const { data: sessionData } = await client.auth.getSession();
+  if (!sessionData.session) return [];
+
   const { data, error } = await client.rpc('lookup_teacher_explanation', { p_search: null });
   if (error) {
-    console.error('lookup_teacher_explanation error:', error);
+    console.error('lookup_teacher_explanation error:', {
+      message: error.message,
+      code: (error as { code?: string }).code,
+      details: (error as { details?: string }).details,
+      hint: (error as { hint?: string }).hint,
+    });
     return [];
   }
   return (data ?? []) as KnowledgeExplanation[];
