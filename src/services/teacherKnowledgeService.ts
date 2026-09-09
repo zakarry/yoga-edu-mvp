@@ -53,6 +53,7 @@ function scoreCandidate(query: string, candidate: KnowledgeExplanation): number 
   const nc = candidate.publicContent.toLowerCase();
 
   if (nq === nm) return 100;
+  if (ns && nq === ns) return 95;
   if (nm && nq.startsWith(nm)) return 90;
   if (nm.startsWith(nq)) return 85;
   if (nm.includes(nq)) return 75;
@@ -72,6 +73,27 @@ export function rankKnowledgeCandidates(
       if (b.score !== a.score) return b.score - a.score;
       return a.entry.title.length - b.entry.title.length;
     });
+}
+
+export async function getKnowledgeRanking(
+  query: string,
+): Promise<Array<{ entry: KnowledgeExplanation; score: number }>> {
+  const client = getSupabase();
+  const { data: sessionData } = await client.auth.getSession();
+  if (!sessionData.session) return [];
+
+  const { data, error } = await client.rpc('lookup_teacher_explanation', { p_search: null });
+  if (error) {
+    console.error('lookup_teacher_explanation error:', {
+      message: error.message,
+      code: (error as { code?: string }).code,
+      details: (error as { details?: string }).details,
+      hint: (error as { hint?: string }).hint,
+    });
+    return [];
+  }
+  const candidates = (data ?? []) as KnowledgeExplanation[];
+  return rankKnowledgeCandidates(query, candidates);
 }
 
 export async function getBestExplanation(query: string): Promise<KnowledgeExplanation | null> {

@@ -1,5 +1,5 @@
 import type { TeacherContext } from './teacherContextService';
-import { getBestExplanation, type KnowledgeExplanation } from './teacherKnowledgeService';
+import { getKnowledgeRanking, type KnowledgeExplanation } from './teacherKnowledgeService';
 
 export interface ConversationContext {
   requestedMinutes?: number;
@@ -41,6 +41,32 @@ const EXPLANATION_PATTERNS = [
 function isExplanationIntent(text: string): boolean {
   if (PRACTICE_REQUEST_KEYWORDS.some((kw) => text.includes(kw))) return false;
   return EXPLANATION_PATTERNS.some((pat) => text.includes(pat));
+}
+
+const PRACTICE_INTENT_KEYWORDS = [
+  '合う', 'おすすめ', 'やれば', 'やったほうが', 'すべき',
+  '今日何を', '今日やる', 'プラン', 'メニュー',
+  'メニュー', '中心に', '中心で', '多め', '増やして', '減らして',
+  '入れて', '入れたい', '組み合わせ',
+  '短く', '短め', '長め', '時間がない',
+];
+
+function isPracticeRequest(text: string): boolean {
+  if (/\d+\s*分/.test(text)) return true;
+  if (text.includes('呼吸') && (text.includes('中心') || text.includes('多め') || text.includes('増や') || text.includes('したい') || text.includes('て') && (text.includes('制限') || text.includes('絞')))) return true;
+  if (text.includes('アーサナ') && (text.includes('中心') || text.includes('多め') || text.includes('増や') || text.includes('したい'))) return true;
+  if (text.includes('瞑想') && (text.includes('中心') || text.includes('多め') || text.includes('増や') || text.includes('したい'))) return true;
+  if (text.includes('リラックス') || text.includes('やさしい') || text.includes('フロウ') || text.includes('動かしたい') || text.includes('動かす')) return true;
+  if (text.includes('疲れ') || text.includes('つかれた')) return true;
+  if (text.includes('落ち着')) return true;
+  return PRACTICE_INTENT_KEYWORDS.some((kw) => text.includes(kw));
+}
+
+function isLikelyKnowledgeQuery(text: string): boolean {
+  if (isExplanationIntent(text)) return true;
+  const normalized = text.trim();
+  if (normalized.length > 30) return false;
+  return !['こんにちは', 'こんばんは', 'おはよう', 'ありがとう', 'よろしく'].includes(normalized);
 }
 
 function extractExplanationKeyword(text: string): string {
@@ -114,10 +140,14 @@ export async function generateTeacherResponse(
   }
 
   // Knowledge explanation route (after safety, before rule-based)
-  if (isExplanationIntent(userMessage)) {
-    const keyword = extractExplanationKeyword(userMessage) || userMessage;
-    const entry = await getBestExplanation(keyword);
-    if (entry) {
+  // Attempt Knowledge lookup for any non-practice input — bare keywords or explanation phrases
+  if (!isPracticeRequest(userMessage) && isLikelyKnowledgeQuery(userMessage)) {
+    const keyword = isExplanationIntent(userMessage)
+      ? (extractExplanationKeyword(userMessage) || userMessage)
+      : userMessage.replace(/[「」？?。、，,]/g, '').trim();
+    const ranked = await getKnowledgeRanking(keyword);
+    if (ranked.length > 0 && ranked[0].score >= 75) {
+      const entry = ranked[0].entry;
       const name = context.persona?.name ?? 'AI先生';
       const text = formatExplanation(entry, context.preferences.explanation, name);
       return {
@@ -131,6 +161,24 @@ export async function generateTeacherResponse(
           lastKnowledgeMasterId: entry.masterId,
           lastKnowledgeTitle: entry.title,
         },
+      };
+    }
+    // Ambiguous: content-only match (score 40) or multiple weak matches → confirm
+    if (ranked.length > 0 && ranked[0].score >= 40 && ranked[0].score < 75) {
+      const name = context.persona?.name ?? 'AI先生';
+      return {
+        text: `${name}です。「${ranked[0].entry.title}」についてですか？ もしよければ「${ranked[0].entry.title}について教えて」と入れると、詳しくご説明できます。`,
+        knowledgeUsed: false,
+        updatedContext: { ...prevContext, lastUserMessage: userMessage },
+      };
+    }
+    // No match at all → rephrase guidance (only if the input looked like a knowledge question)
+    if (isExplanationIntent(userMessage)) {
+      const name = context.persona?.name ?? 'AI先生';
+      return {
+        text: `${name}です。そのテーマについては、今のKnowledgeからは直接的な説明が見つかりませんでした。別の言葉で言い換えていただけると、お調べできるかもしれません。`,
+        knowledgeUsed: false,
+        updatedContext: { ...prevContext, lastUserMessage: userMessage },
       };
     }
   }
