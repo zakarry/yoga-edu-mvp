@@ -1,56 +1,7 @@
 import { getKnowledgeRanking, type KnowledgeExplanation, type RankedCandidate } from './teacherKnowledgeService';
 import { sanitizeKnowledgePayload, MAX_KNOWLEDGE_ITEMS } from './knowledgeGuardService';
 import type { LLMKnowledgeItem } from '../types/aiTeacherLLM';
-
-const SAFETY_KEYWORDS = [
-  '痛い', '痛み', '疼痛', '怪我', '妊娠', '既往症', '病気', '腰痛', '膝が', '肩が痛',
-  '高血圧', '低血圧', '診断', '治療', '薬', 'めまい', 'しびれ', '手術',
-  '効く', 'に効く', '合うポーズ', '合う呼吸',
-  '喘息', '偏頭痛', 'ヘルニア', '関節炎', '糖尿病',
-];
-
-const PRACTICE_REQUEST_KEYWORDS = [
-  '合う', 'おすすめ', 'やれば', 'やったほうが', 'すべき',
-  '今日何を', '今日やる', 'プラン', 'メニュー',
-];
-
-const EXPLANATION_PATTERNS = [
-  'とは', 'とは何', 'って何', 'とはどういう', 'どういう意味',
-  '教えて', '説明して', 'について', 'とは？',
-  'どういう', 'どんなもの', 'どんな意味',
-];
-
-function detectSafetyKeyword(text: string): string | null {
-  for (const kw of SAFETY_KEYWORDS) {
-    if (text.includes(kw)) return kw;
-  }
-  return null;
-}
-
-function isExplanationIntent(text: string): boolean {
-  if (PRACTICE_REQUEST_KEYWORDS.some((kw) => text.includes(kw))) return false;
-  return EXPLANATION_PATTERNS.some((pat) => text.includes(pat));
-}
-
-function isPracticeRequest(text: string): boolean {
-  return PRACTICE_REQUEST_KEYWORDS.some((kw) => text.includes(kw));
-}
-
-function isLikelyKnowledgeQuery(text: string): boolean {
-  if (isExplanationIntent(text)) return true;
-  const normalized = text.trim();
-  if (normalized.length > 30) return false;
-  return !['こんにちは', 'こんばんは', 'おはよう', 'ありがとう', 'よろしく'].includes(normalized);
-}
-
-function extractExplanationKeyword(text: string): string {
-  return text
-    .replace(/とはどういう意味ですか?|とは何ですか?|とは？|とは\?|って何ですか?|って何？|って何\?|について教えてください?|について説明してください?|を説明してください?|説明してください?|教えてください?/g, '')
-    .replace(/[「」？?。、，,]/g, '')
-    .replace(/^(この|その)\s*/, '')
-    .replace(/簡単に|詳しく|わかりやすく/g, '')
-    .trim();
-}
+import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword } from './safetyAndIntent';
 
 export type DryRunReason =
   | 'safety_blocked'
