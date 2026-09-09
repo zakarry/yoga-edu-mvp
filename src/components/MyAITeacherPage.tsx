@@ -19,6 +19,7 @@ import { generateTeacherResponse, generateNextSuggestion, type ConversationConte
 import { attachKnowledgeToTodayPlan, fetchKnowledgeExplanation, type TodayPlanWithKnowledge } from '../services/todayPlanKnowledgeService';
 import type { KnowledgeExplanation } from '../services/teacherKnowledgeService';
 import { runLLMRequestDryRun, type DryRunResult } from '../services/llmRequestDryRun';
+import type { LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
 
 interface MyAITeacherPageProps {
   onBackHome: () => void;
@@ -417,10 +418,34 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     if (!dryRunInput.trim()) return;
     setDryRunLoading(true);
     setDryRunResult(null);
-    const result = await runLLMRequestDryRun(dryRunInput.trim(), !!auth.user);
+    const dryRunPersona: LLMPersona | null = persona ? {
+      name: persona.name,
+      personality: persona.personality,
+      specialty: persona.specialty,
+      teachingLanguage: persona.teachingLanguage,
+    } : null;
+    const dryRunSessionContext: LLMSessionContext = {
+      requestedMinutes: conversationContext.requestedMinutes ?? null,
+      requestedType: conversationContext.requestedType ?? null,
+      requestedStyle: conversationContext.requestedStyle ?? null,
+      explanationPreference: growth.prefs.explanation,
+      cuePreference: growth.prefs.cue,
+      praisePreference: growth.prefs.praise,
+      practiceSummary: {
+        totalSessions: growth.sessions,
+        favoriteTypes: growth.favoriteTypes,
+        preferredStyle: growth.preferredStyle,
+      },
+    };
+    const result = await runLLMRequestDryRun({
+      userMessage: dryRunInput.trim(),
+      isLoggedIn: !!auth.user,
+      persona: dryRunPersona,
+      sessionContext: dryRunSessionContext,
+    });
     setDryRunResult(result);
     setDryRunLoading(false);
-  }, [dryRunInput, auth.user]);
+  }, [dryRunInput, auth.user, persona, growth, conversationContext]);
 
   const handleSendChat = useCallback(() => {
     if (!chatInput.trim()) return;

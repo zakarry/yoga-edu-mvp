@@ -5,19 +5,23 @@ export interface LLMKnowledgeItem {
 }
 
 export interface LLMSessionContext {
+  requestedMinutes: number | null;
+  requestedType: string | null;
+  requestedStyle: string | null;
+  explanationPreference: string;
+  cuePreference: string;
+  praisePreference: string;
   practiceSummary: {
     totalSessions: number;
     favoriteTypes: string[];
     preferredStyle: string | null;
   };
-  conversationContext: Record<string, unknown>;
 }
 
 export interface LLMPersona {
   name: string;
   personality: string;
   specialty: string;
-  uiLanguage: string;
   teachingLanguage: string;
 }
 
