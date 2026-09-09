@@ -4044,6 +4044,20 @@ h1 {
   height: 1px;
   background: rgba(16,37,66,.1);
 }
+.oauth-disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  position: relative;
+}
+.oauth-coming-soon {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  background: rgba(16,37,66,.08);
+  padding: 2px 8px;
+  border-radius: 8px;
+}
 
 /* Profile / Privacy sections */
 .mypage-section {

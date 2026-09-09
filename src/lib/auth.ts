@@ -22,7 +22,13 @@ export interface PrivacySettings {
   updated_at: string;
 }
 
-type OAuthProvider = 'google' | 'apple' | 'line';
+type OAuthProvider = 'google' | 'apple';
+
+export const OAUTH_PROVIDERS = {
+  google: { enabled: false, label: 'Googleで続ける' },
+  apple: { enabled: false, label: 'Appleで続ける' },
+  line: { enabled: false, label: 'LINEで続ける' },
+} as const;
 
 interface AuthState {
   user: User | null;
@@ -133,8 +139,11 @@ const signUp = async (email: string, password: string) => {
 
 const signInWithOAuth = async (provider: OAuthProvider) => {
   if (!supabase) return { error: '現在クラウド保存を利用できません' };
+  if (!OAUTH_PROVIDERS[provider].enabled) {
+    return { error: '現在このログイン方法は利用できません。メールアドレスでお進みください。' };
+  }
   const { error } = await supabase.auth.signInWithOAuth({
-    provider: provider as Provider,
+    provider,
     options: {
       redirectTo: window.location.origin,
     },
