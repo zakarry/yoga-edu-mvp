@@ -1,0 +1,3 @@
+[functions.ai-teacher-explanation]
+verify_jwt = true
+entrypoint = "./functions/ai-teacher-explanation/index.ts"

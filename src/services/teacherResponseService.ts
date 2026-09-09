@@ -1,6 +1,9 @@
 import type { TeacherContext } from './teacherContextService';
-import { getKnowledgeRanking, type KnowledgeExplanation } from './teacherKnowledgeService';
+import { getKnowledgeRanking, type KnowledgeExplanation, type RankedCandidate } from './teacherKnowledgeService';
+import { sanitizeKnowledgePayload, MAX_KNOWLEDGE_ITEMS } from './knowledgeGuardService';
 import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword } from './safetyAndIntent';
+import { fetchLLMExplanation } from './llmExplanationService';
+import type { AITeacherLLMRequest, LLMKnowledgeItem, LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
 
 export interface ConversationContext {
   requestedMinutes?: number;
@@ -93,19 +96,72 @@ export async function generateTeacherResponse(
       : [];
 
     if (top && top.score >= 75 && !(top.matchType === 'title_prefix' && sameStrength.length > 1)) {
-      const entry = top.entry;
+      const candidates: KnowledgeExplanation[] = ranked
+        .filter((c: RankedCandidate) => c.score >= 75)
+        .slice(0, MAX_KNOWLEDGE_ITEMS)
+        .map((c: RankedCandidate) => c.entry);
+
+      const knowledgeItems: LLMKnowledgeItem[] = candidates.map(sanitizeKnowledgePayload);
+      const masterIds = candidates.map((c: KnowledgeExplanation) => c.masterId);
+      const primaryEntry = top.entry;
       const name = context.persona?.name ?? 'AI先生';
-      const text = formatExplanation(entry, context.preferences.explanation, name);
+
+      const persona: LLMPersona = {
+        name: context.persona?.name ?? '',
+        personality: context.persona?.personality ?? '',
+        specialty: context.persona?.specialty ?? '',
+        teachingLanguage: context.persona?.teachingLanguage ?? 'ja',
+      };
+
+      const sessionContext: LLMSessionContext = {
+        requestedMinutes: prevContext?.requestedMinutes ?? null,
+        requestedType: prevContext?.requestedType ?? null,
+        requestedStyle: prevContext?.requestedStyle ?? null,
+        explanationPreference: context.preferences.explanation,
+        cuePreference: context.preferences.cue,
+        praisePreference: context.preferences.praise,
+        practiceSummary: {
+          totalSessions: context.practiceSummary.totalSessions,
+          favoriteTypes: context.practiceSummary.favoriteTypes,
+          preferredStyle: null,
+        },
+      };
+
+      const llmPayload: AITeacherLLMRequest = {
+        userMessage,
+        persona,
+        sessionContext,
+        knowledge: knowledgeItems,
+      };
+
+      const llmResult = await fetchLLMExplanation(llmPayload);
+
+      if (llmResult.text && !llmResult.fallback) {
+        return {
+          text: `${llmResult.text}\n\nこの説明はYoga Knowledgeを参考にしています。`,
+          knowledgeUsed: true,
+          knowledgeMasterId: primaryEntry.masterId,
+          knowledgeTitle: primaryEntry.title,
+          updatedContext: {
+            ...prevContext,
+            lastUserMessage: userMessage,
+            lastKnowledgeMasterId: primaryEntry.masterId,
+            lastKnowledgeTitle: primaryEntry.title,
+          },
+        };
+      }
+
+      const fallbackText = formatExplanation(primaryEntry, context.preferences.explanation, name);
       return {
-        text,
+        text: fallbackText,
         knowledgeUsed: true,
-        knowledgeMasterId: entry.masterId,
-        knowledgeTitle: entry.title,
+        knowledgeMasterId: primaryEntry.masterId,
+        knowledgeTitle: primaryEntry.title,
         updatedContext: {
           ...prevContext,
           lastUserMessage: userMessage,
-          lastKnowledgeMasterId: entry.masterId,
-          lastKnowledgeTitle: entry.title,
+          lastKnowledgeMasterId: primaryEntry.masterId,
+          lastKnowledgeTitle: primaryEntry.title,
         },
       };
     }
