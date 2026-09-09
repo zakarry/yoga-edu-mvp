@@ -6,11 +6,16 @@ import {
   loadTodayProgram, saveTodayProgram,
   loadGrowth, saveGrowth,
   saveLocalPracticeLog, loadLocalPracticeLogs,
+  loadNextSuggestion, saveNextSuggestion, clearNextSuggestion,
   type AITeacherPersona, type TodayProgram, type ProgramItem,
   type AITeacherGrowth, type LocalPracticeLog,
   type AITeacherPrefs, type PrefExplanation, type PrefCue, type PrefPraise,
+  type NextSuggestion,
 } from '../lib/aiTeacherStorage';
 import type { DiagnosisRecord, SafetyState } from '../services/diagnosisService';
+import { buildTeacherContext, type TeacherContext } from '../services/teacherContextService';
+import { generateTodayPlan, type TodayPlan } from '../services/todayPlannerService';
+import { generateTeacherResponse, generateNextSuggestion, type ConversationContext } from '../services/teacherResponseService';
 
 interface MyAITeacherPageProps {
   onBackHome: () => void;
@@ -204,44 +209,52 @@ interface ChatMessage {
   isSafety?: boolean;
 }
 
-const SAFETY_KEYWORDS = ['痛い', '怪我', '妊娠', '既往症', '病気', '腰痛', '膝が', '肩が痛', '高血圧', '診断', '治療', '薬', 'めまい', 'しびれ'];
-
-function detectSafetyKeyword(text: string): string | null {
-  for (const kw of SAFETY_KEYWORDS) {
-    if (text.includes(kw)) return kw;
+function buildLocalContextFast(growth: AITeacherGrowth, sessionIntent?: ConversationContext): TeacherContext {
+  const persona = loadPersona();
+  const localLogs = loadLocalPracticeLogs();
+  const records = localLogs.map((l) => ({
+    practice_type: l.practice_type,
+    duration_min: l.duration_min,
+    created_at: l.created_at,
+  }));
+  const typeCounts: Record<string, number> = {};
+  let totalDuration = 0;
+  let durationCount = 0;
+  let lastPracticeAt: string | undefined;
+  for (const r of records) {
+    typeCounts[r.practice_type] = (typeCounts[r.practice_type] ?? 0) + 1;
+    if (r.duration_min) { totalDuration += r.duration_min; durationCount++; }
+    if (!lastPracticeAt || r.created_at > lastPracticeAt) lastPracticeAt = r.created_at;
   }
-  return null;
-}
-
-function generateChatResponse(userText: string, persona: AITeacherPersona | null): ChatMessage {
-  const safetyHit = detectSafetyKeyword(userText);
-  if (safetyHit) {
-    return {
-      role: 'teacher',
-      text: 'ありがとうございます。ただし、痛みや怪我、妊娠や既往症などについては、私から個別の判断や実践提案を行うことはできません。まずは医療専門家やヨガの先生にご相談ください。一般的なリラックス法として、深い呼吸を数回行うことならできます。よろしければご案内しますか？',
-      isSafety: true,
-    };
-  }
-
-  const name = persona?.name ?? 'AI先生';
-  const lower = userText.toLowerCase();
-
-  if (userText.includes('短く') || userText.includes('時間がない')) {
-    return { role: 'teacher', text: `${name}です。では今日は5分の呼吸と3分の瞑想にしましょう。短くても毎日続けることが大切です。` };
-  }
-  if (userText.includes('瞑想')) {
-    return { role: 'teacher', text: `${name}です。瞑想を取り入れましょう。静かな場所で座り、呼吸に意識を向けます。3分から始めましょう。` };
-  }
-  if (userText.includes('呼吸') || lower.includes('pranayama')) {
-    return { role: 'teacher', text: `${name}です。呼吸法を中心にしましょう。4秒吸って4秒止めて4秒吐いて4秒止めるボックスブリージングから始めます。` };
-  }
-  if (userText.includes('疲れ') || userText.includes('つかれた')) {
-    return { role: 'teacher', text: `${name}です。お疲れ様です。今日は無理をせず、やさしいストレッチと深呼吸で体を休めましょう。` };
-  }
-  if (userText.includes('リラックス') || userText.includes('落ち着')) {
-    return { role: 'teacher', text: `${name}です。リラックス重視でいきましょう。仰向けで膝を曲げるポーズから始め、ゆっくり呼吸を整えます。` };
-  }
-  return { role: 'teacher', text: `${name}です。今日の実践を始めましょう。アーサナ・呼吸法・瞑想のどれから始めても大丈夫です。あなたのペースで進めましょう。` };
+  const favoriteTypes = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => k);
+  const averageDuration = durationCount > 0 ? Math.round(totalDuration / durationCount) : undefined;
+  return {
+    practiceSummary: {
+      totalSessions: records.length,
+      streakDays: growth.streakDays,
+      recentTypes: records.slice(0, 10).map((r) => r.practice_type),
+      favoriteTypes: favoriteTypes.length > 0 ? favoriteTypes : growth.favoriteTypes,
+      averageDuration,
+      lastPracticeAt,
+    },
+    preferences: {
+      explanation: growth.prefs.explanation,
+      cue: growth.prefs.cue,
+      praise: growth.prefs.praise,
+    },
+    persona: persona ? {
+      name: persona.name,
+      personality: persona.personality,
+      specialty: persona.specialty,
+      teachingLanguage: persona.teachingLanguage,
+    } : null,
+    sessionIntent: sessionIntent ? {
+      requestedMinutes: sessionIntent.requestedMinutes,
+      requestedStyle: sessionIntent.requestedStyle,
+      requestedType: sessionIntent.requestedType,
+      userMessage: sessionIntent.lastUserMessage,
+    } : undefined,
+  };
 }
 
 // ── Component ──
@@ -264,6 +277,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [practiceDuration, setPracticeDuration] = useState<number>(10);
   const [localLogs, setLocalLogs] = useState<LocalPracticeLog[]>(loadLocalPracticeLogs());
   const [saveStatus, setSaveStatus] = useState<string>('');
+  const [conversationContext, setConversationContext] = useState<ConversationContext>({});
+  const [todayPlan, setTodayPlan] = useState<TodayPlan | null>(null);
+  const [teacherContext, setTeacherContext] = useState<TeacherContext | null>(null);
+  const [nextSuggestion, setNextSuggestion] = useState<NextSuggestion | null>(loadNextSuggestion());
+  const [showContextSignals, setShowContextSignals] = useState(false);
+  const [showMemorySummary, setShowMemorySummary] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -300,16 +319,24 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setProgram(loadTodayProgram());
   }, []);
 
-  // Demo feedback rotation during active practice
+  // Demo feedback rotation during active practice (adapted by prefs)
   useEffect(() => {
     if (!cameraOn || !practiceActive) return;
     const lang = persona?.teachingLanguage ?? 'ja';
-    const msgs = DEMO_FEEDBACK[lang] ?? DEMO_FEEDBACK.ja;
+    let msgs = [...(DEMO_FEEDBACK[lang] ?? DEMO_FEEDBACK.ja)];
+    if (growth.prefs.cue === 'minimal') {
+      msgs = msgs.filter((_, i) => i % 2 === 0);
+    }
+    if (growth.prefs.cue === 'more') {
+      msgs = [...msgs, 'その調子です', 'ゆっくり深く'];
+    }
+    if (msgs.length === 0) msgs = [DEMO_FEEDBACK.ja[0]];
+    const intervalMs = growth.prefs.cue === 'minimal' ? 8000 : growth.prefs.cue === 'more' ? 3500 : 5000;
     const interval = setInterval(() => {
       setDemoMsgIdx((prev) => (prev + 1) % msgs.length);
-    }, 5000);
+    }, intervalMs);
     return () => clearInterval(interval);
-  }, [cameraOn, practiceActive, persona]);
+  }, [cameraOn, practiceActive, persona, growth.prefs.cue]);
 
   // Camera management
   useEffect(() => {
@@ -346,18 +373,21 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const safetyBlocked = isSafetyBlocked(latestDiagnosis?.safety_state);
   const safetyCautioned = isSafetyCautioned(latestDiagnosis?.safety_state);
 
-  const handleGenerateProgram = useCallback(() => {
+  const handleGenerateProgram = useCallback(async () => {
     if (safetyBlocked) return;
-    const recentTypes = localLogs.slice(0, 10).map((l) => l.practice_type);
-    const newProgram = generateProgram({
-      preferredStyle: growth.preferredStyle,
-      recentTypes,
-      sessionCount: growth.sessions,
-    });
+    const ctx = await buildTeacherContext(auth.user?.id ?? null, growth, conversationContext);
+    setTeacherContext(ctx);
+    const plan = generateTodayPlan(ctx);
+    setTodayPlan(plan);
+    const newProgram: TodayProgram = {
+      items: plan.items.map((i) => ({ name: i.name, type: i.type, durationMin: i.minutes })),
+      generatedAt: new Date().toISOString(),
+      basedOn: ctx.practiceSummary.totalSessions > 0 ? 'history' : 'default',
+    };
     setProgram(newProgram);
     saveTodayProgram(newProgram);
     setStep('step2');
-  }, [safetyBlocked, localLogs, growth]);
+  }, [safetyBlocked, auth.user, growth, conversationContext]);
 
   const handleSavePersona = useCallback(() => {
     const newPersona: AITeacherPersona = {
@@ -381,12 +411,17 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setChatInput('');
     setChatTyping(true);
     const delay = 150 + Math.random() * 150;
-    setTimeout(() => {
-      const reply = generateChatResponse(userMsg.text, persona);
+    setTimeout(async () => {
+      const ctx = teacherContext ?? buildLocalContextFast(growth, conversationContext);
+      const response = generateTeacherResponse(ctx, userMsg.text, conversationContext);
+      if (response.updatedContext) {
+        setConversationContext(response.updatedContext);
+      }
+      const reply: ChatMessage = { role: 'teacher', text: response.text, isSafety: response.isSafety };
       setChatMessages((prev) => [...prev, reply]);
       setChatTyping(false);
     }, delay);
-  }, [chatInput, persona]);
+  }, [chatInput, persona, teacherContext, growth, conversationContext]);
 
   const handleCompletePractice = useCallback(async () => {
     if (!practiceType) return;
@@ -430,6 +465,23 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setGrowth(newGrowth);
     setLocalLogs(loadLocalPracticeLogs());
 
+    // Generate next practice suggestion (non-sensitive)
+    const ctx = teacherContext ?? buildLocalContextFast(newGrowth, conversationContext);
+    const suggestion = generateNextSuggestion(ctx, practiceType, practiceDuration);
+    const nextSug: NextSuggestion = {
+      text: suggestion.text,
+      suggestedType: suggestion.suggestedType,
+      suggestedDuration: suggestion.suggestedDuration,
+      createdAt: new Date().toISOString(),
+    };
+    saveNextSuggestion(nextSug);
+    setNextSuggestion(nextSug);
+
+    // Rebuild context for next session
+    const updatedCtx = await buildTeacherContext(auth.user?.id ?? null, newGrowth, {});
+    setTeacherContext(updatedCtx);
+    setConversationContext({});
+
     if (auth.user) {
       getPracticeLogs(auth.user.id).then(({ data }) => {
         if (data) setCloudLogs(data);
@@ -442,7 +494,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setMoodAfter('');
     setPracticeNote('');
     setStep('step7');
-  }, [practiceType, program, practiceDuration, moodBefore, moodAfter, practiceNote, auth, growth, formSpecialty]);
+  }, [practiceType, program, practiceDuration, moodBefore, moodAfter, practiceNote, auth, growth, formSpecialty, teacherContext, conversationContext]);
 
   const steps: Array<{ id: StepId; label: string; n: string }> = [
     { id: 'step1', label: '今の状態', n: '1' },
@@ -547,6 +599,34 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               診断結果により個別実践の制限が必要です。専門家にご相談ください。一般的なリラックス呼吸のみ案内できます。
             </p>
           )}
+          {todayPlan && todayPlan.sourceSignals.length > 0 && (
+            <div className="ai-teacher-context-signals">
+              <button className="ai-teacher-collapse-toggle" onClick={() => setShowContextSignals((v) => !v)}>
+                先生が今日参考にしたこと {showContextSignals ? '▲' : '▼'}
+              </button>
+              {showContextSignals && (
+                <ul className="ai-teacher-signal-list">
+                  {todayPlan.sourceSignals.map((s, idx) => <li key={idx}>{s}</li>)}
+                </ul>
+              )}
+            </div>
+          )}
+          {nextSuggestion && (
+            <div className="ai-teacher-next-suggestion">
+              <p>{nextSuggestion.text}</p>
+              {nextSuggestion.suggestedType && (
+                <button className="secondary-button" onClick={() => {
+                  setPracticeType(nextSuggestion.suggestedType as 'asana' | 'pranayama' | 'dhyana');
+                  if (nextSuggestion.suggestedDuration) setPracticeDuration(nextSuggestion.suggestedDuration);
+                  setStep('step6');
+                  clearNextSuggestion();
+                  setNextSuggestion(null);
+                }}">
+                  この提案で始める
+                </button>
+              )}
+            </div>
+          )}
         </section>
       )}
 
@@ -603,6 +683,26 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               <p className="ai-teacher-program-meta">
                 生成日時: {new Date(program.generatedAt).toLocaleString('ja-JP')} / 元: {program.basedOn === 'diagnosis' ? '診断' : program.basedOn === 'history' ? '履歴' : 'デフォルト'}
               </p>
+              {todayPlan && todayPlan.adaptationNotes.length > 0 && (
+                <div className="ai-teacher-plan-reasons">
+                  <h4>なぜこのプログラム？</h4>
+                  <ul>
+                    {todayPlan.adaptationNotes.map((note, idx) => <li key={idx}>{note}</li>)}
+                  </ul>
+                </div>
+              )}
+              {todayPlan && todayPlan.sourceSignals.length > 0 && (
+                <div className="ai-teacher-context-signals">
+                  <button className="ai-teacher-collapse-toggle" onClick={() => setShowContextSignals((v) => !v)}>
+                    先生が参考にしたシグナル {showContextSignals ? '▲' : '▼'}
+                  </button>
+                  {showContextSignals && (
+                    <ul className="ai-teacher-signal-list">
+                      {todayPlan.sourceSignals.map((s, idx) => <li key={idx}>{s}</li>)}
+                    </ul>
+                  )}
+                </div>
+              )}
               <button className="primary-button" onClick={() => setStep('step3')}>プログラムを保存する</button>
             </div>
           ) : (
@@ -902,6 +1002,23 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             <p className="ai-teacher-no-records">まだ実践記録がありません。STEP 6で実践を始めましょう。</p>
           )}
 
+          {nextSuggestion && (
+            <div className="ai-teacher-next-suggestion">
+              <h4>次回の提案</h4>
+              <p>{nextSuggestion.text}</p>
+              {nextSuggestion.suggestedType && (
+                <button className="secondary-button" onClick={() => {
+                  setPracticeType(nextSuggestion.suggestedType as 'asana' | 'pranayama' | 'dhyana');
+                  if (nextSuggestion.suggestedDuration) setPracticeDuration(nextSuggestion.suggestedDuration);
+                  setStep('step6');
+                  clearNextSuggestion();
+                  setNextSuggestion(null);
+                }}>
+                  この提案で始める
+                </button>
+              )}
+            </div>
+          )}
           <div className="ai-teacher-step7-cta">
             <button className="primary-button" onClick={onOpenMyPage}>myYOGAカルテで実践履歴を見る</button>
           </div>
@@ -983,6 +1100,18 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             <p className="ai-teacher-understanding-note">
               この表示は実践履歴や設定情報に基づく目安です。
             </p>
+          </div>
+
+          {/* My AI Teacherが覚えていること */}
+          <div className="ai-teacher-memory-section">
+            <button className="ai-teacher-collapse-toggle" onClick={() => setShowMemorySummary((v) => !v)}>
+              My AI Teacherが覚えていること {showMemorySummary ? '▲' : '▼'}
+            </button>
+            {showMemorySummary && (
+              <ul className="ai-teacher-memory-list">
+                {buildMemorySummary(growth, localLogs, cloudLogs, auth.user != null).map((m, idx) => <li key={idx}>{m}</li>)}
+              </ul>
+            )}
           </div>
 
           {/* 先生が知っていること */}
@@ -1130,4 +1259,27 @@ function updateStreak(currentStreak: number, lastDate: string | null): number {
   const yKey = yesterday.toISOString().slice(0, 10);
   if (lastDate === yKey) return currentStreak + 1;
   return 1;
+}
+
+function buildMemorySummary(growth: AITeacherGrowth, localLogs: LocalPracticeLog[], cloudLogs: PracticeLog[], isLoggedIn: boolean): string[] {
+  const summary: string[] = [];
+  const logs = isLoggedIn ? cloudLogs : localLogs;
+  const durations = logs.map((l) => l.duration_min).filter((d): d is number => d != null);
+  if (durations.length > 0) {
+    const avg = Math.round(durations.reduce((a, b) => a + b, 0) / durations.length);
+    summary.push(`${avg}分前後の実践をよく選ぶ`);
+  }
+  if (growth.favoriteTypes.length > 0) {
+    const labels = growth.favoriteTypes.map((t) => t === 'asana' ? 'アーサナ' : t === 'pranayama' ? '呼吸法' : '瞑想');
+    summary.push(`${labels[0]}をよく選ぶ`);
+  }
+  if (growth.prefs.explanation === 'short') summary.push('説明は短めが好み');
+  else if (growth.prefs.explanation === 'detailed') summary.push('説明は詳しいのが好み');
+  if (growth.prefs.cue === 'minimal') summary.push('声かけは最低限が好み');
+  else if (growth.prefs.cue === 'more') summary.push('声かけは多めが好み');
+  if (growth.prefs.praise === 'less') summary.push('励ましは控えめが好み');
+  else if (growth.prefs.praise === 'more') summary.push('励ましは多めが好み');
+  if (growth.streakDays >= 2) summary.push(`${growth.streakDays}回継続している`);
+  if (growth.sessions > 0) summary.push(`累計${growth.sessions}回の実践`);
+  return summary.slice(0, 5);
 }

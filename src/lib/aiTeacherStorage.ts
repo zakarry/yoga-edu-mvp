@@ -184,3 +184,40 @@ export function getLocalPracticeSummary(): { asana: number; pranayama: number; d
   }
   return summary;
 }
+
+// ── Next Practice Suggestion (non-sensitive) ──
+
+const NEXT_SUGGESTION_KEY = 'yoga-ai-next-suggestion-v1';
+
+export interface NextSuggestion {
+  text: string;
+  suggestedType?: string;
+  suggestedDuration?: number;
+  createdAt: string;
+}
+
+export function loadNextSuggestion(): NextSuggestion | null {
+  try {
+    const raw = localStorage.getItem(NEXT_SUGGESTION_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as NextSuggestion;
+  } catch {
+    return null;
+  }
+}
+
+export function saveNextSuggestion(suggestion: NextSuggestion): void {
+  try {
+    localStorage.setItem(NEXT_SUGGESTION_KEY, JSON.stringify(suggestion));
+  } catch {
+    // ignore
+  }
+}
+
+export function clearNextSuggestion(): void {
+  try {
+    localStorage.removeItem(NEXT_SUGGESTION_KEY);
+  } catch {
+    // ignore
+  }
+}
