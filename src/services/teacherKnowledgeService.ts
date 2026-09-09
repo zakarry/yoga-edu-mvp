@@ -57,15 +57,20 @@ function extractAliases(supplementary: string): string[] {
     .filter((s) => s.length > 0);
 }
 
+function getTitleVariants(main: string): string[] {
+  return [main, main.replace(/簡単な/g, '')].filter((value, index, values) => value && values.indexOf(value) === index);
+}
+
 function scoreCandidate(query: string, candidate: KnowledgeExplanation): RankedCandidate | null {
   const nq = normalizeQuery(query);
   if (!nq) return null;
 
   const { main, supplementary } = extractTitleParts(candidate.title);
-  const nm = normalizeQuery(main);
+  const titleVariants = getTitleVariants(main).map(normalizeQuery);
+  const nm = titleVariants[0];
   const nc = candidate.publicContent.toLowerCase();
 
-  if (nq === nm) return { entry: candidate, score: 100, matchType: 'title_exact' };
+  if (titleVariants.includes(nq)) return { entry: candidate, score: 100, matchType: 'title_exact' };
 
   const aliases = extractAliases(supplementary);
   for (const alias of aliases) {
@@ -74,8 +79,8 @@ function scoreCandidate(query: string, candidate: KnowledgeExplanation): RankedC
   }
 
   if (nm && nq.startsWith(nm)) return { entry: candidate, score: 90, matchType: 'title_prefix' };
-  if (nm.startsWith(nq)) return { entry: candidate, score: 85, matchType: 'title_prefix' };
-  if (nm.includes(nq)) return { entry: candidate, score: 75, matchType: 'title_contains' };
+  if (titleVariants.some((variant) => variant.startsWith(nq))) return { entry: candidate, score: 85, matchType: 'title_prefix' };
+  if (titleVariants.some((variant) => variant.includes(nq))) return { entry: candidate, score: 75, matchType: 'title_contains' };
 
   for (const alias of aliases) {
     const na = normalizeQuery(alias);
