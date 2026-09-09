@@ -1508,10 +1508,10 @@ export default function App() {
         {page === 'ai-teacher' && (
           <MyAITeacherPage
             onBackHome={() => moveTo('home')}
-            onOpenSearch={() => moveTo('search')}
+            onOpenDiagnosis={() => moveTo('diagnosis-v2')}
             onOpenMyPage={() => moveTo('my-page')}
             onOpenProYoga={() => moveTo('pro-yoga')}
-            onDetail={setDetailItem}
+            latestDiagnosis={null}
           />
         )}
         {page === 'site-map' && (
