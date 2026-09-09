@@ -35,7 +35,7 @@ import { useAuth } from './lib/auth';
 import { addTeacherRelationship } from './services/teacherRelationshipService';
 import { fetchDirectory } from './services/directoryService';
 
-type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map' | 'box-breathing';
+type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map' | 'box-breathing' | 'breathing-meditation';
 
 type FilterType = SearchItem['type'] | 'all';
 
@@ -1000,6 +1000,42 @@ function buildClubFromForm(values: Record<string, string | string[]>): Club {
   };
 }
 
+function MeditationTimer({ seconds }: { seconds: number }) {
+  const [remaining, setRemaining] = useState(seconds);
+  const [isRunning, setIsRunning] = useState(false);
+
+  useEffect(() => {
+    if (!isRunning) return;
+    if (remaining <= 0) {
+      setIsRunning(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setRemaining((r) => r - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [isRunning, remaining]);
+
+  const mins = Math.floor(remaining / 60);
+  const secs = remaining % 60;
+
+  return (
+    <div style={{ textAlign: 'center', padding: '24px' }}>
+      <div style={{ fontSize: '48px', fontWeight: 700, color: 'var(--navy)', marginBottom: 16 }}>
+        {remaining > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : '完了'}
+      </div>
+      {remaining <= 0 && (
+        <p style={{ color: 'var(--green-strong)', fontWeight: 600 }}>お疲れさまでした。静かに目を開けてください。</p>
+      )}
+      <button
+        className="primary-button"
+        onClick={() => { if (remaining <= 0) setRemaining(seconds); setIsRunning(true); }}
+        style={{ marginTop: 12 }}
+      >
+        {remaining <= 0 ? 'もう一度' : isRunning ? '実践中' : '瞑想を始める'}
+      </button>
+    </div>
+  );
+}
+
 export default function App() {
   const [page, setPage] = useState<PageKey>('home');
   const [teacherList, setTeacherList] = useState<Teacher[]>(initialTeachers);
@@ -1278,10 +1314,10 @@ export default function App() {
                   <strong>Box Breathing</strong>
                   <span>4秒吸う・止める・吐く・止める</span>
                 </button>
-                <button className="top-daily-card" onClick={() => moveToAITeacher(5)}>
+                <button className="top-daily-card" onClick={() => moveTo('breathing-meditation')}>
                   <span className="top-daily-time">5分</span>
                   <strong>呼吸＋瞑想</strong>
-                  <span>短い呼吸法から瞑想へ</span>
+                  <span>呼吸3分＋短い瞑想2分</span>
                 </button>
                 <button className="top-daily-card" onClick={() => moveToAITeacher(10)}>
                   <span className="top-daily-time">10分</span>
@@ -1356,12 +1392,12 @@ export default function App() {
                   <p>ヨガの哲学、人体、指導、アーサナ、呼吸、瞑想まで。体系的に理解するための知識ライブラリ。</p>
                   <span className="top-knowledge-cta">ヨガ図鑑を見る →</span>
                 </a>
-                <a className="top-knowledge-card" href="https://yogaorg.jp/breathing/" target="_blank" rel="noopener noreferrer">
+                <div className="top-knowledge-card top-knowledge-card-coming-soon">
                   <span className="top-knowledge-icon">🌬️</span>
                   <strong>呼吸図鑑</strong>
                   <p>呼吸の方法・考え方・学びまで。毎日の呼吸実践を深める知識入口。</p>
-                  <span className="top-knowledge-cta">呼吸図鑑を見る →</span>
-                </a>
+                  <span className="top-knowledge-cta top-knowledge-coming-soon">呼吸図鑑 準備中</span>
+                </div>
               </div>
               <div className="top-knowledge-bridge">
                 <p>今日の実践 → 図鑑で詳しく知る</p>
@@ -1702,6 +1738,30 @@ export default function App() {
             latestDiagnosis={null}
             initialMinutes={aiTeacherMinutes}
           />
+        )}
+        {page === 'breathing-meditation' && (
+          <div className="page-shell">
+            <section className="hero-panel compact-hero">
+              <div>
+                <button className="ghost-button" onClick={() => moveTo('home')}>TOPへ戻る</button>
+                <span className="eyebrow">5分ルーティン</span>
+                <h2>呼吸3分 ＋ 短い瞑想2分</h2>
+                <p>まずBox Breathingで呼吸を整え、そのまま静かに目を閉じて2分間瞑想します。</p>
+              </div>
+            </section>
+            <section className="panel">
+              <h3 style={{ marginBottom: 12 }}>Step 1: 呼吸（3分）</h3>
+              <p style={{ marginBottom: 16 }}>4秒吸う・4秒止める・4秒吐く・4秒止めるを繰り返します。</p>
+              <BoxBreathingExperience />
+            </section>
+            <section className="panel">
+              <h3 style={{ marginBottom: 12 }}>Step 2: 短い瞑想（2分）</h3>
+              <p style={{ marginBottom: 16 }}>呼吸が整ったら、目を閉じて静かに2分間過ごします。</p>
+              <div className="breathing-meditation-timer">
+                <MeditationTimer seconds={120} />
+              </div>
+            </section>
+          </div>
         )}
         {page === 'box-breathing' && (
           <div className="page-shell">

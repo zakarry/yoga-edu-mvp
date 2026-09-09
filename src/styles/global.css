@@ -5754,3 +5754,17 @@ a.top-knowledge-card:hover {
 .top-renewal .section-inline-header { margin-bottom: 10px; }
 .top-renewal h3 { font-size: 20px; }
 .top-section-sub { font-size: 13px; margin-top: 2px; }
+
+.top-knowledge-card-coming-soon {
+  opacity: 0.7;
+  cursor: default;
+}
+.top-knowledge-card-coming-soon:hover {
+  border-color: var(--border);
+  box-shadow: none;
+  transform: none;
+}
+.top-knowledge-coming-soon {
+  color: var(--muted) !important;
+  font-style: italic;
+}
