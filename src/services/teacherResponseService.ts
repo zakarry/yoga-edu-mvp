@@ -1,5 +1,5 @@
 import type { TeacherContext } from './teacherContextService';
-import { findExplanationByKeyword, type KnowledgeExplanation } from './teacherKnowledgeService';
+import { getBestExplanation, type KnowledgeExplanation } from './teacherKnowledgeService';
 
 export interface ConversationContext {
   requestedMinutes?: number;
@@ -116,7 +116,7 @@ export async function generateTeacherResponse(
   // Knowledge explanation route (after safety, before rule-based)
   if (isExplanationIntent(userMessage)) {
     const keyword = extractExplanationKeyword(userMessage) || userMessage;
-    const entry = await findExplanationByKeyword(keyword);
+    const entry = await getBestExplanation(keyword);
     if (entry) {
       const name = context.persona?.name ?? 'AI先生';
       const text = formatExplanation(entry, context.preferences.explanation, name);
