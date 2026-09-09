@@ -4664,6 +4664,49 @@ h1 {
 .ai-teacher-program-item strong { color: var(--navy); }
 .ai-teacher-duration { color: var(--muted); font-size: 14px; }
 .ai-teacher-program-meta { font-size: 12px; color: var(--muted); }
+.knowledge-link-button {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 8px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: opacity 0.2s;
+}
+.knowledge-link-button:hover { opacity: 0.7; }
+.knowledge-login-hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+.knowledge-explanation-box {
+  margin-top: 16px;
+  padding: 20px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.7);
+  border: 1px solid rgba(16,37,66,.08);
+}
+.knowledge-explanation-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 12px;
+}
+.knowledge-explanation-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+.knowledge-loading {
+  font-size: 14px;
+  color: var(--muted);
+}
+.knowledge-close-button {
+  margin-top: 12px;
+  font-size: 13px;
+}
 .ai-teacher-save-status { color: var(--green-strong); font-weight: 600; }
 .ai-teacher-persona-display {
   display: grid;

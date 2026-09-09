@@ -5,6 +5,9 @@ export interface TodayPlanItem {
   name: string;
   minutes: number;
   reason?: string;
+  knowledgeMasterId?: string;
+  knowledgeTitle?: string;
+  knowledgeAvailable?: boolean;
 }
 
 export interface TodayPlan {

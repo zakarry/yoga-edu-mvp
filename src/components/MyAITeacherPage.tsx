@@ -16,6 +16,8 @@ import type { DiagnosisRecord, SafetyState } from '../services/diagnosisService'
 import { buildTeacherContext, type TeacherContext } from '../services/teacherContextService';
 import { generateTodayPlan, type TodayPlan } from '../services/todayPlannerService';
 import { generateTeacherResponse, generateNextSuggestion, type ConversationContext } from '../services/teacherResponseService';
+import { attachKnowledgeToTodayPlan, fetchKnowledgeExplanation, type TodayPlanWithKnowledge } from '../services/todayPlanKnowledgeService';
+import type { KnowledgeExplanation } from '../services/teacherKnowledgeService';
 
 interface MyAITeacherPageProps {
   onBackHome: () => void;
@@ -244,7 +246,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       setConversationContext((prev) => ({ ...prev, requestedMinutes: initialMinutes }));
     }
   }, [initialMinutes]);
-  const [todayPlan, setTodayPlan] = useState<TodayPlan | null>(null);
+  const [todayPlan, setTodayPlan] = useState<TodayPlanWithKnowledge | null>(null);
+  const [knowledgeExplanation, setKnowledgeExplanation] = useState<KnowledgeExplanation | null>(null);
+  const [knowledgeLoading, setKnowledgeLoading] = useState(false);
   const [teacherContext, setTeacherContext] = useState<TeacherContext | null>(null);
   const [nextSuggestion, setNextSuggestion] = useState<NextSuggestion | null>(loadNextSuggestion());
   const [showContextSignals, setShowContextSignals] = useState(false);
@@ -344,7 +348,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     const ctx = await buildTeacherContext(auth.user?.id ?? null, growth, conversationContext);
     setTeacherContext(ctx);
     const plan = generateTodayPlan(ctx);
-    setTodayPlan(plan);
+    const planWithKnowledge = await attachKnowledgeToTodayPlan(plan);
+    setTodayPlan(planWithKnowledge);
     const newProgram: TodayProgram = {
       items: plan.items.map((i) => ({ name: i.name, type: i.type, durationMin: i.minutes })),
       generatedAt: new Date().toISOString(),
@@ -637,7 +642,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             </p>
           ) : program ? (
             <div className="ai-teacher-program-list">
-              {program.items.map((item, idx) => (
+              {program.items.map((item, idx) => {
+                const planItem = todayPlan?.items[idx];
+                const showKnowledgeLink = auth.user && planItem?.knowledgeAvailable;
+                return (
                 <div key={idx} className="ai-teacher-program-item">
                   <span className={`type-pill ${item.type}`}>
                     {item.type === 'asana' ? 'アーサナ' : item.type === 'pranayama' ? '呼吸法' : '瞑想'}
@@ -649,8 +657,27 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     setPracticeDuration(item.durationMin);
                     setStep('step6');
                   }}>実践する</button>
+                  {showKnowledgeLink && (
+                    <button
+                      className="knowledge-link-button"
+                      onClick={async () => {
+                        if (!planItem?.knowledgeMasterId) return;
+                        setKnowledgeLoading(true);
+                        setKnowledgeExplanation(null);
+                        const entry = await fetchKnowledgeExplanation(planItem.knowledgeMasterId);
+                        setKnowledgeExplanation(entry);
+                        setKnowledgeLoading(false);
+                      }}
+                    >
+                      この実践について
+                    </button>
+                  )}
+                  {!auth.user && (
+                    <span className="knowledge-login-hint">ログインで解説を見る</span>
+                  )}
                 </div>
-              ))}
+                );
+              })}
               <p className="ai-teacher-program-meta">
                 生成日時: {new Date(program.generatedAt).toLocaleString('ja-JP')} / 元: {program.basedOn === 'diagnosis' ? '診断' : program.basedOn === 'history' ? '履歴' : 'デフォルト'}
               </p>
@@ -675,6 +702,19 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 </div>
               )}
               <button className="primary-button" onClick={() => setStep('step3')}>プログラムを保存する</button>
+              {knowledgeLoading && (
+                <div className="knowledge-explanation-box">
+                  <p className="knowledge-loading">読み込み中…</p>
+                </div>
+              )}
+              {knowledgeExplanation && (
+                <div className="knowledge-explanation-box">
+                  <h4 className="knowledge-explanation-title">{knowledgeExplanation.title}</h4>
+                  <p className="knowledge-explanation-text">{knowledgeExplanation.publicContent}</p>
+                  <span className="chat-knowledge-badge">Yoga Knowledgeを参考にしています</span>
+                  <button className="ghost-button knowledge-close-button" onClick={() => setKnowledgeExplanation(null)}>閉じる</button>
+                </div>
+              )}
             </div>
           ) : (
             <div>
