@@ -8,6 +8,7 @@ import {
   saveLocalPracticeLog, loadLocalPracticeLogs,
   type AITeacherPersona, type TodayProgram, type ProgramItem,
   type AITeacherGrowth, type LocalPracticeLog,
+  type AITeacherPrefs, type PrefExplanation, type PrefCue, type PrefPraise,
 } from '../lib/aiTeacherStorage';
 import type { DiagnosisRecord, SafetyState } from '../services/diagnosisService';
 
@@ -36,6 +37,40 @@ const SPECIALTY_OPTIONS = [
   { v: 'meditation', label: '瞑想・マインドフルネス' },
   { v: 'alignment', label: 'アライメント・姿勢' },
 ];
+
+const PREF_EXPLANATION_OPTIONS: { v: PrefExplanation; label: string }[] = [
+  { v: 'short', label: '短め' },
+  { v: 'standard', label: '標準' },
+  { v: 'detailed', label: '詳しく' },
+];
+const PREF_CUE_OPTIONS: { v: PrefCue; label: string }[] = [
+  { v: 'more', label: '多め' },
+  { v: 'as_needed', label: '必要時' },
+  { v: 'minimal', label: '最低限' },
+];
+const PREF_PRAISE_OPTIONS: { v: PrefPraise; label: string }[] = [
+  { v: 'more', label: '多め' },
+  { v: 'normal', label: '普通' },
+  { v: 'less', label: '少なめ' },
+];
+
+function getRelationshipStage(sessions: number): { label: string; min: number; max: number } {
+  if (sessions < 5) return { label: '出会ったばかり', min: 0, max: 5 };
+  if (sessions < 20) return { label: 'Getting to know you', min: 5, max: 20 };
+  if (sessions < 50) return { label: 'Personalized Teacher', min: 20, max: 50 };
+  return { label: 'Deeply Personalized', min: 50, max: 100 };
+}
+
+function getAdaptMessages(prefs: AITeacherPrefs): string[] {
+  const msgs: string[] = [];
+  if (prefs.explanation === 'short') msgs.push('説明を短めにします');
+  else if (prefs.explanation === 'detailed') msgs.push('説明を詳しくします');
+  if (prefs.cue === 'minimal') msgs.push('声かけを必要最小限にします');
+  else if (prefs.cue === 'more') msgs.push('声かけを多めにします');
+  if (prefs.praise === 'more') msgs.push('励ましを少し多めにします');
+  else if (prefs.praise === 'less') msgs.push('励ましを控えめにします');
+  return msgs;
+}
 
 // ── Program generation (rule-based, non-medical) ──
 
@@ -314,17 +349,35 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   return (
     <div className="page-shell ai-teacher-shell">
       <section className="hero-panel compact-hero ai-teacher-hero">
-        <div>
+        <div className="ai-teacher-hero-main">
           <button className="ghost-button" onClick={onBackHome}>TOPへ戻る</button>
           <span className="eyebrow">My AI Teacher</span>
-          <h2>今日のヨガをAI先生と始める</h2>
+          <h2>今のあなたを知る。<br />あなたの先生が育つ。</h2>
           <p>あなたの目的や記録に合わせて、アーサナ・呼吸・瞑想の実践をサポートします。</p>
           {persona && (
-            <div className="ai-teacher-persona-badge">
-              <span className="ai-teacher-avatar">{persona.avatar}</span>
-              <span>{persona.name}</span>
+            <div className="ai-teacher-hero-teacher">
+              <span className="ai-teacher-hero-avatar">{persona.avatar}</span>
+              <div className="ai-teacher-hero-teacher-info">
+                <strong>{persona.name}</strong>
+                <span>{PERSONALITY_OPTIONS.find((p) => p.v === persona.personality)?.label ?? persona.personality}</span>
+                <span>{SPECIALTY_OPTIONS.find((s) => s.v === persona.specialty)?.label ?? persona.specialty}</span>
+              </div>
             </div>
           )}
+        </div>
+        <div className="ai-teacher-hero-kpis">
+          <div className="ai-teacher-hero-kpi">
+            <strong>DIAGNOSIS</strong>
+            <span>{latestDiagnosis ? '済み' : '未受診'}</span>
+          </div>
+          <div className="ai-teacher-hero-kpi">
+            <strong>PRACTICE</strong>
+            <span>{growth.sessions}回</span>
+          </div>
+          <div className="ai-teacher-hero-kpi">
+            <strong>MEMORY</strong>
+            <span>{growth.facts.length}件</span>
+          </div>
         </div>
       </section>
 
@@ -706,6 +759,86 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               <span>理解度レベル</span>
             </div>
           </div>
+
+          {/* RELATIONSHIP */}
+          <div className="ai-teacher-relationship-section">
+            <h4>RELATIONSHIP</h4>
+            {(() => {
+              const stage = getRelationshipStage(growth.sessions);
+              const pct = Math.min(100, ((growth.sessions - stage.min) / (stage.max - stage.min)) * 100);
+              return (
+                <>
+                  <div className="ai-teacher-relationship-stage">
+                    <span className="ai-teacher-relationship-label">{stage.label}</span>
+                    <span className="ai-teacher-relationship-count">{growth.sessions} / {stage.max} sessions</span>
+                  </div>
+                  <div className="ai-teacher-progress-bar">
+                    <div className="ai-teacher-progress-fill" style={{ width: `${pct}%` }} />
+                  </div>
+                  <p className="ai-teacher-relationship-note">
+                    これはAI先生との利用・実践履歴に基づく関係性の演出です。医学的に理解していることを意味するものではありません。
+                  </p>
+                </>
+              );
+            })()}
+          </div>
+
+          {/* Prefs UI */}
+          <div className="ai-teacher-prefs-section">
+            <h4>好みの設定</h4>
+            <p className="ai-teacher-prefs-desc">先生の説明や声かけの好みを設定できます。医療・身体情報は保存しません。</p>
+            <div className="ai-teacher-prefs-grid">
+              <div className="ai-teacher-pref-item">
+                <label>説明量</label>
+                <div className="chip-grid">
+                  {PREF_EXPLANATION_OPTIONS.map((o) => (
+                    <button key={o.v} className={`select-chip ${growth.prefs.explanation === o.v ? 'active' : ''}`}
+                      onClick={() => {
+                        const ng = { ...growth, prefs: { ...growth.prefs, explanation: o.v } };
+                        saveGrowth(ng); setGrowth(ng);
+                      }}>{o.label}</button>
+                  ))}
+                </div>
+              </div>
+              <div className="ai-teacher-pref-item">
+                <label>声かけ</label>
+                <div className="chip-grid">
+                  {PREF_CUE_OPTIONS.map((o) => (
+                    <button key={o.v} className={`select-chip ${growth.prefs.cue === o.v ? 'active' : ''}`}
+                      onClick={() => {
+                        const ng = { ...growth, prefs: { ...growth.prefs, cue: o.v } };
+                        saveGrowth(ng); setGrowth(ng);
+                      }}>{o.label}</button>
+                  ))}
+                </div>
+              </div>
+              <div className="ai-teacher-pref-item">
+                <label>励まし</label>
+                <div className="chip-grid">
+                  {PREF_PRAISE_OPTIONS.map((o) => (
+                    <button key={o.v} className={`select-chip ${growth.prefs.praise === o.v ? 'active' : ''}`}
+                      onClick={() => {
+                        const ng = { ...growth, prefs: { ...growth.prefs, praise: o.v } };
+                        saveGrowth(ng); setGrowth(ng);
+                      }}>{o.label}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Adapt */}
+          <div className="ai-teacher-adapt-section">
+            <h4>先生の指導の変化</h4>
+            {getAdaptMessages(growth.prefs).length > 0 ? (
+              <ul className="ai-teacher-adapt-list">
+                {getAdaptMessages(growth.prefs).map((m, idx) => <li key={idx}>{m}</li>)}
+              </ul>
+            ) : (
+              <p className="ai-teacher-adapt-default">標準的な指導で進めています。好みの設定を変更すると、先生の指導が変わります。</p>
+            )}
+          </div>
+
           {growth.favoriteTypes.length > 0 && (
             <div className="ai-teacher-growth-section">
               <h4>よく実践している種類</h4>

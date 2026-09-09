@@ -78,6 +78,16 @@ export function saveTodayProgram(program: TodayProgram): void {
 
 // ── Growth (non-sensitive) ──
 
+export type PrefExplanation = 'short' | 'standard' | 'detailed';
+export type PrefCue = 'more' | 'as_needed' | 'minimal';
+export type PrefPraise = 'more' | 'normal' | 'less';
+
+export interface AITeacherPrefs {
+  explanation: PrefExplanation;
+  cue: PrefCue;
+  praise: PrefPraise;
+}
+
 export interface AITeacherGrowth {
   sessions: number;
   favoriteTypes: string[];
@@ -87,6 +97,7 @@ export interface AITeacherGrowth {
   facts: string[];
   streakDays: number;
   lastPracticeDate: string | null;
+  prefs: AITeacherPrefs;
 }
 
 const DEFAULT_GROWTH: AITeacherGrowth = {
@@ -98,6 +109,7 @@ const DEFAULT_GROWTH: AITeacherGrowth = {
   facts: [],
   streakDays: 0,
   lastPracticeDate: null,
+  prefs: { explanation: 'standard', cue: 'as_needed', praise: 'normal' },
 };
 
 export function loadGrowth(): AITeacherGrowth {
