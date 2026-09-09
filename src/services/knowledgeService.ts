@@ -22,6 +22,7 @@ export interface KnowledgeEntry {
   chapter_title: string | null;
   item_no: number | null;
   is_published: boolean;
+  ai_use_scope: 'reference_only' | 'ai_teacher_explanation' | 'ai_teacher_practice' | 'teacher_education' | 'guru_future';
   created_at: string;
   updated_at: string;
 }
@@ -36,6 +37,7 @@ export interface KnowledgeSource {
   source_url: string | null;
   source_order: number | null;
   is_primary: boolean;
+  source_status: 'checked' | 'final' | 'review_required' | 'draft';
   created_at: string;
 }
 
@@ -50,7 +52,7 @@ export interface KnowledgeRelation {
 export interface PracticeKnowledge {
   id: string;
   knowledge_entry_id: string;
-  practice_type: 'asana' | 'pranayama' | 'dhyana';
+  practice_type: 'asana' | 'pranayama' | 'breathwork' | 'dhyana';
   practice_name: string;
   default_minutes: number | null;
   difficulty: string | null;
@@ -141,7 +143,7 @@ export async function getRelatedKnowledge(entryId: string): Promise<KnowledgeEnt
   return (entries ?? []) as KnowledgeEntry[];
 }
 
-export async function getPracticeKnowledge(practiceType?: 'asana' | 'pranayama' | 'dhyana'): Promise<PracticeKnowledge[]> {
+export async function getPracticeKnowledge(practiceType?: 'asana' | 'pranayama' | 'breathwork' | 'dhyana'): Promise<PracticeKnowledge[]> {
   const client = getSupabase();
   let query = client
     .from('practice_knowledge')
