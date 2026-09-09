@@ -25,7 +25,7 @@ export interface PrivacySettings {
 type OAuthProvider = 'google' | 'apple';
 
 export const OAUTH_PROVIDERS = {
-  google: { enabled: false, label: 'Googleで続ける' },
+  google: { enabled: true, label: 'Googleで続ける' },
   apple: { enabled: false, label: 'Appleで続ける' },
   line: { enabled: false, label: 'LINEで続ける' },
 } as const;
