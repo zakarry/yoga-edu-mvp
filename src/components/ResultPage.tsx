@@ -70,7 +70,7 @@ const BOX_BREATHING_PHASES = [
   },
 ] as const;
 
-function BoxBreathingExperience() {
+export function BoxBreathingExperience() {
   const [runId, setRunId] = useState(0);
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [remainingSeconds, setRemainingSeconds] = useState(4);

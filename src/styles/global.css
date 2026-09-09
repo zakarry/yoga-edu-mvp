@@ -20,6 +20,8 @@
 
 * { box-sizing: border-box; }
 html, body, #root { min-height: 100%; }
+html { overflow-x: hidden; }
+body { overflow-x: hidden; }
 body {
   margin: 0;
   font-family: Inter, -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
@@ -5588,3 +5590,167 @@ h1 {
   .top-learning-flow { gap: 8px; }
   .top-learning-step { padding: 6px 14px; font-size: 13px; }
 }
+
+/* === Acceptance fixes === */
+
+/* Fix: PC header nowrap — prevent 1-char wrap */
+@media (min-width: 769px) {
+  .nav-secondary-menu {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  .nav-secondary-menu button {
+    white-space: nowrap;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
+@media (min-width: 769px) and (max-width: 1200px) {
+  .nav-secondary-menu button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .topbar { gap: 8px; padding: 10px 16px; }
+  .brandmark { font-size: 16px; }
+  .header-main-button { min-width: 120px; min-height: 40px; font-size: 13px; }
+}
+
+/* Fix: top-knowledge-card as anchor */
+a.top-knowledge-card {
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s, transform .15s;
+}
+a.top-knowledge-card:hover {
+  border-color: var(--green-strong);
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+/* Fix: compact-hero for box-breathing page */
+.compact-hero {
+  grid-template-columns: 1fr;
+  padding: 24px 28px;
+}
+.compact-hero h2 { font-size: 24px; margin: 8px 0 8px; }
+.compact-hero p { font-size: 14px; }
+
+/* Fix: mobile HERO overflow prevention */
+.top-renewal { max-width: 100%; overflow-x: hidden; }
+.top-hero {
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.top-hero h1 {
+  word-break: normal;
+  overflow-wrap: normal;
+  writing-mode: horizontal-tb;
+}
+.top-hero .hero-subcopy {
+  word-break: normal;
+  overflow-wrap: normal;
+}
+.top-hero-actions {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.top-hero-actions button,
+.top-hero-actions .hero-cta-group {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .top-renewal { gap: 20px; }
+  .top-hero {
+    padding: 24px 16px;
+    border-radius: 16px;
+  width: 100%;
+    max-width: 100%;
+    grid-template-columns: 1fr !important;
+  }
+  .top-hero h1 {
+    font-size: 22px;
+    line-height: 1.4;
+  }
+  .top-hero .hero-subcopy {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .top-hero-actions {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  .top-hero-actions button {
+    width: 100%;
+    max-width: 100%;
+    text-align: center;
+    white-space: normal;
+  }
+  .hero-cta-group {
+    width: 100%;
+    align-items: center;
+  }
+  .hero-cta-group button {
+    width: 100%;
+    text-align: center;
+  }
+  .hero-cta-sub {
+    padding-left: 0;
+    text-align: center;
+  }
+  .main-shell {
+    width: 100%;
+    max-width: 100%;
+    margin: 16px 0 32px;
+    padding: 0 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .top-hero {
+    padding: 20px 12px;
+  }
+  .top-hero h1 {
+    font-size: 19px;
+    line-height: 1.45;
+  }
+  .top-hero .hero-subcopy {
+    font-size: 13px;
+  }
+  .top-intent-card,
+  .top-daily-card,
+  .top-segment-card,
+  .top-teacher-card {
+    padding: 14px;
+  }
+  .top-segment-grid { gap: 8px; }
+  .top-teacher-grid { gap: 8px; }
+  .top-intent-grid { gap: 10px; }
+  .top-daily-grid { gap: 10px; }
+  .top-knowledge-grid { gap: 12px; }
+  a.top-knowledge-card { padding: 16px; }
+  .top-learning-grid { gap: 12px; }
+  .top-myyoga-tags { gap: 6px; }
+  .top-myyoga-tags span { font-size: 12px; padding: 5px 10px; }
+  .top-sacred-panel { padding: 16px; }
+  .top-sacred-inner { gap: 12px; }
+  .top-ai-teacher-panel { padding: 20px 16px; }
+  .top-ai-teacher-features { gap: 6px; }
+  .top-ai-teacher-features span { font-size: 12px; padding: 5px 10px; }
+}
+
+/* Compress TOP section spacing */
+.top-renewal .panel { padding: 20px; }
+.top-renewal .section-inline-header { margin-bottom: 10px; }
+.top-renewal h3 { font-size: 20px; }
+.top-section-sub { font-size: 13px; margin-top: 2px; }

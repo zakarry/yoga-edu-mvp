@@ -23,6 +23,7 @@ interface MyAITeacherPageProps {
   onOpenMyPage: () => void;
   onOpenProYoga: () => void;
   latestDiagnosis: DiagnosisRecord | null;
+  initialMinutes?: number;
 }
 
 type StepId = 'home' | 'step1' | 'step2' | 'step3' | 'step4' | 'step5' | 'step6' | 'step7' | 'step8';
@@ -217,7 +218,7 @@ function buildLocalContextFast(growth: AITeacherGrowth, sessionIntent?: Conversa
 
 // ── Component ──
 
-export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onOpenProYoga, latestDiagnosis }: MyAITeacherPageProps) {
+export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onOpenProYoga, latestDiagnosis, initialMinutes }: MyAITeacherPageProps) {
   const auth = useAuth();
   const [step, setStep] = useState<StepId>('home');
   const [persona, setPersona] = useState<AITeacherPersona | null>(null);
@@ -236,6 +237,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [localLogs, setLocalLogs] = useState<LocalPracticeLog[]>(loadLocalPracticeLogs());
   const [saveStatus, setSaveStatus] = useState<string>('');
   const [conversationContext, setConversationContext] = useState<ConversationContext>({});
+
+  useEffect(() => {
+    if (initialMinutes) {
+      setConversationContext((prev) => ({ ...prev, requestedMinutes: initialMinutes }));
+    }
+  }, [initialMinutes]);
   const [todayPlan, setTodayPlan] = useState<TodayPlan | null>(null);
   const [teacherContext, setTeacherContext] = useState<TeacherContext | null>(null);
   const [nextSuggestion, setNextSuggestion] = useState<NextSuggestion | null>(loadNextSuggestion());

@@ -15,7 +15,7 @@ import {
 import { DiagnosisForm } from './components/DiagnosisForm';
 import { CardList } from './components/CardList';
 import { MapView } from './components/MapView';
-import { DiagnosisResult, ResultPage, YogaPoseRecommendation } from './components/ResultPage';
+import { DiagnosisResult, ResultPage, YogaPoseRecommendation, BoxBreathingExperience } from './components/ResultPage';
 import { FieldConfig, FormSectionConfig, RegisterForm } from './components/RegisterForm';
 import { ProYogaPage } from './components/ProYogaPage';
 import { ProDrillPage } from './ProDrillPage';
@@ -35,7 +35,7 @@ import { useAuth } from './lib/auth';
 import { addTeacherRelationship } from './services/teacherRelationshipService';
 import { fetchDirectory } from './services/directoryService';
 
-type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map';
+type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map' | 'box-breathing';
 
 type FilterType = SearchItem['type'] | 'all';
 
@@ -1021,6 +1021,7 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [mapFilterType, setMapFilterType] = useState<FilterType>('all');
+  const [aiTeacherMinutes, setAiTeacherMinutes] = useState<number | undefined>(undefined);
   const auth = useAuth();
 
   useEffect(() => {
@@ -1055,6 +1056,11 @@ export default function App() {
     setMobileNavOpen(false);
     setPage(next);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const moveToAITeacher = (minutes?: number) => {
+    setAiTeacherMinutes(minutes);
+    moveTo('ai-teacher');
   };
 
   const handleDiagnosisSubmit = (input: StudentDiagnosisInput) => {
@@ -1225,7 +1231,7 @@ export default function App() {
                   <span className="top-intent-desc">AI診断で今の状態をチェック</span>
                   <span className="top-intent-cta">AI診断 →</span>
                 </button>
-                <button className="top-intent-card" onClick={() => moveTo('results')}>
+                <button className="top-intent-card" onClick={() => moveTo('box-breathing')}>
                   <span className="top-intent-icon">🌬️</span>
                   <strong>今すぐ2分だけ呼吸したい</strong>
                   <span className="top-intent-desc">Box Breathingですぐリセット</span>
@@ -1258,12 +1264,47 @@ export default function App() {
               </div>
             </section>
 
-            {/* 3. 地図から探す */}
+            {/* 3. Daily Yoga */}
+            <section className="panel top-daily-panel">
+              <div className="section-inline-header">
+                <div>
+                  <h3>今日のルーティーン</h3>
+                  <p className="top-section-sub">1分でも、5分でも。毎日の呼吸とヨガを無理なく続ける。</p>
+                </div>
+              </div>
+              <div className="top-daily-grid">
+                <button className="top-daily-card" onClick={() => moveTo('box-breathing')}>
+                  <span className="top-daily-time">2分</span>
+                  <strong>Box Breathing</strong>
+                  <span>4秒吸う・止める・吐く・止める</span>
+                </button>
+                <button className="top-daily-card" onClick={() => moveToAITeacher(5)}>
+                  <span className="top-daily-time">5分</span>
+                  <strong>呼吸＋瞑想</strong>
+                  <span>短い呼吸法から瞑想へ</span>
+                </button>
+                <button className="top-daily-card" onClick={() => moveToAITeacher(10)}>
+                  <span className="top-daily-time">10分</span>
+                  <strong>今日のヨガ</strong>
+                  <span>アーサナ中心に体を動かす</span>
+                </button>
+                <button className="top-daily-card top-daily-card-featured" onClick={() => moveToAITeacher(20)}>
+                  <span className="top-daily-time">20分</span>
+                  <strong>My AI Teacher</strong>
+                  <span>AI先生と今日のプログラムを</span>
+                </button>
+              </div>
+              {auth.user && (
+                <p className="top-daily-status">ログイン済み：実践履歴はmyYOGAカルテに記録されます</p>
+              )}
+            </section>
+
+            {/* 4. 地図から探す */}
             <section className="panel top-map-section">
               <div className="section-inline-header">
                 <div>
                   <h3>近くのヨガを、地図から探す。</h3>
-                  <p className="top-section-sub">先生・スクール・イベント・ヨガクラブを、地域や現在地から探せます。</p>
+                  <p className="top-section-sub">先生・スクール・イベント・ヨガクラブを地域や現在地から探せます。</p>
                 </div>
               </div>
               <div className="top-map-tabs">
@@ -1283,48 +1324,13 @@ export default function App() {
               </div>
             </section>
 
-            {/* 4. Daily Yoga */}
-            <section className="panel top-daily-panel">
-              <div className="section-inline-header">
-                <div>
-                  <h3>今日のルーティーン</h3>
-                  <p className="top-section-sub">1分でも、5分でも。毎日の呼吸とヨガを、無理なく続ける。</p>
-                </div>
-              </div>
-              <div className="top-daily-grid">
-                <button className="top-daily-card" onClick={() => moveTo('results')}>
-                  <span className="top-daily-time">2分</span>
-                  <strong>Box Breathing</strong>
-                  <span>4秒吸って・4秒止めて・4秒吐いて・4秒止める</span>
-                </button>
-                <button className="top-daily-card" onClick={() => moveTo('ai-teacher')}>
-                  <span className="top-daily-time">5分</span>
-                  <strong>呼吸＋瞑想</strong>
-                  <span>短い呼吸法から瞑想へ</span>
-                </button>
-                <button className="top-daily-card" onClick={() => moveTo('ai-teacher')}>
-                  <span className="top-daily-time">10分</span>
-                  <strong>今日のヨガ</strong>
-                  <span>アーサナを中心に体を動かす</span>
-                </button>
-                <button className="top-daily-card top-daily-card-featured" onClick={() => moveTo('ai-teacher')}>
-                  <span className="top-daily-time">20分</span>
-                  <strong>My AI Teacher</strong>
-                  <span>AI先生と一緒に今日のプログラムを</span>
-                </button>
-              </div>
-              {auth.user && (
-                <p className="top-daily-status">ログイン済み：実践履歴はmyYOGAカルテに記録されます</p>
-              )}
-            </section>
-
             {/* 5. My AI Teacher */}
             <section className="panel top-ai-teacher-panel">
               <div className="top-ai-teacher-inner">
                 <div className="top-ai-teacher-copy">
                   <span className="eyebrow">My AI Teacher</span>
                   <h3>あなた専属のMy AI Teacher</h3>
-                  <p>診断や実践履歴、あなたの好みを参考に、今日のアーサナ・呼吸・瞑想を一緒に考えます。</p>
+                  <p>診断や実践履歴、あなたの好みを参考に今日のアーサナ・呼吸・瞑想を一緒に考えます。</p>
                   <div className="top-ai-teacher-features">
                     <span>今日のプログラム</span>
                     <span>AI先生との対話</span>
@@ -1344,18 +1350,18 @@ export default function App() {
                 <h3>実践したことを、もっと知る。</h3>
               </div>
               <div className="top-knowledge-grid">
-                <button className="top-knowledge-card" onClick={() => moveTo('pro-yoga')}>
+                <a className="top-knowledge-card" href="https://yogaorg.jp/yoga_zukan/" target="_blank" rel="noopener noreferrer">
                   <span className="top-knowledge-icon">📖</span>
                   <strong>ヨガ図鑑</strong>
-                  <p>ヨガの哲学、人体、指導、アーサナ、呼吸、瞑想まで。ヨガを体系的に理解するための知識ライブラリ。</p>
+                  <p>ヨガの哲学、人体、指導、アーサナ、呼吸、瞑想まで。体系的に理解するための知識ライブラリ。</p>
                   <span className="top-knowledge-cta">ヨガ図鑑を見る →</span>
-                </button>
-                <button className="top-knowledge-card" onClick={() => moveTo('pro-yoga')}>
+                </a>
+                <a className="top-knowledge-card" href="https://yogaorg.jp/breathing/" target="_blank" rel="noopener noreferrer">
                   <span className="top-knowledge-icon">🌬️</span>
                   <strong>呼吸図鑑</strong>
-                  <p>毎日の呼吸実践から、呼吸の方法・考え方・学びまで。</p>
+                  <p>呼吸の方法・考え方・学びまで。毎日の呼吸実践を深める知識入口。</p>
                   <span className="top-knowledge-cta">呼吸図鑑を見る →</span>
-                </button>
+                </a>
               </div>
               <div className="top-knowledge-bridge">
                 <p>今日の実践 → 図鑑で詳しく知る</p>
@@ -1399,7 +1405,7 @@ export default function App() {
               <div className="section-inline-header">
                 <div>
                   <h3>続けたことが、あなたのYoga Journeyになる。</h3>
-                  <p className="top-section-sub">AI診断、My AI Teacherでの実践、リアルの先生、学習、Pro Yogaなどを、ひとつのYoga Memoryとして記録します。</p>
+                  <p className="top-section-sub">AI診断・実践・学習・Pro YogaをひとつのYoga Memoryとして記録します。</p>
                 </div>
               </div>
               <div className="top-myyoga-tags">
@@ -1490,7 +1496,7 @@ export default function App() {
                 <div>
                   <span className="eyebrow">Culture</span>
                   <h3>ヨガの聖地と文化</h3>
-                  <p>ヨガは実践だけのものではありません。聖地や文化を知ることで、実践がより深くなります。</p>
+                  <p>聖地や文化を知ることで、実践がより深くなります。</p>
                 </div>
                 <button className="secondary-button" onClick={() => moveTo('sacred-sites')}>ヨガの聖地と文化を見る</button>
               </div>
@@ -1694,7 +1700,23 @@ export default function App() {
             onOpenMyPage={() => moveTo('my-page')}
             onOpenProYoga={() => moveTo('pro-yoga')}
             latestDiagnosis={null}
+            initialMinutes={aiTeacherMinutes}
           />
+        )}
+        {page === 'box-breathing' && (
+          <div className="page-shell">
+            <section className="hero-panel compact-hero">
+              <div>
+                <button className="ghost-button" onClick={() => moveTo('home')}>TOPへ戻る</button>
+                <span className="eyebrow">Box Breathing</span>
+                <h2>2分 Box Breathing</h2>
+                <p>4秒吸う・4秒止める・4秒吐く・4秒止める。円アニメーションに合わせて呼吸を整えます。</p>
+              </div>
+            </section>
+            <section className="panel">
+              <BoxBreathingExperience />
+            </section>
+          </div>
         )}
         {page === 'site-map' && (
           <SiteMapPage
