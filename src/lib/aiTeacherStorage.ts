@@ -140,6 +140,7 @@ export interface LocalPracticeLog {
   duration_min: number | null;
   mood_before: string | null;
   mood_after: string | null;
+  note: string | null;
   ai_teacher_used: boolean;
   created_at: string;
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth } from '../lib/auth';
-import { savePracticeLog } from '../services/practiceLogService';
+import { savePracticeLog, getPracticeLogs, type PracticeLog } from '../services/practiceLogService';
 import {
   loadPersona, savePersona, clearPersona,
   loadTodayProgram, saveTodayProgram,
@@ -63,6 +63,21 @@ const PRACTICE_START_GUIDE: Record<LangCode, string> = {
   zh: '那么，慢慢开始吧。',
   ko: '그럼, 천천히 시작해 봅시다.',
 };
+
+const MOOD_BEFORE_OPTIONS = ['落ち着いている', '普通', '少し疲れている', '集中したい'];
+const MOOD_AFTER_OPTIONS = ['とても良い', '良い', '普通', '少し疲れた'];
+
+function calcUnderstandingAxis(g: AITeacherGrowth, hasPersona: boolean): { practice: number; preference: number; continuity: number } {
+  const practice = Math.min(100, Math.round((g.sessions / 50) * 100));
+  const prefCount =
+    (g.prefs.explanation !== 'standard' ? 1 : 0) +
+    (g.prefs.cue !== 'as_needed' ? 1 : 0) +
+    (g.prefs.praise !== 'normal' ? 1 : 0) +
+    (hasPersona ? 1 : 0);
+  const preference = Math.min(100, Math.round((prefCount / 4) * 100));
+  const continuity = Math.min(100, Math.round((g.streakDays / 30) * 100));
+  return { practice, preference, continuity };
+}
 
 const DEMO_FEEDBACK: Record<LangCode, string[]> = {
   ja: [
@@ -244,11 +259,21 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [practiceType, setPracticeType] = useState<'asana' | 'pranayama' | 'dhyana' | null>(null);
   const [moodBefore, setMoodBefore] = useState<string>('');
   const [moodAfter, setMoodAfter] = useState<string>('');
+  const [practiceNote, setPracticeNote] = useState<string>('');
+  const [cloudLogs, setCloudLogs] = useState<PracticeLog[]>([]);
   const [practiceDuration, setPracticeDuration] = useState<number>(10);
   const [localLogs, setLocalLogs] = useState<LocalPracticeLog[]>(loadLocalPracticeLogs());
   const [saveStatus, setSaveStatus] = useState<string>('');
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+
+  useEffect(() => {
+    if (auth.user) {
+      getPracticeLogs(auth.user.id).then(({ data }) => {
+        if (data) setCloudLogs(data);
+      });
+    }
+  }, [auth.user]);
 
   // Persona form state
   const [editingPersona, setEditingPersona] = useState(false);
@@ -372,6 +397,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       duration_min: practiceDuration,
       mood_before: moodBefore || null,
       mood_after: moodAfter || null,
+      note: practiceNote || null,
       ai_teacher_used: true,
     };
 
@@ -404,12 +430,19 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setGrowth(newGrowth);
     setLocalLogs(loadLocalPracticeLogs());
 
+    if (auth.user) {
+      getPracticeLogs(auth.user.id).then(({ data }) => {
+        if (data) setCloudLogs(data);
+      });
+    }
+
     setPracticeActive(false);
     setPracticeType(null);
     setMoodBefore('');
     setMoodAfter('');
+    setPracticeNote('');
     setStep('step7');
-  }, [practiceType, program, practiceDuration, moodBefore, moodAfter, auth, growth, formSpecialty]);
+  }, [practiceType, program, practiceDuration, moodBefore, moodAfter, practiceNote, auth, growth, formSpecialty]);
 
   const steps: Array<{ id: StepId; label: string; n: string }> = [
     { id: 'step1', label: '今の状態', n: '1' },
@@ -745,12 +778,22 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             <div className="field-grid">
               <div className="field">
                 <label>実践前の気分</label>
-                <input value={moodBefore} onChange={(e) => setMoodBefore(e.target.value)} placeholder="例: ぼんやりしている" />
+                <select value={moodBefore} onChange={(e) => setMoodBefore(e.target.value)}>
+                  <option value="">選択してください</option>
+                  {MOOD_BEFORE_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
+                </select>
               </div>
               <div className="field">
                 <label>実践後の気分</label>
-                <input value={moodAfter} onChange={(e) => setMoodAfter(e.target.value)} placeholder="実践後に記入" />
+                <select value={moodAfter} onChange={(e) => setMoodAfter(e.target.value)} disabled={!practiceActive}>
+                  <option value="">実践後に選択</option>
+                  {MOOD_AFTER_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
+                </select>
               </div>
+            </div>
+            <div className="field">
+              <label>自由メモ（任意）</label>
+              <input value={practiceNote} onChange={(e) => setPracticeNote(e.target.value)} placeholder="今日の気づきやメモ" />
             </div>
           </div>
 
@@ -823,27 +866,46 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       {step === 'step7' && (
         <section className="panel ai-teacher-step-panel">
           <h3>STEP 7 — 今日の記録</h3>
+          {saveStatus && <p className="ai-teacher-save-status">{saveStatus}</p>}
           {auth.user ? (
-            <p>実践記録はクラウドに保存されています。myYOGAカルテで確認できます。</p>
+            <p className="ai-teacher-record-source">実践記録はクラウドに保存されています。</p>
           ) : (
-            <p>実践記録はこの端末のローカルに保存されています。ログインするとクラウド保存が可能です。</p>
+            <p className="ai-teacher-record-source">実践記録はこの端末のローカルに保存されています。ログインするとクラウド保存が可能です。</p>
           )}
-          {localLogs.length > 0 && (
-            <div className="ai-teacher-local-logs">
-              <h4>ローカル実践履歴（最新5件）</h4>
-              {localLogs.slice(0, 5).map((log) => (
-                <div key={log.id} className="ai-teacher-log-row">
-                  <span className={`type-pill ${log.practice_type}`}>
-                    {log.practice_type === 'asana' ? 'アーサナ' : log.practice_type === 'pranayama' ? '呼吸法' : '瞑想'}
-                  </span>
-                  <strong>{log.practice_name}</strong>
-                  <span>{log.duration_min ?? '-'}分</span>
-                  <small>{new Date(log.created_at).toLocaleDateString('ja-JP')}</small>
-                </div>
-              ))}
+
+          {(auth.user ? cloudLogs.length > 0 : localLogs.length > 0) ? (
+            <div className="ai-teacher-record-list">
+              <h4>最近の実践記録</h4>
+              {(auth.user ? cloudLogs : localLogs).slice(0, 10).map((log) => {
+                const type = log.practice_type;
+                const typeLabel = type === 'asana' ? 'アーサナ' : type === 'pranayama' ? '呼吸法' : '瞑想';
+                const date = new Date(log.created_at).toLocaleDateString('ja-JP');
+                return (
+                  <div key={log.id} className="ai-teacher-record-card">
+                    <div className="ai-teacher-record-header">
+                      <span className={`type-pill ${type}`}>{typeLabel}</span>
+                      <strong>{log.practice_name}</strong>
+                      {log.ai_teacher_used && <span className="ai-teacher-badge">AI Teacher</span>}
+                    </div>
+                    <div className="ai-teacher-record-meta">
+                      <span>📅 {date}</span>
+                      <span>⏱ {log.duration_min ?? '-'}分</span>
+                      {log.mood_before && <span>前: {log.mood_before}</span>}
+                      {log.mood_after && <span>後: {log.mood_after}</span>}
+                    </div>
+                    {log.note && <p className="ai-teacher-record-note">{log.note}</p>}
+                  </div>
+                );
+              })}
             </div>
+          ) : (
+            <p className="ai-teacher-no-records">まだ実践記録がありません。STEP 6で実践を始めましょう。</p>
           )}
-          <button className="secondary-button" onClick={onOpenMyPage}>myYOGAカルテを見る</button>
+
+          <div className="ai-teacher-step7-cta">
+            <button className="primary-button" onClick={onOpenMyPage}>myYOGAカルテで実践履歴を見る</button>
+          </div>
+          <p className="ai-teacher-safety-note">気分は感じ方のメモであり、医療診断ではありません。</p>
         </section>
       )}
 
@@ -892,6 +954,46 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               );
             })()}
           </div>
+
+          {/* UNDERSTANDING */}
+          <div className="ai-teacher-understanding-section">
+            <h4>UNDERSTANDING</h4>
+            {(() => {
+              const axis = calcUnderstandingAxis(growth, !!persona);
+              const axes = [
+                { label: '実践', value: axis.practice, icon: '🧘' },
+                { label: '好み', value: axis.preference, icon: '⚙️' },
+                { label: '継続', value: axis.continuity, icon: '🌱' },
+              ];
+              return (
+                <div className="ai-teacher-understanding-grid">
+                  {axes.map((a) => (
+                    <div key={a.label} className="ai-teacher-axis-card">
+                      <span className="ai-teacher-axis-icon">{a.icon}</span>
+                      <strong>{a.label}</strong>
+                      <div className="ai-teacher-axis-bar">
+                        <div className="ai-teacher-axis-fill" style={{ width: `${a.value}%` }} />
+                      </div>
+                      <span className="ai-teacher-axis-value">{a.value}%</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+            <p className="ai-teacher-understanding-note">
+              この表示は実践履歴や設定情報に基づく目安です。
+            </p>
+          </div>
+
+          {/* 先生が知っていること */}
+          {growth.facts.length > 0 && (
+            <div className="ai-teacher-growth-section">
+              <h4>先生が知っていること</h4>
+              <ul className="ai-teacher-facts-list">
+                {growth.facts.map((f, idx) => <li key={idx}>{f}</li>)}
+              </ul>
+            </div>
+          )}
 
           {/* Prefs UI */}
           <div className="ai-teacher-prefs-section">
@@ -949,26 +1051,34 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             )}
           </div>
 
-          {growth.favoriteTypes.length > 0 && (
-            <div className="ai-teacher-growth-section">
-              <h4>よく実践している種類</h4>
-              <div className="chip-grid">
-                {growth.favoriteTypes.map((t) => (
-                  <span key={t} className="select-chip active">
-                    {t === 'asana' ? 'アーサナ' : t === 'pranayama' ? '呼吸法' : '瞑想'}
-                  </span>
-                ))}
+          {/* 最近の実践履歴 */}
+          <div className="ai-teacher-history-section">
+            <h4>最近の実践履歴</h4>
+            {(auth.user ? cloudLogs.length > 0 : localLogs.length > 0) ? (
+              <div className="ai-teacher-history-list">
+                {(auth.user ? cloudLogs : localLogs).slice(0, 20).map((log) => {
+                  const type = log.practice_type;
+                  const typeLabel = type === 'asana' ? 'アーサナ' : type === 'pranayama' ? '呼吸法' : '瞑想';
+                  const date = new Date(log.created_at).toLocaleDateString('ja-JP');
+                  return (
+                    <div key={log.id} className="ai-teacher-history-row">
+                      <span className={`type-pill ${type}`}>{typeLabel}</span>
+                      <strong>{log.practice_name}</strong>
+                      <span className="ai-teacher-history-duration">{log.duration_min ?? '-'}分</span>
+                      {log.mood_after && <span className="ai-teacher-history-mood">後: {log.mood_after}</span>}
+                      <small>{date}</small>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
-          )}
-          {growth.facts.length > 0 && (
-            <div className="ai-teacher-growth-section">
-              <h4>先生が知っていること</h4>
-              <ul className="ai-teacher-facts-list">
-                {growth.facts.map((f, idx) => <li key={idx}>{f}</li>)}
-              </ul>
-            </div>
-          )}
+            ) : (
+              <p className="ai-teacher-no-records">まだ実践履歴がありません。</p>
+            )}
+          </div>
+
+          <div className="ai-teacher-step8-cta">
+            <button className="secondary-button" onClick={onOpenMyPage}>myYOGAカルテで実践履歴を見る</button>
+          </div>
           <p className="ai-teacher-safety-note">
             成長データに医療・身体情報は保存されません。
           </p>

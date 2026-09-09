@@ -6,7 +6,7 @@ import {
   type DiagnosisRecord,
 } from '../services/diagnosisService';
 import {
-  getPracticeSummary, type PracticeSummary,
+  getPracticeSummary, getPracticeLogs, type PracticeSummary, type PracticeLog,
 } from '../services/practiceLogService';
 
 function formatDate(iso: string): string {
@@ -149,13 +149,16 @@ function ScoreDiff({ latest, previous }: { latest: Record<string, unknown>; prev
 export function CloudPracticeSection({ onStartAITeacher }: { onStartAITeacher?: () => void }) {
   const auth = useAuth();
   const [summary, setSummary] = useState<PracticeSummary | null>(null);
+  const [logs, setLogs] = useState<PracticeLog[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!auth.user || !isSupabaseConfigured) { setLoading(false); return; }
     (async () => {
-      const { data } = await getPracticeSummary(auth.user!.id);
-      setSummary(data);
+      const { data: s } = await getPracticeSummary(auth.user!.id);
+      setSummary(s);
+      const { data: l } = await getPracticeLogs(auth.user!.id);
+      setLogs(l ?? []);
       setLoading(false);
     })();
   }, [auth.user]);
@@ -240,6 +243,25 @@ export function CloudPracticeSection({ onStartAITeacher }: { onStartAITeacher?: 
       {onStartAITeacher && (
         <div className="hero-actions" style={{ marginTop: 16 }}>
           <button type="button" className="primary-button" onClick={onStartAITeacher}>今日の実践を始める — My AI Teacher</button>
+        </div>
+      )}
+      {logs.filter((l) => l.ai_teacher_used).length > 0 && (
+        <div className="cloud-practice-ai-teacher">
+          <h4>My AI Teacherで実践した記録</h4>
+          <div className="cloud-practice-ai-list">
+            {logs.filter((l) => l.ai_teacher_used).slice(0, 10).map((log) => {
+              const typeLabel = practiceLabels[log.practice_type] ?? log.practice_type;
+              return (
+                <div key={log.id} className="cloud-practice-ai-row">
+                  <span className={`type-pill ${log.practice_type}`}>{typeLabel}</span>
+                  <strong>{log.practice_name}</strong>
+                  <span>{log.duration_min ?? '-'}分</span>
+                  {log.mood_after && <small>後: {log.mood_after}</small>}
+                  <small>{formatDate(log.created_at)}</small>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </section>
