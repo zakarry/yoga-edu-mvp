@@ -4730,6 +4730,17 @@ h1 {
 }
 .chat-role { font-size: 12px; font-weight: 800; color: var(--muted); }
 .chat-message p { font-size: 14px; line-height: 1.6; color: var(--text); }
+.chat-knowledge-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(108, 138, 118, 0.12);
+  border: 1px solid rgba(108, 138, 118, 0.2);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green-strong);
+}
 .ai-teacher-chat-input-row {
   display: flex;
   gap: 8px;

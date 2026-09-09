@@ -1,4 +1,5 @@
 import type { TeacherContext } from './teacherContextService';
+import { findExplanationByKeyword, type KnowledgeExplanation } from './teacherKnowledgeService';
 
 export interface ConversationContext {
   requestedMinutes?: number;
@@ -6,18 +7,68 @@ export interface ConversationContext {
   requestedStyle?: string;
   lastUserMessage?: string;
   lastTeacherSuggestion?: string;
+  lastKnowledgeMasterId?: string;
+  lastKnowledgeTitle?: string;
 }
 
 export interface TeacherResponse {
   text: string;
   isSafety?: boolean;
+  knowledgeUsed?: boolean;
+  knowledgeMasterId?: string;
+  knowledgeTitle?: string;
   updatedContext?: ConversationContext;
 }
 
 const SAFETY_KEYWORDS = [
   '痛い', '怪我', '妊娠', '既往症', '病気', '腰痛', '膝が', '肩が痛',
   '高血圧', '診断', '治療', '薬', 'めまい', 'しびれ', '手術',
+  '効く', 'おすすめ', '合うポーズ', '合う呼吸', '安全', '危険',
 ];
+
+const PRACTICE_REQUEST_KEYWORDS = [
+  '合う', 'おすすめ', 'やれば', 'やったほうが', 'すべき',
+  '今日何を', '今日やる', 'プラン', 'メニュー',
+];
+
+const EXPLANATION_PATTERNS = [
+  'とは', 'とは何', 'って何', 'とはどういう', 'どういう意味',
+  '教えて', '説明して', 'について', 'とは？',
+  'どういう', 'どんなもの', 'どんな意味',
+];
+
+function isExplanationIntent(text: string): boolean {
+  if (PRACTICE_REQUEST_KEYWORDS.some((kw) => text.includes(kw))) return false;
+  return EXPLANATION_PATTERNS.some((pat) => text.includes(pat));
+}
+
+function extractExplanationKeyword(text: string): string {
+  return text
+    .replace(/とはどういう意味ですか?|とは何ですか?|とは？|とは\?|って何ですか?|って何？|って何\?|について教えてください?|について説明してください?|を説明してください?|説明してください?|教えてください?/g, '')
+    .replace(/[「」？?。、，,]/g, '')
+    .replace(/^(この|その)\s*/, '')
+    .replace(/簡単に|詳しく|わかりやすく/g, '')
+    .trim();
+}
+
+function formatExplanation(
+  entry: KnowledgeExplanation,
+  explanationPref: 'short' | 'standard' | 'detailed',
+  teacherName: string,
+): string {
+  const content = entry.publicContent;
+  let body: string;
+  if (explanationPref === 'short') {
+    const sentences = content.split(/。/).filter((s) => s.trim().length > 0);
+    body = sentences.slice(0, 2).join('。') + '。';
+  } else if (explanationPref === 'detailed') {
+    body = content;
+  } else {
+    const sentences = content.split(/。/).filter((s) => s.trim().length > 0);
+    body = sentences.slice(0, Math.min(5, sentences.length)).join('。') + '。';
+  }
+  return `${teacherName}です。${body}\n\nこの説明はYoga Knowledgeを参考にしています。`;
+}
 
 function detectSafetyKeyword(text: string): string | null {
   for (const kw of SAFETY_KEYWORDS) {
@@ -47,11 +98,11 @@ function parseStyle(text: string): string | null {
   return null;
 }
 
-export function generateTeacherResponse(
+export async function generateTeacherResponse(
   context: TeacherContext,
   userMessage: string,
   prevContext?: ConversationContext,
-): TeacherResponse {
+): Promise<TeacherResponse> {
   const safetyHit = detectSafetyKeyword(userMessage);
   if (safetyHit) {
     return {
@@ -59,6 +110,28 @@ export function generateTeacherResponse(
       isSafety: true,
       updatedContext: { ...prevContext, lastUserMessage: undefined, lastTeacherSuggestion: undefined },
     };
+  }
+
+  // Knowledge explanation route (after safety, before rule-based)
+  if (isExplanationIntent(userMessage)) {
+    const keyword = extractExplanationKeyword(userMessage) || userMessage;
+    const entry = await findExplanationByKeyword(keyword);
+    if (entry) {
+      const name = context.persona?.name ?? 'AI先生';
+      const text = formatExplanation(entry, context.preferences.explanation, name);
+      return {
+        text,
+        knowledgeUsed: true,
+        knowledgeMasterId: entry.masterId,
+        knowledgeTitle: entry.title,
+        updatedContext: {
+          ...prevContext,
+          lastUserMessage: userMessage,
+          lastKnowledgeMasterId: entry.masterId,
+          lastKnowledgeTitle: entry.title,
+        },
+      };
+    }
   }
 
   const name = context.persona?.name ?? 'AI先生';

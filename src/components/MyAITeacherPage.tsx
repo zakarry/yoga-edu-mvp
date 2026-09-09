@@ -166,6 +166,7 @@ interface ChatMessage {
   role: 'user' | 'teacher';
   text: string;
   isSafety?: boolean;
+  knowledgeUsed?: boolean;
 }
 
 function buildLocalContextFast(growth: AITeacherGrowth, sessionIntent?: ConversationContext): TeacherContext {
@@ -378,11 +379,16 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     const delay = 150 + Math.random() * 150;
     setTimeout(async () => {
       const ctx = teacherContext ?? buildLocalContextFast(growth, conversationContext);
-      const response = generateTeacherResponse(ctx, userMsg.text, conversationContext);
+      const response = await generateTeacherResponse(ctx, userMsg.text, conversationContext);
       if (response.updatedContext) {
         setConversationContext(response.updatedContext);
       }
-      const reply: ChatMessage = { role: 'teacher', text: response.text, isSafety: response.isSafety };
+      const reply: ChatMessage = {
+        role: 'teacher',
+        text: response.text,
+        isSafety: response.isSafety,
+        knowledgeUsed: response.knowledgeUsed,
+      };
       setChatMessages((prev) => [...prev, reply]);
       setChatTyping(false);
     }, delay);
@@ -792,6 +798,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 <div key={idx} className={`chat-message ${msg.role} ${msg.isSafety ? 'safety' : ''}`}>
                   <span className="chat-role">{msg.role === 'teacher' ? (persona?.name ?? 'AI先生') : 'あなた'}</span>
                   <p>{msg.text}</p>
+                  {msg.knowledgeUsed && <span className="chat-knowledge-badge">Yoga Knowledgeを参考にしています</span>}
                 </div>
               ))}
               {chatTyping && (
