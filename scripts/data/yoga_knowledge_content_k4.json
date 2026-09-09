@@ -1,0 +1,83 @@
+[
+  {
+    "master_id": "YK-0001",
+    "content_kind": "source_text",
+    "language": "ja",
+    "content": "ヨーガの起源は古代インドに遡る。インダス文明の遺跡から発見された印章には、瞑想的な姿勬をとる人物像が刻まれており、これがヨーガの最古の形跡と考えられている。紀元前1500年頃にアーリア人がインド亜大陸に侵入し、ヴェーダ文献の中にヨーガの萌芽が見られる。後にウパニシャッド哲学において、ヨーガは精神的修行体系として発展した。",
+    "safety_review_status": "not_reviewed",
+    "sections": [
+      {
+        "section_type": "history",
+        "heading": "ヨーガの起源",
+        "body": "ヨーガの起源は古代インドに遡る。インダス文明の遺跡から発見された印章には、瞑想的な姿勬をとる人物像が刻まれており、これがヨーガの最古の形跡と考えられている。",
+        "source_order": 1
+      },
+      {
+        "section_type": "introduction",
+        "heading": "ヴェーダ文献との関係",
+        "body": "紀元前1500年頃にアーリア人がインド亜大陸に侵入し、ヴェーダ文献の中にヨーガの萌芽が見られる。後にウパニシャッド哲学において、ヨーガは精神的修行体系として発展した。",
+        "source_order": 2
+      }
+    ]
+  },
+  {
+    "master_id": "YK-0029",
+    "content_kind": "source_text",
+    "language": "ja",
+    "content": "プラーナーヤーマは、プラーナ（生命エネルギー）とアーヤーマ（拡張・制御）の複合語であり、呼吸を通じて生命エネルギーを制御するヨーガの実践法である。パタンジャリのヨーガ・スートラでは第8肢として位置づけられている。プラーナーヤーマの実践により、心身の浄化と精神の集中が促されるとされる。ただし、無理な呼吸法は身体に害をもたらす可能性があるため、適切な指導者の下で行うべきである。",
+    "safety_review_status": "review_required",
+    "sections": [
+      {
+        "section_type": "definition",
+        "heading": "プラーナーヤーマとは",
+        "body": "プラーナーヤーマは、プラーナ（生命エネルギー）とアーヤーマ（拡張・制御）の複合語であり、呼吸を通じて生命エネルギーを制御するヨーガの実践法である。",
+        "source_order": 1
+      },
+      {
+        "section_type": "concept",
+        "heading": "ヨーガ・スートラにおける位置づけ",
+        "body": "パタンジャリのヨーガ・スートラでは第8肢として位置づけられている。",
+        "source_order": 2
+      },
+      {
+        "section_type": "benefit",
+        "heading": "効果",
+        "body": "プラーナーヤーマの実践により、心身の浄化と精神の集中が促されるとされる。",
+        "source_order": 3
+      },
+      {
+        "section_type": "caution",
+        "heading": "注意",
+        "body": "無理な呼吸法は身体に害をもたらす可能性があるため、適切な指導者の下で行うべきである。",
+        "source_order": 4
+      }
+    ]
+  },
+  {
+    "master_id": "YK-0253",
+    "content_kind": "source_text",
+    "language": "ja",
+    "content": "ウシュトラーサナ（uṣṭrāsana ラクダのポーズ）は、膝立ちから上半身を後弯させ、両手を踵に置くアーサナである。背中の筋肉を伸ばし、胸部を開く効果がある。腰痛のある者、首の疾患のある者は注意が必要であり、無理な後弯は避けるべきである。妊娠中の実践は推奨されない。",
+    "safety_review_status": "review_required",
+    "sections": [
+      {
+        "section_type": "definition",
+        "heading": "ウシュトラーサナとは",
+        "body": "ウシュトラーサナ（uṣṭrāsana ラクダのポーズ）は、膝立ちから上半身を後弯させ、両手を踵に置くアーサナである。",
+        "source_order": 1
+      },
+      {
+        "section_type": "benefit",
+        "heading": "効果",
+        "body": "背中の筋肉を伸ばし、胸部を開く効果がある。",
+        "source_order": 2
+      },
+      {
+        "section_type": "contraindication",
+        "heading": "禁忌",
+        "body": "腰痛のある者、首の疾患のある者は注意が必要であり、無理な後弯は避けるべきである。妊娠中の実践は推奨されない。",
+        "source_order": 3
+      }
+    ]
+  }
+]

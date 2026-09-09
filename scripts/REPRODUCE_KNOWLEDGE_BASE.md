@@ -41,7 +41,29 @@ Idempotent (DELETE then INSERT).
 - Entry import script: `scripts/importYogaKnowledge.ts`
 - Source import script: `fix_source_mappings.js`
 
+### 4. Import Source Text (K4 — knowledge_contents + knowledge_source_sections)
+```sh
+npx tsx scripts/importYogaKnowledgeContent.ts
+```
+This reads `scripts/data/yoga_knowledge_content_k4.json` and upserts
+source_text rows into `knowledge_contents`, plus structured sub-sections
+into `knowledge_source_sections`. Idempotent (upsert + DELETE/INSERT sections).
+
+K4-specific migration:
+- `20260909090100_k4_create_content_tables.sql`
+
+## File locations
+- Formal Master JSON: `scripts/data/yoga_knowledge_master_k2_6_formal.json`
+- Formal Master CSV:  `scripts/data/yoga_knowledge_master_k2_6_formal.csv`
+- Source Mappings CSV: `scripts/data/yoga_knowledge_master_k2_6_source_mappings.csv`
+- K4 Content JSON:    `scripts/data/yoga_knowledge_content_k4.json`
+- Entry import script: `scripts/importYogaKnowledge.ts`
+- Source import script: `fix_source_mappings.js`
+- Content import script: `scripts/importYogaKnowledgeContent.ts`
+
 ## Expected result
 - knowledge_entries with master_id = 335
 - knowledge_sources (yoga_zukan) = 392
 - entries with 0 source mappings = 0
+- knowledge_contents: varies by K4 JSON (test: 3 rows)
+- knowledge_source_sections: varies by K4 JSON (test: 9 rows)
