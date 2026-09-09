@@ -3958,6 +3958,93 @@ h1 {
   width: 100%;
 }
 
+/* OAuth buttons */
+.auth-welcome {
+  text-align: center;
+}
+.auth-welcome h3 {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 4px;
+}
+.auth-welcome p {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+}
+.oauth-buttons {
+  display: grid;
+  gap: 10px;
+}
+.oauth-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  border: 1px solid rgba(16,37,66,.12);
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, transform .1s ease;
+  background: #fff;
+  color: var(--navy);
+}
+.oauth-button:hover:not(:disabled) {
+  background: rgba(16,37,66,.04);
+  border-color: rgba(16,37,66,.2);
+}
+.oauth-button:active:not(:disabled) {
+  transform: scale(.98);
+}
+.oauth-button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+.oauth-google {
+  border-color: rgba(66,133,244,.3);
+}
+.oauth-apple {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+.oauth-apple:hover:not(:disabled) {
+  background: #1a1a1a;
+}
+.oauth-line {
+  background: #06C755;
+  color: #fff;
+  border-color: #06C755;
+}
+.oauth-line:hover:not(:disabled) {
+  background: #05b84d;
+}
+.oauth-email {
+  background: transparent;
+  color: var(--navy-soft, #3a5a7a);
+}
+.oauth-icon {
+  flex-shrink: 0;
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(16,37,66,.1);
+}
+
 /* Profile / Privacy sections */
 .mypage-section {
   display: grid;

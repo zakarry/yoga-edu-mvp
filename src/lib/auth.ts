@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import { supabase, isSupabaseConfigured } from './supabase';
-import type { User } from '@supabase/supabase-js';
+import type { User, Provider } from '@supabase/supabase-js';
 
 export interface Profile {
   id: string;
@@ -22,6 +22,8 @@ export interface PrivacySettings {
   updated_at: string;
 }
 
+type OAuthProvider = 'google' | 'apple' | 'line';
+
 interface AuthState {
   user: User | null;
   profile: Profile | null;
@@ -31,6 +33,7 @@ interface AuthState {
   cloudUnavailable: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string) => Promise<{ error: string | null }>;
+  signInWithOAuth: (provider: OAuthProvider) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateProfile: (patch: Partial<Profile>) => Promise<{ error: string | null }>;
@@ -50,6 +53,7 @@ const initialAuthState: AuthState = {
   cloudUnavailable: !isSupabaseConfigured,
   signIn: noop,
   signUp: noop,
+  signInWithOAuth: noop,
   signOut: noop,
   refreshProfile: noop,
   updateProfile: noop,
@@ -127,6 +131,17 @@ const signUp = async (email: string, password: string) => {
   return { error: error?.message ?? null };
 };
 
+const signInWithOAuth = async (provider: OAuthProvider) => {
+  if (!supabase) return { error: '現在クラウド保存を利用できません' };
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: provider as Provider,
+    options: {
+      redirectTo: window.location.origin,
+    },
+  });
+  return { error: error?.message ?? null };
+};
+
 const signOut = async () => {
   if (!supabase) return;
   await supabase.auth.signOut();
@@ -159,7 +174,7 @@ const updatePrivacy = async (patch: Partial<PrivacySettings>) => {
   return { error: error?.message ?? null };
 };
 
-setAuthState({ signIn, signUp, signOut, refreshProfile, updateProfile, updatePrivacy });
+setAuthState({ signIn, signUp, signInWithOAuth, signOut, refreshProfile, updateProfile, updatePrivacy });
 
 export function useAuth(): AuthState {
   const [, forceUpdate] = useState(0);
