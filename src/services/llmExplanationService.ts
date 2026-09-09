@@ -1,4 +1,6 @@
 import type { AITeacherLLMRequest } from '../types/aiTeacherLLM';
+import { supabase } from '../lib/supabase';
+import { getMembershipTier, isPaidMember } from './membershipService';
 
 const LLM_ENABLED = import.meta.env.VITE_AI_TEACHER_LLM_ENABLED === 'true';
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -18,12 +20,21 @@ export interface LLMExplanationResult {
   text: string | null;
   fallback: boolean;
   model?: string;
+  membershipRequired?: boolean;
+}
+
+async function canUseLLM(userId: string | null): Promise<boolean> {
+  if (!LLM_ENABLED || !userId || !supabase) return false;
+  const tier = await getMembershipTier(userId);
+  return isPaidMember(tier);
 }
 
 export async function fetchLLMExplanation(
   payload: AITeacherLLMRequest,
+  userId: string | null,
 ): Promise<LLMExplanationResult> {
-  if (!LLM_ENABLED) {
+  const allowed = await canUseLLM(userId);
+  if (!allowed) {
     return { text: null, fallback: true };
   }
 
@@ -32,12 +43,18 @@ export async function fetchLLMExplanation(
   }
 
   try {
+    const { data: session } = await supabase!.auth.getSession();
+    const accessToken = session?.session?.access_token;
+    if (!accessToken) {
+      return { text: null, fallback: true };
+    }
+
     const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-teacher-explanation`;
     const res = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        'Authorization': `Bearer ${accessToken}`,
       },
       body: JSON.stringify(payload),
     });

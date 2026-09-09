@@ -134,7 +134,7 @@ export async function generateTeacherResponse(
         knowledge: knowledgeItems,
       };
 
-      const llmResult = await fetchLLMExplanation(llmPayload);
+      const llmResult = await fetchLLMExplanation(llmPayload, context.userId ?? null);
 
       if (llmResult.text && !llmResult.fallback) {
         return {

@@ -176,6 +176,24 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("membership_tier")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profileError || !profile || profile.membership_tier !== "paid") {
+      return new Response(JSON.stringify({
+        text: null,
+        fallback: true,
+        reason: "paid_membership_required",
+        model: LLM_MODEL,
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const body: AITeacherLLMRequest = await req.json();
 
     if (!body.knowledge || body.knowledge.length === 0) {
