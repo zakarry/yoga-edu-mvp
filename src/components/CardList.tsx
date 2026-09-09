@@ -99,7 +99,7 @@ const detailLabel = (item: SearchItem) => {
     case 'teacher':
       return 'プロフィールを見る';
     case 'event':
-      return '参加詳細を見る';
+      return isPastEvent(item) ? 'イベント詳細を見る' : '参加詳細を見る';
     default:
       return '活動を見る';
   }
@@ -116,6 +116,13 @@ const accentMeta = (item: SearchItem) => {
     default:
       return item.internationalExchangeAvailable ? '国際交流あり' : '地域で続けやすい活動';
   }
+};
+
+const isPastEvent = (item: SearchItem): boolean => {
+  if (item.type !== 'event') return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return new Date(item.date) < today;
 };
 
 const isAdminRecommendedSchool = (item: SearchItem): item is Extract<SearchItem, { type: 'school' }> => {
@@ -154,6 +161,7 @@ export function CardList({
         <div className="entity-topline">
           <span className={`type-pill ${item.type}`}>{typeLabel[item.type]}</span>
           <div className="entity-badge-group">
+            {item.type === 'event' && isPastEvent(item) && <span className="badge-ended-event">終了</span>}
             {isPrioritySchool && index === 0 && <span className="badge-priority">まず見る</span>}
             {isAdminRecommendedSchool(item) && <span className="badge-admin-recommendation">運営おすすめ</span>}
           </div>

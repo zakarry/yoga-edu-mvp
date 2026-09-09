@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { isSupabaseConfigured } from '../lib/supabase';
 
 interface AuthPanelProps {
   onOpenMyPage: () => void;
+  openSignal?: number;
 }
 
-export function AuthPanel({ onOpenMyPage }: AuthPanelProps) {
+export function AuthPanel({ onOpenMyPage, openSignal = 0 }: AuthPanelProps) {
   const auth = useAuth();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -14,6 +15,13 @@ export function AuthPanel({ onOpenMyPage }: AuthPanelProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (openSignal > 0) {
+      setOpen(true);
+      setMode('signin');
+    }
+  }, [openSignal]);
 
   if (!isSupabaseConfigured) {
     return (

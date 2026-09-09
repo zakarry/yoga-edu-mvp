@@ -146,7 +146,7 @@ function ScoreDiff({ latest, previous }: { latest: Record<string, unknown>; prev
   );
 }
 
-export function CloudPracticeSection() {
+export function CloudPracticeSection({ onStartAITeacher }: { onStartAITeacher?: () => void }) {
   const auth = useAuth();
   const [summary, setSummary] = useState<PracticeSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -206,6 +206,9 @@ export function CloudPracticeSection() {
       <section className="panel mypage-section">
         <h3>My Practice</h3>
         <p>クラウドに保存された実践履歴はまだありません。</p>
+        {onStartAITeacher && (
+          <button type="button" className="primary-button" onClick={onStartAITeacher} style={{ marginTop: 12 }}>今日の実践を始める — My AI Teacher</button>
+        )}
       </section>
     );
   }
@@ -234,6 +237,11 @@ export function CloudPracticeSection() {
           );
         })}
       </div>
+      {onStartAITeacher && (
+        <div className="hero-actions" style={{ marginTop: 16 }}>
+          <button type="button" className="primary-button" onClick={onStartAITeacher}>今日の実践を始める — My AI Teacher</button>
+        </div>
+      )}
     </section>
   );
 }

@@ -43,6 +43,7 @@ interface ResultPageProps {
   onBackHome: () => void;
   onOpenMyPage: () => void;
   onOpenProYoga: () => void;
+  onOpenAITeacher: () => void;
   onDetail: (item: SearchItem) => void;
 }
 
@@ -180,7 +181,7 @@ function BoxBreathingExperience() {
   );
 }
 
-export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch, onBackHome, onOpenMyPage, onOpenProYoga, onDetail }: ResultPageProps) {
+export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch, onBackHome, onOpenMyPage, onOpenProYoga, onOpenAITeacher, onDetail }: ResultPageProps) {
   const pose = result.recommendedYogaPose;
 
   return (
@@ -225,6 +226,9 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
             <button className="secondary-button" onClick={onOpenSearch}>この条件で探す</button>
             <button className="ghost-button" onClick={onOpenMyPage}>マイページを見る</button>
             <button className="primary-button" onClick={onRestart}>もう一度診断する</button>
+          </div>
+          <div className="hero-actions result-ai-teacher-cta">
+            <button className="gold-button" onClick={onOpenAITeacher}>今日の実践へ — My AI Teacherと始める</button>
           </div>
         </div>
       </section>

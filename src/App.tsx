@@ -29,11 +29,13 @@ import { AuthPanel } from './components/AuthPanel';
 import { CloudDiagnosisSection, CloudPracticeSection } from './components/MyYogaCloudSections';
 import { MyTeachingJourney } from './components/MyTeachingJourney';
 import { MyTeacherSection } from './components/MyTeacherSection';
+import { MyAITeacherPage } from './components/MyAITeacherPage';
+import { SiteMapPage } from './components/SiteMapPage';
 import { useAuth } from './lib/auth';
 import { addTeacherRelationship } from './services/teacherRelationshipService';
 import { fetchDirectory } from './services/directoryService';
 
-type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy'| 'diagnosis-v2';
+type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map';
 
 type FilterType = SearchItem['type'] | 'all';
 
@@ -484,6 +486,13 @@ function getItemTags(item: SearchItem) {
   if (item.type === 'school') return [...item.schoolTypes, ...item.programs, ...item.strengths];
   if (item.type === 'event') return [...item.eventTypes, ...item.contentTags, item.organizerType];
   return [...item.clubTypes, ...item.activities];
+}
+
+function isPastEventItem(item: SearchItem): boolean {
+  if (item.type !== 'event') return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return new Date(item.date) < today;
 }
 
 function getForeignScore(item: SearchItem) {
@@ -1007,8 +1016,10 @@ export default function App() {
   const [searchPurposes, setSearchPurposes] = useState<string[]>([]);
   const [searchFeatures, setSearchFeatures] = useState<string[]>([]);
   const [detailItem, setDetailItem] = useState<SearchItem | null>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [teacherRelationshipRefresh, setTeacherRelationshipRefresh] = useState(0);
+  const [authOpenSignal, setAuthOpenSignal] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const auth = useAuth();
 
   useEffect(() => {
@@ -1040,6 +1051,7 @@ export default function App() {
 
   const moveTo = (next: PageKey) => {
     setMobileMenuOpen(false);
+    setMobileNavOpen(false);
     setPage(next);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -1068,7 +1080,8 @@ export default function App() {
 
   const handleAddTeacher = async (item: Extract<SearchItem, { type: 'teacher' }>) => {
     if (!auth.user) {
-      window.alert('My Teacherへの登録にはログインが必要です。');
+      const shouldLogin = window.confirm('My TeacherとしてmyYOGAカルテに保存するにはログインしてください\n\nログイン画面を開きますか？');
+      if (shouldLogin) setAuthOpenSignal((v) => v + 1);
       return;
     }
     const result = await addTeacherRelationship(auth.user.id, item.id, 'regular');
@@ -1163,13 +1176,16 @@ export default function App() {
         <div className="topbar-actions">
           <button className="primary-button header-main-button" onClick={() => moveTo('diagnosis')}>無料診断を始める</button>
           <div className="auth-area">
-            <AuthPanel onOpenMyPage={() => moveTo('my-page')} />
+            <AuthPanel onOpenMyPage={() => moveTo('my-page')} openSignal={authOpenSignal} />
           </div>
           <nav className={`nav-row nav-secondary-menu ${mobileMenuOpen ? 'is-open' : ''}`}>
             <button className="nav-mobile-home" onClick={() => moveTo('home')}>TOPへ戻る</button>
-            <button onClick={() => openSearchWithType('all', page === 'results')}>検索・一覧</button>
+            <button onClick={() => moveTo('diagnosis')}>AI診断</button>
+            <button onClick={() => openSearchWithType('all', page === 'results')}>探す</button>
+            <button onClick={() => moveTo('ai-teacher')}>My AI Teacher</button>
             <button onClick={() => moveTo('my-page')}>myYOGAカルテ</button>
-            <button onClick={() => moveTo('pro-yoga')}>プロYoga検定</button>
+            <button onClick={() => moveTo('pro-yoga')}>学ぶ</button>
+            <button onClick={() => moveTo('site-map')}>機能一覧</button>
           </nav>
         </div>
       </header>
@@ -1199,6 +1215,62 @@ export default function App() {
                 <div className="stats-card"><strong>{teacherList.length}</strong><span>おすすめ先生</span></div>
                 <div className="stats-card"><strong>{eventList.length}</strong><span>イベント</span></div>
                 <div className="stats-card"><strong>{clubList.length}</strong><span>ヨガクラブ</span></div>
+              </div>
+            </section>
+
+            <section className="panel ai-teacher-top-cta-panel">
+              <div className="ai-teacher-top-cta-inner">
+                <div>
+                  <span className="eyebrow">My AI Teacher</span>
+                  <h3>今日のヨガをAI先生と始める</h3>
+                  <p>あなたの目的や記録に合わせて、アーサナ・呼吸・瞑想の実践をサポートします。</p>
+                </div>
+                <button className="primary-button" onClick={() => moveTo('ai-teacher')}>My AI Teacherを始める</button>
+              </div>
+            </section>
+
+            <section className="panel features-overview-panel">
+              <div className="section-inline-header">
+                <h3>Yoga AIでできること</h3>
+              </div>
+              <div className="features-overview-grid">
+                <button className="feature-card" onClick={() => moveTo('diagnosis')}>
+                  <strong>自分を知る</strong>
+                  <span>AI診断で今の状態をチェック</span>
+                </button>
+                <button className="feature-card" onClick={() => moveTo('ai-teacher')}>
+                  <strong>今日ヨガをする</strong>
+                  <span>My AI Teacherと実践する</span>
+                </button>
+                <button className="feature-card" onClick={() => moveTo('search')}>
+                  <strong>自分に合うヨガを探す</strong>
+                  <span>先生・スクール・イベント・クラブ</span>
+                </button>
+                <button className="feature-card" onClick={() => moveTo('my-page')}>
+                  <strong>続けた記録を見る</strong>
+                  <span>myYOGAカルテで振り返る</span>
+                </button>
+                <button className="feature-card" onClick={() => moveTo('pro-yoga')}>
+                  <strong>学ぶ</strong>
+                  <span>検定・Pro Yoga・ヨガの聖地</span>
+                </button>
+              </div>
+            </section>
+
+            <section className="panel user-flow-panel">
+              <div className="section-inline-header">
+                <h3>Yoga AIを始める流れ</h3>
+              </div>
+              <div className="user-flow-steps">
+                <div className="user-flow-step"><span>1</span><strong>診断する</strong><p>今の状態と目的をAI診断</p></div>
+                <div className="user-flow-arrow" aria-hidden="true">→</div>
+                <div className="user-flow-step"><span>2</span><strong>実践する</strong><p>My AI Teacherで今日のヨガ</p></div>
+                <div className="user-flow-arrow" aria-hidden="true">→</div>
+                <div className="user-flow-step"><span>3</span><strong>探す</strong><p>先生・スクール・イベントを探す</p></div>
+                <div className="user-flow-arrow" aria-hidden="true">→</div>
+                <div className="user-flow-step"><span>4</span><strong>続ける</strong><p>myYOGAカルテで記録</p></div>
+                <div className="user-flow-arrow" aria-hidden="true">→</div>
+                <div className="user-flow-step"><span>5</span><strong>成長する</strong><p>検定・Pro Yogaで次へ</p></div>
               </div>
             </section>
 
@@ -1255,6 +1327,7 @@ export default function App() {
             onBackHome={() => moveTo('home')}
             onOpenMyPage={() => moveTo('my-page')}
             onOpenProYoga={() => moveTo('pro-yoga')}
+            onOpenAITeacher={() => moveTo('ai-teacher')}
             onDetail={setDetailItem}
           />
         )}
@@ -1265,7 +1338,7 @@ export default function App() {
             onRestart={() => moveTo('diagnosis')}
             onDetail={setDetailItem}
             cloudDiagnosisSection={<CloudDiagnosisSection onStartDiagnosis={() => moveTo('diagnosis-v2')} />}
-            cloudPracticeSection={<CloudPracticeSection />}
+            cloudPracticeSection={<CloudPracticeSection onStartAITeacher={() => moveTo('ai-teacher')} />}
             teachingJourneySection={<MyTeachingJourney onStartTeacherDiagnosis={() => moveTo('teacher-diagnosis')} onOpenProYoga={() => moveTo('pro-yoga')} />}
             myTeacherSection={<MyTeacherSection refreshToken={teacherRelationshipRefresh} />}
           />
@@ -1294,7 +1367,7 @@ export default function App() {
               <div className="filter-row">
                 <div className="tab-row">
                   {(['all', 'school', 'teacher', 'event', 'club'] as const).map((type) => (
-                    <button key={type} className={searchType === type ? 'tab-button active' : 'tab-button'} onClick={() => setSearchType(type)}>
+                    <button key={type} className={searchType === type ? 'tab-button active' : 'tab-button'} onClick={() => { setSearchType(type); setSearchKeyword(''); }}>
                       {type === 'all' ? 'すべて' : type === 'school' ? 'スクール' : type === 'teacher' ? '先生' : type === 'event' ? 'イベント' : 'ヨガクラブ'}
                     </button>
                   ))}
@@ -1432,6 +1505,21 @@ export default function App() {
         {page === 'pro-drill' && <ProDrillPage onBackHome={() => moveTo('home')} />}
         {page === 'diagnosis-v2' && <DiagnosisV2Page onMoveToSearch={() => moveTo('search')} onSaved={() => moveTo('my-page')} />}
         {page === 'sacred-sites' && <SacredSitesPage onBackHome={() => moveTo('home')} />}
+        {page === 'ai-teacher' && (
+          <MyAITeacherPage
+            onBackHome={() => moveTo('home')}
+            onOpenSearch={() => moveTo('search')}
+            onOpenMyPage={() => moveTo('my-page')}
+            onOpenProYoga={() => moveTo('pro-yoga')}
+            onDetail={setDetailItem}
+          />
+        )}
+        {page === 'site-map' && (
+          <SiteMapPage
+            onNavigate={(p) => moveTo(p as PageKey)}
+            onOpenSearchWithType={(t) => openSearchWithType(t)}
+          />
+        )}
         {page === 'terms' && (
           <StaticInfoPage
             eyebrow="Terms"
@@ -1508,11 +1596,41 @@ export default function App() {
         </div>
       </footer>
 
+      <nav className={`mobile-bottom-nav ${mobileNavOpen ? 'is-open' : ''}`} aria-label="モバイルナビ">
+        <button onClick={() => moveTo('home')}><span className="mbn-icon">🏠</span><span className="mbn-label">ホーム</span></button>
+        <button onClick={() => openSearchWithType('all')}><span className="mbn-icon">🔍</span><span className="mbn-label">探す</span></button>
+        <button onClick={() => moveTo('ai-teacher')} className="mbn-center"><span className="mbn-icon">🧘</span><span className="mbn-label">AI先生</span></button>
+        <button onClick={() => moveTo('my-page')}><span className="mbn-icon">📋</span><span className="mbn-label">カルテ</span></button>
+        <button onClick={() => setMobileNavOpen((v) => !v)}><span className="mbn-icon">☰</span><span className="mbn-label">メニュー</span></button>
+      </nav>
+      {mobileNavOpen && (
+        <div className="mobile-menu-overlay" onClick={() => setMobileNavOpen(false)}>
+          <div className="mobile-menu-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="mobile-menu-header">
+              <strong>メニュー</strong>
+              <button onClick={() => setMobileNavOpen(false)}>×</button>
+            </div>
+            <nav className="mobile-menu-list">
+              <button onClick={() => moveTo('diagnosis')}>AI診断</button>
+              <button onClick={() => moveTo('teacher-diagnosis')}>先生AI診断</button>
+              <button onClick={() => moveTo('pro-yoga')}>ヨガ検定3級・2級</button>
+              <button onClick={() => moveTo('pro-yoga')}>呼吸検定</button>
+              <button onClick={() => moveTo('pro-yoga')}>Pro Yoga</button>
+              <button onClick={() => moveTo('sacred-sites')}>ヨガの聖地と文化</button>
+              <button onClick={() => moveTo('site-map')}>Yoga AIでできること</button>
+              <button onClick={() => moveTo('terms')}>利用規約</button>
+              <button onClick={() => moveTo('privacy')}>プライバシーポリシー</button>
+            </nav>
+          </div>
+        </div>
+      )}
+
       {detailItem && (
         <aside className="detail-drawer">
           <div className="detail-header">
             <div>
               <span className={`type-pill ${detailItem.type}`}>{detailItem.type === 'school' ? 'スクール' : detailItem.type === 'teacher' ? '先生' : detailItem.type === 'event' ? 'イベント' : 'ヨガクラブ'}</span>
+              {detailItem.type === 'event' && isPastEventItem(detailItem) && <span className="badge-ended-event" style={{ marginLeft: 8 }}>終了</span>}
               <h3>{detailItem.name}</h3>
             </div>
             <button className="close-button" onClick={() => setDetailItem(null)}>×</button>
@@ -1522,6 +1640,16 @@ export default function App() {
             <div><strong>地域</strong><span>{detailItem.area}</span></div>
             <div><strong>対応言語</strong><span>{detailItem.languages.join(' / ')}</span></div>
             <div><strong>タグ</strong><span>{getItemTags(detailItem).slice(0, 8).join(' / ')}</span></div>
+            {detailItem.type === 'event' && (
+              <>
+                <div><strong>開催日</strong><span>{detailItem.date}</span></div>
+                <div><strong>主催者</strong><span>{detailItem.organizerType}</span></div>
+                <div><strong>開催時刻</strong><span>詳細情報は掲載準備中</span></div>
+                <div><strong>会場住所</strong><span>詳細情報は掲載準備中</span></div>
+                <div><strong>料金</strong><span>詳細情報は掲載準備中</span></div>
+                <div><strong>申込先</strong><span>詳細情報は掲載準備中</span></div>
+              </>
+            )}
           </div>
         </aside>
       )}
