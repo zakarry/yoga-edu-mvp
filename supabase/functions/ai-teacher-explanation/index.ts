@@ -105,9 +105,9 @@ function postCheckResponse(text: string): boolean {
   return true;
 }
 
-async function callLLM(prompt: string): Promise<string | null> {
+async function callLLM(prompt: string): Promise<{ text: string | null; error?: string }> {
   const apiKey = Deno.env.get("OPENAI_API_KEY");
-  if (!apiKey) return null;
+  if (!apiKey) return { text: null, error: "no_api_key" };
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS);
@@ -131,14 +131,17 @@ async function callLLM(prompt: string): Promise<string | null> {
       signal: controller.signal,
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => "");
+      return { text: null, error: `http_${res.status}: ${errBody.slice(0, 200)}` };
+    }
 
     const data = await res.json();
     const text = data?.choices?.[0]?.message?.content;
-    if (typeof text !== "string") return null;
-    return text;
-  } catch {
-    return null;
+    if (typeof text !== "string") return { text: null, error: "no_content" };
+    return { text };
+  } catch (err) {
+    return { text: null, error: `exception: ${err.message}` };
   } finally {
     clearTimeout(timeout);
   }
@@ -197,9 +200,9 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const llmText = await callLLM(prompt);
+    const llmResult = await callLLM(prompt);
 
-    if (!llmText || !postCheckResponse(llmText)) {
+    if (!llmResult.text || !postCheckResponse(llmResult.text)) {
       return new Response(JSON.stringify({
         text: null,
         fallback: true,
@@ -211,7 +214,7 @@ Deno.serve(async (req: Request) => {
     }
 
     return new Response(JSON.stringify({
-      text: llmText,
+      text: llmResult.text,
       fallback: false,
       model: LLM_MODEL,
     }), {
