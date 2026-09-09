@@ -146,8 +146,13 @@ export async function generateTeacherResponse(
       ? (extractExplanationKeyword(userMessage) || userMessage)
       : userMessage.replace(/[「」？?。、，,]/g, '').trim();
     const ranked = await getKnowledgeRanking(keyword);
-    if (ranked.length > 0 && ranked[0].score >= 75) {
-      const entry = ranked[0].entry;
+    const top = ranked[0];
+    const sameStrength = top
+      ? ranked.filter((candidate) => candidate.score === top.score && candidate.matchType === top.matchType)
+      : [];
+
+    if (top && top.score >= 75 && !(top.matchType === 'title_prefix' && sameStrength.length > 1)) {
+      const entry = top.entry;
       const name = context.persona?.name ?? 'AI先生';
       const text = formatExplanation(entry, context.preferences.explanation, name);
       return {
@@ -163,20 +168,30 @@ export async function generateTeacherResponse(
         },
       };
     }
-    // Ambiguous: content-only match (score 40) or multiple weak matches → confirm
-    if (ranked.length > 0 && ranked[0].score >= 40 && ranked[0].score < 75) {
+
+    if (top && top.matchType === 'title_prefix' && sameStrength.length > 1) {
       const name = context.persona?.name ?? 'AI先生';
+      const choices = sameStrength.slice(0, 4).map((candidate) => `「${candidate.entry.title}」`).join('、');
       return {
-        text: `${name}です。「${ranked[0].entry.title}」についてですか？ もしよければ「${ranked[0].entry.title}について教えて」と入れると、詳しくご説明できます。`,
+        text: `${name}です。${choices}のどの内容を知りたいですか？`,
         knowledgeUsed: false,
         updatedContext: { ...prevContext, lastUserMessage: userMessage },
       };
     }
-    // No match at all → rephrase guidance (only if the input looked like a knowledge question)
-    if (isExplanationIntent(userMessage)) {
+
+    if (top && top.score >= 40) {
       const name = context.persona?.name ?? 'AI先生';
       return {
-        text: `${name}です。そのテーマについては、今のKnowledgeからは直接的な説明が見つかりませんでした。別の言葉で言い換えていただけると、お調べできるかもしれません。`,
+        text: `${name}です。「${top.entry.title}」についてですか？`,
+        knowledgeUsed: false,
+        updatedContext: { ...prevContext, lastUserMessage: userMessage },
+      };
+    }
+
+    if (isLikelyKnowledgeQuery(userMessage)) {
+      const name = context.persona?.name ?? 'AI先生';
+      return {
+        text: `${name}です。その言葉については、今のKnowledgeから直接的な説明が見つかりませんでした。別の言葉で言い換えていただけると、お調べできるかもしれません。`,
         knowledgeUsed: false,
         updatedContext: { ...prevContext, lastUserMessage: userMessage },
       };
