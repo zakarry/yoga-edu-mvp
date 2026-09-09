@@ -4886,6 +4886,13 @@ h1 {
   border-color: rgba(209,75,75,.16);
   color: #a14040;
 }
+.ai-teacher-pillar-card[style*="pointer-events: none"] {
+  opacity: 0.5;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
 
 /* === P1: Hero, Relationship, Prefs, Adapt === */
 .ai-teacher-hero {

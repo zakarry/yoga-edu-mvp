@@ -249,6 +249,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [todayPlan, setTodayPlan] = useState<TodayPlanWithKnowledge | null>(null);
   const [knowledgeExplanation, setKnowledgeExplanation] = useState<KnowledgeExplanation | null>(null);
   const [knowledgeLoading, setKnowledgeLoading] = useState(false);
+  const [sessionSafetyBlocked, setSessionSafetyBlocked] = useState(false);
+  const testPlanMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('testPlan') === 'knowledge-k6';
   const [teacherContext, setTeacherContext] = useState<TeacherContext | null>(null);
   const [nextSuggestion, setNextSuggestion] = useState<NextSuggestion | null>(loadNextSuggestion());
   const [showContextSignals, setShowContextSignals] = useState(false);
@@ -340,25 +342,41 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     };
   }, [cameraOn]);
 
-  const safetyBlocked = isSafetyBlocked(latestDiagnosis?.safety_state);
+  const safetyBlocked = isSafetyBlocked(latestDiagnosis?.safety_state) || sessionSafetyBlocked;
   const safetyCautioned = isSafetyCautioned(latestDiagnosis?.safety_state);
 
   const handleGenerateProgram = useCallback(async () => {
     if (safetyBlocked) return;
     const ctx = await buildTeacherContext(auth.user?.id ?? null, growth, conversationContext);
     setTeacherContext(ctx);
-    const plan = generateTodayPlan(ctx);
+    let plan;
+    if (testPlanMode) {
+      plan = {
+        title: 'K6受入テストプラン',
+        summary: 'Knowledge連携確認用テストプラン',
+        totalMinutes: 7,
+        items: [
+          { type: 'pranayama' as const, name: '腹式呼吸', minutes: 3 },
+          { type: 'asana' as const, name: 'ブジャンガーサナ', minutes: 3 },
+          { type: 'dhyana' as const, name: '瞑想', minutes: 1 },
+        ],
+        adaptationNotes: [],
+        sourceSignals: ['testPlan=knowledge-k6'],
+      };
+    } else {
+      plan = generateTodayPlan(ctx);
+    }
     const planWithKnowledge = await attachKnowledgeToTodayPlan(plan);
     setTodayPlan(planWithKnowledge);
     const newProgram: TodayProgram = {
       items: plan.items.map((i) => ({ name: i.name, type: i.type, durationMin: i.minutes })),
       generatedAt: new Date().toISOString(),
-      basedOn: ctx.practiceSummary.totalSessions > 0 ? 'history' : 'default',
+      basedOn: testPlanMode ? 'default' : (ctx.practiceSummary.totalSessions > 0 ? 'history' : 'default'),
     };
     setProgram(newProgram);
     saveTodayProgram(newProgram);
     setStep('step2');
-  }, [safetyBlocked, auth.user, growth, conversationContext]);
+  }, [safetyBlocked, auth.user, growth, conversationContext, testPlanMode]);
 
   const handleSavePersona = useCallback(() => {
     const newPersona: AITeacherPersona = {
@@ -396,6 +414,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       };
       setChatMessages((prev) => [...prev, reply]);
       setChatTyping(false);
+      if (response.isSafety) {
+        setSessionSafetyBlocked(true);
+      }
     }, delay);
   }, [chatInput, persona, teacherContext, growth, conversationContext]);
 
@@ -545,14 +566,17 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               };
               return (
                 <article key={pt} className="ai-teacher-pillar-card"
-                  onClick={() => { setPracticeType(pt); setStep('step6'); }}
+                  onClick={() => { if (!safetyBlocked) { setPracticeType(pt); setStep('step6'); } }}
                   role="button" tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { setPracticeType(pt); setStep('step6'); } }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !safetyBlocked) { setPracticeType(pt); setStep('step6'); } }}
+                  style={safetyBlocked ? { pointerEvents: 'none', opacity: 0.5 } : undefined}
                 >
                   <span className="ai-teacher-pillar-label">{labels[pt]}</span>
                   <strong>{subs[pt]}</strong>
                   <p>{descs[pt]}</p>
-                  <button type="button" className="secondary-button ai-teacher-pillar-button">実践を始める</button>
+                  <button type="button" className="secondary-button ai-teacher-pillar-button" disabled={safetyBlocked}>
+                    {safetyBlocked ? '安全確認が必要です' : '実践を始める'}
+                  </button>
                 </article>
               );
             })}
@@ -591,14 +615,15 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             <div className="ai-teacher-next-suggestion">
               <p>{nextSuggestion.text}</p>
               {nextSuggestion.suggestedType && (
-                <button className="secondary-button" onClick={() => {
+                <button className="secondary-button" disabled={safetyBlocked} onClick={() => {
+                  if (safetyBlocked) return;
                   setPracticeType(nextSuggestion.suggestedType as 'asana' | 'pranayama' | 'dhyana');
                   if (nextSuggestion.suggestedDuration) setPracticeDuration(nextSuggestion.suggestedDuration);
                   setStep('step6');
                   clearNextSuggestion();
                   setNextSuggestion(null);
                 }}>
-                  この提案で始める
+                  {safetyBlocked ? '安全確認が必要です' : 'この提案で始める'}
                 </button>
               )}
             </div>
@@ -652,11 +677,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   </span>
                   <strong>{item.name}</strong>
                   <span className="ai-teacher-duration">約{item.durationMin}分</span>
-                  <button className="secondary-button" onClick={() => {
+                  <button className="secondary-button" disabled={safetyBlocked} onClick={() => {
+                    if (safetyBlocked) return;
                     setPracticeType(item.type);
                     setPracticeDuration(item.durationMin);
                     setStep('step6');
-                  }}>実践する</button>
+                  }}>{safetyBlocked ? '安全確認が必要です' : '実践する'}</button>
                   {showKnowledgeLink && (
                     <button
                       className="knowledge-link-button"
@@ -868,6 +894,11 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       {step === 'step6' && (
         <section className="panel ai-teacher-step-panel">
           <h3>STEP 6 — 実践AI先生</h3>
+          {safetyBlocked && (
+            <p className="ai-teacher-safety-note safety-blocked">
+              安全のため実践を開始できません。専門家にご相談ください。
+            </p>
+          )}
           <div className="ai-teacher-practice-setup">
             <div className="field-grid">
               <div className="field">
@@ -961,8 +992,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
           <div className="ai-teacher-practice-actions">
             {!practiceActive ? (
-              <button className="primary-button" onClick={() => setPracticeActive(true)} disabled={!practiceType}>
-                実践スタート
+              <button className="primary-button" onClick={() => { if (safetyBlocked) return; setPracticeActive(true); }} disabled={!practiceType || safetyBlocked}>
+                {safetyBlocked ? '安全確認が必要です' : '実践スタート'}
               </button>
             ) : (
               <button className="gold-button" onClick={handleCompletePractice}>
@@ -1019,14 +1050,15 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               <h4>次回の提案</h4>
               <p>{nextSuggestion.text}</p>
               {nextSuggestion.suggestedType && (
-                <button className="secondary-button" onClick={() => {
+                <button className="secondary-button" disabled={safetyBlocked} onClick={() => {
+                  if (safetyBlocked) return;
                   setPracticeType(nextSuggestion.suggestedType as 'asana' | 'pranayama' | 'dhyana');
                   if (nextSuggestion.suggestedDuration) setPracticeDuration(nextSuggestion.suggestedDuration);
                   setStep('step6');
                   clearNextSuggestion();
                   setNextSuggestion(null);
                 }}>
-                  この提案で始める
+                  {safetyBlocked ? '安全確認が必要です' : 'この提案で始める'}
                 </button>
               )}
             </div>
