@@ -1,3 +1,7 @@
 [functions.ai-teacher-explanation]
 verify_jwt = true
 entrypoint = "./functions/ai-teacher-explanation/index.ts"
+
+[functions.line-auth]
+verify_jwt = false
+entrypoint = "./functions/line-auth/index.ts"

@@ -50,6 +50,20 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0 }: AuthPanelProps) {
     }
   }, [openSignal]);
 
+  // Show error if redirected back from LINE auth with an error
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('line_auth_error')) {
+      setError('LINEログインを完了できませんでした。もう一度お試しいただくか、Googleまたはメールでお進みください。');
+      setOpen(true);
+      params.delete('line_auth_error');
+      const cleanUrl = params.toString()
+        ? `${window.location.pathname}?${params.toString()}`
+        : window.location.pathname;
+      window.history.replaceState(null, '', cleanUrl);
+    }
+  }, []);
+
   if (!isSupabaseConfigured) {
     return (
       <span className="auth-unavailable-text">クラウド保存未接続</span>
@@ -67,7 +81,7 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0 }: AuthPanelProps) {
     );
   }
 
-  const handleOAuth = async (provider: 'google' | 'apple') => {
+  const handleOAuth = async (provider: 'google' | 'apple' | 'line') => {
     setBusy(true);
     setError(null);
     const { error: err } = await auth.signInWithOAuth(provider);
@@ -127,7 +141,7 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0 }: AuthPanelProps) {
                   key={id}
                   type="button"
                   className={`oauth-button oauth-${id}`}
-                  onClick={() => handleOAuth(id as 'google' | 'apple')}
+                  onClick={() => handleOAuth(id as 'google' | 'apple' | 'line')}
                   disabled={busy}
                 >
                   {OAUTH_SVGS[id]}
