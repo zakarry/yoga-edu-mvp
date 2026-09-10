@@ -41,7 +41,9 @@ Deno.serve(async (req: Request) => {
   }
 
   const url = new URL(req.url);
-  const path = url.pathname.replace(/\/functions\/v1\/line-auth\/?/, "");
+  // In Supabase Edge Functions, the pathname includes /functions/v1/<slug>/...
+  // Strip everything up to and including the function slug.
+  const path = url.pathname.replace(/^.*\/line-auth\/?/, "");
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
