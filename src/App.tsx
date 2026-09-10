@@ -32,6 +32,7 @@ import { MyTeacherSection } from './components/MyTeacherSection';
 import { MyAITeacherPage } from './components/MyAITeacherPage';
 import { SiteMapPage } from './components/SiteMapPage';
 import { useAuth } from './lib/auth';
+import { initLiffOnce, useLiff } from './lib/liff';
 import { addTeacherRelationship } from './services/teacherRelationshipService';
 import { fetchDirectory } from './services/directoryService';
 
@@ -1059,6 +1060,11 @@ export default function App() {
   const [mapFilterType, setMapFilterType] = useState<FilterType>('all');
   const [aiTeacherMinutes, setAiTeacherMinutes] = useState<number | undefined>(undefined);
   const auth = useAuth();
+  const liffState = useLiff();
+
+  useEffect(() => {
+    void initLiffOnce();
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -1232,6 +1238,14 @@ export default function App() {
           </nav>
         </div>
       </header>
+
+      {import.meta.env.DEV && liffState.initialized && (
+        <div style={{ padding: '4px 12px', fontSize: '11px', color: '#666', background: '#f5f5f5', borderBottom: '1px solid #ddd' }}>
+          LIFF: initialized={String(liffState.initialized)} isInClient={String(liffState.isInClient)} isLoggedIn={String(liffState.isLoggedIn)}
+          {liffState.profile ? ` displayName=${liffState.profile.displayName}` : ''}
+          {liffState.error ? ` error=${liffState.error}` : ''}
+        </div>
+      )}
 
       <main className="main-shell">
         {page === 'home' && (
