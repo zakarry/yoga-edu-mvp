@@ -5944,26 +5944,115 @@ a.top-knowledge-card:hover {
   font-style: italic;
 }
 
-/* === EVENT-LIFF-1.1: LINE WebView fixes === */
+/* === EVENT-LIFF-1.2: LINE WebView UI final fixes === */
 
-/* Prevent extreme 1-2 char wrapping in LINE internal browser */
+/* --- 1. HERO: vertical stack on mobile, no side-by-side --- */
+.top-renewal .top-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.top-renewal .top-hero .hero-copy-block {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.top-renewal .top-hero .top-hero-actions {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.top-renewal .top-hero .top-hero-actions button,
+.top-renewal .top-hero .top-hero-actions .hero-cta-group {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.top-renewal .top-hero .top-hero-actions .hero-cta-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: stretch;
+}
+
+.top-renewal .top-hero .top-hero-actions .hero-cta-group button {
+  width: 100%;
+}
+
+.top-renewal .top-hero .top-hero-actions .hero-cta-sub {
+  text-align: center;
+  padding-left: 0;
+}
+
+/* --- 2. Text wrapping: keep-all, no mid-word breaks --- */
 .top-renewal h1,
 .top-renewal h2,
 .top-renewal h3,
 .top-renewal h4 {
   word-break: keep-all;
-  overflow-wrap: break-word;
+  overflow-wrap: normal;
   text-wrap: balance;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .top-renewal p,
 .top-renewal span,
 .top-renewal strong {
   word-break: keep-all;
-  overflow-wrap: break-word;
+  overflow-wrap: normal;
 }
 
-/* Flex items: prevent min-width overflow */
+/* --- 3. CTA buttons: full width, no 1-char lines --- */
+.top-renewal button {
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  text-align: center;
+}
+
+/* --- 4. Map section: prevent text cutoff --- */
+.top-renewal .top-map-section {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.top-renewal .top-map-section .section-inline-header {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.top-renewal .top-map-section .top-section-sub {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
+.top-renewal .top-map-section .top-map-tabs {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.top-renewal .top-map-section .top-map-tabs button {
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* --- 5. Grid items: prevent min-width overflow --- */
 .top-intent-grid,
 .top-daily-grid,
 .top-segment-grid,
@@ -5983,20 +6072,7 @@ a.top-knowledge-card:hover {
   overflow: hidden;
 }
 
-/* Button text: prevent 1-char per line */
-.top-renewal button {
-  white-space: normal;
-  word-break: keep-all;
-  overflow-wrap: break-word;
-}
-
-/* Hero CTA: allow wrapping but prevent 1-char lines */
-.top-hero-actions button,
-.top-hero-actions .hero-cta-group {
-  min-width: 0;
-}
-
-/* Prevent horizontal scroll in LINE WebView */
+/* --- 6. Prevent horizontal scroll --- */
 .top-renewal {
   overflow-x: hidden;
   max-width: 100vw;
@@ -6009,7 +6085,7 @@ a.top-knowledge-card:hover {
   overflow: hidden;
 }
 
-/* Bottom nav: ensure content not hidden behind fixed nav */
+/* --- 7. Bottom nav: ensure content not hidden behind fixed nav --- */
 @media (max-width: 768px) {
   .main-shell {
     margin-bottom: calc(80px + env(safe-area-inset-bottom));
@@ -6020,7 +6096,77 @@ a.top-knowledge-card:hover {
   }
 }
 
-/* Today Plan save button: ensure visible above bottom nav */
+/* --- 8. Today Plan: save button visible above bottom nav --- */
 .ai-teacher-step-panel {
   padding-bottom: calc(80px + env(safe-area-inset-bottom) + 16px);
+}
+
+/* --- 9. myYOGAカルテ: ensure scroll to bottom, no nav overlap --- */
+.top-myyoga-panel {
+  padding-bottom: calc(80px + env(safe-area-inset-bottom) + 16px);
+}
+
+/* --- 10. Mobile: override federation-hero 2-col grid for top-hero --- */
+@media (max-width: 768px) {
+  .top-renewal .federation-hero.top-hero {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    grid-template-areas: none !important;
+    gap: 20px !important;
+    padding: 24px 16px !important;
+  }
+
+  .top-renewal .federation-hero.top-hero .hero-copy-block {
+    grid-area: auto !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .top-renewal .federation-hero.top-hero h1 {
+    font-size: 22px !important;
+    line-height: 1.4 !important;
+    max-width: 100% !important;
+  }
+
+  .top-renewal .federation-hero.top-hero .hero-subcopy {
+    font-size: 14px !important;
+    line-height: 1.7 !important;
+    max-width: 100% !important;
+  }
+
+  .top-renewal .federation-hero.top-hero .top-hero-actions {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .top-renewal .federation-hero.top-hero .top-hero-actions button {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    text-align: center !important;
+    white-space: normal !important;
+    padding: 14px 16px !important;
+    font-size: 15px !important;
+  }
+
+  .top-renewal .federation-hero.top-hero .hero-cta-group {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    align-items: stretch !important;
+  }
+
+  .top-renewal .federation-hero.top-hero .hero-cta-group button {
+    width: 100% !important;
+  }
+
+  .top-renewal .federation-hero.top-hero .hero-cta-sub {
+    text-align: center !important;
+    padding-left: 0 !important;
+  }
 }
