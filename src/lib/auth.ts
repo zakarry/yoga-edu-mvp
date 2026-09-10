@@ -148,7 +148,13 @@ const signInWithOAuth = async (provider: OAuthProvider) => {
       redirectTo: window.location.origin,
     },
   });
-  return { error: error?.message ?? null };
+  if (error) {
+    return {
+      error:
+        'Googleログインを完了できませんでした。もう一度お試しいただくか、メールアドレスでお進みください。',
+    };
+  }
+  return { error: null };
 };
 
 const signOut = async () => {
