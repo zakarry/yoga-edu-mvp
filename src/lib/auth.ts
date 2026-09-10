@@ -96,8 +96,39 @@ async function fetchProfileAndPrivacy(userId: string) {
   return { profile: profile as Profile | null, privacy: privacy as PrivacySettings | null };
 }
 
+// === TEMP DIAG: OAuth callback diagnostics (remove after EVENT-AUTH-1.2.2) ===
+const __diagEvents: string[] = [];
+const __diagLog = () => {
+  const url = new URL(window.location.href);
+  const report = {
+    hasCode: url.searchParams.has('code'),
+    hasAccessTokenHash: url.hash.includes('access_token='),
+    hasError: url.searchParams.has('error') || url.searchParams.has('error_code'),
+    hasState: url.searchParams.has('state'),
+    authEvents: [...__diagEvents],
+  };
+  console.log('[OAUTH DIAG] URL+events', report);
+};
+const __diagGetSession = async (label: string) => {
+  if (!supabase) return;
+  const { data } = await supabase.auth.getSession();
+  console.log(`[OAUTH DIAG] getSession(${label}): ${!!data.session}`);
+};
+// === END TEMP DIAG ===
+
 if (supabase && isSupabaseConfigured) {
+  // TEMP DIAG: log URL form on load
+  __diagLog();
+  __diagGetSession('immediate');
+  setTimeout(() => __diagGetSession('500ms'), 500);
+  setTimeout(() => {
+    __diagGetSession('1500ms');
+    __diagLog();
+  }, 1500);
+
   supabase.auth.onAuthStateChange((event, session) => {
+    __diagEvents.push(event);
+    console.log('[OAUTH DIAG] event:', event, 'session:', !!session);
     (async () => {
       if (session?.user) {
         setAuthState({ loading: true });
