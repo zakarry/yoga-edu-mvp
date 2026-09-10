@@ -71,7 +71,7 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0 }: AuthPanelProps) {
   }
 
   if (auth.user) {
-    const name = auth.profile?.display_name || auth.user.email?.split('@')[0] || 'ユーザー';
+    const name = auth.profile?.display_name || (auth.user.email && !auth.user.email.includes('@lineauth.local') ? auth.user.email.split('@')[0] : null) || 'Yoga AIユーザー';
     return (
       <div className="auth-logged-in">
         <span className="auth-user-name">{name} さん</span>

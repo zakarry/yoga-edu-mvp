@@ -216,6 +216,18 @@ Deno.serve(async (req: Request) => {
         });
       }
 
+      // Ensure profiles.display_name is set from LINE displayName.
+      // The handle_new_user trigger creates the profile row with display_name=NULL;
+      // we update it here so the UI never falls back to the internal email prefix.
+      const lineDisplayName = lineProfile.name || null;
+      if (lineDisplayName) {
+        await adminClient
+          .from("profiles")
+          .update({ display_name: lineDisplayName })
+          .eq("id", userId)
+          .is("display_name", null);
+      }
+
       // Generate a magic link for this user, then verify the OTP server-side
       // using the anon-key client to obtain a proper user session (not an admin
       // session). The resulting tokens are passed to the browser via URL hash
