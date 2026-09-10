@@ -6249,3 +6249,189 @@ html, body {
     padding-left: 0 !important;
   }
 }
+
+/* === EVENT-LIFF-1.4: myYOGAカルテ mobile UI fixes === */
+
+/* --- 1. Yoga Memory設定: stack heading + description vertically --- */
+@media (max-width: 768px) {
+  .mypage-section .section-inline-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .mypage-section .section-inline-header h3 {
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  .mypage-section .section-inline-header p {
+    line-height: 1.7;
+    margin: 0;
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+/* --- 2. CardList header: stack title area + count badge vertically --- */
+@media (max-width: 768px) {
+  .priority-school-section .section-inline-header,
+  .result-section .section-inline-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .priority-school-section .section-inline-header > span,
+  .result-section .section-inline-header > span {
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .priority-school-section .result-section-heading,
+  .result-section .result-section-heading {
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .priority-school-section h3,
+  .result-section h3 {
+    word-break: keep-all;
+    overflow-wrap: normal;
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+/* --- 3. Entity cards: prevent text clipping on right edge --- */
+@media (max-width: 768px) {
+  .entity-card,
+  .priority-entity-card,
+  .featured-school-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .entity-card h4,
+  .featured-school-card h4 {
+    word-break: keep-all;
+    overflow-wrap: normal;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .entity-card p,
+  .featured-school-card p {
+    word-break: keep-all;
+    overflow-wrap: normal;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .entity-topline {
+    min-width: 0;
+  }
+
+  .entity-badge-group {
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .entity-meta {
+    min-width: 0;
+  }
+
+  .entity-meta div {
+    grid-template-columns: 72px 1fr;
+    min-width: 0;
+  }
+
+  .entity-meta dd {
+    word-break: keep-all;
+    overflow-wrap: normal;
+    min-width: 0;
+  }
+
+  .entity-accent-strip {
+    word-break: keep-all;
+    overflow-wrap: normal;
+    min-width: 0;
+  }
+
+  .tag-row {
+    min-width: 0;
+  }
+
+  .mini-tag {
+    white-space: nowrap;
+  }
+}
+
+/* --- 4. Badge/count: prevent vertical splitting of short badges --- */
+@media (max-width: 768px) {
+  .badge-priority,
+  .badge-admin-recommendation,
+  .badge-ended-event,
+  .badge-special-recommendation,
+  .result-step-badge,
+  .mypage-delta-badge {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}
+
+/* --- 5. myYOGAカルテ: use .mypage-shell for bottom padding --- */
+@media (max-width: 768px) {
+  .mypage-shell {
+    padding-bottom: calc(90px + env(safe-area-inset-bottom) + 24px);
+  }
+}
+
+/* --- 6. Mypage hero: stack vertically on mobile --- */
+@media (max-width: 768px) {
+  .mypage-hero {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  .mypage-status-grid {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+/* --- 7. Mypage summary/detail grids: single column on mobile --- */
+@media (max-width: 768px) {
+  .mypage-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mypage-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mypage-summary-card,
+  .mypage-score-card {
+    min-width: 0;
+  }
+}
+
+/* --- 8. Mypage storage panel: stack vertically --- */
+@media (max-width: 768px) {
+  .mypage-storage-panel {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .mypage-storage-actions {
+    justify-content: flex-start;
+  }
+}
