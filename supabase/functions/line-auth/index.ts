@@ -48,11 +48,16 @@ Deno.serve(async (req: Request) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-  const channelId = Deno.env.get("LINE_CHANNEL_ID");
-  const channelSecret = Deno.env.get("LINE_CHANNEL_SECRET");
+  const channelId = (Deno.env.get("LINE_CHANNEL_ID") || "").trim();
+  const channelSecret = (Deno.env.get("LINE_CHANNEL_SECRET") || "").trim();
 
   if (!supabaseUrl || !serviceRoleKey || !anonKey || !channelId || !channelSecret) {
-    console.error("line-auth: missing required env vars");
+    console.error("line-auth: missing required env vars", {
+      hasChannelId: channelId.length > 0,
+      channelIdType: typeof channelId,
+      channelIdLength: channelId.length,
+      hasChannelSecret: channelSecret.length > 0,
+    });
     return jsonResponse({ error: "configuration_error" }, 500);
   }
 
@@ -76,12 +81,14 @@ Deno.serve(async (req: Request) => {
       }
 
       const callbackUrl = `${supabaseUrl}/functions/v1/line-auth/callback`;
-      const authUrl =
-        `${LINE_AUTH_BASE}?response_type=code` +
-        `&client_id=${encodeURIComponent(channelId)}` +
-        `&redirect_uri=${encodeURIComponent(callbackUrl)}` +
-        `&state=${encodeURIComponent(state)}` +
-        `&scope=${encodeURIComponent("openid profile")}`;
+      const params = new URLSearchParams({
+        response_type: "code",
+        client_id: channelId,
+        redirect_uri: callbackUrl,
+        state,
+        scope: "openid profile",
+      });
+      const authUrl = `${LINE_AUTH_BASE}?${params.toString()}`;
 
       return redirectResponse(authUrl);
     }
