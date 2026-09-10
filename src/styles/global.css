@@ -5943,3 +5943,84 @@ a.top-knowledge-card:hover {
   color: var(--muted) !important;
   font-style: italic;
 }
+
+/* === EVENT-LIFF-1.1: LINE WebView fixes === */
+
+/* Prevent extreme 1-2 char wrapping in LINE internal browser */
+.top-renewal h1,
+.top-renewal h2,
+.top-renewal h3,
+.top-renewal h4 {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+
+.top-renewal p,
+.top-renewal span,
+.top-renewal strong {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* Flex items: prevent min-width overflow */
+.top-intent-grid,
+.top-daily-grid,
+.top-segment-grid,
+.top-teacher-grid,
+.top-knowledge-grid,
+.top-learning-grid {
+  min-width: 0;
+}
+
+.top-intent-card,
+.top-daily-card,
+.top-segment-card,
+.top-teacher-card,
+.top-knowledge-card,
+.top-learning-item {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Button text: prevent 1-char per line */
+.top-renewal button {
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* Hero CTA: allow wrapping but prevent 1-char lines */
+.top-hero-actions button,
+.top-hero-actions .hero-cta-group {
+  min-width: 0;
+}
+
+/* Prevent horizontal scroll in LINE WebView */
+.top-renewal {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+.top-renewal .panel,
+.top-renewal .hero-panel {
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Bottom nav: ensure content not hidden behind fixed nav */
+@media (max-width: 768px) {
+  .main-shell {
+    margin-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+
+  .page-shell {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Today Plan save button: ensure visible above bottom nav */
+.ai-teacher-step-panel {
+  padding-bottom: calc(80px + env(safe-area-inset-bottom) + 16px);
+}

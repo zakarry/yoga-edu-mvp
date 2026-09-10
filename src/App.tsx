@@ -1239,11 +1239,14 @@ export default function App() {
         </div>
       </header>
 
-      {import.meta.env.DEV && liffState.initialized && (
-        <div style={{ padding: '4px 12px', fontSize: '11px', color: '#666', background: '#f5f5f5', borderBottom: '1px solid #ddd' }}>
-          LIFF: initialized={String(liffState.initialized)} isInClient={String(liffState.isInClient)} isLoggedIn={String(liffState.isLoggedIn)}
-          {liffState.profile ? ` displayName=${liffState.profile.displayName}` : ''}
-          {liffState.error ? ` error=${liffState.error}` : ''}
+      {liffState.initialized && new URLSearchParams(window.location.search).get('testMode') === 'liff-status' && (
+        <div style={{ padding: '8px 16px', fontSize: '12px', color: '#333', background: '#f0f4f8', borderBottom: '1px solid #cce' }}>
+          <strong>LIFF Status:</strong>{' '}
+          initialized={String(liffState.initialized)}{' | '}
+          isInClient={String(liffState.isInClient)}{' | '}
+          isLoggedIn={String(liffState.isLoggedIn)}{' | '}
+          displayName={liffState.profile ? '取得済み' : '未取得'}
+          {liffState.error ? ` | error=${liffState.error}` : ''}
         </div>
       )}
 
