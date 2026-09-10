@@ -9,6 +9,10 @@ const corsHeaders = {
 const LLM_MODEL = Deno.env.get("LLM_MODEL") ?? "gpt-4o-mini";
 const LLM_TIMEOUT_MS = 10000;
 const MAX_PROMPT_CHARS = 12000;
+const MAX_KNOWLEDGE_ITEMS = 3;
+const MAX_USER_MESSAGE_CHARS = 1000;
+const MAX_PERSONA_FIELD_CHARS = 200;
+const MAX_PREFERENCE_CHARS = 100;
 
 const SYSTEM_INSTRUCTION = `あなたはYoga AIのMy AI Teacherです。
 以下のルールを厳守してください。
@@ -62,6 +66,57 @@ interface AITeacherLLMRequest {
   knowledge: LLMKnowledgeItem[];
 }
 
+function clampText(value: unknown, max: number): string {
+  if (typeof value !== "string") return "";
+  return value.replace(/\s+/g, " ").trim().slice(0, max);
+}
+
+interface ApprovedKnowledgeRow {
+  masterId: string;
+  title: string;
+  category: string;
+  publicContent: string;
+}
+
+/*
+  The browser assembles the knowledge array it wants the model to answer from, so
+  its contents are attacker controlled. Re-resolve every requested item against
+  the approved set returned by lookup_teacher_explanation (which applies the
+  usage / editorial / safety-review filters server-side) and use the stored copy
+  of the text. Anything with no approved match makes the whole request invalid.
+*/
+async function resolveApprovedKnowledge(
+  // deno-lint-ignore no-explicit-any
+  client: any,
+  requested: LLMKnowledgeItem[],
+): Promise<LLMKnowledgeItem[] | null> {
+  const resolved: LLMKnowledgeItem[] = [];
+  const seen = new Set<string>();
+
+  for (const item of requested) {
+    const title = typeof item?.title === "string" ? item.title.trim() : "";
+    if (!title) return null;
+
+    const { data, error } = await client.rpc("lookup_teacher_explanation", { p_search: title });
+    if (error || !Array.isArray(data)) return null;
+
+    const match = (data as ApprovedKnowledgeRow[]).find(
+      (row) => typeof row?.title === "string" && row.title.trim() === title,
+    );
+    if (!match || typeof match.publicContent !== "string") return null;
+    if (seen.has(match.masterId)) continue;
+    seen.add(match.masterId);
+
+    resolved.push({
+      title: match.title,
+      category: typeof match.category === "string" ? match.category : "",
+      content: match.publicContent,
+    });
+  }
+
+  return resolved.length > 0 ? resolved : null;
+}
+
 function buildUserPrompt(req: AITeacherLLMRequest): string {
   const knowledgeText = req.knowledge.map((k, i) => {
     const truncated = k.content.length > 2000
@@ -73,21 +128,21 @@ function buildUserPrompt(req: AITeacherLLMRequest): string {
   const langMap: Record<string, string> = {
     ja: "日本語", en: "English", zh: "中文", ko: "한국어",
   };
-  const lang = langMap[req.persona.teachingLanguage] ?? "日本語";
+  const lang = langMap[req.persona?.teachingLanguage ?? "ja"] ?? "日本語";
 
   return `User question:
-${req.userMessage}
+${clampText(req.userMessage, MAX_USER_MESSAGE_CHARS)}
 
 Teacher persona:
-name: ${req.persona.name}
-personality: ${req.persona.personality}
-specialty: ${req.persona.specialty}
+name: ${clampText(req.persona?.name, MAX_PERSONA_FIELD_CHARS)}
+personality: ${clampText(req.persona?.personality, MAX_PERSONA_FIELD_CHARS)}
+specialty: ${clampText(req.persona?.specialty, MAX_PERSONA_FIELD_CHARS)}
 language: ${lang}
 
 Session preferences:
-explanationPreference: ${req.sessionContext.explanationPreference}
-cuePreference: ${req.sessionContext.cuePreference}
-praisePreference: ${req.sessionContext.praisePreference}
+explanationPreference: ${clampText(req.sessionContext?.explanationPreference, MAX_PREFERENCE_CHARS)}
+cuePreference: ${clampText(req.sessionContext?.cuePreference, MAX_PREFERENCE_CHARS)}
+praisePreference: ${clampText(req.sessionContext?.praisePreference, MAX_PREFERENCE_CHARS)}
 
 Approved Yoga Knowledge:
 ${knowledgeText}
@@ -132,8 +187,7 @@ async function callLLM(prompt: string): Promise<{ text: string | null; error?: s
     });
 
     if (!res.ok) {
-      const errBody = await res.text().catch(() => "");
-      return { text: null, error: `http_${res.status}: ${errBody.slice(0, 200)}` };
+      return { text: null, error: `http_${res.status}` };
     }
 
     const data = await res.json();
@@ -194,31 +248,74 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const body: AITeacherLLMRequest = await req.json();
-
-    if (!body.knowledge || body.knowledge.length === 0) {
-      return new Response(JSON.stringify({ error: "No knowledge provided" }), {
+    let body: AITeacherLLMRequest;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid request" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    if (body.knowledge.length > 3) {
-      return new Response(JSON.stringify({ error: "Too many knowledge items" }), {
+    if (!Array.isArray(body?.knowledge) || body.knowledge.length === 0) {
+      return new Response(JSON.stringify({ error: "Invalid request" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const prompt = buildUserPrompt(body);
+    if (body.knowledge.length > MAX_KNOWLEDGE_ITEMS) {
+      return new Response(JSON.stringify({ error: "Invalid request" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (typeof body.userMessage !== "string" || body.userMessage.trim().length === 0) {
+      return new Response(JSON.stringify({ error: "Invalid request" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Never trust the knowledge text sent by the browser: rebuild it from the
+    // approved rows in the database.
+    const approvedKnowledge = await resolveApprovedKnowledge(supabase, body.knowledge);
+    if (!approvedKnowledge) {
+      return new Response(JSON.stringify({ error: "Invalid request" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Server-side rate limit (the browser-side counter is advisory only).
+    const { data: claim, error: claimError } = await supabase.rpc("claim_ai_teacher_llm_call");
+    if (claimError || !claim || claim.allowed !== true) {
+      return new Response(JSON.stringify({
+        text: null,
+        fallback: true,
+        reason: "rate_limited",
+        model: LLM_MODEL,
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const prompt = buildUserPrompt({ ...body, knowledge: approvedKnowledge });
     if (prompt.length > MAX_PROMPT_CHARS) {
-      return new Response(JSON.stringify({ error: "Prompt too large" }), {
+      return new Response(JSON.stringify({ error: "Invalid request" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const llmResult = await callLLM(prompt);
+
+    if (llmResult.error) {
+      console.error("ai-teacher-explanation: llm call failed", llmResult.error);
+    }
 
     if (!llmResult.text || !postCheckResponse(llmResult.text)) {
       return new Response(JSON.stringify({
@@ -240,10 +337,12 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
+    // Log server-side only: the exception text is internal detail and must not
+    // be returned to the caller.
+    console.error("ai-teacher-explanation: unhandled error", err);
     return new Response(JSON.stringify({
       text: null,
       fallback: true,
-      error: err.message,
     }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

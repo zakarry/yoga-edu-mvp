@@ -77,16 +77,24 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0 }: AuthPanelProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (mode === 'signup' && password.length < 8) {
+      setError('パスワードは8文字以上でご入力ください。');
+      return;
+    }
     setBusy(true);
     setError(null);
     const fn = mode === 'signin' ? auth.signIn : auth.signUp;
     const { error: err } = await fn(email, password);
     setBusy(false);
+    if (mode === 'signup') {
+      // Always the same response, whether or not the address already has an
+      // account, so this form cannot be used to discover who is registered.
+      setError('ご登録を受け付けました。ログイン画面からお進みください。');
+      setMode('signin');
+      return;
+    }
     if (err) {
       setError(err);
-    } else if (mode === 'signup') {
-      setError('確認メールをご確認ください。登録完了後ログインできます。');
-      setMode('signin');
     } else {
       setOpen(false);
       setEmail('');
@@ -177,7 +185,7 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0 }: AuthPanelProps) {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-                  minLength={6}
+                  minLength={mode === 'signin' ? 6 : 8}
                 />
                 {error && <p className="auth-error">{error}</p>}
                 <button type="submit" className="primary-button auth-submit" disabled={busy}>

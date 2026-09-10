@@ -89,7 +89,7 @@ export async function getKnowledgeEntryBySlug(slug: string): Promise<KnowledgeEn
     .maybeSingle();
 
   if (error) {
-    console.error('getKnowledgeEntryBySlug error:', error);
+    console.error('getKnowledgeEntryBySlug failed');
     return null;
   }
 
@@ -106,7 +106,7 @@ export async function getKnowledgeEntriesByCategory(category: string): Promise<K
     .order('created_at', { ascending: true });
 
   if (error) {
-    console.error('getKnowledgeEntriesByCategory error:', error);
+    console.error('getKnowledgeEntriesByCategory failed');
     return [];
   }
 
@@ -121,7 +121,7 @@ export async function getRelatedKnowledge(entryId: string): Promise<KnowledgeEnt
     .eq('from_entry_id', entryId);
 
   if (relError) {
-    console.error('getRelatedKnowledge relations error:', relError);
+    console.error('getRelatedKnowledge relations failed');
     return [];
   }
 
@@ -136,7 +136,7 @@ export async function getRelatedKnowledge(entryId: string): Promise<KnowledgeEnt
     .eq('is_published', true);
 
   if (entryError) {
-    console.error('getRelatedKnowledge entries error:', entryError);
+    console.error('getRelatedKnowledge entries failed');
     return [];
   }
 
@@ -156,7 +156,7 @@ export async function getPracticeKnowledge(practiceType?: 'asana' | 'pranayama' 
   const { data, error } = await query;
 
   if (error) {
-    console.error('getPracticeKnowledge error:', error);
+    console.error('getPracticeKnowledge failed');
     return [];
   }
 
@@ -171,7 +171,7 @@ export async function getLearningMappings(program: string): Promise<LearningMapp
     .eq('learning_program', program);
 
   if (error) {
-    console.error('getLearningMappings error:', error);
+    console.error('getLearningMappings failed');
     return [];
   }
 
@@ -187,7 +187,7 @@ export async function getKnowledgeSources(entryId: string): Promise<KnowledgeSou
     .order('source_order', { ascending: true, nullsFirst: false });
 
   if (error) {
-    console.error('getKnowledgeSources error:', error);
+    console.error('getKnowledgeSources failed');
     return [];
   }
 

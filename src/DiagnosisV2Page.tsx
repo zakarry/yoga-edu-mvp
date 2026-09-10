@@ -634,7 +634,7 @@ export default function DiagnosisV2Page({ onMoveToSearch, onSaved }: { onMoveToS
         requires_human_review: requiresHumanReview,
         safety_category: safetyCategory,
       }).then(({ error, savedToCloud }) => {
-        if (error) console.warn("[diagnosis save error]", error);
+        if (error) console.warn("[diagnosis save failed]");
         if (savedToCloud && onSaved) {
           // optionally navigate to myYOGAカルテ after cloud save
         }

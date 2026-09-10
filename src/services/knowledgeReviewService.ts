@@ -37,7 +37,7 @@ async function fetchByUsageStatus(status: UsageStatus): Promise<KnowledgeReviewE
     .order('master_id', { ascending: true, nullsFirst: false });
 
   if (error) {
-    console.error(`fetchByUsageStatus(${status}) error:`, error);
+    console.error(`fetchByUsageStatus(${status}) failed`);
     return [];
   }
   return (data ?? []) as KnowledgeReviewEntry[];
@@ -70,7 +70,7 @@ export async function getUsageStatusCounts(): Promise<Record<UsageStatus, number
     .select('usage_status');
 
   if (error) {
-    console.error('getUsageStatusCounts error:', error);
+    console.error('getUsageStatusCounts failed');
     return {
       source_only: 0,
       public_candidate: 0,

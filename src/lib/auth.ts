@@ -159,13 +159,23 @@ if (supabase && isSupabaseConfigured) {
 const signIn = async (email: string, password: string) => {
   if (!supabase) return { error: '現在クラウド保存を利用できません' };
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  return { error: error?.message ?? null };
+  if (error) {
+    return { error: 'メールアドレスまたはパスワードが正しくありません。' };
+  }
+  return { error: null };
 };
 
 const signUp = async (email: string, password: string) => {
   if (!supabase) return { error: '現在クラウド保存を利用できません' };
   const { error } = await supabase.auth.signUp({ email, password });
-  return { error: error?.message ?? null };
+  if (error) {
+    // Deliberately generic: a message that varies with whether the address is
+    // already registered would let anyone enumerate accounts from this form.
+    return {
+      error: '登録を完了できませんでした。入力内容をご確認のうえ、もう一度お試しください。',
+    };
+  }
+  return { error: null };
 };
 
 const signInWithOAuth = async (provider: OAuthProvider) => {
@@ -200,14 +210,23 @@ const refreshProfile = async () => {
   setAuthState({ profile, privacy });
 };
 
+// Columns a user is allowed to change on their own profile. Privileged columns
+// such as membership_tier are never writable from the client; the database also
+// enforces this with column-level privileges.
+const EDITABLE_PROFILE_FIELDS = ['display_name', 'role', 'preferred_language', 'area'] as const;
+
 const updateProfile = async (patch: Partial<Profile>) => {
   if (!supabase || !authState.user) return { error: 'ログインしていません' };
+  const safePatch: Record<string, unknown> = {};
+  for (const field of EDITABLE_PROFILE_FIELDS) {
+    if (field in patch) safePatch[field] = (patch as Record<string, unknown>)[field];
+  }
   const { error } = await supabase
     .from('profiles')
-    .update({ ...patch, updated_at: new Date().toISOString() })
+    .update({ ...safePatch, updated_at: new Date().toISOString() })
     .eq('id', authState.user.id);
   if (!error) await refreshProfile();
-  return { error: error?.message ?? null };
+  return { error: error ? 'プロフィールを保存できませんでした。' : null };
 };
 
 const updatePrivacy = async (patch: Partial<PrivacySettings>) => {
@@ -217,7 +236,7 @@ const updatePrivacy = async (patch: Partial<PrivacySettings>) => {
     .update({ ...patch, updated_at: new Date().toISOString() })
     .eq('user_id', authState.user.id);
   if (!error) await refreshProfile();
-  return { error: error?.message ?? null };
+  return { error: error ? '設定を保存できませんでした。' : null };
 };
 
 setAuthState({ signIn, signUp, signInWithOAuth, signOut, refreshProfile, updateProfile, updatePrivacy });

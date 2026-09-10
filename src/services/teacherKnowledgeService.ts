@@ -113,12 +113,7 @@ export async function getKnowledgeRanking(
 
   const { data, error } = await client.rpc('lookup_teacher_explanation', { p_search: null });
   if (error) {
-    console.error('lookup_teacher_explanation error:', {
-      message: error.message,
-      code: (error as { code?: string }).code,
-      details: (error as { details?: string }).details,
-      hint: (error as { hint?: string }).hint,
-    });
+    console.error('lookup_teacher_explanation failed');
     return [];
   }
   const candidates = (data ?? []) as KnowledgeExplanation[];
@@ -140,12 +135,7 @@ async function fetchAllCandidates(): Promise<KnowledgeExplanation[]> {
 
   const { data, error } = await client.rpc('lookup_teacher_explanation', { p_search: null });
   if (error) {
-    console.error('lookup_teacher_explanation error:', {
-      message: error.message,
-      code: (error as { code?: string }).code,
-      details: (error as { details?: string }).details,
-      hint: (error as { hint?: string }).hint,
-    });
+    console.error('lookup_teacher_explanation failed');
     return [];
   }
   return (data ?? []) as KnowledgeExplanation[];

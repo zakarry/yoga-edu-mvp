@@ -28,7 +28,7 @@ export async function getLearningProgress(knowledgeEntryId: string): Promise<Use
     .maybeSingle();
 
   if (error) {
-    console.error('getLearningProgress error:', error);
+    console.error('getLearningProgress failed');
     return null;
   }
 
@@ -52,7 +52,7 @@ export async function markViewed(knowledgeEntryId: string): Promise<UserLearning
       .maybeSingle();
 
     if (error) {
-      console.error('markViewed update error:', error);
+      console.error('markViewed update failed');
       return null;
     }
 
@@ -72,7 +72,7 @@ export async function markViewed(knowledgeEntryId: string): Promise<UserLearning
     .maybeSingle();
 
   if (error) {
-    console.error('markViewed insert error:', error);
+    console.error('markViewed insert failed');
     return null;
   }
 
@@ -95,7 +95,7 @@ export async function markLearning(knowledgeEntryId: string): Promise<UserLearni
       .maybeSingle();
 
     if (error) {
-      console.error('markLearning update error:', error);
+      console.error('markLearning update failed');
       return null;
     }
 
@@ -115,7 +115,7 @@ export async function markLearning(knowledgeEntryId: string): Promise<UserLearni
     .maybeSingle();
 
   if (error) {
-    console.error('markLearning insert error:', error);
+    console.error('markLearning insert failed');
     return null;
   }
 
@@ -139,7 +139,7 @@ export async function markCompleted(knowledgeEntryId: string): Promise<UserLearn
       .maybeSingle();
 
     if (error) {
-      console.error('markCompleted update error:', error);
+      console.error('markCompleted update failed');
       return null;
     }
 
@@ -160,7 +160,7 @@ export async function markCompleted(knowledgeEntryId: string): Promise<UserLearn
     .maybeSingle();
 
   if (error) {
-    console.error('markCompleted insert error:', error);
+    console.error('markCompleted insert failed');
     return null;
   }
 

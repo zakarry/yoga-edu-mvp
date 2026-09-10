@@ -462,7 +462,7 @@ export function TeacherDiagnosisPage({ onOpenListingSelect, onOpenTeacherRegiste
         requires_human_review: false,
         safety_category: null as SafetyCategory | null,
       }).then(({ error }) => {
-        if (error) console.warn('[teacher diagnosis save error]', error);
+        if (error) console.warn('[teacher diagnosis save failed]');
       });
     }
   };
