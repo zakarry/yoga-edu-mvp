@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { SearchItem } from '../data';
 
 interface MapViewProps {
@@ -10,7 +10,6 @@ interface MapViewProps {
 declare global {
   interface Window {
     google?: any;
-    initYogaMvpMap?: () => void;
     __openMapDetail?: (id: string) => void;
   }
 }
@@ -22,11 +21,48 @@ const pinColors: Record<SearchItem['type'], string> = {
   club: '#d5932f',
 };
 
+let googleMapsPromise: Promise<void> | null = null;
+
+function loadGoogleMaps(apiKey: string): Promise<void> {
+  if (window.google?.maps) return Promise.resolve();
+  if (googleMapsPromise) return googleMapsPromise;
+
+  googleMapsPromise = new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector(
+      'script[src^="https://maps.googleapis.com/maps/api/js"]',
+    );
+    if (existing) {
+      existing.addEventListener('load', () => resolve());
+      existing.addEventListener('error', () => reject(new Error('Google Maps script failed')));
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () => {
+      googleMapsPromise = null;
+      reject(new Error('Google Maps script failed to load'));
+    };
+    document.body.appendChild(script);
+  });
+
+  return googleMapsPromise;
+}
+
+function isValidCoord(lat: unknown, lng: unknown): boolean {
+  return typeof lat === 'number' && typeof lng === 'number' && Number.isFinite(lat) && Number.isFinite(lng);
+}
+
 export function MapView({ items, selectedType = 'all', onSelectItem }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const googleMapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const infoWindowRef = useRef<any>(null);
+  const [mapReady, setMapReady] = useState(false);
+  const [mapError, setMapError] = useState(false);
   const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
 
   const visibleItems = useMemo(
@@ -44,33 +80,61 @@ export function MapView({ items, selectedType = 'all', onSelectItem }: MapViewPr
     };
   }, [items, onSelectItem]);
 
+  // Effect A: Initialize map instance once (apiKey + container only)
   useEffect(() => {
     if (!apiKey || !mapRef.current) return;
 
-    const mountMap = () => {
+    let cancelled = false;
+
+    loadGoogleMaps(apiKey)
+      .then(() => {
+        if (cancelled || !mapRef.current || googleMapRef.current) return;
+        try {
+          googleMapRef.current = new window.google.maps.Map(mapRef.current, {
+            center: { lat: 35.6762, lng: 139.6503 },
+            zoom: 11,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+          });
+          infoWindowRef.current = new window.google.maps.InfoWindow();
+          setMapReady(true);
+        } catch {
+          setMapError(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setMapError(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [apiKey]);
+
+  // Effect B: Update markers when visibleItems or map readiness changes
+  useEffect(() => {
+    if (!mapReady || !googleMapRef.current || !window.google?.maps) return;
+
+    try {
       const google = window.google;
-      if (!google || !mapRef.current) return;
+      const map = googleMapRef.current;
 
-      if (!googleMapRef.current) {
-        googleMapRef.current = new google.maps.Map(mapRef.current, {
-          center: { lat: 35.6762, lng: 139.6503 },
-          zoom: 11,
-          mapTypeControl: false,
-          streetViewControl: false,
-          fullscreenControl: false,
-        });
-        infoWindowRef.current = new google.maps.InfoWindow();
-      }
-
-      markersRef.current.forEach((marker) => marker.setMap(null));
+      markersRef.current.forEach((marker) => {
+        try { marker.setMap(null); } catch { /* ignore */ }
+      });
       markersRef.current = [];
+
+      const validItems = visibleItems.filter((item) => isValidCoord(item.lat, item.lng));
+      if (validItems.length === 0) return;
 
       const bounds = new google.maps.LatLngBounds();
 
-      visibleItems.forEach((item) => {
+      validItems.forEach((item) => {
+        const position = { lat: item.lat, lng: item.lng };
         const marker = new google.maps.Marker({
-          map: googleMapRef.current,
-          position: { lat: item.lat, lng: item.lng },
+          map,
+          position,
           title: item.name,
           icon: {
             url: buildMarker(pinColors[item.type]),
@@ -79,42 +143,45 @@ export function MapView({ items, selectedType = 'all', onSelectItem }: MapViewPr
         });
 
         marker.addListener('click', () => {
-          infoWindowRef.current.setContent(`
-            <div style="padding:8px 10px; min-width: 220px; font-family: sans-serif;">
-              <div style="font-size:12px;color:#6b7280;margin-bottom:6px;">${labelOf(item.type)}</div>
-              <div style="font-size:15px;font-weight:700;margin-bottom:8px;">${item.name}</div>
-              <div style="font-size:13px;line-height:1.6;color:#374151;margin-bottom:10px;">${item.description}</div>
-              <button onclick="window.__openMapDetail && window.__openMapDetail('${item.id}')" style="background:#102542;color:#fff;border:none;border-radius:999px;padding:8px 12px;font-size:12px;cursor:pointer;">詳細を見るボタン</button>
-            </div>
-          `);
-          infoWindowRef.current.open({ anchor: marker, map: googleMapRef.current });
-          if (onSelectItem) onSelectItem(item);
+          try {
+            infoWindowRef.current.setContent(`
+              <div style="padding:8px 10px; min-width: 220px; font-family: sans-serif;">
+                <div style="font-size:12px;color:#6b7280;margin-bottom:6px;">${labelOf(item.type)}</div>
+                <div style="font-size:15px;font-weight:700;margin-bottom:8px;">${item.name}</div>
+                <div style="font-size:13px;line-height:1.6;color:#374151;margin-bottom:10px;">${item.description}</div>
+                <button onclick="window.__openMapDetail && window.__openMapDetail('${item.id}')" style="background:#102542;color:#fff;border:none;border-radius:999px;padding:8px 12px;font-size:12px;cursor:pointer;">詳細を見るボタン</button>
+              </div>
+            `);
+            infoWindowRef.current.open({ anchor: marker, map });
+            if (onSelectItem) onSelectItem(item);
+          } catch { /* ignore infowindow errors */ }
         });
+
         markersRef.current.push(marker);
-        bounds.extend(marker.getPosition());
+        const pos = marker.getPosition();
+        if (pos) bounds.extend(pos);
       });
 
-      if (visibleItems.length > 0) {
-        googleMapRef.current.fitBounds(bounds, 48);
+      if (validItems.length === 1) {
+        map.setCenter({ lat: validItems[0].lat, lng: validItems[0].lng });
+        map.setZoom(13);
+      } else {
+        map.fitBounds(bounds, 48);
       }
-    };
-
-    if (window.google?.maps) {
-      mountMap();
-      return;
+    } catch {
+      setMapError(true);
     }
+  }, [mapReady, visibleItems, onSelectItem]);
 
-    window.initYogaMvpMap = mountMap;
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initYogaMvpMap`;
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
-
+  // Cleanup markers on unmount
+  useEffect(() => {
     return () => {
-      if (window.initYogaMvpMap) delete window.initYogaMvpMap;
+      markersRef.current.forEach((marker) => {
+        try { marker.setMap(null); } catch { /* ignore */ }
+      });
+      markersRef.current = [];
     };
-  }, [apiKey, visibleItems, onSelectItem]);
+  }, []);
 
   if (!apiKey) {
     return (
@@ -135,6 +202,26 @@ export function MapView({ items, selectedType = 'all', onSelectItem }: MapViewPr
                 <span><i style={{ background: pinColors.event }} />イベント</span>
                 <span><i style={{ background: pinColors.club }} />クラブ</span>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (mapError) {
+    return (
+      <section className="panel map-panel">
+        <div className="section-inline-header tight">
+          <h3>地図から探す</h3>
+          <span>表示エラー</span>
+        </div>
+        <div className="dummy-map">
+          <div className="dummy-map-grid" />
+          <div className="dummy-map-overlay">
+            <div>
+              <strong>地図を表示できませんでした</strong>
+              <p>Google Mapsの読み込みに失敗しました。ページを再読み込みしてください。</p>
             </div>
           </div>
         </div>
