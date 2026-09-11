@@ -6643,3 +6643,77 @@ html, body {
     line-height: 1;
   }
 }
+
+/* === EVENT-LIFF-1.8: TOP地図テキスト切れ修正 === */
+/* Root cause: .top-renewal h3 { width: 100% } makes h3 take all flex width, */
+/* pushing "APIキー未設定" span off-screen. .top-renewal .panel { overflow: hidden } clips it. */
+/* .top-renewal p { overflow-wrap: normal } prevents description wrapping. */
+
+/* --- 1. APIキー未設定: allow h3 + span to coexist in flex header --- */
+@media (max-width: 768px) {
+  .top-renewal .top-map-section .section-inline-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .top-renewal .top-map-section .section-inline-header h3 {
+    width: auto;
+    max-width: 100%;
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+
+  .top-renewal .top-map-section .section-inline-header span {
+    width: auto;
+    max-width: 100%;
+    min-width: 0;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}
+
+/* --- 2. 説明文: allow wrapping, prevent clip --- */
+@media (max-width: 768px) {
+  .top-renewal .top-map-section .dummy-map-overlay p {
+    overflow-wrap: anywhere;
+    word-break: keep-all;
+    white-space: normal;
+    line-height: 1.7;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .top-renewal .top-map-section .dummy-map-overlay strong {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+/* --- 3. 親パネル: overflow visible so text is not clipped --- */
+@media (max-width: 768px) {
+  .top-renewal .top-map-section.panel {
+    overflow: visible;
+  }
+
+  .top-renewal .top-map-section .dummy-map {
+    overflow: visible;
+  }
+
+  .top-renewal .top-map-section .dummy-map-overlay {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .top-renewal .top-map-section .dummy-map-overlay > div {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: visible;
+  }
+}
