@@ -6717,3 +6717,30 @@ html, body {
     overflow: visible;
   }
 }
+
+/* === EVENT-LIFF-2: LIFF auto-login loading banner === */
+.liff-auto-login-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #102542;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.liff-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: liff-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes liff-spin {
+  to { transform: rotate(360deg); }
+}

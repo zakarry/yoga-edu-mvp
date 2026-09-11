@@ -32,7 +32,7 @@ import { MyTeacherSection } from './components/MyTeacherSection';
 import { MyAITeacherPage } from './components/MyAITeacherPage';
 import { SiteMapPage } from './components/SiteMapPage';
 import { useAuth } from './lib/auth';
-import { initLiffOnce, useLiff } from './lib/liff';
+import { initLiffOnce, useLiff, attemptLiffAutoLogin, isAutoLoginAttempted } from './lib/liff';
 import { addTeacherRelationship } from './services/teacherRelationshipService';
 import { fetchDirectory } from './services/directoryService';
 
@@ -1066,6 +1066,22 @@ export default function App() {
     void initLiffOnce();
   }, []);
 
+  // LIFF auto-login: when inside LINE LIFF browser, logged in to LINE,
+  // and not yet authenticated with Supabase, verify the LINE ID Token
+  // server-side and establish a Supabase session automatically.
+  useEffect(() => {
+    if (
+      liffState.initialized &&
+      liffState.isInClient &&
+      liffState.isLoggedIn &&
+      !auth.user &&
+      !auth.loading &&
+      !isAutoLoginAttempted()
+    ) {
+      void attemptLiffAutoLogin();
+    }
+  }, [liffState.initialized, liffState.isInClient, liffState.isLoggedIn, auth.user, auth.loading]);
+
   useEffect(() => {
     let active = true;
     void fetchDirectory().then((directory) => {
@@ -1247,6 +1263,13 @@ export default function App() {
           isLoggedIn={String(liffState.isLoggedIn)}{' | '}
           displayName={liffState.profile ? '取得済み' : '未取得'}
           {liffState.error ? ` | error=${liffState.error}` : ''}
+        </div>
+      )}
+
+      {liffState.autoLoginStatus === 'loading' && (
+        <div className="liff-auto-login-banner">
+          <span className="liff-spinner" />
+          <span>LINEで確認しています…</span>
         </div>
       )}
 

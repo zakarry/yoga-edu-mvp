@@ -9,6 +9,7 @@ const corsHeaders = {
 const LINE_AUTH_BASE = "https://access.line.me/oauth2/v2.1/authorize";
 const LINE_TOKEN_URL = "https://api.line.me/oauth2/v2.1/token";
 const LINE_PROFILE_URL = "https://api.line.me/oauth2/v2.1/userinfo";
+const LINE_ID_TOKEN_VERIFY_URL = "https://api.line.me/oauth2/v2.1/verify";
 const STATE_TTL_MINUTES = 10;
 
 function jsonResponse(body: Record<string, unknown>, status = 200): Response {
@@ -35,14 +36,102 @@ function generateState(): string {
   return arr.join("");
 }
 
+// Shared helper: look up or create a Supabase user from a verified LINE sub,
+// then generate a session. Used by both the OAuth callback and LIFF paths.
+async function getOrCreateLineSession(
+  adminClient: ReturnType<typeof createClient>,
+  lineSub: string,
+  displayName: string | null,
+  supabaseUrl: string,
+  anonKey: string,
+): Promise<{ access_token: string; refresh_token: string; expires_in: number; token_type: string } | null> {
+  const { data: existingIdentity } = await adminClient
+    .from("line_identities")
+    .select("user_id")
+    .eq("line_sub", lineSub)
+    .maybeSingle();
+
+  let userId: string;
+
+  if (existingIdentity?.user_id) {
+    userId = existingIdentity.user_id;
+  } else {
+    const fakeEmail = `line-${lineSub}@lineauth.local`;
+    const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+      email: fakeEmail,
+      email_confirm: true,
+      user_metadata: {
+        provider: "line",
+        line_sub: lineSub,
+        display_name: displayName || null,
+      },
+    });
+
+    if (createError || !newUser?.user) {
+      console.error("line-auth: user creation failed");
+      return null;
+    }
+
+    userId = newUser.user.id;
+
+    const { error: identityError } = await adminClient.from("line_identities").insert({
+      line_sub: lineSub,
+      user_id: userId,
+      display_name: displayName || null,
+    });
+
+    if (identityError) {
+      console.error("line-auth: identity insert failed");
+      return null;
+    }
+  }
+
+  if (displayName) {
+    await adminClient
+      .from("profiles")
+      .update({ display_name: displayName })
+      .eq("id", userId)
+      .is("display_name", null);
+  }
+
+  const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+    type: "magiclink",
+    email: `line-${lineSub}@lineauth.local`,
+  });
+
+  if (linkError || !linkData?.properties?.hashed_token) {
+    console.error("line-auth: magic link generation failed");
+    return null;
+  }
+
+  const anonClient = createClient(supabaseUrl, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const { data: verifyData, error: verifyError } = await anonClient.auth.verifyOtp({
+    token_hash: linkData.properties.hashed_token,
+    type: "magiclink",
+  });
+
+  if (verifyError || !verifyData?.session) {
+    console.error("line-auth: OTP verification failed");
+    return null;
+  }
+
+  return {
+    access_token: verifyData.session.access_token,
+    refresh_token: verifyData.session.refresh_token,
+    expires_in: verifyData.session.expires_in,
+    token_type: verifyData.session.token_type,
+  };
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
   const url = new URL(req.url);
-  // In Supabase Edge Functions, the pathname includes /functions/v1/<slug>/...
-  // Strip everything up to and including the function slug.
   const path = url.pathname.replace(/^.*\/line-auth\/?/, "");
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -66,7 +155,7 @@ Deno.serve(async (req: Request) => {
   });
 
   try {
-    // ── START ──────────────────────────────────────────────
+    // ── START (LINE Login OAuth redirect) ─────────────────
     if (path === "start" || path === "" || path === "/") {
       const redirectTo = url.searchParams.get("redirect_to") || url.origin;
       const state = generateState();
@@ -93,7 +182,7 @@ Deno.serve(async (req: Request) => {
       return redirectResponse(authUrl);
     }
 
-    // ── CALLBACK ──────────────────────────────────────────
+    // ── CALLBACK (LINE Login OAuth callback) ──────────────
     if (path === "callback" || path === "callback/") {
       const code = url.searchParams.get("code");
       const state = url.searchParams.get("state");
@@ -107,7 +196,6 @@ Deno.serve(async (req: Request) => {
         return redirectToAppWithError(url.origin, "line_auth_failed");
       }
 
-      // Verify state
       const { data: stateRow, error: stateError } = await adminClient
         .from("line_auth_states")
         .select("id, redirect_to, consumed, created_at")
@@ -127,13 +215,11 @@ Deno.serve(async (req: Request) => {
         return redirectToAppWithError(url.origin, "line_auth_failed");
       }
 
-      // Consume state (one-time use)
       await adminClient
         .from("line_auth_states")
         .update({ consumed: true })
         .eq("id", stateRow.id);
 
-      // Exchange code with LINE token endpoint
       const callbackUrl = `${supabaseUrl}/functions/v1/line-auth/callback`;
       const tokenRes = await fetch(LINE_TOKEN_URL, {
         method: "POST",
@@ -159,7 +245,6 @@ Deno.serve(async (req: Request) => {
         return redirectToAppWithError(stateRow.redirect_to, "line_auth_failed");
       }
 
-      // Get LINE user profile
       const profileRes = await fetch(LINE_PROFILE_URL, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
@@ -176,92 +261,18 @@ Deno.serve(async (req: Request) => {
         return redirectToAppWithError(stateRow.redirect_to, "line_auth_failed");
       }
 
-      // Check if this LINE user already has a Supabase account
-      const { data: existingIdentity } = await adminClient
-        .from("line_identities")
-        .select("user_id")
-        .eq("line_sub", lineSub)
-        .maybeSingle();
+      const session = await getOrCreateLineSession(
+        adminClient,
+        lineSub,
+        lineProfile.name || null,
+        supabaseUrl,
+        anonKey,
+      );
 
-      let userId: string;
-
-      if (existingIdentity?.user_id) {
-        userId = existingIdentity.user_id;
-      } else {
-        // Create a new Supabase user. We use admin.createUser so the service
-        // role key never reaches the browser. The email is a non-deliverable
-        // placeholder — LINE users don't need email.
-        const fakeEmail = `line-${lineSub}@lineauth.local`;
-        const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
-          email: fakeEmail,
-          email_confirm: true,
-          user_metadata: {
-            provider: "line",
-            line_sub: lineSub,
-            display_name: lineProfile.name || null,
-          },
-        });
-
-        if (createError || !newUser?.user) {
-          console.error("line-auth: user creation failed");
-          return redirectToAppWithError(stateRow.redirect_to, "line_auth_failed");
-        }
-
-        userId = newUser.user.id;
-
-        await adminClient.from("line_identities").insert({
-          line_sub: lineSub,
-          user_id: userId,
-          display_name: lineProfile.name || null,
-        });
-      }
-
-      // Ensure profiles.display_name is set from LINE displayName.
-      // The handle_new_user trigger creates the profile row with display_name=NULL;
-      // we update it here so the UI never falls back to the internal email prefix.
-      const lineDisplayName = lineProfile.name || null;
-      if (lineDisplayName) {
-        await adminClient
-          .from("profiles")
-          .update({ display_name: lineDisplayName })
-          .eq("id", userId)
-          .is("display_name", null);
-      }
-
-      // Generate a magic link for this user, then verify the OTP server-side
-      // using the anon-key client to obtain a proper user session (not an admin
-      // session). The resulting tokens are passed to the browser via URL hash
-      // in the implicit-flow format that supabase-js detectSessionInUrl parses.
-      const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
-        type: "magiclink",
-        email: `line-${lineSub}@lineauth.local`,
-      });
-
-      if (linkError || !linkData?.properties?.hashed_token) {
-        console.error("line-auth: magic link generation failed");
+      if (!session) {
         return redirectToAppWithError(stateRow.redirect_to, "line_auth_failed");
       }
 
-      // Verify the OTP using the anon client to get a real user session
-      const anonClient = createClient(supabaseUrl, anonKey, {
-        auth: { persistSession: false, autoRefreshToken: false },
-      });
-
-      const { data: verifyData, error: verifyError } = await anonClient.auth.verifyOtp({
-        token_hash: linkData.properties.hashed_token,
-        type: "magiclink",
-      });
-
-      if (verifyError || !verifyData?.session) {
-        console.error("line-auth: OTP verification failed");
-        return redirectToAppWithError(stateRow.redirect_to, "line_auth_failed");
-      }
-
-      const session = verifyData.session;
-
-      // Redirect to the app with session tokens in the URL hash.
-      // The supabase-js client with detectSessionInUrl (default true) will
-      // parse these and establish the session in the browser.
       const finalRedirect = new URL(stateRow.redirect_to);
       finalRedirect.hash =
         `access_token=${encodeURIComponent(session.access_token)}` +
@@ -271,6 +282,62 @@ Deno.serve(async (req: Request) => {
         `&type=magiclink`;
 
       return redirectResponse(finalRedirect.toString());
+    }
+
+    // ── LIFF (ID Token verification + session creation) ───
+    if (path === "liff" || path === "liff/") {
+      if (req.method !== "POST") {
+        return jsonResponse({ error: "method_not_allowed" }, 405);
+      }
+
+      const body = await req.json().catch(() => null);
+      if (!body || !body.id_token || typeof body.id_token !== "string") {
+        return jsonResponse({ error: "missing_id_token" }, 400);
+      }
+
+      // Verify the ID token with LINE's token verification endpoint.
+      // LINE validates the token server-side and returns the claims.
+      const verifyRes = await fetch(LINE_ID_TOKEN_VERIFY_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          id_token: body.id_token,
+          client_id: channelId,
+        }),
+      });
+
+      if (!verifyRes.ok) {
+        return jsonResponse({ error: "verification_failed" }, 401);
+      }
+
+      const lineUserInfo = await verifyRes.json();
+      const lineSub: string | undefined = lineUserInfo.sub;
+
+      if (!lineSub) {
+        return jsonResponse({ error: "verification_failed" }, 401);
+      }
+
+      // Defense-in-depth: verify audience matches our channel ID
+      if (lineUserInfo.aud && lineUserInfo.aud !== channelId) {
+        console.error("line-auth: LIFF token audience mismatch");
+        return jsonResponse({ error: "verification_failed" }, 401);
+      }
+
+      const displayName = (typeof lineUserInfo.name === "string" && lineUserInfo.name) || null;
+
+      const session = await getOrCreateLineSession(
+        adminClient,
+        lineSub,
+        displayName,
+        supabaseUrl,
+        anonKey,
+      );
+
+      if (!session) {
+        return jsonResponse({ error: "session_creation_failed" }, 500);
+      }
+
+      return jsonResponse({ session }, 200);
     }
 
     // Unknown path
