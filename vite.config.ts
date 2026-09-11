@@ -6,8 +6,4 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@line/liff'],
   },
-  server: {
-    host: '0.0.0.0',
-    port: 4173,
-  },
 });
