@@ -856,7 +856,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       {/* STEP 4: AI Teacher persona */}
       {step === 'step4' && (
         <section className="panel ai-teacher-step-panel">
-          <h3>STEP 4 — My AI Teacher設定</h3>
+          <h3>STEP 4 — AI先生設定</h3>
           {persona && !editingPersona ? (
             <div className="ai-teacher-persona-display">
               <span className="ai-teacher-avatar-lg">{persona.avatar}</span>
@@ -1031,7 +1031,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 {cameraOn ? 'カメラをOFFにする' : 'カメラをONにする'}
               </button>
               {cameraOn && (
-                <span className="ai-teacher-camera-status">My AI Teacherがあなたの実践を見守っています</span>
+                <span className="ai-teacher-camera-status">AI先生があなたの実践を見守っています</span>
               )}
             </div>
             {cameraOn && (
@@ -1228,10 +1228,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             </p>
           </div>
 
-          {/* My AI Teacherが覚えていること */}
+          {/* AI先生が覚えていること */}
           <div className="ai-teacher-memory-section">
             <button className="ai-teacher-collapse-toggle" onClick={() => setShowMemorySummary((v) => !v)}>
-              My AI Teacherが覚えていること {showMemorySummary ? '▲' : '▼'}
+              AI先生が覚えていること {showMemorySummary ? '▲' : '▼'}
             </button>
             {showMemorySummary && (
               <ul className="ai-teacher-memory-list">

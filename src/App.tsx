@@ -1358,8 +1358,8 @@ export default function App() {
                 <section className="panel top-ai-teacher-panel top-ai-teacher-prominent">
                   <div className="top-ai-teacher-inner">
                     <div className="top-ai-teacher-copy">
-                      <span className="eyebrow">My AI Teacher</span>
-                      <h3>あなた専属のMy AI Teacher</h3>
+                      <span className="eyebrow">AI先生</span>
+                      <h3>あなた専属のAI先生</h3>
                       <p>診断や実践履歴、あなたの好みを参考に今日のアーサナ・呼吸・瞑想を一緒に考えます。</p>
                       <div className="top-ai-teacher-features">
                         <span>今日のプログラム</span>
@@ -1368,8 +1368,8 @@ export default function App() {
                         <span>実践記録</span>
                         <span>先生が育つ</span>
                       </div>
-                      <button className="primary-button" onClick={() => moveTo('ai-teacher')}>My AI Teacherを開く</button>
-                      <p className="top-ai-teacher-note">My AI Teacherはリアルの先生を置き換えるものではありません。レッスンとレッスンの間の日々の実践を支えます。</p>
+                      <button className="primary-button" onClick={() => moveTo('ai-teacher')}>AI先生を開く</button>
+                      <p className="top-ai-teacher-note">AI先生はリアルの先生を置き換えるものではありません。レッスンとレッスンの間の日々の実践を支えます。</p>
                     </div>
                   </div>
                 </section>
@@ -1400,7 +1400,7 @@ export default function App() {
                     </button>
                     <button className="top-daily-card top-daily-card-featured" onClick={() => moveToAITeacher(20)}>
                       <span className="top-daily-time">20分</span>
-                      <strong>My AI Teacher</strong>
+                      <strong>AI先生</strong>
                       <span>AI先生と今日のプログラムを</span>
                     </button>
                   </div>
@@ -1488,8 +1488,8 @@ export default function App() {
                     <button className="top-intent-card" onClick={() => moveTo('ai-teacher')}>
                       <span className="top-intent-icon">🧘</span>
                       <strong>今日ヨガをしたい</strong>
-                      <span className="top-intent-desc">My AI Teacherと実践する</span>
-                      <span className="top-intent-cta">My AI Teacher →</span>
+                      <span className="top-intent-desc">AI先生と実践する</span>
+                      <span className="top-intent-cta">AI先生 →</span>
                     </button>
                     <button className="top-intent-card" onClick={() => moveTo('search')}>
                       <span className="top-intent-icon">📍</span>
@@ -1538,18 +1538,18 @@ export default function App() {
                     </button>
                     <button className="top-daily-card top-daily-card-featured" onClick={() => moveToAITeacher(20)}>
                       <span className="top-daily-time">20分</span>
-                      <strong>My AI Teacher</strong>
+                      <strong>AI先生</strong>
                       <span>AI先生と今日のプログラムを</span>
                     </button>
                   </div>
                 </section>
 
-                {/* My AI Teacher */}
+                {/* AI先生 */}
                 <section className="panel top-ai-teacher-panel">
                   <div className="top-ai-teacher-inner">
                     <div className="top-ai-teacher-copy">
-                      <span className="eyebrow">My AI Teacher</span>
-                      <h3>あなた専属のMy AI Teacher</h3>
+                      <span className="eyebrow">AI先生</span>
+                      <h3>あなた専属のAI先生</h3>
                       <p>診断や実践履歴、あなたの好みを参考に今日のアーサナ・呼吸・瞑想を一緒に考えます。</p>
                       <div className="top-ai-teacher-features">
                         <span>今日のプログラム</span>
@@ -1558,8 +1558,8 @@ export default function App() {
                         <span>実践記録</span>
                         <span>先生が育つ</span>
                       </div>
-                      <button className="primary-button" onClick={() => moveTo('ai-teacher')}>My AI Teacherを開く</button>
-                      <p className="top-ai-teacher-note">My AI Teacherはリアルの先生を置き換えるものではありません。レッスンとレッスンの間の日々の実践を支えます。</p>
+                      <button className="primary-button" onClick={() => moveTo('ai-teacher')}>AI先生を開く</button>
+                      <p className="top-ai-teacher-note">AI先生はリアルの先生を置き換えるものではありません。レッスンとレッスンの間の日々の実践を支えます。</p>
                     </div>
                   </div>
                 </section>
@@ -1660,7 +1660,7 @@ export default function App() {
               <div className="top-myyoga-tags">
                 <span>AI診断</span>
                 <span>My Practice</span>
-                <span>My AI Teacher利用履歴</span>
+                <span>AI先生利用履歴</span>
                 <span>My Teacher</span>
                 <span>診断履歴</span>
                 <span>My Teaching Journey</span>
@@ -1681,11 +1681,11 @@ export default function App() {
                 </button>
                 <button className="top-segment-card" onClick={() => moveTo('ai-teacher')}>
                   <strong>毎日のルーティーンにしたい方</strong>
-                  <span>Daily Yoga / My AI Teacher</span>
+                  <span>Daily Yoga / AI先生</span>
                 </button>
                 <button className="top-segment-card" onClick={() => moveTo('ai-teacher')}>
                   <strong>すでにヨガをしている方</strong>
-                  <span>My AI Teacher / Yoga Knowledge</span>
+                  <span>AI先生 / Yoga Knowledge</span>
                 </button>
                 <button className="top-segment-card" onClick={() => moveTo('my-page')}>
                   <strong>すでに先生に習っている方</strong>
@@ -1751,7 +1751,7 @@ export default function App() {
               </p>
               <div className="top-about-yoga-ai-features">
                 <span>AI診断で自分を知る</span>
-                <span>今日のヨガを実践する</span>
+                <span>AI先生と実践する</span>
                 <span>地図から先生・スクールを探す</span>
                 <span>ヨガ図鑑・呼吸図鑑で学ぶ</span>
                 <span>実践記録がYoga Journeyに</span>
