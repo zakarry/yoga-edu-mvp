@@ -88,6 +88,115 @@ const PRACTICE_START_GUIDE: Record<LangCode, string> = {
 const MOOD_BEFORE_OPTIONS = ['落ち着いている', '普通', '少し疲れている', '集中したい'];
 const MOOD_AFTER_OPTIONS = ['とても良い', '良い', '普通', '少し疲れた'];
 
+interface PracticeGuide {
+  id: string;
+  name: string;
+  purpose: string;
+  steps: string[];
+  estimate: string;
+  hasTimer?: boolean;
+  timerPhases?: { label: string; seconds: number; body: string }[];
+  timerRounds?: number;
+}
+
+const PRACTICE_GUIDES: Record<'pranayama' | 'dhyana' | 'asana', PracticeGuide[]> = {
+  pranayama: [
+    {
+      id: 'box-breathing',
+      name: 'Box Breathing',
+      purpose: '気持ちを落ち着け、呼吸に意識を戻すための短い実践',
+      steps: [
+        '楽な姿勢になる（椅子でも床でもOK）',
+        '4秒かけて鼻からゆっくり吸う',
+        '4秒、そのまま静かに止める',
+        '4秒かけて鼻から細く長く吐く',
+        '4秒、次の呼吸の前に静かに止める',
+      ],
+      estimate: '4〜6周（約1分30秒〜2分）',
+      hasTimer: true,
+      timerPhases: [
+        { label: '吸う', seconds: 4, body: '鼻からゆっくり吸って、胸やお腹にやさしく空気を入れます。' },
+        { label: '止める', seconds: 4, body: '苦しくない範囲で、そのまま静かにキープします。' },
+        { label: '吐く', seconds: 4, body: '鼻から細く長く吐いて、肩の力も一緒にゆるめます。' },
+        { label: '止める', seconds: 4, body: '次の呼吸の前に、落ち着いてひと呼吸ぶん間を取ります。' },
+      ],
+      timerRounds: 4,
+    },
+    {
+      id: 'abdominal-breathing',
+      name: '腹式呼吸',
+      purpose: 'お腹の深い動きを感じながら、自律神経を整える実践',
+      steps: [
+        '仰向けまたは椅子に座り、楽な姿勢になる',
+        '片手をお腹に置き、呼吸の動きを感じる',
+        '鼻から自然に吸い、お腹が膨らむのを感じる',
+        'ゆっくり鼻から吐き、お腹が戻るのを感じる',
+        '無理に深く吸わず、自然な範囲で続ける',
+      ],
+      estimate: '2〜3分',
+    },
+    {
+      id: 'alternate-nostril',
+      name: '交替鼻呼吸',
+      purpose: '左右の鼻孔を交互に使い、心身のバランスを整える実践',
+      steps: [
+        '楽な姿勢で座り、右手を鼻の前に持ってくる',
+        '親指で右鼻を閉じ、左鼻からゆっくり吸う',
+        '薬指で左鼻を閉じ、親指を離して右鼻からゆっくり吐く',
+        '右鼻から吸い、親指で右鼻を閉じて左鼻から吐く',
+        'これを交互に繰り返す',
+      ],
+      estimate: '2〜3分',
+    },
+  ],
+  dhyana: [
+    {
+      id: 'mindful-breath',
+      name: '1分間マインドフルネス',
+      purpose: '呼吸に意識を向け、今この瞬間に戻る短い瞑想',
+      steps: [
+        '背筋を伸ばして楽な姿勢で座る',
+        '目を閉じるか、薄く開いて前に置く',
+        '呼吸の動き（鼻の奥、胸、お腹）に注意を向ける',
+        '呼吸がそれてきたら、やさしく呼吸に戻す',
+        '1分間、ただ呼吸を観察し続ける',
+      ],
+      estimate: '1分',
+    },
+    {
+      id: 'body-scan',
+      name: 'ボディスキャン',
+      purpose: '体の各部分に意識を向け、緊張を手放す瞑想',
+      steps: [
+        '仰向けに寝るか、椅子に座る',
+        '足のつま先から順番に意識を向ける',
+        'ふくらはぎ、太もも、お腹、胸、腕、肩、頭まで',
+        '各部分で緊張がないか感じ、あればゆるめる',
+        '最後に全身を感じて終わる',
+      ],
+      estimate: '3〜5分',
+    },
+  ],
+  asana: [
+    {
+      id: 'today-plan-asana',
+      name: '今日のアーサナ',
+      purpose: 'Today Planで安全に選ばれたポーズを実践します',
+      steps: [
+        'Today Planのポーズを確認する',
+        '各ポーズの指示に従ってゆっくり動く',
+        '無理のない範囲で行う',
+        '呼吸と動きを合わせる',
+      ],
+      estimate: '5〜10分',
+    },
+  ],
+};
+
+function getGuidesForType(type: 'asana' | 'pranayama' | 'dhyana'): PracticeGuide[] {
+  return PRACTICE_GUIDES[type];
+}
+
 function calcUnderstandingAxis(g: AITeacherGrowth, hasPersona: boolean): { practice: number; preference: number; continuity: number } {
   const practice = Math.min(100, Math.round((g.sessions / 50) * 100));
   const prefCount =
@@ -295,6 +404,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [formTeachingLang, setFormTeachingLang] = useState<LangCode>('ja');
   const [demoMsgIdx, setDemoMsgIdx] = useState(0);
   const [chatTyping, setChatTyping] = useState(false);
+  const [selectedGuide, setSelectedGuide] = useState<PracticeGuide | null>(null);
+  const [practicePhase, setPracticePhase] = useState<'guide' | 'active' | 'done'>('guide');
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [timerPhaseIdx, setTimerPhaseIdx] = useState(0);
+  const [timerRemaining, setTimerRemaining] = useState(0);
+  const [timerRound, setTimerRound] = useState(1);
 
   useEffect(() => {
     const p = loadPersona();
@@ -485,9 +600,44 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     }, delay);
   }, [chatInput, persona, teacherContext, growth, conversationContext]);
 
+  useEffect(() => {
+    if (!timerRunning || !selectedGuide?.hasTimer) return;
+    const phases = selectedGuide.timerPhases!;
+    const phase = phases[timerPhaseIdx];
+    if (!phase) return;
+
+    setTimerRemaining(phase.seconds);
+    const tick = window.setInterval(() => {
+      setTimerRemaining((prev) => {
+        if (prev <= 1) {
+          window.clearInterval(tick);
+          const nextIdx = timerPhaseIdx + 1;
+          if (nextIdx >= phases.length) {
+            const nextRound = timerRound + 1;
+            if (nextRound > (selectedGuide.timerRounds ?? 1)) {
+              setTimerRunning(false);
+              setTimerPhaseIdx(0);
+              setTimerRound(1);
+              setPracticePhase('done');
+            } else {
+              setTimerRound(nextRound);
+              setTimerPhaseIdx(0);
+            }
+          } else {
+            setTimerPhaseIdx(nextIdx);
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(tick);
+  }, [timerRunning, timerPhaseIdx, timerRound, selectedGuide]);
+
   const handleCompletePractice = useCallback(async () => {
     if (!practiceType) return;
-    const practiceName = program?.items.find((i) => i.type === practiceType)?.name ?? '実践';
+    const practiceName = selectedGuide?.name ?? program?.items.find((i) => i.type === practiceType)?.name ?? '実践';
     const logParams = {
       practice_type: practiceType,
       practice_name: practiceName,
@@ -555,8 +705,13 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setMoodBefore('');
     setMoodAfter('');
     setPracticeNote('');
+    setSelectedGuide(null);
+    setPracticePhase('guide');
+    setTimerRunning(false);
+    setTimerPhaseIdx(0);
+    setTimerRound(1);
     setStep('step7');
-  }, [practiceType, program, practiceDuration, moodBefore, moodAfter, practiceNote, auth, growth, formSpecialty, teacherContext, conversationContext]);
+  }, [practiceType, program, practiceDuration, moodBefore, moodAfter, practiceNote, auth, growth, formSpecialty, teacherContext, conversationContext, selectedGuide]);
 
   const steps: Array<{ id: StepId; label: string; n: string }> = [
     { id: 'step1', label: '今の状態', n: '1' },
@@ -643,9 +798,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               };
               return (
                 <article key={pt} className="ai-teacher-pillar-card"
-                  onClick={() => { if (!safetyBlocked) { setPracticeType(pt); setStep('step6'); } }}
+                  onClick={() => { if (!safetyBlocked) { setPracticeType(pt); setSelectedGuide(null); setPracticePhase('guide'); setStep('step6'); } }}
                   role="button" tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter' && !safetyBlocked) { setPracticeType(pt); setStep('step6'); } }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !safetyBlocked) { setPracticeType(pt); setSelectedGuide(null); setPracticePhase('guide'); setStep('step6'); } }}
                   style={safetyBlocked ? { pointerEvents: 'none', opacity: 0.5 } : undefined}
                 >
                   <span className="ai-teacher-pillar-label">{labels[pt]}</span>
@@ -696,6 +851,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   if (safetyBlocked) return;
                   setPracticeType(nextSuggestion.suggestedType as 'asana' | 'pranayama' | 'dhyana');
                   if (nextSuggestion.suggestedDuration) setPracticeDuration(nextSuggestion.suggestedDuration);
+                  setSelectedGuide(null); setPracticePhase('guide');
                   setStep('step6');
                   clearNextSuggestion();
                   setNextSuggestion(null);
@@ -758,6 +914,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     if (safetyBlocked) return;
                     setPracticeType(item.type);
                     setPracticeDuration(item.durationMin);
+                    setSelectedGuide(null); setPracticePhase('guide');
                     setStep('step6');
                   }}>{safetyBlocked ? '安全確認が必要です' : '実践する'}</button>
                   {showKnowledgeLink && planItem?.knowledgeLinks && planItem.knowledgeLinks.length > 0 ? (
@@ -992,108 +1149,201 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               安全のため実践を開始できません。専門家にご相談ください。
             </p>
           )}
-          <div className="ai-teacher-practice-setup">
-            <div className="field-grid">
-              <div className="field">
-                <label>実践の種類</label>
-                <select
-                  value={practiceType ?? ''}
-                  onChange={(e) => setPracticeType(e.target.value as 'asana' | 'pranayama' | 'dhyana')}
-                >
-                  <option value="asana">アーサナ</option>
-                  <option value="pranayama">呼吸法</option>
-                  <option value="dhyana">瞑想</option>
-                </select>
-              </div>
-              <div className="field">
-                <label>目安時間（分）</label>
-                <input type="number" min={1} max={120} value={practiceDuration}
-                  onChange={(e) => setPracticeDuration(Number(e.target.value))} />
-              </div>
-            </div>
-            <div className="field-grid">
-              <div className="field">
-                <label>実践前の気分</label>
-                <select value={moodBefore} onChange={(e) => setMoodBefore(e.target.value)}>
-                  <option value="">選択してください</option>
-                  {MOOD_BEFORE_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </div>
-              <div className="field">
-                <label>実践後の気分</label>
-                <select value={moodAfter} onChange={(e) => setMoodAfter(e.target.value)} disabled={!practiceActive}>
-                  <option value="">実践後に選択</option>
-                  {MOOD_AFTER_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="field">
-              <label>自由メモ（任意）</label>
-              <input value={practiceNote} onChange={(e) => setPracticeNote(e.target.value)} placeholder="今日の気づきやメモ" />
-            </div>
-          </div>
 
-          <div className="ai-teacher-camera-section">
-            <div className="ai-teacher-camera-header">
-              <button
-                className={cameraOn ? 'secondary-button' : 'primary-button'}
-                onClick={() => setCameraOn((v) => !v)}
-              >
-                {cameraOn ? 'カメラをOFFにする' : 'カメラをONにする'}
-              </button>
-              {cameraOn && (
-                <span className="ai-teacher-camera-status">AI先生があなたの実践を見守っています</span>
+          {/* Phase: Guide — select practice type and guide */}
+          {practicePhase === 'guide' && (
+            <div className="practice-guide-section">
+              <div className="practice-type-selector">
+                <label>実践の種類</label>
+                <div className="chip-grid">
+                  {(['pranayama', 'dhyana', 'asana'] as const).map((pt) => (
+                    <button
+                      key={pt}
+                      className={`select-chip ${practiceType === pt ? 'active' : ''}`}
+                      onClick={() => {
+                        setPracticeType(pt);
+                        setSelectedGuide(null);
+                      }}
+                    >
+                      {pt === 'pranayama' ? '呼吸法' : pt === 'dhyana' ? '瞑想' : 'アーサナ'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {practiceType && !safetyBlocked && (
+                <div className="practice-guide-list">
+                  <h4>今日の{practiceType === 'pranayama' ? '呼吸法' : practiceType === 'dhyana' ? '瞑想' : 'アーサナ'}</h4>
+                  {getGuidesForType(practiceType).map((g) => (
+                    <button
+                      key={g.id}
+                      className={`practice-guide-card ${selectedGuide?.id === g.id ? 'selected' : ''}`}
+                      onClick={() => setSelectedGuide(g)}
+                    >
+                      <strong>{g.name}</strong>
+                      <span className="practice-guide-purpose">{g.purpose}</span>
+                      <span className="practice-guide-estimate">目安: {g.estimate}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {selectedGuide && (
+                <div className="practice-guide-detail">
+                  <h4>{selectedGuide.name}</h4>
+                  <p className="practice-guide-purpose">{selectedGuide.purpose}</p>
+                  <div className="practice-guide-steps">
+                    <strong>手順</strong>
+                    <ol>
+                      {selectedGuide.steps.map((s, i) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ol>
+                  </div>
+                  <div className="practice-guide-estimate-row">
+                    <span>目安: {selectedGuide.estimate}</span>
+                  </div>
+                  <div className="practice-guide-duration">
+                    <label>実践時間（分）</label>
+                    <input type="number" min={1} max={120} value={practiceDuration}
+                      onChange={(e) => setPracticeDuration(Number(e.target.value))} />
+                  </div>
+                  <button
+                    className="primary-button practice-start-btn"
+                    onClick={() => {
+                      if (safetyBlocked) return;
+                      setPracticePhase('active');
+                      setPracticeActive(true);
+                      if (selectedGuide.hasTimer) {
+                        setTimerRunning(true);
+                        setTimerPhaseIdx(0);
+                        setTimerRound(1);
+                      }
+                    }}
+                  >
+                    実践スタート
+                  </button>
+                </div>
               )}
             </div>
-            {cameraOn && (
-              <div className="ai-teacher-video-wrap">
-                <div className="ai-teacher-video-container">
-                  <video ref={videoRef} autoPlay muted playsInline className="ai-teacher-video ai-teacher-video-mirror" />
-                  <div className="ai-teacher-camera-overlay">
-                    <span className="ai-teacher-overlay-eye">👁</span>
-                    <span className="ai-teacher-overlay-text">{persona?.name ?? 'AI先生'} があなたの実践を見守っています</span>
-                  </div>
-                  {practiceActive && (
-                    <div className="ai-teacher-demo-fb">
-                      {(DEMO_FEEDBACK[persona?.teachingLanguage ?? 'ja'] ?? DEMO_FEEDBACK.ja)[demoMsgIdx]}
+          )}
+
+          {/* Phase: Active — practice with optional timer */}
+          {practicePhase === 'active' && selectedGuide && (
+            <div className="practice-active-section">
+              <div className="practice-active-header">
+                <h4>{selectedGuide.name}</h4>
+                <span className="practice-active-round">
+                  {selectedGuide.hasTimer ? `${timerRound} / ${selectedGuide.timerRounds} 周` : '実践中'}
+                </span>
+              </div>
+
+              {selectedGuide.hasTimer && timerRunning && (
+                <div className="practice-timer">
+                  <div className="breathing-orb-stage">
+                    <div className="breathing-orb-halo" />
+                    <div className="breathing-circle is-running" aria-live="polite">
+                      <div className="breathing-circle-content">
+                        <strong>{selectedGuide.timerPhases![timerPhaseIdx]?.label ?? ''}</strong>
+                        <span>{timerRemaining}</span>
+                      </div>
                     </div>
+                  </div>
+                  <p className="practice-timer-body">
+                    {selectedGuide.timerPhases![timerPhaseIdx]?.body ?? ''}
+                  </p>
+                </div>
+              )}
+
+              {!selectedGuide.hasTimer && (
+                <div className="practice-non-timer-guide">
+                  <ol>
+                    {selectedGuide.steps.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ol>
+                  <p className="practice-non-timer-note">手順に沿って、ゆっくり実践してください。</p>
+                </div>
+              )}
+
+              <div className="ai-teacher-camera-section">
+                <div className="ai-teacher-camera-header">
+                  <button
+                    className={cameraOn ? 'secondary-button' : 'primary-button'}
+                    onClick={() => setCameraOn((v) => !v)}
+                  >
+                    {cameraOn ? 'カメラをOFFにする' : 'カメラをONにする'}
+                  </button>
+                  {cameraOn && (
+                    <span className="ai-teacher-camera-status">AI先生があなたの実践を見守っています</span>
                   )}
                 </div>
-                {persona && (
-                  <div className="ai-teacher-camera-teacher">
-                    <span className="ai-teacher-camera-avatar">{persona.avatar}</span>
-                    <div className="ai-teacher-camera-teacher-info">
-                      <strong>{persona.name}</strong>
-                      <span>{PERSONALITY_OPTIONS.find((p) => p.v === persona.personality)?.label ?? persona.personality}</span>
+                {cameraOn && (
+                  <div className="ai-teacher-video-wrap">
+                    <div className="ai-teacher-video-container">
+                      <video ref={videoRef} autoPlay muted playsInline className="ai-teacher-video ai-teacher-video-mirror" />
+                      <div className="ai-teacher-camera-overlay">
+                        <span className="ai-teacher-overlay-eye">👁</span>
+                        <span className="ai-teacher-overlay-text">{persona?.name ?? 'AI先生'} があなたの実践を見守っています</span>
+                      </div>
                     </div>
+                    {persona && (
+                      <div className="ai-teacher-camera-teacher">
+                        <span className="ai-teacher-camera-avatar">{persona.avatar}</span>
+                        <div className="ai-teacher-camera-teacher-info">
+                          <strong>{persona.name}</strong>
+                          <span>{PERSONALITY_OPTIONS.find((p) => p.v === persona.personality)?.label ?? persona.personality}</span>
+                        </div>
+                      </div>
+                    )}
+                    <p className="ai-teacher-demo-note">
+                      現在はデモ機能です。姿勢や安全性を医学的・専門的に判定するものではありません。
+                    </p>
                   </div>
                 )}
-                <p className="ai-teacher-demo-note">
-                  {CAMERA_GUIDE[persona?.teachingLanguage ?? 'ja'] ?? CAMERA_GUIDE.ja}
-                </p>
-                <p className="ai-teacher-demo-note">
-                  現在はデモ機能です。姿勢や安全性を医学的・専門的に判定するものではありません。
-                </p>
-                {practiceActive && (
-                  <p className="ai-teacher-demo-note">
-                    {PRACTICE_START_GUIDE[persona?.teachingLanguage ?? 'ja'] ?? PRACTICE_START_GUIDE.ja}
-                  </p>
-                )}
               </div>
-            )}
-          </div>
 
-          <div className="ai-teacher-practice-actions">
-            {!practiceActive ? (
-              <button className="primary-button" onClick={() => { if (safetyBlocked) return; setPracticeActive(true); }} disabled={!practiceType || safetyBlocked}>
-                {safetyBlocked ? '安全確認が必要です' : '実践スタート'}
+              <button
+                className="gold-button practice-complete-btn"
+                onClick={() => {
+                  setTimerRunning(false);
+                  setPracticePhase('done');
+                }}
+              >
+                実践を完了する
               </button>
-            ) : (
-              <button className="gold-button" onClick={handleCompletePractice}>
-                実践を完了して記録する
+            </div>
+          )}
+
+          {/* Phase: Done — post-practice recording */}
+          {practicePhase === 'done' && (
+            <div className="practice-done-section">
+              <h4>実践おつかれさまでした</h4>
+              <p>実践の記録を入力してください。</p>
+              <div className="field-grid">
+                <div className="field">
+                  <label>実践後の気分</label>
+                  <select value={moodAfter} onChange={(e) => setMoodAfter(e.target.value)}>
+                    <option value="">選択してください</option>
+                    {MOOD_AFTER_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+                <div className="field">
+                  <label>実践時間（分）</label>
+                  <input type="number" min={1} max={120} value={practiceDuration}
+                    onChange={(e) => setPracticeDuration(Number(e.target.value))} />
+                </div>
+              </div>
+              <div className="field">
+                <label>自由メモ（任意）</label>
+                <input value={practiceNote} onChange={(e) => setPracticeNote(e.target.value)} placeholder="今日の気づきやメモ" />
+              </div>
+              <button className="primary-button practice-save-btn" onClick={handleCompletePractice}>
+                記録して完了する
               </button>
-            )}
-          </div>
+            </div>
+          )}
+
           {saveStatus && <p className="ai-teacher-save-status">{saveStatus}</p>}
         </section>
       )}
@@ -1147,6 +1397,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   if (safetyBlocked) return;
                   setPracticeType(nextSuggestion.suggestedType as 'asana' | 'pranayama' | 'dhyana');
                   if (nextSuggestion.suggestedDuration) setPracticeDuration(nextSuggestion.suggestedDuration);
+                  setSelectedGuide(null); setPracticePhase('guide');
                   setStep('step6');
                   clearNextSuggestion();
                   setNextSuggestion(null);

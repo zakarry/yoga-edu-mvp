@@ -4984,6 +4984,88 @@ h1 {
   border: 1px solid rgba(201,165,76,.14);
 }
 .ai-teacher-practice-actions { margin-top: 8px; }
+
+/* === Practice Guide (STEP 6 redesign) === */
+.practice-guide-section { display: grid; gap: 20px; }
+.practice-type-selector label { font-weight: 700; color: var(--navy); display: block; margin-bottom: 8px; }
+.practice-guide-list { display: grid; gap: 10px; }
+.practice-guide-list h4 { color: var(--navy); }
+.practice-guide-card {
+  text-align: left;
+  background: linear-gradient(180deg, #fff 0%, #f7faf8 100%);
+  border: 1px solid rgba(16,37,66,.08);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: grid;
+  gap: 6px;
+  cursor: pointer;
+  transition: border-color .16s ease, box-shadow .16s ease;
+}
+.practice-guide-card:hover { border-color: rgba(16,37,66,.2); box-shadow: 0 4px 14px rgba(16,37,66,.06); }
+.practice-guide-card.selected { border-color: var(--navy); border-width: 2px; padding: 15px 17px; }
+.practice-guide-card strong { font-size: 17px; color: var(--navy); }
+.practice-guide-purpose { font-size: 13px; color: var(--muted); }
+.practice-guide-estimate { font-size: 12px; color: var(--green-strong); font-weight: 700; }
+.practice-guide-detail {
+  background: rgba(255,255,255,.9);
+  border: 1px solid rgba(16,37,66,.08);
+  border-radius: 18px;
+  padding: 22px;
+  display: grid;
+  gap: 14px;
+}
+.practice-guide-detail h4 { font-size: 20px; color: var(--navy); }
+.practice-guide-steps strong { color: var(--navy); display: block; margin-bottom: 8px; }
+.practice-guide-steps ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.practice-guide-steps li { color: var(--text); font-size: 14px; line-height: 1.7; }
+.practice-guide-estimate-row span { font-size: 13px; color: var(--green-strong); font-weight: 700; }
+.practice-guide-duration { display: grid; gap: 6px; }
+.practice-guide-duration label { font-weight: 700; color: var(--navy); font-size: 14px; }
+.practice-guide-duration input {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 16px;
+}
+.practice-start-btn { font-size: 18px; padding: 16px 24px; }
+
+.practice-active-section { display: grid; gap: 18px; }
+.practice-active-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.practice-active-header h4 { font-size: 20px; color: var(--navy); }
+.practice-active-round {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green-strong);
+  background: rgba(108,138,118,.12);
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+.practice-timer { display: grid; gap: 12px; place-items: center; }
+.practice-timer-body {
+  font-size: 14px;
+  color: var(--muted);
+  text-align: center;
+  max-width: 320px;
+  line-height: 1.6;
+}
+.practice-non-timer-guide { display: grid; gap: 10px; }
+.practice-non-timer-guide ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.practice-non-timer-guide li { color: var(--text); font-size: 14px; line-height: 1.7; }
+.practice-non-timer-note { font-size: 13px; color: var(--green-strong); font-weight: 600; }
+.practice-complete-btn { font-size: 16px; padding: 14px 22px; }
+
+.practice-done-section {
+  display: grid;
+  gap: 16px;
+}
+.practice-done-section h4 { font-size: 20px; color: var(--navy); }
+.practice-done-section > p { font-size: 14px; color: var(--muted); }
+.practice-save-btn { font-size: 16px; padding: 14px 22px; }
 .ai-teacher-local-logs {
   display: grid;
   gap: 8px;
