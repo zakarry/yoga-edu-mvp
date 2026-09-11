@@ -31,7 +31,7 @@ import { MyTeachingJourney } from './components/MyTeachingJourney';
 import { MyTeacherSection } from './components/MyTeacherSection';
 import { MyAITeacherPage } from './components/MyAITeacherPage';
 import { SiteMapPage } from './components/SiteMapPage';
-import { useAuth } from './lib/auth';
+import { useAuth, getLastAuthEvent } from './lib/auth';
 import { initLiffOnce, useLiff, attemptLiffAutoLogin, isAutoLoginAttempted } from './lib/liff';
 import { addTeacherRelationship } from './services/teacherRelationshipService';
 import { fetchDirectory } from './services/directoryService';
@@ -1074,13 +1074,14 @@ export default function App() {
       liffState.initialized &&
       liffState.isInClient &&
       liffState.isLoggedIn &&
+      auth.authReady &&
       !auth.user &&
       !auth.loading &&
       !isAutoLoginAttempted()
     ) {
       void attemptLiffAutoLogin();
     }
-  }, [liffState.initialized, liffState.isInClient, liffState.isLoggedIn, auth.user, auth.loading]);
+  }, [liffState.initialized, liffState.isInClient, liffState.isLoggedIn, auth.authReady, auth.user, auth.loading]);
 
   useEffect(() => {
     let active = true;
@@ -1270,6 +1271,21 @@ export default function App() {
         <div className="liff-auto-login-banner">
           <span className="liff-spinner" />
           <span>LINEで確認しています…</span>
+        </div>
+      )}
+
+      {liffState.initialized && new URLSearchParams(window.location.search).get('testMode') === 'liff-auth' && (
+        <div style={{ padding: '8px 16px', fontSize: '12px', color: '#333', background: '#f0f4f8', borderBottom: '1px solid #cce', lineHeight: 1.8 }}>
+          <strong>LIFF Auto-Login Diagnostics:</strong>
+          <div>liffInitialized={String(liffState.initialized)} | isInClient={String(liffState.isInClient)} | isLoggedIn={String(liffState.isLoggedIn)}</div>
+          <div>hasIdToken={String(liffState.diagnostics.hasIdToken)}</div>
+          <div>edgeCalled={String(liffState.diagnostics.edgeCalled)} | edgeStatus={String(liffState.diagnostics.edgeStatus)} | edgeOk={String(liffState.diagnostics.edgeOk)}</div>
+          <div>lineVerify={String(liffState.diagnostics.lineVerify)} | identityResolved={String(liffState.diagnostics.identityResolved)}</div>
+          <div>sessionCreated={String(liffState.diagnostics.sessionCreated)}</div>
+          <div>setSessionResult={String(liffState.diagnostics.setSessionResult)} | getSessionAfterSet={String(liffState.diagnostics.getSessionAfterSet)}</div>
+          <div>autoLoginStatus={liffState.autoLoginStatus} | autoLoginError={liffState.autoLoginError ?? '(none)'}</div>
+          <div>authReady={String(auth.authReady)} | authLoading={String(auth.loading)} | hasUser={String(Boolean(auth.user))}</div>
+          <div>authEvent={getLastAuthEvent() ?? '(none)'}</div>
         </div>
       )}
 

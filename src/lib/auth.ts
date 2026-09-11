@@ -67,7 +67,12 @@ const initialAuthState: AuthState = {
 };
 
 let authState: AuthState = initialAuthState;
+let lastAuthEvent: string | null = null;
 const listeners = new Set<() => void>();
+
+export function getLastAuthEvent(): string | null {
+  return lastAuthEvent;
+}
 
 function notify() {
   listeners.forEach((fn) => fn());
@@ -98,6 +103,8 @@ async function fetchProfileAndPrivacy(userId: string) {
 
 if (supabase && isSupabaseConfigured) {
   supabase.auth.onAuthStateChange((event, session) => {
+    lastAuthEvent = event;
+    notify();
     (async () => {
       if (session?.user) {
         setAuthState({ loading: true });

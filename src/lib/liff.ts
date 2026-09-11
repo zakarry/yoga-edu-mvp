@@ -7,6 +7,18 @@ export interface LiffProfile {
   pictureUrl?: string;
 }
 
+export interface LiffDiagnostics {
+  hasIdToken: boolean | null;
+  edgeCalled: boolean;
+  edgeStatus: number | null;
+  edgeOk: boolean | null;
+  lineVerify: boolean | null;
+  identityResolved: boolean | null;
+  sessionCreated: boolean | null;
+  setSessionResult: 'pending' | 'ok' | 'error' | null;
+  getSessionAfterSet: boolean | null;
+}
+
 export interface LiffState {
   initialized: boolean;
   isInClient: boolean;
@@ -14,7 +26,21 @@ export interface LiffState {
   profile: LiffProfile | null;
   error: string | null;
   autoLoginStatus: 'idle' | 'loading' | 'success' | 'failed';
+  autoLoginError: string | null;
+  diagnostics: LiffDiagnostics;
 }
+
+const initialDiagnostics: LiffDiagnostics = {
+  hasIdToken: null,
+  edgeCalled: false,
+  edgeStatus: null,
+  edgeOk: null,
+  lineVerify: null,
+  identityResolved: null,
+  sessionCreated: null,
+  setSessionResult: null,
+  getSessionAfterSet: null,
+};
 
 let liffState: LiffState = {
   initialized: false,
@@ -23,6 +49,8 @@ let liffState: LiffState = {
   profile: null,
   error: null,
   autoLoginStatus: 'idle',
+  autoLoginError: null,
+  diagnostics: initialDiagnostics,
 };
 
 const listeners = new Set<() => void>();
@@ -33,6 +61,11 @@ function notify() {
 
 function setLiffState(patch: Partial<LiffState>) {
   liffState = { ...liffState, ...patch };
+  notify();
+}
+
+function setDiagnostics(patch: Partial<LiffDiagnostics>) {
+  liffState = { ...liffState, diagnostics: { ...liffState.diagnostics, ...patch } };
   notify();
 }
 
@@ -101,30 +134,26 @@ export function useLiff(): LiffState {
   return liffState;
 }
 
-/**
- * Attempt LIFF auto-login: send the LINE ID Token to our edge function
- * for server-side verification, then set the returned session in the
- * Supabase client. Only called when isInClient && isLoggedIn && no
- * existing Supabase session.
- */
 export async function attemptLiffAutoLogin(): Promise<{ success: boolean; error: string | null }> {
   if (autoLoginAttempted) {
     return { success: false, error: 'already_attempted' };
   }
   autoLoginAttempted = true;
 
-  setLiffState({ autoLoginStatus: 'loading' });
+  setLiffState({ autoLoginStatus: 'loading', autoLoginError: null, diagnostics: initialDiagnostics });
 
   try {
     const idToken = liff.getIDToken();
+    setDiagnostics({ hasIdToken: Boolean(idToken) });
     if (!idToken) {
-      setLiffState({ autoLoginStatus: 'failed' });
+      setLiffState({ autoLoginStatus: 'failed', autoLoginError: 'no_id_token' });
       return { success: false, error: 'no_id_token' };
     }
 
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
+    setDiagnostics({ edgeCalled: true });
     const response = await fetch(`${supabaseUrl}/functions/v1/line-auth/liff`, {
       method: 'POST',
       headers: {
@@ -135,39 +164,53 @@ export async function attemptLiffAutoLogin(): Promise<{ success: boolean; error:
       body: JSON.stringify({ id_token: idToken }),
     });
 
+    setDiagnostics({ edgeStatus: response.status, edgeOk: response.ok });
+
     if (!response.ok) {
-      setLiffState({ autoLoginStatus: 'failed' });
+      setLiffState({ autoLoginStatus: 'failed', autoLoginError: `edge_${response.status}` });
       return { success: false, error: 'verification_failed' };
     }
 
     const data = await response.json();
+    setDiagnostics({ lineVerify: true, identityResolved: true });
+
     if (!data?.session?.access_token || !data?.session?.refresh_token) {
-      setLiffState({ autoLoginStatus: 'failed' });
+      setDiagnostics({ sessionCreated: false });
+      setLiffState({ autoLoginStatus: 'failed', autoLoginError: 'invalid_response' });
       return { success: false, error: 'invalid_response' };
     }
 
-    // Import supabase client dynamically to avoid circular dependency
+    setDiagnostics({ sessionCreated: true });
+
     const { supabase } = await import('./supabase');
     if (!supabase) {
-      setLiffState({ autoLoginStatus: 'failed' });
+      setLiffState({ autoLoginStatus: 'failed', autoLoginError: 'supabase_not_configured' });
       return { success: false, error: 'supabase_not_configured' };
     }
 
+    setDiagnostics({ setSessionResult: 'pending' });
     const { error: setError } = await supabase.auth.setSession({
       access_token: data.session.access_token,
       refresh_token: data.session.refresh_token,
     });
 
     if (setError) {
-      setLiffState({ autoLoginStatus: 'failed' });
+      setDiagnostics({ setSessionResult: 'error' });
+      setLiffState({ autoLoginStatus: 'failed', autoLoginError: 'session_set_failed' });
       return { success: false, error: 'session_set_failed' };
     }
 
+    setDiagnostics({ setSessionResult: 'ok' });
+
+    const { data: sessionCheck } = await supabase.auth.getSession();
+    setDiagnostics({ getSessionAfterSet: Boolean(sessionCheck?.session) });
+
     setLiffState({ autoLoginStatus: 'success' });
     return { success: true, error: null };
-  } catch {
-    setLiffState({ autoLoginStatus: 'failed' });
-    return { success: false, error: 'unexpected_error' };
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : 'unexpected_error';
+    setLiffState({ autoLoginStatus: 'failed', autoLoginError: errMsg });
+    return { success: false, error: errMsg };
   }
 }
 
@@ -177,5 +220,5 @@ export function isAutoLoginAttempted(): boolean {
 
 export function resetAutoLoginAttempt() {
   autoLoginAttempted = false;
-  setLiffState({ autoLoginStatus: 'idle' });
+  setLiffState({ autoLoginStatus: 'idle', autoLoginError: null, diagnostics: initialDiagnostics });
 }
