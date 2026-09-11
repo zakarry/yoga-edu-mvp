@@ -21,6 +21,7 @@ import { ProYogaPage } from './components/ProYogaPage';
 import { ProDrillPage } from './ProDrillPage';
 import DiagnosisV2Page from './DiagnosisV2Page';
 import { SacredSitesPage } from './components/SacredSitesPage';
+import { LearnHubPage } from './components/LearnHubPage';
 import { StaticInfoPage } from './components/StaticInfoPage';
 import { TeacherDiagnosisPage } from './components/TeacherDiagnosisPage';
 import { TopBackLink } from './components/TopBackLink';
@@ -36,7 +37,7 @@ import { initLiffOnce, useLiff, attemptLiffAutoLogin, isAutoLoginAttempted } fro
 import { addTeacherRelationship } from './services/teacherRelationshipService';
 import { fetchDirectory } from './services/directoryService';
 
-type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map' | 'box-breathing' | 'breathing-meditation';
+type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map' | 'box-breathing' | 'breathing-meditation' | 'learn';
 
 type FilterType = SearchItem['type'] | 'all';
 
@@ -1099,7 +1100,7 @@ export default function App() {
     teacher: 'ai-teacher',
     search: 'search',
     karte: 'my-page',
-    learn: 'pro-yoga',
+    learn: 'learn',
     diagnosis: 'diagnosis',
   };
 
@@ -1234,7 +1235,7 @@ export default function App() {
       title: 'Learning / Certification',
       links: [
         { label: '動画で学ぶ', disabled: true },
-        { label: '資格・検定', action: () => moveTo('pro-yoga') },
+        { label: '資格・検定', action: () => moveTo('learn') },
         { label: 'プロYoga検定', action: () => moveTo('pro-yoga') },
         { label: 'ヨガの聖地と文化', action: () => moveTo('sacred-sites') },
       ],
@@ -1277,7 +1278,7 @@ export default function App() {
             <button onClick={() => openSearchWithType('all', page === 'results')}>地図から探す</button>
             <button onClick={() => moveTo('ai-teacher')}>My AI Teacher</button>
             <button onClick={() => moveTo('my-page')}>myYOGAカルテ</button>
-            <button onClick={() => moveTo('pro-yoga')}>学ぶ</button>
+            <button onClick={() => moveTo('learn')}>学ぶ</button>
             <button onClick={() => moveTo('site-map')}>メニュー</button>
           </nav>
         </div>
@@ -1368,7 +1369,7 @@ export default function App() {
                   <span className="top-intent-desc">地図から先生・スクール・イベント</span>
                   <span className="top-intent-cta">地図から探す →</span>
                 </button>
-                <button className="top-intent-card" onClick={() => moveTo('pro-yoga')}>
+                <button className="top-intent-card" onClick={() => moveTo('learn')}>
                   <span className="top-intent-icon">📚</span>
                   <strong>ヨガ・呼吸を学びたい</strong>
                   <span className="top-intent-desc">ヨガ図鑑・呼吸図鑑・検定</span>
@@ -1565,7 +1566,7 @@ export default function App() {
                   <strong>先生・スクールを探している方</strong>
                   <span>Map / Directory</span>
                 </button>
-                <button className="top-segment-card" onClick={() => moveTo('pro-yoga')}>
+                <button className="top-segment-card" onClick={() => moveTo('learn')}>
                   <strong>ヨガ・呼吸を学びたい方</strong>
                   <span>ヨガ図鑑 / 呼吸図鑑 / 検定</span>
                 </button>
@@ -1811,6 +1812,16 @@ export default function App() {
         {page === 'pro-yoga' && <ProYogaPage onStartDiagnosis={() => moveTo('diagnosis')} onBackHome={() => moveTo('home')} onOpenDrill={() => moveTo('pro-drill')} />}
         {page === 'pro-drill' && <ProDrillPage onBackHome={() => moveTo('home')} />}
         {page === 'diagnosis-v2' && <DiagnosisV2Page onMoveToSearch={() => moveTo('search')} onSaved={() => moveTo('my-page')} />}
+        {page === 'learn' && (
+          <LearnHubPage
+            onBackHome={() => moveTo('home')}
+            onOpenProYoga={() => moveTo('pro-yoga')}
+            onOpenBoxBreathing={() => moveTo('box-breathing')}
+            onOpenBreathingMeditation={() => moveTo('breathing-meditation')}
+            onOpenAITeacher={() => moveTo('ai-teacher')}
+            onOpenSacredSites={() => moveTo('sacred-sites')}
+          />
+        )}
         {page === 'sacred-sites' && <SacredSitesPage onBackHome={() => moveTo('home')} />}
         {page === 'ai-teacher' && (
           <MyAITeacherPage

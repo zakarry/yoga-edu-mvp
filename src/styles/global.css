@@ -6744,3 +6744,19 @@ html, body {
 @keyframes liff-spin {
   to { transform: rotate(360deg); }
 }
+
+.learn-hub-page .learn-hub-section { margin-bottom: 20px; }
+.learn-hub-page .top-learning-item-disabled {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+.learn-hub-page .learn-hub-note {
+  margin-top: 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+@media (max-width: 768px) {
+  .learn-hub-page .top-learning-grid { grid-template-columns: 1fr; }
+}
