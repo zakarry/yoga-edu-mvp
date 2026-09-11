@@ -1059,12 +1059,20 @@ export default function App() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [mapFilterType, setMapFilterType] = useState<FilterType>('all');
   const [aiTeacherMinutes, setAiTeacherMinutes] = useState<number | undefined>(undefined);
+  const [testMode, setTestMode] = useState<string | null>(null);
+
   const auth = useAuth();
   const liffState = useLiff();
 
   useEffect(() => {
     void initLiffOnce();
   }, []);
+
+  useEffect(() => {
+    if (!liffState.initialized) return;
+    const params = new URLSearchParams(window.location.search);
+    setTestMode(params.get('testMode'));
+  }, [liffState.initialized]);
 
   // LIFF auto-login: when inside LINE LIFF browser, logged in to LINE,
   // and not yet authenticated with Supabase, verify the LINE ID Token
@@ -1256,7 +1264,7 @@ export default function App() {
         </div>
       </header>
 
-      {liffState.initialized && new URLSearchParams(window.location.search).get('testMode') === 'liff-status' && (
+      {liffState.initialized && testMode === 'liff-status' && (
         <div style={{ padding: '8px 16px', fontSize: '12px', color: '#333', background: '#f0f4f8', borderBottom: '1px solid #cce' }}>
           <strong>LIFF Status:</strong>{' '}
           initialized={String(liffState.initialized)}{' | '}
@@ -1274,7 +1282,7 @@ export default function App() {
         </div>
       )}
 
-      {liffState.initialized && new URLSearchParams(window.location.search).get('testMode') === 'liff-auth' && (
+      {liffState.initialized && testMode === 'liff-auth' && (
         <div style={{ padding: '8px 16px', fontSize: '12px', color: '#333', background: '#f0f4f8', borderBottom: '1px solid #cce', lineHeight: 1.8 }}>
           <strong>LIFF Auto-Login Diagnostics:</strong>
           <div>liffInitialized={String(liffState.initialized)} | isInClient={String(liffState.isInClient)} | isLoggedIn={String(liffState.isLoggedIn)}</div>
