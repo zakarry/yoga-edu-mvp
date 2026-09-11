@@ -149,11 +149,10 @@ export function MapView({ items, selectedType = 'all', onSelectItem }: MapViewPr
                 <div style="font-size:12px;color:#6b7280;margin-bottom:6px;">${labelOf(item.type)}</div>
                 <div style="font-size:15px;font-weight:700;margin-bottom:8px;">${item.name}</div>
                 <div style="font-size:13px;line-height:1.6;color:#374151;margin-bottom:10px;">${item.description}</div>
-                <button onclick="window.__openMapDetail && window.__openMapDetail('${item.id}')" style="background:#102542;color:#fff;border:none;border-radius:999px;padding:8px 12px;font-size:12px;cursor:pointer;">詳細を見るボタン</button>
+                <button onclick="window.__openMapDetail && window.__openMapDetail('${item.id}')" style="background:#102542;color:#fff;border:none;border-radius:999px;padding:8px 12px;font-size:12px;cursor:pointer;">詳細を見る</button>
               </div>
             `);
             infoWindowRef.current.open({ anchor: marker, map });
-            if (onSelectItem) onSelectItem(item);
           } catch { /* ignore infowindow errors */ }
         });
 

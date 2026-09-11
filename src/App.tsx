@@ -1055,6 +1055,18 @@ export default function App() {
   const [searchPurposes, setSearchPurposes] = useState<string[]>([]);
   const [searchFeatures, setSearchFeatures] = useState<string[]>([]);
   const [detailItem, setDetailItem] = useState<SearchItem | null>(null);
+
+  useEffect(() => {
+    if (!detailItem) return;
+    window.history.pushState({ detailDrawer: true }, '');
+    const handler = (e: PopStateEvent) => {
+      setDetailItem(null);
+    };
+    window.addEventListener('popstate', handler);
+    return () => {
+      window.removeEventListener('popstate', handler);
+    };
+  }, [detailItem]);
   const [teacherRelationshipRefresh, setTeacherRelationshipRefresh] = useState(0);
   const [authOpenSignal, setAuthOpenSignal] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -2138,29 +2150,59 @@ export default function App() {
 
       {detailItem && (
         <aside className="detail-drawer">
+          <div className="detail-back-row">
+            <button className="detail-back-button" onClick={() => setDetailItem(null)}>← 地図へ戻る</button>
+            <button className="close-button" onClick={() => setDetailItem(null)} aria-label="閉じる">×</button>
+          </div>
           <div className="detail-header">
             <div>
               <span className={`type-pill ${detailItem.type}`}>{detailItem.type === 'school' ? 'スクール' : detailItem.type === 'teacher' ? '先生' : detailItem.type === 'event' ? 'イベント' : 'ヨガクラブ'}</span>
               {detailItem.type === 'event' && isPastEventItem(detailItem) && <span className="badge-ended-event" style={{ marginLeft: 8 }}>終了</span>}
               <h3>{detailItem.name}</h3>
             </div>
-            <button className="close-button" onClick={() => setDetailItem(null)}>×</button>
           </div>
           <p>{detailItem.description}</p>
           <div className="detail-grid">
             <div><strong>地域</strong><span>{detailItem.area}</span></div>
-            <div><strong>対応言語</strong><span>{detailItem.languages.join(' / ')}</span></div>
-            <div><strong>タグ</strong><span>{getItemTags(detailItem).slice(0, 8).join(' / ')}</span></div>
+            <div><strong>対応言語</strong><span>{detailItem.languages.length > 0 ? detailItem.languages.join(' / ') : '詳細情報は掲載準備中'}</span></div>
+            <div><strong>タグ</strong><span>{(() => { const tags = getItemTags(detailItem).slice(0, 8); return tags.length > 0 ? tags.join(' / ') : '詳細情報は掲載準備中'; })()}</span></div>
             {detailItem.type === 'event' && (
               <>
-                <div><strong>開催日</strong><span>{detailItem.date}</span></div>
-                <div><strong>主催者</strong><span>{detailItem.organizerType}</span></div>
+                <div><strong>開催日</strong><span>{detailItem.date || '詳細情報は掲載準備中'}</span></div>
+                <div><strong>主催者</strong><span>{detailItem.organizerType || '詳細情報は掲載準備中'}</span></div>
                 <div><strong>開催時刻</strong><span>詳細情報は掲載準備中</span></div>
                 <div><strong>会場住所</strong><span>詳細情報は掲載準備中</span></div>
                 <div><strong>料金</strong><span>詳細情報は掲載準備中</span></div>
                 <div><strong>申込先</strong><span>詳細情報は掲載準備中</span></div>
               </>
             )}
+            {detailItem.type === 'teacher' && (
+              <>
+                <div><strong>対象レベル</strong><span>{detailItem.targetLevels.length > 0 ? detailItem.targetLevels.join(' / ') : '詳細情報は掲載準備中'}</span></div>
+                <div><strong>得意分野</strong><span>{detailItem.specialties.length > 0 ? detailItem.specialties.join(' / ') : '詳細情報は掲載準備中'}</span></div>
+                <div><strong>指導形式</strong><span>{detailItem.formats.length > 0 ? detailItem.formats.join(' / ') : '詳細情報は掲載準備中'}</span></div>
+                <div><strong>資格</strong><span>{detailItem.certifications.length > 0 ? detailItem.certifications.join(' / ') : '詳細情報は掲載準備中'}</span></div>
+                <div><strong>外国人対応</strong><span>{detailItem.foreignSupportStatus}</span></div>
+              </>
+            )}
+            {detailItem.type === 'school' && (
+              <>
+                <div><strong>スクール種別</strong><span>{detailItem.schoolTypes.length > 0 ? detailItem.schoolTypes.join(' / ') : '詳細情報は掲載準備中'}</span></div>
+                <div><strong>プログラム</strong><span>{detailItem.programs.length > 0 ? detailItem.programs.join(' / ') : '詳細情報は掲載準備中'}</span></div>
+                <div><strong>強み</strong><span>{detailItem.strengths.length > 0 ? detailItem.strengths.join(' / ') : '詳細情報は掲載準備中'}</span></div>
+                <div><strong>外国人受け入れ</strong><span>{detailItem.foreignSupportStatus}</span></div>
+              </>
+            )}
+            {detailItem.type === 'club' && (
+              <>
+                <div><strong>クラブ種別</strong><span>{detailItem.clubTypes.length > 0 ? detailItem.clubTypes.join(' / ') : '詳細情報は掲載準備中'}</span></div>
+                <div><strong>活動内容</strong><span>{detailItem.activities.length > 0 ? detailItem.activities.join(' / ') : '詳細情報は掲載準備中'}</span></div>
+                <div><strong>外国人参加</strong><span>{detailItem.foreignParticipantStatus}</span></div>
+              </>
+            )}
+          </div>
+          <div className="detail-actions">
+            <button className="secondary-button" onClick={() => setDetailItem(null)}>地図へ戻る</button>
           </div>
         </aside>
       )}
