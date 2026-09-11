@@ -293,8 +293,8 @@ function persistDiagnosisHistory(history: DiagnosisHistoryRecord[]) {
 const initialDiagnosis: StudentDiagnosisInput = {
   ageRange: '30代',
   gender: '女性',
-  residentArea: '渋谷',
-  preferredArea: '渋谷',
+  residentArea: '東京',
+  preferredArea: '東京',
   yogaExperience: '未経験',
   exerciseHabit: 'ほとんどない',
   onlineAvailable: 'どちらでもよい',
@@ -1062,6 +1062,7 @@ export default function App() {
   const [aiTeacherMinutes, setAiTeacherMinutes] = useState<number | undefined>(undefined);
   const [testMode, setTestMode] = useState<string | null>(null);
   const [entryTarget, setEntryTarget] = useState<string | null>(null);
+  const [entrySection, setEntrySection] = useState<string | null>(null);
   const [entryNavigated, setEntryNavigated] = useState(false);
 
   const auth = useAuth();
@@ -1076,6 +1077,7 @@ export default function App() {
     const params = new URLSearchParams(window.location.search);
     setTestMode(params.get('testMode'));
     setEntryTarget(params.get('entry'));
+    setEntrySection(params.get('section'));
   }, [liffState.initialized]);
 
   // LIFF auto-login: when inside LINE LIFF browser, logged in to LINE,
@@ -1102,14 +1104,23 @@ export default function App() {
     karte: 'my-page',
     learn: 'learn',
     diagnosis: 'diagnosis',
+    sacred: 'sacred-sites',
   };
 
   useEffect(() => {
     if (entryNavigated || !entryTarget || !auth.authReady) return;
     setEntryNavigated(true);
     const target = ENTRY_PAGE_MAP[entryTarget];
-    if (target) moveTo(target);
-  }, [entryNavigated, entryTarget, auth.authReady]);
+    if (target) {
+      moveTo(target);
+      if (entrySection) {
+        setTimeout(() => {
+          const el = document.getElementById(entrySection);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+      }
+    }
+  }, [entryNavigated, entryTarget, entrySection, auth.authReady]);
 
   useEffect(() => {
     let active = true;
@@ -1226,16 +1237,15 @@ export default function App() {
     {
       title: 'Service',
       links: [
-        { label: '無料診断を始める', action: () => moveTo('diagnosis') },
-        { label: '先生を探す', action: () => openSearchWithType('teacher') },
-        { label: 'イベントを探す', action: () => openSearchWithType('event') },
+        { label: 'AI診断', action: () => moveTo('diagnosis') },
+        { label: 'ヨガを探す', action: () => openSearchWithType('all') },
+        { label: 'AI先生', action: () => moveTo('ai-teacher') },
       ],
     },
     {
-      title: 'Learning / Certification',
+      title: '学び・検定',
       links: [
-        { label: '動画で学ぶ', disabled: true },
-        { label: '資格・検定', action: () => moveTo('learn') },
+        { label: '学び・検定', action: () => moveTo('learn') },
         { label: 'プロYoga検定', action: () => moveTo('pro-yoga') },
         { label: 'ヨガの聖地と文化', action: () => moveTo('sacred-sites') },
       ],
@@ -1275,10 +1285,10 @@ export default function App() {
           <nav className={`nav-row nav-secondary-menu ${mobileMenuOpen ? 'is-open' : ''}`}>
             <button className="nav-mobile-home" onClick={() => moveTo('home')}>TOPへ戻る</button>
             <button onClick={() => moveTo('diagnosis')}>AI診断</button>
-            <button onClick={() => openSearchWithType('all', page === 'results')}>地図から探す</button>
-            <button onClick={() => moveTo('ai-teacher')}>My AI Teacher</button>
+            <button onClick={() => openSearchWithType('all', page === 'results')}>ヨガを探す</button>
+            <button onClick={() => moveTo('ai-teacher')}>AI先生</button>
             <button onClick={() => moveTo('my-page')}>myYOGAカルテ</button>
-            <button onClick={() => moveTo('learn')}>学ぶ</button>
+            <button onClick={() => moveTo('learn')}>学び・検定</button>
             <button onClick={() => moveTo('site-map')}>メニュー</button>
           </nav>
         </div>
@@ -1955,10 +1965,10 @@ export default function App() {
       </footer>
 
       <nav className={`mobile-bottom-nav ${mobileNavOpen ? 'is-open' : ''}`} aria-label="モバイルナビ">
-        <button onClick={() => moveTo('home')}><span className="mbn-icon">🏠</span><span className="mbn-label">ホーム</span></button>
-        <button onClick={() => openSearchWithType('all')}><span className="mbn-icon">🔍</span><span className="mbn-label">探す</span></button>
-        <button onClick={() => moveTo('ai-teacher')} className="mbn-center"><span className="mbn-icon">🧘</span><span className="mbn-label">AI先生</span></button>
-        <button onClick={() => moveTo('my-page')}><span className="mbn-icon">📋</span><span className="mbn-label">カルテ</span></button>
+        <button onClick={() => moveTo('home')} className={page === 'home' ? 'mbn-active' : ''}><span className="mbn-icon">🏠</span><span className="mbn-label">ホーム</span></button>
+        <button onClick={() => openSearchWithType('all')} className={page === 'search' ? 'mbn-active' : ''}><span className="mbn-icon">🔍</span><span className="mbn-label">探す</span></button>
+        <button onClick={() => moveTo('ai-teacher')} className={`mbn-center ${page === 'ai-teacher' ? 'mbn-active' : ''}`}><span className="mbn-icon">🧘</span><span className="mbn-label">AI先生</span></button>
+        <button onClick={() => moveTo('my-page')} className={page === 'my-page' ? 'mbn-active' : ''}><span className="mbn-icon">📋</span><span className="mbn-label">カルテ</span></button>
         <button onClick={() => setMobileNavOpen((v) => !v)}><span className="mbn-icon">☰</span><span className="mbn-label">メニュー</span></button>
       </nav>
       {mobileNavOpen && (
@@ -1969,10 +1979,13 @@ export default function App() {
               <button onClick={() => setMobileNavOpen(false)}>×</button>
             </div>
             <nav className="mobile-menu-list">
+              <button onClick={() => moveTo('ai-teacher')}>今日のヨガ</button>
+              <button onClick={() => moveTo('ai-teacher')}>AI先生</button>
+              <button onClick={() => openSearchWithType('all')}>ヨガを探す</button>
+              <button onClick={() => moveTo('my-page')}>myYOGAカルテ</button>
+              <button onClick={() => moveTo('learn')}>学び・検定</button>
               <button onClick={() => moveTo('diagnosis')}>AI診断</button>
               <button onClick={() => moveTo('teacher-diagnosis')}>先生AI診断</button>
-              <button onClick={() => moveTo('pro-yoga')}>ヨガ検定3級・2級</button>
-              <button onClick={() => moveTo('pro-yoga')}>呼吸検定</button>
               <button onClick={() => moveTo('pro-yoga')}>Pro Yoga</button>
               <button onClick={() => moveTo('sacred-sites')}>ヨガの聖地と文化</button>
               <button onClick={() => moveTo('site-map')}>Yoga AIでできること</button>

@@ -562,10 +562,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     <div className="page-shell ai-teacher-shell">
       <section className="hero-panel compact-hero ai-teacher-hero">
         <div className="ai-teacher-hero-main">
-          <button className="ghost-button" onClick={onBackHome}>TOPへ戻る</button>
-          <span className="eyebrow">My AI Teacher</span>
-          <h2>今のあなたを知る。<br />あなたの先生が育つ。</h2>
-          <p>あなたの目的や記録に合わせて、アーサナ・呼吸・瞑想の実践をサポートします。</p>
+          <div className="ai-teacher-hero-top-bar">
+            <span className="eyebrow">AI先生 / My AI Teacher</span>
+            <button className="ghost-button ai-teacher-back-btn" onClick={onBackHome}>TOPへ戻る</button>
+          </div>
+          <h2>あなたのAI先生</h2>
+          <p>今日のあなたに合わせて、ヨガ・呼吸・瞑想をサポート。</p>
           {persona && (
             <div className="ai-teacher-hero-teacher">
               <span className="ai-teacher-hero-avatar">{persona.avatar}</span>
@@ -573,9 +575,19 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 <strong>{persona.name}</strong>
                 <span>{PERSONALITY_OPTIONS.find((p) => p.v === persona.personality)?.label ?? persona.personality}</span>
                 <span>{SPECIALTY_OPTIONS.find((s) => s.v === persona.specialty)?.label ?? persona.specialty}</span>
+                <span>指導言語: {LANG_OPTIONS.find((l) => l.v === persona.teachingLanguage)?.label ?? persona.teachingLanguage}</span>
               </div>
             </div>
           )}
+          <div className="ai-teacher-hero-cta-row">
+            <button className="primary-button" onClick={handleGenerateProgram} disabled={safetyBlocked}>
+              {safetyBlocked ? '安全のため現在プログラム生成を制限しています' : '今日のヨガ'}
+            </button>
+            <button className="secondary-button" onClick={() => setStep('step5')}>話しかける</button>
+            <button className="ghost-button" onClick={() => setStep('step4')}>
+              {persona ? '先生を育てる / 設定' : 'AI先生をつくる'}
+            </button>
+          </div>
         </div>
         <div className="ai-teacher-hero-kpis">
           <div className="ai-teacher-hero-kpi">

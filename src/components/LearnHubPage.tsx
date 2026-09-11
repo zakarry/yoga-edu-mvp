@@ -1,4 +1,4 @@
-import { TopBackLink } from './TopBackLink';
+import { PageHeader, SectionToc } from './PageHeader';
 
 interface LearnHubPageProps {
   onBackHome: () => void;
@@ -19,17 +19,21 @@ export function LearnHubPage({
 }: LearnHubPageProps) {
   return (
     <div className="page-shell learn-hub-page">
-      <section className="hero-panel compact-hero">
-        <div>
-          <TopBackLink onBackHome={onBackHome} />
-          <span className="eyebrow">Learning & Certification</span>
-          <h2>学び・検定</h2>
-          <p>ヨガの知識を深め、呼吸を学び、検定で理解を確かめる。実践から理解へつなぐ学びの総合入口です。</p>
-        </div>
-      </section>
+      <PageHeader
+        eyebrow="学び・検定"
+        title="学び・検定"
+        subtitle="学ぶ・資格を取る・実践する。実践から理解へつなぐ学びの総合入口です。"
+        onBackHome={onBackHome}
+      />
+      <SectionToc items={[
+        { id: 'learn-knowledge', label: 'Yoga Knowledge' },
+        { id: 'learn-cert', label: '資格・検定' },
+        { id: 'learn-practice', label: '今日から実践' },
+        { id: 'learn-sacred', label: 'ヨガの聖地と文化' },
+      ]} />
 
       {/* A. Yoga Knowledge */}
-      <section className="panel learn-hub-section">
+      <section id="learn-knowledge" className="panel learn-hub-section">
         <div className="section-inline-header">
           <h3>Yoga Knowledge</h3>
         </div>
@@ -44,7 +48,7 @@ export function LearnHubPage({
       </section>
 
       {/* B. 資格・検定 */}
-      <section className="panel learn-hub-section">
+      <section id="learn-cert" className="panel learn-hub-section">
         <div className="section-inline-header">
           <h3>資格・検定</h3>
         </div>
@@ -74,7 +78,7 @@ export function LearnHubPage({
       </section>
 
       {/* C. 今日から実践 */}
-      <section className="panel learn-hub-section">
+      <section id="learn-practice" className="panel learn-hub-section">
         <div className="section-inline-header">
           <h3>今日から実践</h3>
         </div>
@@ -98,7 +102,7 @@ export function LearnHubPage({
       </section>
 
       {/* D. ヨガの聖地と文化 */}
-      <section className="panel learn-hub-section">
+      <section id="learn-sacred" className="panel learn-hub-section">
         <div className="section-inline-header">
           <h3>ヨガの聖地と文化</h3>
         </div>

@@ -5,6 +5,7 @@ import { CardList } from './CardList';
 import { useAuth } from '../lib/auth';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { ProfileSection, PrivacySection } from './ProfilePrivacy';
+import { PageHeader, SectionToc } from './PageHeader';
 
 export type WellnessScores = {
   flexibility: number;
@@ -174,33 +175,37 @@ export function MyPage({ history, onRestart, onDetail, cloudDiagnosisSection, cl
   if (!latest) {
     return (
       <div className="page-shell mypage-shell">
-        <section className="hero-panel compact-hero mypage-hero">
-          <div>
-            <span className="eyebrow">myYOGAカルテ</span>
-            <h2>myYOGAカルテ</h2>
-            <p>
-              診断結果をこの端末に保存し、前回との違いを見返せるページです。身体だけでなく、心・呼吸・理解・実践までまとめて確認できます。まだ履歴がないため、まずは無料診断から始めてみましょう。
-            </p>
-          </div>
-          <div className="hero-actions">
-            <button type="button" className="primary-button" onClick={onRestart}>無料診断を始める</button>
-          </div>
-        </section>
-
-        {authStatusSection}
+        <PageHeader eyebrow="myYOGAカルテ" title="myYOGAカルテ" subtitle="診断結果をこの端末に保存し、前回との違いを見返せるページです。身体だけでなく、心・呼吸・理解・実践までまとめて確認できます。まだ履歴がないため、まずは無料診断から始めてみましょう。" />
+        <SectionToc items={[
+          { id: 'profile', label: 'プロフィール' },
+          { id: 'yoga-memory', label: 'Yoga Memory' },
+          { id: 'practice-history', label: '実践履歴' },
+          { id: 'my-teacher', label: 'My Teacher' },
+        ]} />
+        <div id="profile">{authStatusSection}</div>
         <ProfileSection />
         <PrivacySection />
-        {cloudDiagnosisSection}
-        {cloudPracticeSection}
+        <div id="yoga-memory">{cloudDiagnosisSection}</div>
+        <div id="practice-history">{cloudPracticeSection}</div>
         {teachingJourneySection}
-        {myTeacherSection}
+        <div id="my-teacher">{myTeacherSection}</div>
       </div>
     );
   }
 
   return (
     <div className="page-shell mypage-shell">
-      <section className="hero-panel compact-hero mypage-hero">
+      <PageHeader eyebrow="myYOGAカルテ" title="myYOGAカルテ" subtitle="診断履歴をローカル保存し、最新スコアと前回との差分を見ながら今の傾向を確認できます。医療的な判定ではなく、運動・呼吸・日々の整え方を振り返るための体験設計です。" />
+      <SectionToc items={[
+        { id: 'profile', label: 'プロフィール' },
+        { id: 'yoga-memory', label: 'Yoga Memory' },
+        { id: 'diagnosis-history', label: '診断履歴' },
+        { id: 'practice-history', label: '実践履歴' },
+        { id: 'recommended-school', label: 'おすすめスクール' },
+        { id: 'my-teacher', label: 'My Teacher' },
+      ]} />
+
+      <section id="diagnosis-history" className="hero-panel compact-hero mypage-hero">
         <div>
           <span className="eyebrow">myYOGAカルテ</span>
           <h2>myYOGAカルテ</h2>
@@ -338,13 +343,36 @@ export function MyPage({ history, onRestart, onDetail, cloudDiagnosisSection, cl
         </div>
       </section>
 
-      {authStatusSection}
+      <div id="recommended-school">
+        <CardList
+          title="最新のおすすめスクール"
+          items={latest.result.recommendedSchools.slice(0, 1)}
+          onDetail={onDetail}
+          variant="prioritySchool"
+          stepLabel="おすすめスクール"
+          description="最新診断で相性が良かったスクールを、マイページからすぐ確認できます。"
+        />
+      </div>
+
+      <section className="panel mypage-storage-panel">
+        <div className="mypage-storage-copy">
+          <strong>この端末に診断履歴を保存しています</strong>
+          <p>
+            この端末には直近 {history.length} 件を保持しています。医療評価ではなく、日々の感覚や変化を見返すための体験用メモとして使えます。
+          </p>
+        </div>
+        <div className="mypage-storage-actions">
+          <button type="button" className="primary-button" onClick={onRestart}>もう一度診断する</button>
+        </div>
+      </section>
+
+      <div id="profile">{authStatusSection}</div>
       <ProfileSection />
       <PrivacySection />
-      {cloudDiagnosisSection}
-      {cloudPracticeSection}
+      <div id="yoga-memory">{cloudDiagnosisSection}</div>
+      <div id="practice-history">{cloudPracticeSection}</div>
       {teachingJourneySection}
-      {myTeacherSection}
+      <div id="my-teacher">{myTeacherSection}</div>
     </div>
   );
 }

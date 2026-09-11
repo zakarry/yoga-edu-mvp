@@ -1,6 +1,7 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { AREAS, LANGUAGES, StudentDiagnosisInput } from '../data';
-import { TopBackLink } from './TopBackLink';
+import { PREFECTURE_GROUPS, EXTRA_AREAS, migrateArea } from '../data/prefectures';
+import { PageHeader } from './PageHeader';
 
 interface DiagnosisFormProps {
   initialValue: StudentDiagnosisInput;
@@ -32,24 +33,16 @@ export function DiagnosisForm({ initialValue, onSubmit, onBackHome }: DiagnosisF
 
   return (
     <form className="page-shell" onSubmit={handleSubmit}>
-      <div className="section-heading">
-        <TopBackLink onBackHome={onBackHome} />
-        <span className="eyebrow">Free Diagnosis</span>
-        <h2>無料診断を始める</h2>
-        <p>
-          条件・目的・身体状態・国際対応ニーズをまとめて診断し、スクールを最優先におすすめを返します。
-          現在の選択数は <strong>{selectedCount}</strong> 項目です。
-        </p>
-      </div>
+      <PageHeader eyebrow="AI診断" title="無料診断を始める" subtitle={`条件・目的・身体状態・国際対応ニーズをまとめて診断し、スクールを最優先におすすめを返します。現在の選択数は ${selectedCount} 項目です。`} onBackHome={onBackHome} />
 
       <div className="form-grid two-column">
         <section className="panel form-panel">
           <h3>基本情報</h3>
           <div className="field-grid two-column">
-            <label className="field"><span>年代</span><select value={form.ageRange} onChange={(e) => setForm({ ...form, ageRange: e.target.value })}><option>10代</option><option>20代</option><option>30代</option><option>40代</option><option>50代</option><option>60代以上</option></select></label>
+            <label className="field"><span>年代</span><select value={form.ageRange} onChange={(e) => setForm({ ...form, ageRange: e.target.value })}><option>10代</option><option>20代</option><option>30代</option><option>40代</option><option>50代</option><option>60代</option><option>70代以上</option><option>回答しない</option></select></label>
             <label className="field"><span>性別</span><select value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })}><option>女性</option><option>男性</option><option>ノンバイナリー</option><option>回答しない</option></select></label>
-            <label className="field"><span>居住エリア</span><select value={form.residentArea} onChange={(e) => setForm({ ...form, residentArea: e.target.value })}>{AREAS.map((area) => <option key={area}>{area}</option>)}</select></label>
-            <label className="field"><span>希望エリア</span><select value={form.preferredArea} onChange={(e) => setForm({ ...form, preferredArea: e.target.value })}>{AREAS.map((area) => <option key={area}>{area}</option>)}</select></label>
+            <label className="field"><span>居住エリア</span><select value={migrateArea(form.residentArea)} onChange={(e) => setForm({ ...form, residentArea: e.target.value })}><optgroup label="北海道"><option>北海道</option></optgroup>{PREFECTURE_GROUPS.filter((g) => g.label !== '北海道').map((g) => <optgroup key={g.label} label={g.label}>{g.prefectures.map((p) => <option key={p}>{p}</option>)}</optgroup>)}<optgroup label="その他">{EXTRA_AREAS.map((a) => <option key={a}>{a}</option>)}</optgroup></select></label>
+            <label className="field"><span>希望エリア</span><select value={migrateArea(form.preferredArea)} onChange={(e) => setForm({ ...form, preferredArea: e.target.value })}><optgroup label="北海道"><option>北海道</option></optgroup>{PREFECTURE_GROUPS.filter((g) => g.label !== '北海道').map((g) => <optgroup key={g.label} label={g.label}>{g.prefectures.map((p) => <option key={p}>{p}</option>)}</optgroup>)}<optgroup label="その他">{EXTRA_AREAS.map((a) => <option key={a}>{a}</option>)}</optgroup></select></label>
             <label className="field"><span>ヨガ経験</span><select value={form.yogaExperience} onChange={(e) => setForm({ ...form, yogaExperience: e.target.value })}><option>未経験</option><option>少しある</option><option>継続中</option><option>深く学んでいる</option></select></label>
             <label className="field"><span>運動習慣</span><select value={form.exerciseHabit} onChange={(e) => setForm({ ...form, exerciseHabit: e.target.value })}><option>ほとんどない</option><option>週1回程度</option><option>週2-3回</option><option>日常的にある</option></select></label>
             <label className="field"><span>オンライン受講可否</span><select value={form.onlineAvailable} onChange={(e) => setForm({ ...form, onlineAvailable: e.target.value })}><option>可能</option><option>対面希望</option><option>どちらでもよい</option></select></label>

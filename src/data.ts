@@ -90,9 +90,7 @@ export interface StudentDiagnosisInput {
   wantsForeignFriendly: string;
 }
 
-export const AREAS = [
-  '渋谷', '新宿', '銀座', '青山', '表参道', '恵比寿', '世田谷', '吉祥寺', '品川', '浅草', '上野', 'オンライン'
-];
+export { ALL_AREAS as AREAS, PREFECTURE_GROUPS, EXTRA_AREAS, LEGACY_AREA_MAP, migrateArea } from './data/prefectures';
 
 export const LANGUAGES = ['日本語', '英語', '中国語', 'イタリア語', 'その他'];
 
