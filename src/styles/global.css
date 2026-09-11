@@ -6830,6 +6830,11 @@ html, body {
 }
 .mobile-bottom-nav button.mbn-center.mbn-active {
   background: var(--navy-dark, #122c45);
+  color: #fff;
+}
+.mobile-bottom-nav button.mbn-center.mbn-active .mbn-label {
+  color: #fff;
+  text-decoration: none;
 }
 
 /* AI Teacher hero updates */
