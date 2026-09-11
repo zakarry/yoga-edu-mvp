@@ -6977,6 +6977,20 @@ html, body {
   }
 }
 
+/* Deep-link section scroll offset (clears sticky PageHeader on mobile) */
+[id="profile"],
+[id="yoga-memory"],
+[id="diagnosis-history"],
+[id="practice-history"],
+[id="recommended-school"],
+[id="my-teacher"],
+[id="learn-knowledge"],
+[id="learn-cert"],
+[id="learn-practice"],
+[id="learn-sacred"] {
+  scroll-margin-top: 100px;
+}
+
 /* === PHASE EVENT-UX-HOME-REDESIGN === */
 
 /* Logged-in hero: compact, AI先生 + 今日のヨガ as primary CTAs */

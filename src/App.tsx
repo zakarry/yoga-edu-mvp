@@ -1115,10 +1115,18 @@ export default function App() {
     if (target) {
       moveTo(target);
       if (entrySection) {
-        setTimeout(() => {
+        let attempts = 0;
+        const maxAttempts = 30;
+        const interval = setInterval(() => {
+          attempts++;
           const el = document.getElementById(entrySection);
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 300);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            clearInterval(interval);
+          } else if (attempts >= maxAttempts) {
+            clearInterval(interval);
+          }
+        }, 100);
       }
     }
   }, [entryNavigated, entryTarget, entrySection, auth.authReady]);
