@@ -30,6 +30,7 @@ interface MyPageProps {
   history: DiagnosisHistoryRecord[];
   onRestart: () => void;
   onDetail: (item: SearchItem) => void;
+  onBackHome: () => void;
   cloudDiagnosisSection?: ReactNode;
   cloudPracticeSection?: ReactNode;
   teachingJourneySection?: ReactNode;
@@ -152,7 +153,7 @@ function buildChangeComment(latest: DiagnosisHistoryRecord, previous?: Diagnosis
   return '少しずつ変化が見えています。数字は目安として受け取りながら、その時の体調や気分、毎日の過ごし方に合わせて使ってみてください。';
 }
 
-export function MyPage({ history, onRestart, onDetail, cloudDiagnosisSection, cloudPracticeSection, teachingJourneySection, myTeacherSection }: MyPageProps) {
+export function MyPage({ history, onRestart, onDetail, onBackHome, cloudDiagnosisSection, cloudPracticeSection, teachingJourneySection, myTeacherSection }: MyPageProps) {
   const auth = useAuth();
   const latest = history[0];
   const previous = history[1];
@@ -175,7 +176,7 @@ export function MyPage({ history, onRestart, onDetail, cloudDiagnosisSection, cl
   if (!latest) {
     return (
       <div className="page-shell mypage-shell">
-        <PageHeader eyebrow="myYOGAカルテ" title="myYOGAカルテ" subtitle="診断結果をこの端末に保存し、前回との違いを見返せるページです。身体だけでなく、心・呼吸・理解・実践までまとめて確認できます。まだ履歴がないため、まずは無料診断から始めてみましょう。" />
+        <PageHeader eyebrow="myYOGAカルテ" title="myYOGAカルテ" subtitle="診断結果をこの端末に保存し、前回との違いを見返せるページです。身体だけでなく、心・呼吸・理解・実践までまとめて確認できます。まだ履歴がないため、まずは無料診断から始めてみましょう。" onBackHome={onBackHome} />
         <SectionToc items={[
           { id: 'profile', label: 'プロフィール' },
           { id: 'yoga-memory', label: 'Yoga Memory' },
@@ -195,7 +196,7 @@ export function MyPage({ history, onRestart, onDetail, cloudDiagnosisSection, cl
 
   return (
     <div className="page-shell mypage-shell">
-      <PageHeader eyebrow="myYOGAカルテ" title="myYOGAカルテ" subtitle="診断履歴をローカル保存し、最新スコアと前回との差分を見ながら今の傾向を確認できます。医療的な判定ではなく、運動・呼吸・日々の整え方を振り返るための体験設計です。" />
+      <PageHeader eyebrow="myYOGAカルテ" title="myYOGAカルテ" subtitle="診断履歴をローカル保存し、最新スコアと前回との差分を見ながら今の傾向を確認できます。医療的な判定ではなく、運動・呼吸・日々の整え方を振り返るための体験設計です。" onBackHome={onBackHome} />
       <SectionToc items={[
         { id: 'profile', label: 'プロフィール' },
         { id: 'yoga-memory', label: 'Yoga Memory' },

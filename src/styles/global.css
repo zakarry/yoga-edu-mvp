@@ -6942,3 +6942,32 @@ html, body {
     font-size: 18px;
   }
 }
+
+/* ===== Search page: map-first layout ===== */
+.search-page-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.search-page-shell .map-view {
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+}
+.search-page-shell .search-filter-panel {
+  order: 2;
+}
+
+@media (max-width: 768px) {
+  .search-page-shell .map-view,
+  .search-page-shell .map-view .map-container,
+  .search-page-shell .map-view iframe {
+    width: 100% !important;
+    min-height: 320px;
+  }
+  .search-page-shell .page-header-unified {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+}

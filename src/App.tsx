@@ -25,6 +25,7 @@ import { LearnHubPage } from './components/LearnHubPage';
 import { StaticInfoPage } from './components/StaticInfoPage';
 import { TeacherDiagnosisPage } from './components/TeacherDiagnosisPage';
 import { TopBackLink } from './components/TopBackLink';
+import { PageHeader } from './components/PageHeader';
 import { MyPage, type DiagnosisHistoryRecord, type WellnessScores } from './components/MyPage';
 import { AuthPanel } from './components/AuthPanel';
 import { CloudDiagnosisSection, CloudPracticeSection } from './components/MyYogaCloudSections';
@@ -1655,6 +1656,7 @@ export default function App() {
             history={diagnosisHistory}
             onRestart={() => moveTo('diagnosis')}
             onDetail={setDetailItem}
+            onBackHome={() => moveTo('home')}
             cloudDiagnosisSection={<CloudDiagnosisSection onStartDiagnosis={() => moveTo('diagnosis-v2')} />}
             cloudPracticeSection={<CloudPracticeSection onStartAITeacher={() => moveTo('ai-teacher')} />}
             teachingJourneySection={<MyTeachingJourney onStartTeacherDiagnosis={() => moveTo('teacher-diagnosis')} onOpenProYoga={() => moveTo('pro-yoga')} />}
@@ -1672,15 +1674,9 @@ export default function App() {
         )}
 
         {page === 'search' && (
-          <div className="page-shell">
-            <section className="hero-panel compact-hero">
-              <div>
-                <TopBackLink onBackHome={() => moveTo('home')} />
-                <span className="eyebrow">Search & Directory</span>
-                <h2>先生・スクール・イベント・ヨガクラブを探す</h2>
-                <p>カード一覧とGoogleマップを同時に見ながら、条件に合う候補を比較できます。</p>
-              </div>
-            </section>
+          <div className="page-shell search-page-shell">
+            <PageHeader eyebrow="ヨガを探す" title="先生・スクール・イベント・ヨガクラブを探す" subtitle="Googleマップで候補を地図から見つけて、条件で絞り込めます。" onBackHome={() => moveTo('home')} />
+            <MapView items={filteredItems} selectedType={searchType} onSelectItem={setDetailItem} />
             <section className="panel search-filter-panel">
               <div className="filter-row">
                 <div className="tab-row">
@@ -1767,7 +1763,6 @@ export default function App() {
                 )}
               </div>
             </section>
-            <MapView items={filteredItems} selectedType={searchType} onSelectItem={setDetailItem} />
             <CardList title="検索結果一覧" items={filteredItems} onDetail={setDetailItem} onAddTeacher={handleAddTeacher} emptyMessage="条件に合う候補が見つかりませんでした。フィルターを少し減らしてみてください。" />
           </div>
         )}
