@@ -1060,6 +1060,8 @@ export default function App() {
   const [mapFilterType, setMapFilterType] = useState<FilterType>('all');
   const [aiTeacherMinutes, setAiTeacherMinutes] = useState<number | undefined>(undefined);
   const [testMode, setTestMode] = useState<string | null>(null);
+  const [entryTarget, setEntryTarget] = useState<string | null>(null);
+  const [entryNavigated, setEntryNavigated] = useState(false);
 
   const auth = useAuth();
   const liffState = useLiff();
@@ -1072,6 +1074,7 @@ export default function App() {
     if (!liffState.initialized) return;
     const params = new URLSearchParams(window.location.search);
     setTestMode(params.get('testMode'));
+    setEntryTarget(params.get('entry'));
   }, [liffState.initialized]);
 
   // LIFF auto-login: when inside LINE LIFF browser, logged in to LINE,
@@ -1090,6 +1093,22 @@ export default function App() {
       void attemptLiffAutoLogin();
     }
   }, [liffState.initialized, liffState.isInClient, liffState.isLoggedIn, auth.authReady, auth.user, auth.loading]);
+
+  const ENTRY_PAGE_MAP: Record<string, PageKey> = {
+    today: 'ai-teacher',
+    teacher: 'ai-teacher',
+    search: 'search',
+    karte: 'my-page',
+    learn: 'pro-yoga',
+    diagnosis: 'diagnosis',
+  };
+
+  useEffect(() => {
+    if (entryNavigated || !entryTarget || !auth.authReady) return;
+    setEntryNavigated(true);
+    const target = ENTRY_PAGE_MAP[entryTarget];
+    if (target) moveTo(target);
+  }, [entryNavigated, entryTarget, auth.authReady]);
 
   useEffect(() => {
     let active = true;
