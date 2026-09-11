@@ -7104,3 +7104,58 @@ html, body {
     min-height: 44px;
   }
 }
+
+/* === Logged-out hero: concise === */
+.top-hero-logged-out {
+  padding: 36px 32px;
+}
+.top-hero-logged-out .eyebrow {
+  margin-bottom: 12px;
+}
+.top-hero-logged-out h1 {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+.top-hero-logged-out .hero-subcopy {
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+.top-hero-logged-out .top-hero-actions {
+  gap: 12px;
+}
+
+/* === Yoga AIとは section === */
+.top-about-yoga-ai-panel {
+  display: grid;
+  gap: 14px;
+}
+.top-about-yoga-ai-desc {
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+.top-about-yoga-ai-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.top-about-yoga-ai-features span {
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(220, 236, 225, 0.3);
+  border: 1px solid var(--border);
+  color: var(--navy);
+}
+
+@media (max-width: 768px) {
+  .top-hero-logged-out {
+    padding: 24px 20px;
+  }
+  .top-hero-logged-out h1 {
+    font-size: 22px;
+  }
+  .top-hero-logged-out .hero-subcopy {
+    font-size: 13px;
+  }
+}

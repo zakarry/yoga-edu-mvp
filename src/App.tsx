@@ -1455,21 +1455,15 @@ export default function App() {
             ) : (
               /* === LOGGED-OUT HERO: diagnosis as primary CTA === */
               <>
-                <section className="hero-panel federation-hero top-hero">
+                <section className="hero-panel federation-hero top-hero top-hero-logged-out">
                   <div className="hero-copy-block">
-                    <h1>「探す」から「続ける」まで。<br />あなたのYoga Journeyを支えるYoga AI。</h1>
-                    <p className="hero-subcopy">
-                      自分を知る。今日ヨガをする。先生や場所を探す。<br />
-                      続けた記録が、あなたのYoga Journeyになります。
-                    </p>
+                    <span className="eyebrow">Yoga AI</span>
+                    <h1>あなたに合うYogaを見つけよう</h1>
+                    <p className="hero-subcopy">「探す」から「続ける」まで。あなたのYoga Journeyを支えるYoga AI。</p>
                   </div>
                   <div className="hero-actions wrap top-hero-actions">
                     <button className="primary-button hero-primary-cta" onClick={() => moveTo('diagnosis')}>無料AI診断を始める</button>
-                    <div className="hero-cta-group">
-                      <button className="ghost-button hero-secondary-cta" onClick={() => moveTo('ai-teacher')}>今日のヨガを始める</button>
-                      <small className="hero-cta-sub">My AI Teacher</small>
-                    </div>
-                    <button className="ghost-button hero-secondary-cta" onClick={() => moveTo('search')}>地図から探す</button>
+                    <button className="ghost-button hero-secondary-cta" onClick={() => moveTo('ai-teacher')}>AI先生とは？</button>
                   </div>
                 </section>
 
@@ -1743,6 +1737,25 @@ export default function App() {
                 </button>
               </div>
               <button className="gold-button top-teacher-cta" onClick={() => moveTo('teacher-diagnosis')}>先生向けYoga AIを見る</button>
+            </section>
+
+            {/* Yoga AIとは */}
+            <section className="panel top-about-yoga-ai-panel">
+              <div className="section-inline-header">
+                <span className="eyebrow">Yoga AIとは</span>
+                <h3>「探す」から「続ける」まで、あなたのYoga Journeyを支える</h3>
+              </div>
+              <p className="top-about-yoga-ai-desc">
+                自分を知る。今日ヨガをする。先生や場所を探す。呼吸やヨガを学ぶ。<br />
+                続けた記録が、あなたのYoga Journeyになります。
+              </p>
+              <div className="top-about-yoga-ai-features">
+                <span>AI診断で自分を知る</span>
+                <span>今日のヨガを実践する</span>
+                <span>地図から先生・スクールを探す</span>
+                <span>ヨガ図鑑・呼吸図鑑で学ぶ</span>
+                <span>実践記録がYoga Journeyに</span>
+              </div>
             </section>
 
             {/* ヨガの聖地と文化 */}
