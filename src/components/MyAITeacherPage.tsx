@@ -361,6 +361,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [practiceDuration, setPracticeDuration] = useState<number>(10);
   const [localLogs, setLocalLogs] = useState<LocalPracticeLog[]>(loadLocalPracticeLogs());
   const [saveStatus, setSaveStatus] = useState<string>('');
+
+  const practiceCount = auth.user ? cloudLogs.length : localLogs.length;
   const [conversationContext, setConversationContext] = useState<ConversationContext>({});
 
   useEffect(() => {
@@ -636,7 +638,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   }, [timerRunning, timerPhaseIdx, timerRound, selectedGuide]);
 
   const handleCompletePractice = useCallback(async () => {
-    if (!practiceType) return;
+    if (!practiceType || practicePhase !== 'done') return;
     const practiceName = selectedGuide?.name ?? program?.items.find((i) => i.type === practiceType)?.name ?? '実践';
     const logParams = {
       practice_type: practiceType,
@@ -711,7 +713,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setTimerPhaseIdx(0);
     setTimerRound(1);
     setStep('step7');
-  }, [practiceType, program, practiceDuration, moodBefore, moodAfter, practiceNote, auth, growth, formSpecialty, teacherContext, conversationContext, selectedGuide]);
+  }, [practiceType, program, practiceDuration, moodBefore, moodAfter, practiceNote, auth, growth, formSpecialty, teacherContext, conversationContext, selectedGuide, practicePhase]);
 
   const steps: Array<{ id: StepId; label: string; n: string }> = [
     { id: 'step1', label: '今の状態', n: '1' },
@@ -762,7 +764,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           </div>
           <div className="ai-teacher-hero-kpi">
             <strong>PRACTICE</strong>
-            <span>{growth.sessions}回</span>
+            <span>{practiceCount}回</span>
           </div>
           <div className="ai-teacher-hero-kpi">
             <strong>MEMORY</strong>
@@ -1105,7 +1107,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             <div className="ai-teacher-chat-messages">
               {chatMessages.length === 0 && (
                 <p className="ai-teacher-chat-empty">
-                  {growth.sessions === 0
+                  {practiceCount === 0
                     ? `${persona?.name ?? 'AI先生'}です。今日のプログラムについて、変えたいことはありますか？`
                     : `${persona?.name ?? 'AI先生'}です。これまでの好みも参考にしながら調整します。今日はどんな実践にしますか？`}
                 </p>
@@ -1359,7 +1361,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             <p className="ai-teacher-record-source">実践記録はこの端末のローカルに保存されています。ログインするとクラウド保存が可能です。</p>
           )}
 
-          {(auth.user ? cloudLogs.length > 0 : localLogs.length > 0) ? (
+          {practiceCount > 0 ? (
             <div className="ai-teacher-record-list">
               <h4>最近の実践記録</h4>
               {(auth.user ? cloudLogs : localLogs).slice(0, 10).map((log) => {
@@ -1420,7 +1422,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           <h3>STEP 8 — 先生が育つ</h3>
           <div className="ai-teacher-growth-grid">
             <div className="ai-teacher-growth-stat">
-              <strong>{growth.sessions}</strong>
+              <strong>{practiceCount}</strong>
               <span>累計実践回数</span>
             </div>
             <div className="ai-teacher-growth-stat">
@@ -1441,13 +1443,13 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           <div className="ai-teacher-relationship-section">
             <h4>RELATIONSHIP</h4>
             {(() => {
-              const stage = getRelationshipStage(growth.sessions);
-              const pct = Math.min(100, ((growth.sessions - stage.min) / (stage.max - stage.min)) * 100);
+              const stage = getRelationshipStage(practiceCount);
+              const pct = Math.min(100, ((practiceCount - stage.min) / (stage.max - stage.min)) * 100);
               return (
                 <>
                   <div className="ai-teacher-relationship-stage">
                     <span className="ai-teacher-relationship-label">{stage.label}</span>
-                    <span className="ai-teacher-relationship-count">{growth.sessions} / {stage.max} sessions</span>
+                    <span className="ai-teacher-relationship-count">{practiceCount} / {stage.max} sessions</span>
                   </div>
                   <div className="ai-teacher-progress-bar">
                     <div className="ai-teacher-progress-fill" style={{ width: `${pct}%` }} />
@@ -1571,7 +1573,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           {/* 最近の実践履歴 */}
           <div className="ai-teacher-history-section">
             <h4>最近の実践履歴</h4>
-            {(auth.user ? cloudLogs.length > 0 : localLogs.length > 0) ? (
+            {practiceCount > 0 ? (
               <div className="ai-teacher-history-list">
                 {(auth.user ? cloudLogs : localLogs).slice(0, 20).map((log) => {
                   const type = log.practice_type;
@@ -1698,6 +1700,6 @@ function buildMemorySummary(growth: AITeacherGrowth, localLogs: LocalPracticeLog
   if (growth.prefs.praise === 'less') summary.push('励ましは控えめが好み');
   else if (growth.prefs.praise === 'more') summary.push('励ましは多めが好み');
   if (growth.streakDays >= 2) summary.push(`${growth.streakDays}回継続している`);
-  if (growth.sessions > 0) summary.push(`累計${growth.sessions}回の実践`);
+  if (logs.length > 0) summary.push(`累計${logs.length}回の実践`);
   return summary.slice(0, 5);
 }
