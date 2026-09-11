@@ -53,6 +53,17 @@ const SPECIALTY_OPTIONS = [
   { v: 'philosophy', label: 'ヨガ哲学' },
 ];
 
+const SPECIALTY_LEGACY_MAP: Record<string, string> = {
+  relax: '呼吸法',
+  breathwork: '呼吸法',
+  asana: 'ハタヨガ',
+  breathing: '呼吸法',
+};
+
+function specialtyLabel(value: string): string {
+  return SPECIALTY_OPTIONS.find((s) => s.v === value)?.label ?? SPECIALTY_LEGACY_MAP[value] ?? value;
+}
+
 const LANG_OPTIONS: { v: LangCode; label: string }[] = [
   { v: 'ja', label: '日本語' },
   { v: 'en', label: 'English' },
@@ -279,7 +290,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [formName, setFormName] = useState('');
   const [formAvatar, setFormAvatar] = useState('🧘');
   const [formPersonality, setFormPersonality] = useState('gentle');
-  const [formSpecialty, setFormSpecialty] = useState('relax');
+  const [formSpecialty, setFormSpecialty] = useState('pranayama');
   const [formUiLang, setFormUiLang] = useState<LangCode>('ja');
   const [formTeachingLang, setFormTeachingLang] = useState<LangCode>('ja');
   const [demoMsgIdx, setDemoMsgIdx] = useState(0);
@@ -574,7 +585,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               <div className="ai-teacher-hero-teacher-info">
                 <strong>{persona.name}</strong>
                 <span>{PERSONALITY_OPTIONS.find((p) => p.v === persona.personality)?.label ?? persona.personality}</span>
-                <span>{SPECIALTY_OPTIONS.find((s) => s.v === persona.specialty)?.label ?? persona.specialty}</span>
+                <span>{specialtyLabel(persona.specialty)}</span>
                 <span>指導言語: {LANG_OPTIONS.find((l) => l.v === persona.teachingLanguage)?.label ?? persona.teachingLanguage}</span>
               </div>
             </div>
@@ -863,7 +874,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               <div className="ai-teacher-persona-fields">
                 <div><strong>名前</strong><span>{persona.name}</span></div>
                 <div><strong>性格</strong><span>{PERSONALITY_OPTIONS.find((p) => p.v === persona.personality)?.label ?? persona.personality}</span></div>
-                <div><strong>得意分野</strong><span>{SPECIALTY_OPTIONS.find((s) => s.v === persona.specialty)?.label ?? persona.specialty}</span></div>
+                <div><strong>得意分野</strong><span>{specialtyLabel(persona.specialty)}</span></div>
                 <div><strong>画面言語</strong><span>{persona.uiLanguage === 'ja' ? '日本語' : 'English'}</span></div>
                 <div><strong>指導言語</strong><span>{persona.teachingLanguage === 'ja' ? '日本語' : 'English'}</span></div>
               </div>
