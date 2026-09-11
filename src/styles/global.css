@@ -6250,6 +6250,113 @@ html, body {
   }
 }
 
+/* === EVENT-LIFF-1.5: myYOGAカルテ おすすめスクール表示修正 === */
+
+/* --- Root cause: grid/flex children default to min-width: auto, causing overflow --- */
+/* --- Fix 1: Add min-width: 0 to all container ancestors of school cards --- */
+.panel,
+.priority-school-section,
+.result-section,
+.priority-stack,
+.card-grid,
+.priority-card-grid,
+.secondary-priority-grid {
+  min-width: 0;
+}
+
+/* --- Fix 2: Remove overflow:hidden from entity cards — it clips text instead of wrapping --- */
+@media (max-width: 768px) {
+  .entity-card,
+  .priority-entity-card,
+  .featured-school-card {
+    overflow: visible !important;
+  }
+}
+
+/* --- Fix 3: School name (h4) — allow wrapping with overflow-wrap: anywhere --- */
+@media (max-width: 768px) {
+  .entity-card h4,
+  .featured-school-card h4,
+  .priority-entity-card h4 {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+    line-height: 1.3;
+  }
+}
+
+/* --- Fix 4: Description (p) — allow wrapping with overflow-wrap: anywhere --- */
+@media (max-width: 768px) {
+  .entity-card p,
+  .featured-school-card p,
+  .priority-entity-card p {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+    line-height: 1.75;
+  }
+}
+
+/* --- Fix 5: Entity topline — allow wrapping, prevent width push --- */
+@media (max-width: 768px) {
+  .entity-topline {
+    flex-wrap: wrap;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .entity-title-block {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .entity-accent-strip {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: keep-all;
+  }
+}
+
+/* --- Fix 6: Entity meta — single column on mobile, prevent overflow --- */
+@media (max-width: 768px) {
+  .featured-school-card .entity-meta {
+    grid-template-columns: 1fr !important;
+  }
+
+  .featured-school-card .entity-meta div {
+    grid-template-columns: 72px 1fr;
+    min-width: 0;
+  }
+
+  .entity-meta dd {
+    overflow-wrap: anywhere;
+    word-break: keep-all;
+    min-width: 0;
+  }
+}
+
+/* --- Fix 7: Tag row — prevent overflow --- */
+@media (max-width: 768px) {
+  .tag-row {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .mini-tag {
+    overflow-wrap: anywhere;
+    word-break: keep-all;
+  }
+}
+
 /* === EVENT-LIFF-1.4: myYOGAカルテ mobile UI fixes === */
 
 /* --- 1. Yoga Memory設定: stack heading + description vertically --- */
@@ -6315,7 +6422,6 @@ html, body {
     max-width: 100%;
     min-width: 0;
     box-sizing: border-box;
-    overflow: hidden;
   }
 
   .entity-card h4,
