@@ -73,10 +73,10 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0 }: AuthPanelProps) {
   if (auth.user) {
     const name = auth.profile?.display_name || (auth.user.email && !auth.user.email.includes('@lineauth.local') ? auth.user.email.split('@')[0] : null) || 'Yoga AIユーザー';
     return (
-      <div className="auth-logged-in">
+      <div className="auth-logged-in auth-logged-in-compact">
         <span className="auth-user-name">{name} さん</span>
-        <button type="button" className="ghost-button auth-action-button" onClick={onOpenMyPage}>myYOGAカルテ</button>
-        <button type="button" className="ghost-button auth-action-button" onClick={() => auth.signOut()}>ログアウト</button>
+        <button type="button" className="auth-compact-btn" onClick={onOpenMyPage}>カルテ</button>
+        <button type="button" className="auth-compact-btn auth-compact-logout" onClick={() => auth.signOut()}>退出</button>
       </div>
     );
   }

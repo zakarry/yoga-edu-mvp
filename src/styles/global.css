@@ -6971,3 +6971,136 @@ html, body {
     z-index: 50;
   }
 }
+
+/* === PHASE EVENT-UX-HOME-REDESIGN === */
+
+/* Logged-in hero: compact, AI先生 + 今日のヨガ as primary CTAs */
+.top-hero-logged-in {
+  padding: 32px 28px;
+}
+.top-hero-logged-in h1 {
+  font-size: 26px;
+  margin-bottom: 8px;
+}
+.top-hero-logged-in .hero-subcopy {
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+.top-hero-actions-logged-in {
+  gap: 12px;
+}
+.hero-cta-ai-teacher,
+.hero-cta-today-yoga {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  font-size: 16px;
+}
+.hero-cta-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+.hero-cta-today-yoga {
+  background: var(--green-strong);
+  color: #fff;
+}
+
+/* Prominent AI Teacher card for logged-in users */
+.top-ai-teacher-prominent {
+  border: 2px solid var(--green-strong);
+  padding: 28px;
+}
+.top-ai-teacher-prominent .eyebrow {
+  background: rgba(108, 138, 118, 0.15);
+  color: var(--green-strong);
+}
+
+/* Compact auth (logged-in header) */
+.auth-logged-in-compact {
+  gap: 6px;
+}
+.auth-compact-btn {
+  border: 1px solid var(--border);
+  background: rgba(16, 37, 66, 0.04);
+  color: var(--navy);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.auth-compact-btn:hover {
+  background: rgba(16, 37, 66, 0.08);
+}
+.auth-compact-logout {
+  color: var(--muted);
+  border-color: rgba(16, 37, 66, 0.08);
+}
+
+/* Mobile: ensure AI先生 and 今日のヨガ visible on first screen */
+@media (max-width: 768px) {
+  .top-hero-logged-in {
+    padding: 24px 20px;
+  }
+  .top-hero-logged-in h1 {
+    font-size: 22px;
+  }
+  .top-hero-logged-in .hero-subcopy {
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+  .top-hero-actions-logged-in {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  .hero-cta-ai-teacher,
+  .hero-cta-today-yoga {
+    width: 100%;
+    justify-content: center;
+  }
+  .top-ai-teacher-prominent {
+    padding: 20px;
+  }
+  .top-ai-teacher-prominent .top-ai-teacher-copy h3 {
+    font-size: 20px;
+  }
+  .top-ai-teacher-prominent .top-ai-teacher-copy p {
+    font-size: 14px;
+  }
+  .top-ai-teacher-prominent .top-ai-teacher-features {
+    gap: 6px;
+  }
+  .top-ai-teacher-prominent .top-ai-teacher-features span {
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+  /* Compact auth on mobile: inline, not stacked */
+  .auth-logged-in-compact {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+  }
+  .auth-compact-btn {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+  .auth-user-name {
+    font-size: 12px;
+  }
+}
+
+/* Hide header diagnosis button when logged in (already handled in JS, this is a safety net) */
+@media (max-width: 480px) {
+  .top-hero-logged-in h1 {
+    font-size: 20px;
+  }
+  .hero-cta-ai-teacher,
+  .hero-cta-today-yoga {
+    font-size: 15px;
+    min-height: 44px;
+  }
+}
