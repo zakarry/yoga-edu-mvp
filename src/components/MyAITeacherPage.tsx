@@ -20,7 +20,7 @@ import { attachKnowledgeToTodayPlan, fetchKnowledgeExplanation, type TodayPlanWi
 import type { KnowledgeExplanation } from '../services/teacherKnowledgeService';
 import { runLLMRequestDryRun, type DryRunResult } from '../services/llmRequestDryRun';
 import type { LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
-import { resolveConcretePoses, getDefaultPlanPoses, type ConcretePose, type PoseStage } from '../lib/poseLibrary';
+import { resolveConcretePoses, getDefaultPlanPoses, getPoseKnowledgeLink, type ConcretePose, type PoseStage } from '../lib/poseLibrary';
 
 interface MyAITeacherPageProps {
   onBackHome: () => void;
@@ -1446,29 +1446,28 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   </div>
                 </div>
 
-                {/* Knowledge link if available */}
+                {/* Knowledge link — only when verified and link exists */}
                 {(() => {
-                  const planItem = todayPlan?.items.find(
-                    (i) => i.knowledgeMasterId && concretePoses[currentPoseIdx].name.includes(i.name)
+                  const pose = concretePoses[currentPoseIdx];
+                  const link = getPoseKnowledgeLink(pose.id);
+                  if (!link.available || !link.verified) return null;
+                  if (!auth.user) return null;
+                  const masterId = link.knowledgeMasterId;
+                  if (!masterId) return null;
+                  return (
+                    <button
+                      className="knowledge-link-button"
+                      onClick={async () => {
+                        setKnowledgeLoading(true);
+                        setKnowledgeExplanation(null);
+                        const entry = await fetchKnowledgeExplanation(masterId);
+                        setKnowledgeExplanation(entry);
+                        setKnowledgeLoading(false);
+                      }}
+                    >
+                      詳しく知る
+                    </button>
                   );
-                  if (auth.user && planItem?.knowledgeMasterId) {
-                    return (
-                      <button
-                        className="knowledge-link-button"
-                        onClick={async () => {
-                          if (!planItem?.knowledgeMasterId) return;
-                          setKnowledgeLoading(true);
-                          setKnowledgeExplanation(null);
-                          const entry = await fetchKnowledgeExplanation(planItem.knowledgeMasterId);
-                          setKnowledgeExplanation(entry);
-                          setKnowledgeLoading(false);
-                        }}
-                      >
-                        詳しく知る
-                      </button>
-                    );
-                  }
-                  return null;
                 })()}
 
                 <div className="pose-guide-actions">

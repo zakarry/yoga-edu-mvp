@@ -17,7 +17,13 @@ export interface ConcretePose {
   durationLabel: string;
   caution: string;
   defaultMinutes: number;
-  knowledgeMasterId?: string;
+  knowledgeEntryId?: string | null;
+  knowledgeMasterId?: string | null;
+  zukanSlug?: string | null;
+  zukanUrl?: string | null;
+  professionalYogaRelated?: boolean;
+  professionalYogaSourceLabel?: string | null;
+  knowledgeVerified?: boolean;
 }
 
 export const CONCRETE_POSES: ConcretePose[] = [
@@ -33,6 +39,13 @@ export const CONCRETE_POSES: ConcretePose[] = [
     durationLabel: '1分',
     caution: '膝を反らさず、足首に均等に体重をかける。めまいがあるときは座って行う',
     defaultMinutes: 1,
+    knowledgeEntryId: null,
+    knowledgeMasterId: 'YK-0264',
+    zukanSlug: 'yk-0264',
+    zukanUrl: null,
+    professionalYogaRelated: true,
+    professionalYogaSourceLabel: 'プロフェッショナルYoga検定関連 Yoga図鑑',
+    knowledgeVerified: true,
   },
   {
     id: 'vrksasana',
@@ -46,6 +59,13 @@ export const CONCRETE_POSES: ConcretePose[] = [
     durationLabel: '1分（左右各30秒）',
     caution: '膝には足を直接当てない。バランスが崩れたら一度足をおろして再開する',
     defaultMinutes: 1,
+    knowledgeEntryId: null,
+    knowledgeMasterId: 'YK-0277',
+    zukanSlug: 'yk-0277',
+    zukanUrl: null,
+    professionalYogaRelated: true,
+    professionalYogaSourceLabel: 'プロフェッショナルYoga検定関連 Yoga図鑑',
+    knowledgeVerified: true,
   },
   {
     id: 'uttanasana',
@@ -64,6 +84,13 @@ export const CONCRETE_POSES: ConcretePose[] = [
     durationLabel: '1分',
     caution: '腰を丸めない。膝を曲げてもよいので無理な深さを求めない。床に手をつける必要はない。めまいがあるときはゆっくり戻る',
     defaultMinutes: 1,
+    knowledgeEntryId: null,
+    knowledgeMasterId: null,
+    zukanSlug: null,
+    zukanUrl: null,
+    professionalYogaRelated: false,
+    professionalYogaSourceLabel: null,
+    knowledgeVerified: false,
   },
   {
     id: 'balasana',
@@ -77,6 +104,13 @@ export const CONCRETE_POSES: ConcretePose[] = [
     durationLabel: '2分',
     caution: '膝が痛いときは折り畳んだ毛布を膝のうしろに入れる。食後は避ける',
     defaultMinutes: 2,
+    knowledgeEntryId: null,
+    knowledgeMasterId: null,
+    zukanSlug: null,
+    zukanUrl: null,
+    professionalYogaRelated: false,
+    professionalYogaSourceLabel: null,
+    knowledgeVerified: false,
   },
   {
     id: 'catcow',
@@ -94,6 +128,13 @@ export const CONCRETE_POSES: ConcretePose[] = [
     durationLabel: '2分',
     caution: '手首が痛いときは拳を作るか前腕をつく。首を無理に動かさない',
     defaultMinutes: 2,
+    knowledgeEntryId: null,
+    knowledgeMasterId: null,
+    zukanSlug: null,
+    zukanUrl: null,
+    professionalYogaRelated: false,
+    professionalYogaSourceLabel: null,
+    knowledgeVerified: false,
   },
   {
     id: 'paschimottanasana',
@@ -107,6 +148,13 @@ export const CONCRETE_POSES: ConcretePose[] = [
     durationLabel: '2分',
     caution: '膝を少し曲げてもよい。腰を丸めず股関節から倒れる。坐骨が床から離れないようにする',
     defaultMinutes: 2,
+    knowledgeEntryId: null,
+    knowledgeMasterId: 'YK-0270',
+    zukanSlug: 'yk-0270',
+    zukanUrl: null,
+    professionalYogaRelated: true,
+    professionalYogaSourceLabel: 'プロフェッショナルYoga検定関連 Yoga図鑑',
+    knowledgeVerified: true,
   },
   {
     id: 'savasana',
@@ -120,6 +168,13 @@ export const CONCRETE_POSES: ConcretePose[] = [
     durationLabel: '3分',
     caution: '腰が浮くときは膝の下に丸めた毛布を入れる。眠ってしまってもよい',
     defaultMinutes: 3,
+    knowledgeEntryId: null,
+    knowledgeMasterId: 'YK-0260',
+    zukanSlug: 'yk-0260',
+    zukanUrl: null,
+    professionalYogaRelated: true,
+    professionalYogaSourceLabel: 'プロフェッショナルYoga検定関連 Yoga図鑑',
+    knowledgeVerified: true,
   },
   {
     id: 'box-breathing',
@@ -133,6 +188,13 @@ export const CONCRETE_POSES: ConcretePose[] = [
     durationLabel: '2分（4〜6周）',
     caution: '息を止めるのが苦しいときは無理をしない。自然な呼吸に戻してよい',
     defaultMinutes: 2,
+    knowledgeEntryId: 'b4dbb7d1-f1c5-4141-8f6d-398cde68bc8c',
+    knowledgeMasterId: null,
+    zukanSlug: 'box-breathing',
+    zukanUrl: null,
+    professionalYogaRelated: false,
+    professionalYogaSourceLabel: null,
+    knowledgeVerified: true,
   },
   {
     id: 'abdominal-breathing',
@@ -146,6 +208,13 @@ export const CONCRETE_POSES: ConcretePose[] = [
     durationLabel: '3分',
     caution: '肩や胸に力を入れない。苦しいときは通常の呼吸に戻す',
     defaultMinutes: 3,
+    knowledgeEntryId: null,
+    knowledgeMasterId: 'YK-0318',
+    zukanSlug: 'yk-0318',
+    zukanUrl: null,
+    professionalYogaRelated: true,
+    professionalYogaSourceLabel: 'プロフェッショナルYoga検定関連 Yoga図鑑',
+    knowledgeVerified: true,
   },
   {
     id: 'mindfulness-1min',
@@ -159,6 +228,13 @@ export const CONCRETE_POSES: ConcretePose[] = [
     durationLabel: '1分',
     caution: '眠くなったら目を開けてもよい。雑念が来るのは自然なこと',
     defaultMinutes: 1,
+    knowledgeEntryId: null,
+    knowledgeMasterId: 'YK-0307',
+    zukanSlug: 'yk-0307',
+    zukanUrl: null,
+    professionalYogaRelated: true,
+    professionalYogaSourceLabel: 'プロフェッショナルYoga検定関連 Yoga図鑑',
+    knowledgeVerified: true,
   },
 ];
 
@@ -199,4 +275,36 @@ export function getDefaultPlanPoses(): ConcretePose[] {
     POSE_BY_ID['box-breathing'],
     POSE_BY_ID['mindfulness-1min'],
   ].filter(Boolean);
+}
+
+export interface PoseKnowledgeLink {
+  available: boolean;
+  knowledgeEntryId?: string;
+  knowledgeMasterId?: string;
+  zukanSlug?: string;
+  zukanUrl?: string;
+  professionalYogaRelated?: boolean;
+  professionalYogaSourceLabel?: string;
+  verified: boolean;
+}
+
+export function getPoseKnowledgeLink(poseId: string): PoseKnowledgeLink {
+  const pose = POSE_BY_ID[poseId];
+  if (!pose || !pose.knowledgeVerified) {
+    return { available: false, verified: false };
+  }
+  const hasLink = !!(pose.knowledgeEntryId || pose.knowledgeMasterId || pose.zukanSlug || pose.zukanUrl);
+  if (!hasLink) {
+    return { available: false, verified: false };
+  }
+  return {
+    available: true,
+    knowledgeEntryId: pose.knowledgeEntryId ?? undefined,
+    knowledgeMasterId: pose.knowledgeMasterId ?? undefined,
+    zukanSlug: pose.zukanSlug ?? undefined,
+    zukanUrl: pose.zukanUrl ?? undefined,
+    professionalYogaRelated: pose.professionalYogaRelated,
+    professionalYogaSourceLabel: pose.professionalYogaSourceLabel ?? undefined,
+    verified: true,
+  };
 }
