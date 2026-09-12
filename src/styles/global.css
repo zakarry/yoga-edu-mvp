@@ -5016,6 +5016,18 @@ h1 {
 .ai-teacher-safety-gate p {
   color: #8b3030;
 }
+
+.ai-teacher-memory-loading-hint {
+  font-size: 13px;
+  color: var(--muted);
+  padding: 10px 14px;
+}
+
+.ai-teacher-safety-gate-text {
+  font-size: 14px;
+  color: #8b3030;
+  font-weight: 600;
+}
 .ai-teacher-persona-form {
   display: grid;
   gap: 14px;

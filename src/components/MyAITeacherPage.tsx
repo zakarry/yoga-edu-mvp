@@ -21,8 +21,9 @@ import type { KnowledgeExplanation } from '../services/teacherKnowledgeService';
 import { runLLMRequestDryRun, type DryRunResult } from '../services/llmRequestDryRun';
 import type { LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
 import { resolveConcretePoses, getDefaultPlanPoses, getPoseKnowledgeLink, type ConcretePose, type PoseStage } from '../lib/poseLibrary';
-import { loadLocalMemory, summarizeMemory } from '../services/aiTeacherMemoryService';
-import { emptyTodayContext, type TodayContext } from '../types/aiTeacherLayers';
+import { loadLocalMemory, summarizeMemory, getMemory } from '../services/aiTeacherMemoryService';
+import { emptyTodayContext, type TodayContext, type RequestedMode } from '../types/aiTeacherLayers';
+import { getPlanGate, gateVerdictAllowsGeneration, gateStateMessage, type PlanGateVerdict } from '../services/planGate';
 
 interface MyAITeacherPageProps {
   onBackHome: () => void;
@@ -422,6 +423,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [todayContext, setTodayContext] = useState<TodayContext>(emptyTodayContext());
   const [showTodayCheck, setShowTodayCheck] = useState(false);
   const [todayCheckResult, setTodayCheckResult] = useState<'none' | 'mild' | 'pain' | 'unknown' | null>(null);
+  const [memoryLoaded, setMemoryLoaded] = useState(false);
+  const [memoryConcerns, setMemoryConcerns] = useState<string[]>([]);
   const [nextSuggestion, setNextSuggestion] = useState<NextSuggestion | null>(loadNextSuggestion());
   const [showContextSignals, setShowContextSignals] = useState(false);
   const [showExampleGuide, setShowExampleGuide] = useState(false);
@@ -444,6 +447,19 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         if (data) setCloudLogs(data);
       });
     }
+  }, [auth.user]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setMemoryLoaded(false);
+      const entries = await getMemory(auth.user?.id ?? null);
+      if (cancelled) return;
+      const summary = summarizeMemory(entries);
+      setMemoryConcerns(summary.activeConcerns);
+      setMemoryLoaded(true);
+    })();
+    return () => { cancelled = true; };
   }, [auth.user]);
 
   // Persona form state
@@ -546,9 +562,29 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     }
   }, [step, concretePoses.length, safetyBlocked]);
 
+  const planGateVerdict: PlanGateVerdict = getPlanGate({
+    memoryLoaded,
+    hasMemoryConcerns: memoryConcerns.length > 0,
+    todayCheckResult,
+    requestedMode: todayContext.requestedMode,
+    safetyBlocked,
+    selectionResolved: todayContext.selectionResolved,
+  });
+
+  const planGenerationBlocked = !gateVerdictAllowsGeneration(planGateVerdict);
+
   const handleGenerateProgram = useCallback(async (overrideToday?: TodayContext) => {
     if (safetyBlocked) return;
     const effectiveToday = overrideToday ?? todayContext;
+    const verdict = getPlanGate({
+      memoryLoaded,
+      hasMemoryConcerns: memoryConcerns.length > 0,
+      todayCheckResult: effectiveToday.todayPain ? 'pain' : todayCheckResult,
+      requestedMode: effectiveToday.requestedMode,
+      safetyBlocked,
+      selectionResolved: effectiveToday.selectionResolved,
+    });
+    if (!gateVerdictAllowsGeneration(verdict)) return;
     const ctx = await buildTeacherContext(auth.user?.id ?? null, growth, conversationContext, effectiveToday);
     setTeacherContext(ctx);
     let plan;
@@ -877,7 +913,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           <span className="eyebrow">Yoga AI / イベント体験</span>
           <h2>AI先生を体験してみよう</h2>
           <p>山のポーズ・呼吸・瞑想をAI先生と一緒に数分で体験できます。</p>
-          <button className="primary-button event-demo-start-btn" onClick={handleEventDemoStart} disabled={safetyBlocked}>
+          <button className="primary-button event-demo-start-btn" onClick={handleEventDemoStart} disabled={safetyBlocked || planGateVerdict === 'BLOCK_SAFETY'}>
             {safetyBlocked ? '安全のため現在制限されています' : 'AI先生デモを始める'}
           </button>
         </section>
@@ -903,16 +939,22 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             </div>
           )}
           <div className="ai-teacher-hero-cta-row">
-            <button className="primary-button" onClick={() => {
-              const mem = teacherContext?.memorySummary;
-              if (mem && mem.activeConcerns.length > 0 && !todayContext.todayConcern && !todayContext.todayPain) {
-                setShowTodayCheck(true);
-              } else {
-                handleGenerateProgram();
-              }
-            }} disabled={safetyBlocked}>
-              {safetyBlocked ? '安全のため現在プログラム生成を制限しています' : '今日のヨガ'}
-            </button>
+            {planGateVerdict === 'BLOCK_LOADING' && (
+              <span className="ai-teacher-memory-loading-hint">{gateStateMessage('LOADING_MEMORY')}</span>
+            )}
+            {planGateVerdict === 'REQUIRE_TODAY_CHECK' && (
+              <button className="primary-button" onClick={() => setShowTodayCheck(true)}>
+                今日の状態を確認する
+              </button>
+            )}
+            {gateVerdictAllowsGeneration(planGateVerdict) && (
+              <button className="primary-button" onClick={() => void handleGenerateProgram()} disabled={safetyBlocked}>
+                {safetyBlocked ? '安全のため現在プログラム生成を制限しています' : '今日のヨガ'}
+              </button>
+            )}
+            {planGateVerdict === 'BLOCK_SAFETY' && (
+              <span className="ai-teacher-safety-gate-text">安全のため実践を制限しています</span>
+            )}
             <button className="secondary-button" onClick={() => setStep('step5')}>話しかける</button>
             <button className="ghost-button" onClick={() => setStep('step4')}>
               {persona ? '先生を育てる / 設定' : 'AI先生をつくる'}
@@ -926,21 +968,21 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 <p>以前、{mem.activeConcerns[0].split('に')[0]}に不安があると教えてもらっています。今日の状態はいかがですか？</p>
                 <div className="ai-teacher-today-check-options">
                   <button className="secondary-button" onClick={() => {
-                    const updated = { ...todayContext, todayConcern: null, todayPain: null };
+                    const updated = { ...todayContext, todayConcern: null, todayPain: null, requestedMode: 'normal' as RequestedMode, selectionResolved: true };
                     setTodayContext(updated);
                     setTodayCheckResult('none');
                     setShowTodayCheck(false);
                     handleGenerateProgram(updated);
                   }}>今日は気にならない</button>
                   <button className="secondary-button" onClick={() => {
-                    const updated = { ...todayContext, todayConcern: '少し気になる', todayPain: null };
+                    const updated = { ...todayContext, todayConcern: '少し気になる', todayPain: null, requestedMode: 'gentle' as RequestedMode, selectionResolved: true };
                     setTodayContext(updated);
                     setTodayCheckResult('mild');
                     setShowTodayCheck(false);
                     handleGenerateProgram(updated);
                   }}>少し気になる</button>
                   <button className="secondary-button" onClick={() => {
-                    const updated = { ...todayContext, todayPain: '痛みがある', todayConcern: null };
+                    const updated = { ...todayContext, todayPain: '痛みがある', todayConcern: null, requestedMode: null, selectionResolved: false };
                     setTodayContext(updated);
                     setTodayCheckResult('pain');
                     setShowTodayCheck(false);
@@ -966,6 +1008,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   setStep('home');
                 }}>今日は実践しない</button>
               </div>
+              <p className="ai-teacher-safety-note" style={{ fontSize: '12px', marginTop: '8px' }}>※呼吸・瞑想も個別治療としては提供しません。</p>
             </div>
           )}
           {todayCheckResult === 'unknown' && (
@@ -973,13 +1016,13 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               <p>わかりました。身体の状態を前提にせず、一般的な短い実践をご案内できます。</p>
               <div className="ai-teacher-today-check-options">
                 <button className="secondary-button" onClick={() => {
-                  const updated = { ...todayContext, todayConcern: null, todayPain: null };
+                  const updated = { ...todayContext, todayConcern: null, todayPain: null, requestedMode: 'general_short' as RequestedMode, selectionResolved: true };
                   setTodayContext(updated);
                   setTodayCheckResult(null);
                   handleGenerateProgram(updated);
                 }}>一般的な短い実践</button>
                 <button className="secondary-button" onClick={() => {
-                  const updated = { ...todayContext, requestedType: 'pranayama' as const, todayConcern: null, todayPain: null };
+                  const updated = { ...todayContext, requestedType: null, requestedMode: 'breath_meditation' as RequestedMode, selectionResolved: true, todayConcern: null, todayPain: null };
                   setTodayContext(updated);
                   setTodayCheckResult(null);
                   handleGenerateProgram(updated);
@@ -1051,17 +1094,23 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             })}
           </div>
           <div className="ai-teacher-home-actions">
-            <button className="primary-button" onClick={() => {
-              const mem = teacherContext?.memorySummary;
-              if (mem && mem.activeConcerns.length > 0 && !todayContext.todayConcern && !todayContext.todayPain) {
-                setShowTodayCheck(true);
-              } else {
-                void handleGenerateProgram();
-              }
-            }} disabled={safetyBlocked}>
-              {safetyBlocked ? '安全のため現在プログラム生成を制限しています' : '今日のプログラムを生成する'}
-            </button>
-            <button className="secondary-button" onClick={() => { setConcretePoses(getDefaultPlanPoses()); setPracticeType('asana'); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); }} disabled={safetyBlocked}>
+            {planGateVerdict === 'REQUIRE_TODAY_CHECK' && (
+              <button className="primary-button" onClick={() => setShowTodayCheck(true)}>
+                今日の状態を確認する
+              </button>
+            )}
+            {gateVerdictAllowsGeneration(planGateVerdict) && (
+              <button className="primary-button" onClick={() => void handleGenerateProgram()} disabled={safetyBlocked}>
+                {safetyBlocked ? '安全のため現在プログラム生成を制限しています' : '今日のプログラムを生成する'}
+              </button>
+            )}
+            {planGateVerdict === 'BLOCK_LOADING' && (
+              <span className="ai-teacher-memory-loading-hint">{gateStateMessage('LOADING_MEMORY')}</span>
+            )}
+            {planGateVerdict === 'BLOCK_SAFETY' && (
+              <span className="ai-teacher-safety-gate-text">安全のため実践を制限しています</span>
+            )}
+            <button className="secondary-button" onClick={() => { setConcretePoses(getDefaultPlanPoses()); setPracticeType('asana'); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); }} disabled={safetyBlocked || planGateVerdict === 'BLOCK_SAFETY'}>
               デモをすぐ始める
             </button>
             {!persona && (

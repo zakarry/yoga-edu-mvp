@@ -79,6 +79,8 @@ export interface UserReportedConcern {
 
 export type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night';
 
+export type RequestedMode = 'normal' | 'gentle' | 'general_short' | 'breath_meditation' | null;
+
 export interface TodayContext {
   availableMinutes: number | null;
   mood: string | null;
@@ -90,6 +92,8 @@ export interface TodayContext {
   todayConcern: string | null;
   todayPain: string | null;
   timeOfDay: TimeOfDay | null;
+  requestedMode: RequestedMode;
+  selectionResolved: boolean;
 }
 
 export function emptyTodayContext(): TodayContext {
@@ -104,6 +108,8 @@ export function emptyTodayContext(): TodayContext {
     todayConcern: null,
     todayPain: null,
     timeOfDay: null,
+    requestedMode: null,
+    selectionResolved: false,
   };
 }
 

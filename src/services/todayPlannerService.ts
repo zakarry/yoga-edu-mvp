@@ -45,6 +45,7 @@ export function generateTodayPlan(context: TeacherContext): TodayPlan {
   const items: TodayPlanItem[] = [];
 
   const { practiceSummary, preferences, sessionIntent, memorySummary, todayContext } = context;
+  const requestedMode = todayContext?.requestedMode ?? null;
 
   const requestedMinutes = sessionIntent?.requestedMinutes;
   const requestedType = sessionIntent?.requestedType;
@@ -88,11 +89,19 @@ export function generateTodayPlan(context: TeacherContext): TodayPlan {
   const recentDhyana = recentTypes.filter((t) => t === 'dhyana').length;
   const recentPranayama = recentTypes.filter((t) => t === 'pranayama').length;
 
-  let primaryType: PracticeType;
-  let secondaryType: PracticeType;
-  let tertiaryType: PracticeType;
+  let primaryType: PracticeType = 'asana';
+  let secondaryType: PracticeType = 'pranayama';
+  let tertiaryType: PracticeType = 'dhyana';
 
-  if (todayContext?.requestedType && ['asana', 'pranayama', 'dhyana'].includes(todayContext.requestedType)) {
+  if (requestedMode === 'breath_meditation') {
+    primaryType = 'pranayama';
+    secondaryType = 'dhyana';
+    tertiaryType = 'pranayama';
+  } else if (requestedMode === 'general_short') {
+    primaryType = 'asana';
+    secondaryType = 'pranayama';
+    tertiaryType = 'dhyana';
+  } else if (todayContext?.requestedType && ['asana', 'pranayama', 'dhyana'].includes(todayContext.requestedType)) {
     primaryType = todayContext.requestedType;
   } else if (requestedType && ['asana', 'pranayama', 'dhyana'].includes(requestedType)) {
     primaryType = requestedType as PracticeType;
@@ -107,17 +116,26 @@ export function generateTodayPlan(context: TeacherContext): TodayPlan {
   }
 
   const allTypes: PracticeType[] = ['asana', 'pranayama', 'dhyana'];
-  const remaining = allTypes.filter((t) => t !== primaryType);
-  secondaryType = remaining[0];
-  tertiaryType = remaining[1];
 
-  // Safety: "痛みがある" is blocked before plan generation by the UI Safety Gate.
-  // The planner only handles "少し気になる" — gentle load, no therapeutic sequencing.
-  const todayHasMildConcern = !!(todayContext?.todayConcern);
-  if (todayHasMildConcern) {
+  if (requestedMode === 'breath_meditation') {
+    // Only pranayama and dhyana — no asana at all
+    notes.push('呼吸・瞑想中心の一般的な実践です（個別治療目的ではありません）');
+  } else {
+    const remaining = allTypes.filter((t) => t !== primaryType);
+    secondaryType = remaining[0];
+    tertiaryType = remaining[1];
+  }
+
+  // gentle: reduce load without therapeutic sequencing
+  if (requestedMode === 'gentle' || (todayContext?.todayConcern && requestedMode !== 'breath_meditation')) {
     notes.push('今日気になる部分があるため、無理のない範囲で構成します（深い可動域や高負荷は避けます）');
   }
-  if (recentAsana >= 2 && recentPranayama === 0) {
+
+  if (requestedMode === 'general_short') {
+    notes.push('一般的な短い実践です（身体状態を前提にせず、低負荷の安全な内容です）');
+  }
+
+  if (requestedMode !== 'breath_meditation' && recentAsana >= 2 && recentPranayama === 0) {
     notes.push('最近アーサナが続いているので、呼吸法も少し入れています');
     if (primaryType !== 'pranayama') {
       secondaryType = 'pranayama';
@@ -137,23 +155,39 @@ export function generateTodayPlan(context: TeacherContext): TodayPlan {
   const secondaryMin = Math.max(2, Math.round(targetMinutes * 0.3));
   const tertiaryMin = Math.max(1, targetMinutes - primaryMin - secondaryMin);
 
-  items.push({
-    type: primaryType,
-    name: pickName(primaryType, requestedStyle ?? undefined),
-    minutes: primaryMin,
-    reason: primaryType === requestedType ? 'ご希望の実践タイプです' : undefined,
-  });
-  items.push({
-    type: secondaryType,
-    name: pickName(secondaryType),
-    minutes: secondaryMin,
-  });
-  if (tertiaryMin > 0) {
+  if (requestedMode === 'breath_meditation') {
+    items.push({ type: 'pranayama', name: pickName('pranayama'), minutes: Math.max(3, Math.round(targetMinutes * 0.5)) });
+    items.push({ type: 'dhyana', name: pickName('dhyana'), minutes: Math.max(2, Math.round(targetMinutes * 0.3)) });
+    const breathRemainder = Math.max(1, targetMinutes - items[0].minutes - items[1].minutes);
+    if (breathRemainder > 0) {
+      items.push({ type: 'pranayama', name: '腹式呼吸', minutes: breathRemainder });
+    }
+  } else if (requestedMode === 'general_short') {
+    items.push({ type: 'asana', name: '山のポーズ', minutes: Math.max(2, Math.round(targetMinutes * 0.4)) });
+    items.push({ type: 'pranayama', name: 'やさしい呼吸', minutes: Math.max(2, Math.round(targetMinutes * 0.3)) });
+    const shortRemainder = Math.max(1, targetMinutes - items[0].minutes - items[1].minutes);
+    if (shortRemainder > 0) {
+      items.push({ type: 'dhyana', name: '短い瞑想', minutes: shortRemainder });
+    }
+  } else {
     items.push({
-      type: tertiaryType,
-      name: pickName(tertiaryType),
-      minutes: tertiaryMin,
+      type: primaryType,
+      name: pickName(primaryType, requestedStyle ?? undefined),
+      minutes: primaryMin,
+      reason: primaryType === requestedType ? 'ご希望の実践タイプです' : undefined,
     });
+    items.push({
+      type: secondaryType,
+      name: pickName(secondaryType),
+      minutes: secondaryMin,
+    });
+    if (tertiaryMin > 0) {
+      items.push({
+        type: tertiaryType,
+        name: pickName(tertiaryType),
+        minutes: tertiaryMin,
+      });
+    }
   }
 
   if (preferences.explanation === 'short') {
