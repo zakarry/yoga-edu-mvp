@@ -420,6 +420,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const testPlanCompositeMode = testPlanParam === 'knowledge-k6-composite';
   const [teacherContext, setTeacherContext] = useState<TeacherContext | null>(null);
   const [todayContext, setTodayContext] = useState<TodayContext>(emptyTodayContext());
+  const [showTodayCheck, setShowTodayCheck] = useState(false);
   const [nextSuggestion, setNextSuggestion] = useState<NextSuggestion | null>(loadNextSuggestion());
   const [showContextSignals, setShowContextSignals] = useState(false);
   const [showExampleGuide, setShowExampleGuide] = useState(false);
@@ -544,9 +545,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     }
   }, [step, concretePoses.length, safetyBlocked]);
 
-  const handleGenerateProgram = useCallback(async () => {
+  const handleGenerateProgram = useCallback(async (overrideToday?: TodayContext) => {
     if (safetyBlocked) return;
-    const ctx = await buildTeacherContext(auth.user?.id ?? null, growth, conversationContext, todayContext);
+    const effectiveToday = overrideToday ?? todayContext;
+    const ctx = await buildTeacherContext(auth.user?.id ?? null, growth, conversationContext, effectiveToday);
     setTeacherContext(ctx);
     let plan;
     if (testPlanMode) {
@@ -900,7 +902,14 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             </div>
           )}
           <div className="ai-teacher-hero-cta-row">
-            <button className="primary-button" onClick={handleGenerateProgram} disabled={safetyBlocked}>
+            <button className="primary-button" onClick={() => {
+              const mem = teacherContext?.memorySummary;
+              if (mem && mem.activeConcerns.length > 0 && !todayContext.todayConcern && !todayContext.todayPain) {
+                setShowTodayCheck(true);
+              } else {
+                handleGenerateProgram();
+              }
+            }} disabled={safetyBlocked}>
               {safetyBlocked ? '安全のため現在プログラム生成を制限しています' : '今日のヨガ'}
             </button>
             <button className="secondary-button" onClick={() => setStep('step5')}>話しかける</button>
@@ -908,6 +917,39 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               {persona ? '先生を育てる / 設定' : 'AI先生をつくる'}
             </button>
           </div>
+          {showTodayCheck && (() => {
+            const mem = teacherContext?.memorySummary;
+            if (!mem || mem.activeConcerns.length === 0) return null;
+            return (
+              <div className="ai-teacher-today-check">
+                <p>以前、{mem.activeConcerns[0].split('に')[0]}に不安があると教えてもらっています。今日の状態はいかがですか？</p>
+                <div className="ai-teacher-today-check-options">
+                  <button className="secondary-button" onClick={() => {
+                    const updated = { ...todayContext, todayConcern: null, todayPain: null };
+                    setTodayContext(updated);
+                    setShowTodayCheck(false);
+                    handleGenerateProgram(updated);
+                  }}>今日は気にならない</button>
+                  <button className="secondary-button" onClick={() => {
+                    const updated = { ...todayContext, todayConcern: '少し気になる', todayPain: null };
+                    setTodayContext(updated);
+                    setShowTodayCheck(false);
+                    handleGenerateProgram(updated);
+                  }}>少し気になる</button>
+                  <button className="secondary-button" onClick={() => {
+                    const updated = { ...todayContext, todayPain: '痛みがある', todayConcern: null };
+                    setTodayContext(updated);
+                    setShowTodayCheck(false);
+                    handleGenerateProgram(updated);
+                  }}>痛みがある</button>
+                  <button className="ghost-button" onClick={() => {
+                    setShowTodayCheck(false);
+                    handleGenerateProgram();
+                  }}>答えたくない</button>
+                </div>
+              </div>
+            );
+          })()}
         </div>
         <div className="ai-teacher-hero-kpis">
           <div className="ai-teacher-hero-kpi">
@@ -968,7 +1010,14 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             })}
           </div>
           <div className="ai-teacher-home-actions">
-            <button className="primary-button" onClick={handleGenerateProgram} disabled={safetyBlocked}>
+            <button className="primary-button" onClick={() => {
+              const mem = teacherContext?.memorySummary;
+              if (mem && mem.activeConcerns.length > 0 && !todayContext.todayConcern && !todayContext.todayPain) {
+                setShowTodayCheck(true);
+              } else {
+                void handleGenerateProgram();
+              }
+            }} disabled={safetyBlocked}>
               {safetyBlocked ? '安全のため現在プログラム生成を制限しています' : '今日のプログラムを生成する'}
             </button>
             <button className="secondary-button" onClick={() => { setConcretePoses(getDefaultPlanPoses()); setPracticeType('asana'); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); }} disabled={safetyBlocked}>
@@ -1152,7 +1201,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           ) : (
             <div>
               <p>プログラムがまだありません。</p>
-              <button className="primary-button" onClick={handleGenerateProgram} disabled={safetyBlocked}>生成する</button>
+              <button className="primary-button" onClick={() => void handleGenerateProgram()} disabled={safetyBlocked}>生成する</button>
             </div>
           )}
         </section>
@@ -1340,7 +1389,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               {concretePoses.length === 0 ? (
                 <div className="today-plan-empty">
                   <p>プログラムがまだありません。</p>
-                  <button className="primary-button" onClick={handleGenerateProgram} disabled={safetyBlocked}>
+                  <button className="primary-button" onClick={() => void handleGenerateProgram()} disabled={safetyBlocked}>
                     プログラムを生成する
                   </button>
                 </div>

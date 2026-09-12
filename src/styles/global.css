@@ -4982,6 +4982,31 @@ h1 {
   border-radius: 12px;
   background: rgba(108,138,118,.06);
 }
+
+.ai-teacher-today-check {
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(201,165,76,.08);
+  border: 1px solid rgba(201,165,76,.2);
+  display: grid;
+  gap: 10px;
+}
+
+.ai-teacher-today-check p {
+  font-size: 14px;
+  color: var(--navy-soft);
+}
+
+.ai-teacher-today-check-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ai-teacher-today-check-options button {
+  font-size: 13px;
+  padding: 10px 14px;
+}
 .ai-teacher-persona-form {
   display: grid;
   gap: 14px;
