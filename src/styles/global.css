@@ -7935,3 +7935,93 @@ html, body {
     height: 8px;
   }
 }
+
+/* ── Multi-stage pose images ── */
+
+.pose-stages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 0 16px;
+}
+
+.pose-stage-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(220, 236, 225, 0.15);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  align-items: flex-start;
+}
+
+.pose-stage-image {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: rgba(220, 236, 225, 0.2);
+  flex-shrink: 0;
+}
+
+.pose-stage-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pose-stage-info strong {
+  font-size: 14px;
+  color: var(--navy);
+}
+
+.pose-stage-info p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Total time display ── */
+
+.pose-total-time {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--navy);
+  padding: 10px 16px;
+  background: rgba(220, 236, 225, 0.3);
+  border-radius: 8px;
+  margin: 12px 0;
+  text-align: center;
+}
+
+/* ── Progress dot completed state ── */
+
+.pose-progress-dot.done {
+  background: var(--navy);
+}
+
+.pose-progress-dot.done::after {
+  content: '';
+}
+
+/* ── Responsive: multi-stage ── */
+
+@media (max-width: 768px) {
+  .pose-stage-item {
+    padding: 10px;
+  }
+
+  .pose-stage-image {
+    width: 72px;
+    height: 72px;
+  }
+
+  .pose-stage-info strong {
+    font-size: 13px;
+  }
+
+  .pose-stage-info p {
+    font-size: 12px;
+  }
+}

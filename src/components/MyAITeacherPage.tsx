@@ -20,7 +20,7 @@ import { attachKnowledgeToTodayPlan, fetchKnowledgeExplanation, type TodayPlanWi
 import type { KnowledgeExplanation } from '../services/teacherKnowledgeService';
 import { runLLMRequestDryRun, type DryRunResult } from '../services/llmRequestDryRun';
 import type { LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
-import { resolveConcretePoses, getDefaultPlanPoses, type ConcretePose } from '../lib/poseLibrary';
+import { resolveConcretePoses, getDefaultPlanPoses, type ConcretePose, type PoseStage } from '../lib/poseLibrary';
 
 interface MyAITeacherPageProps {
   onBackHome: () => void;
@@ -420,6 +420,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [concretePoses, setConcretePoses] = useState<ConcretePose[]>([]);
   const [currentPoseIdx, setCurrentPoseIdx] = useState(0);
   const [posePhase, setPosePhase] = useState<'list' | 'guide' | 'active' | 'done'>('list');
+  const [poseElapsedTotal, setPoseElapsedTotal] = useState(0);
+  const poseGuideRef = useRef<HTMLDivElement>(null);
   const [showMemorySummary, setShowMemorySummary] = useState(false);
   const [dryRunInput, setDryRunInput] = useState('');
   const [dryRunResult, setDryRunResult] = useState<DryRunResult | null>(null);
@@ -680,8 +682,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               setTimerPhaseIdx(0);
               setTimerRound(1);
               if (sessionStartedAt) {
-                const elapsed = Math.max(1, Math.round((Date.now() - sessionStartedAt) / 60000));
-                setPracticeDuration(elapsed);
+                const elapsedSec = Math.max(1, Math.round((Date.now() - sessionStartedAt) / 1000));
+                setPoseElapsedTotal((t) => t + elapsedSec);
+                const elapsedMin = Math.max(1, Math.round(elapsedSec / 60));
+                setPracticeDuration(elapsedMin);
               }
               setPracticePhase('done');
             } else {
@@ -708,6 +712,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         if (prev <= 1) {
           window.clearInterval(tick);
           setTimerRunning(false);
+          if (sessionStartedAt) {
+            const elapsedSec = Math.max(1, Math.round((Date.now() - sessionStartedAt) / 1000));
+            setPoseElapsedTotal((t) => t + elapsedSec);
+            const elapsedMin = Math.max(1, Math.round(elapsedSec / 60));
+            setPracticeDuration(elapsedMin);
+          }
           setPracticePhase('done');
           return 0;
         }
@@ -726,6 +736,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPracticeActive(false);
     setPracticePhase('guide');
     setPosePhase('list');
+    setPoseElapsedTotal(0);
     setSelectedGuide(null);
     setPracticeType(null);
     setMoodBefore('');
@@ -739,12 +750,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     if (!practiceType || practicePhase !== 'done' || practiceAborted || isSavingPractice) return;
     setIsSavingPractice(true);
     const practiceName = selectedGuide?.name ?? program?.items.find((i) => i.type === practiceType)?.name ?? '実践';
-    const elapsedSeconds = sessionStartedAt ? Math.max(1, Math.round((Date.now() - sessionStartedAt) / 1000)) : practiceDuration * 60;
-    const autoDuration = Math.max(1, Math.round(elapsedSeconds / 60));
+    const totalElapsedSec = poseElapsedTotal > 0 ? poseElapsedTotal : (sessionStartedAt ? Math.max(1, Math.round((Date.now() - sessionStartedAt) / 1000)) : practiceDuration * 60);
+    const autoDuration = Math.max(1, Math.round(totalElapsedSec / 60));
     const logParams = {
       practice_type: practiceType,
       practice_name: practiceName,
-      duration_min: practiceDuration || autoDuration,
+      duration_min: autoDuration,
       mood_before: moodBefore || null,
       mood_after: moodAfter || null,
       note: practiceNote || null,
@@ -811,6 +822,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setSelectedGuide(null);
     setPracticePhase('guide');
     setPosePhase('list');
+    setPoseElapsedTotal(0);
     setTimerRunning(false);
     setTimerPhaseIdx(0);
     setTimerRound(1);
@@ -1309,6 +1321,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                           onClick={() => {
                             setCurrentPoseIdx(idx);
                             setPosePhase('guide');
+                            setTimeout(() => {
+                              poseGuideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }, 50);
                           }}
                         >
                           このポーズのお手本を見る
@@ -1322,6 +1337,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     onClick={() => {
                       setCurrentPoseIdx(0);
                       setPosePhase('guide');
+                      setTimeout(() => {
+                        poseGuideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }, 50);
                     }}
                   >
                     最初から順番に実践する
@@ -1360,7 +1378,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
           {/* Phase: Guide — show visual guide for current pose */}
           {posePhase === 'guide' && !safetyBlocked && concretePoses[currentPoseIdx] && (
-            <div className="pose-guide-section">
+            <div ref={poseGuideRef} className="pose-guide-section">
               {/* Progress indicator */}
               <div className="pose-progress-bar">
                 <span className="pose-progress-current">{currentPoseIdx + 1} / {concretePoses.length}</span>
@@ -1389,6 +1407,21 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     className="pose-guide-image"
                   />
                 </div>
+
+                {/* Multi-stage images if available */}
+                {concretePoses[currentPoseIdx].stages && concretePoses[currentPoseIdx].stages!.length > 0 && (
+                  <div className="pose-stages">
+                    {concretePoses[currentPoseIdx].stages!.map((stage: PoseStage, sIdx: number) => (
+                      <div key={sIdx} className="pose-stage-item">
+                        <img src={stage.image} alt={stage.label} className="pose-stage-image" loading="lazy" />
+                        <div className="pose-stage-info">
+                          <strong>{stage.label}</strong>
+                          <p>{stage.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <div className="pose-guide-details">
                   <div className="pose-guide-detail-row">
@@ -1448,26 +1481,27 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   <button
                     className="primary-button pose-guide-start-btn"
                     onClick={() => {
-                      setPracticeType(concretePoses[currentPoseIdx].type);
-                      setPracticeDuration(concretePoses[currentPoseIdx].defaultMinutes);
+                      const pose = concretePoses[currentPoseIdx];
+                      setPracticeType(pose.type);
+                      setPracticeDuration(pose.defaultMinutes);
                       setPracticePhase('active');
                       setPracticeActive(true);
                       setSessionStartedAt(Date.now());
                       setPracticeAborted(false);
                       setPracticeSessionId(crypto.randomUUID());
                       setTimerRunning(true);
-                      if (concretePoses[currentPoseIdx].id === 'box-breathing') {
+                      if (pose.id === 'box-breathing') {
                         const guide = PRACTICE_GUIDES.pranayama.find((g) => g.id === 'box-breathing');
                         if (guide) {
                           setSelectedGuide(guide);
                           setTimerPhaseIdx(0);
                           setTimerRound(1);
                         } else {
-                          setSimpleTimerRemaining(concretePoses[currentPoseIdx].defaultMinutes * 60);
+                          setSimpleTimerRemaining(pose.defaultMinutes * 60);
                         }
                       } else {
                         setSelectedGuide(null);
-                        setSimpleTimerRemaining(concretePoses[currentPoseIdx].defaultMinutes * 60);
+                        setSimpleTimerRemaining(pose.defaultMinutes * 60);
                       }
                     }}
                   >
@@ -1598,21 +1632,25 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           {practicePhase === 'done' && !practiceAborted && (
             <div className="practice-done-section">
               <div className="pose-progress-bar">
-                <span className="pose-progress-current">{currentPoseIdx + 1} / {concretePoses.length} 完了</span>
+                <span className="pose-progress-current">
+                  {currentPoseIdx + 1 < concretePoses.length
+                    ? `${currentPoseIdx + 1} / ${concretePoses.length} 完了`
+                    : `${concretePoses.length} / ${concretePoses.length} 全完了`}
+                </span>
                 <div className="pose-progress-dots">
                   {concretePoses.map((_, idx) => (
                     <span
                       key={idx}
-                      className={`pose-progress-dot ${idx <= currentPoseIdx ? 'done' : ''}`}
+                      className={`pose-progress-dot ${idx <= currentPoseIdx ? 'done' : ''} ${idx === currentPoseIdx ? 'active' : ''}`}
                     />
                   ))}
                 </div>
               </div>
 
-              <h4>おつかれさまでした</h4>
               {currentPoseIdx < concretePoses.length - 1 ? (
                 <div className="pose-next-section">
-                  <p>{concretePoses[currentPoseIdx].name} 完了！次のポーズへ進みましょう。</p>
+                  <h4>おつかれさまでした</h4>
+                  <p>{concretePoses[currentPoseIdx].name} 完了！次のポーズのお手本を見ましょう。</p>
                   <div className="pose-next-preview">
                     <img src={concretePoses[currentPoseIdx + 1].image} alt="" className="pose-next-thumb" />
                     <div>
@@ -1625,48 +1663,33 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   </div>
                   <div className="pose-next-actions">
                     <button
-                      className="ghost-button"
+                      className="primary-button"
                       onClick={() => {
-                        setPracticePhase('guide');
                         setCurrentPoseIdx(currentPoseIdx + 1);
+                        setPracticePhase('guide');
+                        setPosePhase('guide');
+                        setTimeout(() => {
+                          poseGuideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 50);
                       }}
                     >
                       次のポーズのお手本を見る
                     </button>
                     <button
-                      className="primary-button"
-                      onClick={() => {
-                        setCurrentPoseIdx(currentPoseIdx + 1);
-                        setPracticeType(concretePoses[currentPoseIdx + 1].type);
-                        setPracticeDuration(concretePoses[currentPoseIdx + 1].defaultMinutes);
-                        setPracticePhase('active');
-                        setPracticeActive(true);
-                        setSessionStartedAt(Date.now());
-                        setPracticeAborted(false);
-                        setPracticeSessionId(crypto.randomUUID());
-                        setTimerRunning(true);
-                        if (concretePoses[currentPoseIdx + 1].id === 'box-breathing') {
-                          const guide = PRACTICE_GUIDES.pranayama.find((g) => g.id === 'box-breathing');
-                          if (guide) {
-                            setSelectedGuide(guide);
-                            setTimerPhaseIdx(0);
-                            setTimerRound(1);
-                          } else {
-                            setSimpleTimerRemaining(concretePoses[currentPoseIdx + 1].defaultMinutes * 60);
-                          }
-                        } else {
-                          setSelectedGuide(null);
-                          setSimpleTimerRemaining(concretePoses[currentPoseIdx + 1].defaultMinutes * 60);
-                        }
-                      }}
+                      className="ghost-button"
+                      onClick={() => setPosePhase('list')}
                     >
-                      次のポーズへ
+                      一覧に戻る
                     </button>
                   </div>
                 </div>
               ) : (
                 <div className="pose-final-section">
-                  <p>全プログラム完了！今日の実践を記録しましょう。</p>
+                  <h4>全プログラム完了！</h4>
+                  <p>今日の実践を記録しましょう。</p>
+                  <div className="pose-total-time">
+                    合計実践時間：約{Math.max(1, Math.round(poseElapsedTotal / 60))}分
+                  </div>
                   <div className="field-grid">
                     <div className="field">
                       <label>実践後の気分</label>
@@ -1677,7 +1700,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     </div>
                     <div className="field">
                       <label>実践時間（分）</label>
-                      <input type="number" min={1} max={120} value={practiceDuration}
+                      <input type="number" min={1} max={120} value={Math.max(1, Math.round(poseElapsedTotal / 60))}
                         onChange={(e) => setPracticeDuration(Number(e.target.value))} />
                     </div>
                   </div>

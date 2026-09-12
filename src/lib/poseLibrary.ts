@@ -1,9 +1,16 @@
+export interface PoseStage {
+  image: string;
+  label: string;
+  description: string;
+}
+
 export interface ConcretePose {
   id: string;
   name: string;
   sanskrit?: string;
   type: 'asana' | 'pranayama' | 'dhyana';
   image: string;
+  stages?: PoseStage[];
   startPose: string;
   movement: string;
   breathing: string;
@@ -19,7 +26,7 @@ export const CONCRETE_POSES: ConcretePose[] = [
     name: '山のポーズ',
     sanskrit: 'Tadasana',
     type: 'asana',
-    image: '/pose-tadasana.webp',
+    image: '/pose-tadasana-v2.webp',
     startPose: '足を腰幅程度に開き、両足の裏を床にしっかり置いて立つ',
     movement: '背すじを自然に伸ばし、頭頂部を天に向ける。肩の力を抜き、腕を体の脇に垂らす',
     breathing: '鼻から自然な呼吸を続ける。息を吸うとき背すじが少し伸びるのを感じる',
@@ -45,12 +52,17 @@ export const CONCRETE_POSES: ConcretePose[] = [
     name: 'やさしい前屈',
     sanskrit: 'Uttanasana',
     type: 'asana',
-    image: '/pose-uttanasana.webp',
+    image: '/pose-uttanasana-stage3.webp',
+    stages: [
+      { image: '/pose-uttanasana-stage1.webp', label: '段階1：まっすぐ立つ', description: '足を腰幅に開き、背すじを伸ばして立つ。ここからゆっくり始める' },
+      { image: '/pose-uttanasana-stage2.webp', label: '段階2：股関節から前に倒す', description: '息を吐きながら股関節からゆっくり前に倒す。膝は少し曲げてもよい' },
+      { image: '/pose-uttanasana-stage3.webp', label: '段階3：無理のない位置で止まる', description: '手は床またはすねにおく。床に手をつける必要はない。無理な深さを求めない' },
+    ],
     startPose: '足を腰幅に開いて立つ',
     movement: '息を吐きながら股関節から前に倒す。膝は少し曲げてもよい。手は床またはすねにおく',
     breathing: '吐く息で上半身をリラックスさせる。自然な呼吸を続ける',
     durationLabel: '1分',
-    caution: '腰を丸めない。膝を曲げてもよいので無理な深さを求めない。めまいがあるときはゆっくり戻る',
+    caution: '腰を丸めない。膝を曲げてもよいので無理な深さを求めない。床に手をつける必要はない。めまいがあるときはゆっくり戻る',
     defaultMinutes: 1,
   },
   {
@@ -71,7 +83,11 @@ export const CONCRETE_POSES: ConcretePose[] = [
     name: '猫と牛のポーズ',
     sanskrit: 'Marjaryasana-Bitilasana',
     type: 'asana',
-    image: '/pose-catcow.webp',
+    image: '/pose-cow.webp',
+    stages: [
+      { image: '/pose-cow.webp', label: '吸う息：牛のポーズ（Cow）', description: '息を吸いながら胸を開き、背中をやさしく反らせる。お腹は床に向かって下げる。視線は自然に前方へ' },
+      { image: '/pose-cat.webp', label: '吐く息：猫のポーズ（Cat）', description: '息を吐きながら背中を丸める。おへそを見る方向で首を無理に曲げない。ゆっくり交互に繰り返す' },
+    ],
     startPose: '四つん這いになる。手のひらを肩の下、膝を腰の下に置く',
     movement: '息を吸いながら背中を反らせ（牛）、息を吐きながら背中を丸める（猫）。ゆっくり交互に',
     breathing: '吸う息で反らせ、吐く息で丸める。呼吸と動きを合わせる',
