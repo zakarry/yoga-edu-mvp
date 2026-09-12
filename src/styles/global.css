@@ -7735,6 +7735,13 @@ html, body {
   background: rgba(220, 236, 225, 0.15);
 }
 
+.pose-guide-image--portrait {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  object-fit: contain;
+}
+
 .pose-guide-details {
   display: flex;
   flex-direction: column;
@@ -7894,6 +7901,12 @@ html, body {
 
   .pose-guide-image {
     max-height: 300px;
+  }
+
+  .pose-guide-image--portrait {
+    width: 100%;
+    height: auto;
+    max-height: none;
   }
 
   .pose-guide-detail-row {

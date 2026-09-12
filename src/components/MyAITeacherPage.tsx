@@ -1404,7 +1404,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   <img
                     src={concretePoses[currentPoseIdx].image}
                     alt={concretePoses[currentPoseIdx].name}
-                    className="pose-guide-image"
+                    className={`pose-guide-image${concretePoses[currentPoseIdx].id === 'tadasana' ? ' pose-guide-image--portrait' : ''}`}
                   />
                 </div>
 
