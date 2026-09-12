@@ -7,6 +7,7 @@ import {
   loadGrowth, saveGrowth,
   saveLocalPracticeLog, loadLocalPracticeLogs,
   loadNextSuggestion, saveNextSuggestion, clearNextSuggestion,
+  saveTodayContextSession, loadTodayContextSession, clearTodayContextSession,
   type AITeacherPersona, type TodayProgram,
   type AITeacherGrowth, type LocalPracticeLog,
   type AITeacherPrefs, type PrefExplanation, type PrefCue, type PrefPraise,
@@ -524,7 +525,17 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         try { localStorage.removeItem('todayYoga'); } catch { /* ignore */ }
       }
     }
+    const savedTodayCtx = loadTodayContextSession<TodayContext>();
+    if (savedTodayCtx) {
+      setTodayContext(savedTodayCtx);
+      if (savedTodayCtx.todayPain) setTodayCheckResult('pain');
+      else if (savedTodayCtx.selectionResolved) setTodayCheckResult('none');
+    }
   }, []);
+
+  useEffect(() => {
+    saveTodayContextSession(todayContext);
+  }, [todayContext]);
 
   // Demo feedback rotation during active practice (adapted by prefs)
   useEffect(() => {
@@ -681,11 +692,20 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     }
     const planWithKnowledge = await attachKnowledgeToTodayPlan(plan);
     setTodayPlan(planWithKnowledge);
+    const contextSnapshot = effectiveToday;
+    const snapshotSignature = computeTodayContextSignature({
+      todayCheckResult: contextSnapshot.todayPain ? 'pain' : todayCheckResult,
+      requestedMode: contextSnapshot.requestedMode,
+      selectionResolved: contextSnapshot.selectionResolved,
+      availableMinutes: contextSnapshot.availableMinutes,
+      intensityPreference: contextSnapshot.intensityPreference,
+      mood: contextSnapshot.mood,
+    });
     const newProgram: TodayProgram = {
       items: plan.items.map((i) => ({ name: i.name, type: i.type, durationMin: i.minutes, practiceId: i.practiceId })),
       generatedAt: new Date().toISOString(),
       basedOn: (testPlanMode || testPlanCompositeMode) ? 'default' : (ctx.practiceSummary.totalSessions > 0 ? 'history' : 'default'),
-      todayContextSignature,
+      todayContextSignature: snapshotSignature,
     };
     setProgram(newProgram);
     saveTodayProgram(newProgram);
@@ -693,7 +713,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setCurrentPoseIdx(0);
     setPosePhase('list');
     setStep('step2');
-  }, [safetyBlocked, auth.user, growth, conversationContext, testPlanMode, testPlanCompositeMode, todayContextSignature]);
+  }, [safetyBlocked, auth.user, growth, conversationContext, testPlanMode, testPlanCompositeMode, todayContext, todayCheckResult]);
 
   const handleSavePersona = useCallback(() => {
     const newPersona: AITeacherPersona = {
@@ -1545,15 +1565,17 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             </div>
           )}
 
-          {/* Camera disclaimer — always visible */}
+          {/* Camera disclaimer — only when practice is accessible */}
+          {!practiceEntryBlocked && (
           <div className="ai-teacher-camera-disclaimer">
             <p>
               ※カメラは自分の動きを確認するための鏡機能です。AI先生は姿勢の診断・採点・安全判定は行いません。
             </p>
           </div>
+          )}
 
           {/* Phase: List — show all concrete poses */}
-          {posePhase === 'list' && !safetyBlocked && (
+          {posePhase === 'list' && !safetyBlocked && !practiceEntryBlocked && (
             <div className="today-plan-inline-display">
               <div className="today-plan-inline-header">
                 <h4>今日のプログラム</h4>
@@ -1587,7 +1609,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                             {pose.sanskrit && (
                               <span className="today-plan-pose-sanskrit">{pose.sanskrit}</span>
                             )}
-                            <span className="today-plan-pose-duration">目安：{pose.durationLabel}</span>
+                            <span className="today-plan-pose-duration">目安：{pose.defaultMinutes}分</span>
                           </div>
                         </div>
                         <button
@@ -1651,7 +1673,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           )}
 
           {/* Phase: Guide — show visual guide for current pose */}
-          {posePhase === 'guide' && practicePhase !== 'done' && !safetyBlocked && concretePoses[currentPoseIdx] && (
+          {posePhase === 'guide' && practicePhase !== 'done' && !safetyBlocked && !practiceEntryBlocked && concretePoses[currentPoseIdx] && (
             <div ref={poseGuideRef} className="pose-guide-section">
               {/* Progress indicator */}
               <div className="pose-progress-bar">
@@ -1712,7 +1734,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   </div>
                   <div className="pose-guide-detail-row">
                     <strong>目安時間</strong>
-                    <p>{concretePoses[currentPoseIdx].durationLabel}</p>
+                    <p>{concretePoses[currentPoseIdx].defaultMinutes}分</p>
                   </div>
                   <div className="pose-guide-detail-row pose-caution-row">
                     <strong>注意</strong>
@@ -1932,7 +1954,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                       {concretePoses[currentPoseIdx + 1].sanskrit && (
                         <span className="pose-next-sanskrit">{concretePoses[currentPoseIdx + 1].sanskrit}</span>
                       )}
-                      <span className="pose-next-duration">{concretePoses[currentPoseIdx + 1].durationLabel}</span>
+                      <span className="pose-next-duration">{concretePoses[currentPoseIdx + 1].defaultMinutes}分</span>
                     </div>
                   </div>
                   <div className="pose-next-actions">

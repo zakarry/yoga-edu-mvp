@@ -187,6 +187,36 @@ export function getLocalPracticeSummary(): { asana: number; pranayama: number; d
   return summary;
 }
 
+// ── Today Context session persistence (sessionStorage, per-session only) ──
+
+const TODAY_CONTEXT_SESSION_KEY = 'yoga-ai-today-context-session-v1';
+
+export function saveTodayContextSession(ctx: unknown): void {
+  try {
+    sessionStorage.setItem(TODAY_CONTEXT_SESSION_KEY, JSON.stringify(ctx));
+  } catch {
+    // ignore
+  }
+}
+
+export function loadTodayContextSession<T>(): T | null {
+  try {
+    const raw = sessionStorage.getItem(TODAY_CONTEXT_SESSION_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
+export function clearTodayContextSession(): void {
+  try {
+    sessionStorage.removeItem(TODAY_CONTEXT_SESSION_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 // ── Next Practice Suggestion (non-sensitive) ──
 
 const NEXT_SUGGESTION_KEY = 'yoga-ai-next-suggestion-v1';
