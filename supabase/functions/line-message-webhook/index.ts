@@ -190,10 +190,14 @@ async function verifySignature(body: string, signature: string, channelSecret: s
     ["sign"],
   );
   const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(body));
-  const expected = Array.from(new Uint8Array(sig))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-  return expected === signature;
+  const expected = btoa(String.fromCharCode(...new Uint8Array(sig)));
+
+  if (expected.length !== signature.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < expected.length; i++) {
+    mismatch |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
+  }
+  return mismatch === 0;
 }
 
 async function checkRateLimit(adminClient: SupabaseClient, lineUserId: string): Promise<boolean> {
