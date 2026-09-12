@@ -32,7 +32,7 @@ export const CONCRETE_POSES: ConcretePose[] = [
     name: '山のポーズ',
     sanskrit: 'Tadasana',
     type: 'asana',
-    image: '/pose-tadasana-v2.webp',
+    image: '/pose-tadasana-v3.webp',
     startPose: '足を腰幅程度に開き、両足の裏を床にしっかり置いて立つ',
     movement: '背すじを自然に伸ばし、頭頂部を天に向ける。肩の力を抜き、腕を体の脇に垂らす',
     breathing: '鼻から自然な呼吸を続ける。息を吸うとき背すじが少し伸びるのを感じる',
