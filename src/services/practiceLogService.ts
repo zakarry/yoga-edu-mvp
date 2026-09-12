@@ -17,6 +17,7 @@ export interface PracticeLog {
   requires_human_review: boolean;
   safety_category: SafetyCategory | null;
   created_at: string;
+  practice_session_id: string;
 }
 
 export interface SavePracticeLogParams {
@@ -31,6 +32,7 @@ export interface SavePracticeLogParams {
   safety_urgency?: SafetyUrgency;
   requires_human_review?: boolean;
   safety_category?: SafetyCategory | null;
+  practice_session_id?: string;
 }
 
 export interface PracticeSummary {
@@ -55,26 +57,40 @@ export async function savePracticeLog(
   const allowSensitive = privacy.allow_sensitive_data_storage;
   const noteToSave = allowSensitive ? (params.note ?? null) : null;
 
+  const insertPayload = {
+    user_id: userId,
+    practice_type: params.practice_type,
+    practice_name: params.practice_name,
+    duration_min: params.duration_min ?? null,
+    mood_before: params.mood_before ?? null,
+    mood_after: params.mood_after ?? null,
+    note: noteToSave,
+    ai_teacher_used: params.ai_teacher_used ?? false,
+    safety_state: params.safety_state ?? 'normal',
+    safety_urgency: params.safety_urgency ?? 'none',
+    requires_human_review: params.requires_human_review ?? false,
+    safety_category: params.safety_category ?? null,
+    practice_session_id: params.practice_session_id ?? crypto.randomUUID(),
+  };
+
   const { data, error } = await supabase
     .from('practice_logs')
-    .insert({
-      user_id: userId,
-      practice_type: params.practice_type,
-      practice_name: params.practice_name,
-      duration_min: params.duration_min ?? null,
-      mood_before: params.mood_before ?? null,
-      mood_after: params.mood_after ?? null,
-      note: noteToSave,
-      ai_teacher_used: params.ai_teacher_used ?? false,
-      safety_state: params.safety_state ?? 'normal',
-      safety_urgency: params.safety_urgency ?? 'none',
-      requires_human_review: params.requires_human_review ?? false,
-      safety_category: params.safety_category ?? null,
-    })
+    .insert(insertPayload)
     .select('*')
     .single();
 
-  if (error) return { data: null, error: error.message, savedToCloud: false };
+  if (error) {
+    if (error.code === '23505') {
+      const { data: existing } = await supabase
+        .from('practice_logs')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('practice_session_id', insertPayload.practice_session_id)
+        .single();
+      return { data: (existing as PracticeLog) ?? null, error: null, savedToCloud: true };
+    }
+    return { data: null, error: error.message, savedToCloud: false };
+  }
   return { data: data as PracticeLog, error: null, savedToCloud: true };
 }
 

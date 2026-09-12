@@ -422,6 +422,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [sessionStartedAt, setSessionStartedAt] = useState<number | null>(null);
   const [simpleTimerRemaining, setSimpleTimerRemaining] = useState(0);
   const [practiceAborted, setPracticeAborted] = useState(false);
+  const [practiceSessionId, setPracticeSessionId] = useState<string | null>(null);
+  const [isSavingPractice, setIsSavingPractice] = useState(false);
 
   useEffect(() => {
     const p = loadPersona();
@@ -682,10 +684,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setMoodAfter('');
     setPracticeNote('');
     setSessionStartedAt(null);
+    setPracticeSessionId(null);
   }, []);
 
   const handleCompletePractice = useCallback(async () => {
-    if (!practiceType || practicePhase !== 'done' || practiceAborted) return;
+    if (!practiceType || practicePhase !== 'done' || practiceAborted || isSavingPractice) return;
+    setIsSavingPractice(true);
     const practiceName = selectedGuide?.name ?? program?.items.find((i) => i.type === practiceType)?.name ?? '実践';
     const elapsedSeconds = sessionStartedAt ? Math.max(1, Math.round((Date.now() - sessionStartedAt) / 1000)) : practiceDuration * 60;
     const autoDuration = Math.max(1, Math.round(elapsedSeconds / 60));
@@ -697,6 +701,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       mood_after: moodAfter || null,
       note: practiceNote || null,
       ai_teacher_used: true,
+      practice_session_id: practiceSessionId ?? undefined,
     };
 
     if (auth.user) {
@@ -746,9 +751,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setConversationContext({});
 
     if (auth.user) {
-      getPracticeLogs(auth.user.id).then(({ data }) => {
-        if (data) setCloudLogs(data);
-      });
+      const { data: refetched } = await getPracticeLogs(auth.user.id);
+      if (refetched) setCloudLogs(refetched);
     }
 
     setPracticeActive(false);
@@ -764,8 +768,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setSessionStartedAt(null);
     setSimpleTimerRemaining(0);
     setPracticeAborted(false);
+    setPracticeSessionId(null);
+    setIsSavingPractice(false);
     setStep('step7');
-  }, [practiceType, program, practiceDuration, moodBefore, moodAfter, practiceNote, auth, growth, formSpecialty, teacherContext, conversationContext, selectedGuide, practicePhase, practiceAborted, sessionStartedAt]);
+  }, [practiceType, program, practiceDuration, moodBefore, moodAfter, practiceNote, auth, growth, formSpecialty, teacherContext, conversationContext, selectedGuide, practicePhase, practiceAborted, sessionStartedAt, isSavingPractice, practiceSessionId]);
 
   const steps: Array<{ id: StepId; label: string; n: string }> = [
     { id: 'step1', label: '今の状態', n: '1' },
@@ -1265,6 +1271,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                       setPracticeActive(true);
                       setSessionStartedAt(Date.now());
                       setPracticeAborted(false);
+                      setPracticeSessionId(crypto.randomUUID());
                       if (selectedGuide.hasTimer) {
                         setTimerRunning(true);
                         setTimerPhaseIdx(0);
@@ -1406,8 +1413,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 <label>自由メモ（任意）</label>
                 <input value={practiceNote} onChange={(e) => setPracticeNote(e.target.value)} placeholder="今日の気づきやメモ" />
               </div>
-              <button className="primary-button practice-save-btn" onClick={handleCompletePractice}>
-                記録して完了する
+              <button className="primary-button practice-save-btn" onClick={handleCompletePractice} disabled={isSavingPractice}>
+                {isSavingPractice ? '保存中…' : '記録して完了する'}
               </button>
             </div>
           )}
