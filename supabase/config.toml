@@ -5,3 +5,7 @@ entrypoint = "./functions/ai-teacher-explanation/index.ts"
 [functions.line-auth]
 verify_jwt = false
 entrypoint = "./functions/line-auth/index.ts"
+
+[functions.line-message-webhook]
+verify_jwt = false
+entrypoint = "./functions/line-message-webhook/index.ts"
