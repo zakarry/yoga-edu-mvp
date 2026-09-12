@@ -35,6 +35,7 @@ interface MyPageProps {
   cloudPracticeSection?: ReactNode;
   teachingJourneySection?: ReactNode;
   myTeacherSection?: ReactNode;
+  aiTeacherMemorySection?: ReactNode;
 }
 
 const scoreDefinitions: Array<{
@@ -153,7 +154,7 @@ function buildChangeComment(latest: DiagnosisHistoryRecord, previous?: Diagnosis
   return '少しずつ変化が見えています。数字は目安として受け取りながら、その時の体調や気分、毎日の過ごし方に合わせて使ってみてください。';
 }
 
-export function MyPage({ history, onRestart, onDetail, onBackHome, cloudDiagnosisSection, cloudPracticeSection, teachingJourneySection, myTeacherSection }: MyPageProps) {
+export function MyPage({ history, onRestart, onDetail, onBackHome, cloudDiagnosisSection, cloudPracticeSection, teachingJourneySection, myTeacherSection, aiTeacherMemorySection }: MyPageProps) {
   const auth = useAuth();
   const latest = history[0];
   const previous = history[1];
@@ -189,6 +190,7 @@ export function MyPage({ history, onRestart, onDetail, onBackHome, cloudDiagnosi
         <div id="yoga-memory">{cloudDiagnosisSection}</div>
         <div id="practice-history">{cloudPracticeSection}</div>
         {teachingJourneySection}
+        {aiTeacherMemorySection}
         <div id="my-teacher">{myTeacherSection}</div>
       </div>
     );
@@ -384,6 +386,7 @@ export function MyPage({ history, onRestart, onDetail, onBackHome, cloudDiagnosi
       <div id="yoga-memory">{cloudDiagnosisSection}</div>
       <div id="practice-history">{cloudPracticeSection}</div>
       {teachingJourneySection}
+      {aiTeacherMemorySection}
       <div id="my-teacher">{myTeacherSection}</div>
     </div>
   );

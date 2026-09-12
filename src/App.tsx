@@ -31,6 +31,7 @@ import { AuthPanel } from './components/AuthPanel';
 import { CloudDiagnosisSection, CloudPracticeSection } from './components/MyYogaCloudSections';
 import { MyTeachingJourney } from './components/MyTeachingJourney';
 import { MyTeacherSection } from './components/MyTeacherSection';
+import { AITeacherMemorySection } from './components/AITeacherMemorySection';
 import { MyAITeacherPage } from './components/MyAITeacherPage';
 import { SiteMapPage } from './components/SiteMapPage';
 import { useAuth, getLastAuthEvent } from './lib/auth';
@@ -1819,6 +1820,7 @@ export default function App() {
             cloudPracticeSection={<CloudPracticeSection onStartAITeacher={() => moveTo('ai-teacher')} />}
             teachingJourneySection={<MyTeachingJourney onStartTeacherDiagnosis={() => moveTo('teacher-diagnosis')} onOpenProYoga={() => moveTo('pro-yoga')} />}
             myTeacherSection={<MyTeacherSection refreshToken={teacherRelationshipRefresh} />}
+            aiTeacherMemorySection={<AITeacherMemorySection />}
           />
         )}
 

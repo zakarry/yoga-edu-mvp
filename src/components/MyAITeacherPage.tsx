@@ -21,6 +21,8 @@ import type { KnowledgeExplanation } from '../services/teacherKnowledgeService';
 import { runLLMRequestDryRun, type DryRunResult } from '../services/llmRequestDryRun';
 import type { LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
 import { resolveConcretePoses, getDefaultPlanPoses, getPoseKnowledgeLink, type ConcretePose, type PoseStage } from '../lib/poseLibrary';
+import { loadLocalMemory, summarizeMemory } from '../services/aiTeacherMemoryService';
+import { emptyTodayContext, type TodayContext } from '../types/aiTeacherLayers';
 
 interface MyAITeacherPageProps {
   onBackHome: () => void;
@@ -317,7 +319,7 @@ interface ChatMessage {
   knowledgeUsed?: boolean;
 }
 
-function buildLocalContextFast(growth: AITeacherGrowth, sessionIntent?: ConversationContext): TeacherContext {
+function buildLocalContextFast(growth: AITeacherGrowth, sessionIntent?: ConversationContext, todayContext?: TodayContext): TeacherContext {
   const persona = loadPersona();
   const localLogs = loadLocalPracticeLogs();
   const records = localLogs.map((l) => ({
@@ -362,6 +364,8 @@ function buildLocalContextFast(growth: AITeacherGrowth, sessionIntent?: Conversa
       requestedType: sessionIntent.requestedType,
       userMessage: sessionIntent.lastUserMessage,
     } : undefined,
+    memorySummary: summarizeMemory(loadLocalMemory()),
+    todayContext: todayContext ?? emptyTodayContext(),
   };
 }
 
@@ -415,6 +419,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const testPlanMode = testPlanParam === 'knowledge-k6';
   const testPlanCompositeMode = testPlanParam === 'knowledge-k6-composite';
   const [teacherContext, setTeacherContext] = useState<TeacherContext | null>(null);
+  const [todayContext, setTodayContext] = useState<TodayContext>(emptyTodayContext());
   const [nextSuggestion, setNextSuggestion] = useState<NextSuggestion | null>(loadNextSuggestion());
   const [showContextSignals, setShowContextSignals] = useState(false);
   const [showExampleGuide, setShowExampleGuide] = useState(false);
@@ -541,7 +546,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
   const handleGenerateProgram = useCallback(async () => {
     if (safetyBlocked) return;
-    const ctx = await buildTeacherContext(auth.user?.id ?? null, growth, conversationContext);
+    const ctx = await buildTeacherContext(auth.user?.id ?? null, growth, conversationContext, todayContext);
     setTeacherContext(ctx);
     let plan;
     if (testPlanMode) {
@@ -645,7 +650,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setChatTyping(true);
     const delay = 150 + Math.random() * 150;
     setTimeout(async () => {
-      const ctx = teacherContext ?? buildLocalContextFast(growth, conversationContext);
+      const ctx = teacherContext ?? buildLocalContextFast(growth, conversationContext, todayContext);
       const response = await generateTeacherResponse(ctx, userMsg.text, conversationContext);
       if (response.updatedContext) {
         setConversationContext(response.updatedContext);
@@ -882,6 +887,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           </div>
           <h2>あなたのAI先生</h2>
           <p>AI先生が、今日の状態に合わせてヨガ・呼吸・瞑想を一緒にガイドします。</p>
+          <p className="ai-teacher-brand-note">Yoga Knowledgeを基礎に、アーサナ・呼吸法・瞑想を流れとして分かりやすくガイドするAI先生です。使うほど、あなたの好みや継続傾向を覚えていきます。</p>
           {persona && (
             <div className="ai-teacher-hero-teacher">
               <span className="ai-teacher-hero-avatar">{persona.avatar}</span>
@@ -1261,6 +1267,18 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     : `${persona?.name ?? 'AI先生'}です。これまでの好みも参考にしながら調整します。今日はどんな実践にしますか？`}
                 </p>
               )}
+              {(() => {
+                const mem = teacherContext?.memorySummary;
+                if (!mem || mem.activeConcerns.length === 0) return null;
+                return (
+                  <div className="ai-teacher-memory-hint">
+                    <span>AI先生が覚えていること:</span>
+                    <ul>
+                      {mem.activeConcerns.map((c, i) => <li key={i}>{c}</li>)}
+                    </ul>
+                  </div>
+                );
+              })()}
               {chatMessages.map((msg, idx) => (
                 <div key={idx} className={`chat-message ${msg.role} ${msg.isSafety ? 'safety' : ''}`}>
                   <span className="chat-role">{msg.role === 'teacher' ? (persona?.name ?? 'AI先生') : 'あなた'}</span>

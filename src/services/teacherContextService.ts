@@ -4,6 +4,8 @@ import {
   loadPersona, loadGrowth, loadLocalPracticeLogs,
   type AITeacherPersona, type AITeacherGrowth, type LocalPracticeLog,
 } from '../lib/aiTeacherStorage';
+import { getMemory, summarizeMemory, loadLocalMemory, type MemorySummary } from './aiTeacherMemoryService';
+import type { TodayContext } from '../types/aiTeacherLayers';
 
 export type PracticeType = 'asana' | 'pranayama' | 'dhyana';
 
@@ -40,6 +42,8 @@ export interface TeacherContext {
     requestedType?: string;
     userMessage?: string;
   };
+  memorySummary?: MemorySummary;
+  todayContext?: TodayContext;
 }
 
 interface PracticeRecord {
@@ -135,6 +139,7 @@ export async function buildTeacherContext(
   userId: string | null,
   growth: AITeacherGrowth,
   sessionIntent?: TeacherContext['sessionIntent'],
+  todayContext?: TodayContext,
 ): Promise<TeacherContext> {
   const persona = loadPersona();
   const prefs = growth.prefs;
@@ -168,6 +173,9 @@ export async function buildTeacherContext(
     summary.favoriteTypes = growth.favoriteTypes;
   }
 
+  const memoryEntries = await getMemory(userId);
+  const memorySummary = summarizeMemory(memoryEntries);
+
   return {
     userId: userId ?? undefined,
     latestDiagnosis,
@@ -184,10 +192,12 @@ export async function buildTeacherContext(
       teachingLanguage: persona.teachingLanguage,
     } : null,
     sessionIntent,
+    memorySummary,
+    todayContext,
   };
 }
 
-export function buildLocalContext(growth: AITeacherGrowth, sessionIntent?: TeacherContext['sessionIntent']): TeacherContext {
+export function buildLocalContext(growth: AITeacherGrowth, sessionIntent?: TeacherContext['sessionIntent'], todayContext?: TodayContext): TeacherContext {
   const persona = loadPersona();
   const localLogs = loadLocalPracticeLogs();
   const records: PracticeRecord[] = localLogs.map((l) => ({
@@ -200,6 +210,9 @@ export function buildLocalContext(growth: AITeacherGrowth, sessionIntent?: Teach
   if (summary.favoriteTypes.length === 0 && growth.favoriteTypes.length > 0) {
     summary.favoriteTypes = growth.favoriteTypes;
   }
+  const memoryEntries = loadLocalMemory();
+  const memorySummary = summarizeMemory(memoryEntries);
+
   return {
     practiceSummary: summary,
     preferences: {
@@ -214,5 +227,7 @@ export function buildLocalContext(growth: AITeacherGrowth, sessionIntent?: Teach
       teachingLanguage: persona.teachingLanguage,
     } : null,
     sessionIntent,
+    memorySummary,
+    todayContext,
   };
 }

@@ -44,14 +44,16 @@ export function generateTodayPlan(context: TeacherContext): TodayPlan {
   const notes: string[] = [];
   const items: TodayPlanItem[] = [];
 
-  const { practiceSummary, preferences, sessionIntent } = context;
+  const { practiceSummary, preferences, sessionIntent, memorySummary, todayContext } = context;
 
   const requestedMinutes = sessionIntent?.requestedMinutes;
   const requestedType = sessionIntent?.requestedType;
   const requestedStyle = sessionIntent?.requestedStyle;
 
   const avgDuration = practiceSummary.averageDuration ?? 10;
-  const targetMinutes = requestedMinutes ?? avgDuration;
+  const memoryDuration = memorySummary?.preferredDuration ?? null;
+  const todayMinutes = todayContext?.availableMinutes ?? null;
+  const targetMinutes = todayMinutes ?? requestedMinutes ?? memoryDuration ?? avgDuration;
 
   if (requestedMinutes) {
     signals.push(`今日は${requestedMinutes}分を希望しています`);
@@ -90,8 +92,14 @@ export function generateTodayPlan(context: TeacherContext): TodayPlan {
   let secondaryType: PracticeType;
   let tertiaryType: PracticeType;
 
-  if (requestedType && ['asana', 'pranayama', 'dhyana'].includes(requestedType)) {
+  if (todayContext?.requestedType && ['asana', 'pranayama', 'dhyana'].includes(todayContext.requestedType)) {
+    primaryType = todayContext.requestedType;
+  } else if (requestedType && ['asana', 'pranayama', 'dhyana'].includes(requestedType)) {
     primaryType = requestedType as PracticeType;
+  } else if (memorySummary?.favoritePractices.some((p) => p.includes('呼吸'))) {
+    primaryType = 'pranayama';
+  } else if (memorySummary?.favoritePractices.some((p) => p.includes('瞑想'))) {
+    primaryType = 'dhyana';
   } else if (practiceSummary.favoriteTypes[0]) {
     primaryType = practiceSummary.favoriteTypes[0] as PracticeType;
   } else {
@@ -103,13 +111,20 @@ export function generateTodayPlan(context: TeacherContext): TodayPlan {
   secondaryType = remaining[0];
   tertiaryType = remaining[1];
 
-  if (recentAsana >= 2 && recentPranayama === 0) {
+  // Safety: if user has reported concerns, shift toward breath/meditation/rest
+  const hasConcerns = (memorySummary?.userConcerns.length ?? 0) > 0 || !!(todayContext?.todayConcern || todayContext?.todayPain);
+  if (hasConcerns && primaryType === 'asana') {
+    notes.push('本人申告の不安があるため、呼吸法または瞑想を中心に構成します');
+    primaryType = 'pranayama';
+    secondaryType = 'dhyana';
+    const remaining2 = allTypes.filter((t) => t !== primaryType && t !== secondaryType);
+    tertiaryType = remaining2[0];
+  } else if (recentAsana >= 2 && recentPranayama === 0) {
     notes.push('最近アーサナが続いているので、呼吸法も少し入れています');
     if (primaryType !== 'pranayama') {
       secondaryType = 'pranayama';
     }
-  }
-  if (recentDhyana >= 2) {
+  } else if (recentDhyana >= 2) {
     notes.push('最近瞑想が多いので、アーサナも候補に入れています');
     if (primaryType !== 'asana') {
       secondaryType = 'asana';
