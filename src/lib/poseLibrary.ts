@@ -21,7 +21,7 @@ export interface ConcretePose {
   knowledgeMasterId?: string | null;
   zukanSlug?: string | null;
   zukanUrl?: string | null;
-  professionalYogaRelated?: boolean;
+  professionalYogaRelated?: boolean | null;
   professionalYogaSourceLabel?: string | null;
   knowledgeVerified?: boolean;
 }
@@ -43,8 +43,8 @@ export const CONCRETE_POSES: ConcretePose[] = [
     knowledgeMasterId: 'YK-0264',
     zukanSlug: 'yk-0264',
     zukanUrl: null,
-    professionalYogaRelated: true,
-    professionalYogaSourceLabel: 'プロフェッショナルYoga検定関連 Yoga図鑑',
+    professionalYogaRelated: null,
+    professionalYogaSourceLabel: null,
     knowledgeVerified: true,
   },
   {
@@ -63,8 +63,8 @@ export const CONCRETE_POSES: ConcretePose[] = [
     knowledgeMasterId: 'YK-0277',
     zukanSlug: 'yk-0277',
     zukanUrl: null,
-    professionalYogaRelated: true,
-    professionalYogaSourceLabel: 'プロフェッショナルYoga検定関連 Yoga図鑑',
+    professionalYogaRelated: null,
+    professionalYogaSourceLabel: null,
     knowledgeVerified: true,
   },
   {
@@ -152,8 +152,8 @@ export const CONCRETE_POSES: ConcretePose[] = [
     knowledgeMasterId: 'YK-0270',
     zukanSlug: 'yk-0270',
     zukanUrl: null,
-    professionalYogaRelated: true,
-    professionalYogaSourceLabel: 'プロフェッショナルYoga検定関連 Yoga図鑑',
+    professionalYogaRelated: null,
+    professionalYogaSourceLabel: null,
     knowledgeVerified: true,
   },
   {
@@ -172,8 +172,8 @@ export const CONCRETE_POSES: ConcretePose[] = [
     knowledgeMasterId: 'YK-0260',
     zukanSlug: 'yk-0260',
     zukanUrl: null,
-    professionalYogaRelated: true,
-    professionalYogaSourceLabel: 'プロフェッショナルYoga検定関連 Yoga図鑑',
+    professionalYogaRelated: null,
+    professionalYogaSourceLabel: null,
     knowledgeVerified: true,
   },
   {
@@ -212,8 +212,8 @@ export const CONCRETE_POSES: ConcretePose[] = [
     knowledgeMasterId: 'YK-0318',
     zukanSlug: 'yk-0318',
     zukanUrl: null,
-    professionalYogaRelated: true,
-    professionalYogaSourceLabel: 'プロフェッショナルYoga検定関連 Yoga図鑑',
+    professionalYogaRelated: null,
+    professionalYogaSourceLabel: null,
     knowledgeVerified: true,
   },
   {
@@ -232,8 +232,8 @@ export const CONCRETE_POSES: ConcretePose[] = [
     knowledgeMasterId: 'YK-0307',
     zukanSlug: 'yk-0307',
     zukanUrl: null,
-    professionalYogaRelated: true,
-    professionalYogaSourceLabel: 'プロフェッショナルYoga検定関連 Yoga図鑑',
+    professionalYogaRelated: null,
+    professionalYogaSourceLabel: null,
     knowledgeVerified: true,
   },
 ];
@@ -283,7 +283,7 @@ export interface PoseKnowledgeLink {
   knowledgeMasterId?: string;
   zukanSlug?: string;
   zukanUrl?: string;
-  professionalYogaRelated?: boolean;
+  professionalYogaRelated?: boolean | null;
   professionalYogaSourceLabel?: string;
   verified: boolean;
 }
