@@ -94,6 +94,7 @@ interface PracticeGuide {
   purpose: string;
   steps: string[];
   estimate: string;
+  defaultDuration: number;
   hasTimer?: boolean;
   timerPhases?: { label: string; seconds: number; body: string }[];
   timerRounds?: number;
@@ -113,6 +114,7 @@ const PRACTICE_GUIDES: Record<'pranayama' | 'dhyana' | 'asana', PracticeGuide[]>
         '4秒、次の呼吸の前に静かに止める',
       ],
       estimate: '4〜6周（約1分30秒〜2分）',
+      defaultDuration: 2,
       hasTimer: true,
       timerPhases: [
         { label: '吸う', seconds: 4, body: '鼻からゆっくり吸って、胸やお腹にやさしく空気を入れます。' },
@@ -134,6 +136,7 @@ const PRACTICE_GUIDES: Record<'pranayama' | 'dhyana' | 'asana', PracticeGuide[]>
         '無理に深く吸わず、自然な範囲で続ける',
       ],
       estimate: '2〜3分',
+      defaultDuration: 3,
     },
     {
       id: 'alternate-nostril',
@@ -147,6 +150,7 @@ const PRACTICE_GUIDES: Record<'pranayama' | 'dhyana' | 'asana', PracticeGuide[]>
         'これを交互に繰り返す',
       ],
       estimate: '2〜3分',
+      defaultDuration: 3,
     },
   ],
   dhyana: [
@@ -162,6 +166,7 @@ const PRACTICE_GUIDES: Record<'pranayama' | 'dhyana' | 'asana', PracticeGuide[]>
         '1分間、ただ呼吸を観察し続ける',
       ],
       estimate: '1分',
+      defaultDuration: 1,
     },
     {
       id: 'body-scan',
@@ -175,6 +180,7 @@ const PRACTICE_GUIDES: Record<'pranayama' | 'dhyana' | 'asana', PracticeGuide[]>
         '最後に全身を感じて終わる',
       ],
       estimate: '3〜5分',
+      defaultDuration: 5,
     },
   ],
   asana: [
@@ -189,6 +195,7 @@ const PRACTICE_GUIDES: Record<'pranayama' | 'dhyana' | 'asana', PracticeGuide[]>
         '呼吸と動きを合わせる',
       ],
       estimate: '5〜10分',
+      defaultDuration: 10,
     },
   ],
 };
@@ -412,6 +419,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [timerPhaseIdx, setTimerPhaseIdx] = useState(0);
   const [timerRemaining, setTimerRemaining] = useState(0);
   const [timerRound, setTimerRound] = useState(1);
+  const [sessionStartedAt, setSessionStartedAt] = useState<number | null>(null);
+  const [simpleTimerRemaining, setSimpleTimerRemaining] = useState(0);
+  const [practiceAborted, setPracticeAborted] = useState(false);
 
   useEffect(() => {
     const p = loadPersona();
@@ -620,6 +630,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               setTimerRunning(false);
               setTimerPhaseIdx(0);
               setTimerRound(1);
+              if (sessionStartedAt) {
+                const elapsed = Math.max(1, Math.round((Date.now() - sessionStartedAt) / 60000));
+                setPracticeDuration(elapsed);
+              }
               setPracticePhase('done');
             } else {
               setTimerRound(nextRound);
@@ -637,13 +651,48 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     return () => window.clearInterval(tick);
   }, [timerRunning, timerPhaseIdx, timerRound, selectedGuide]);
 
+  useEffect(() => {
+    if (!timerRunning || selectedGuide?.hasTimer || practicePhase !== 'active') return;
+    setSimpleTimerRemaining(practiceDuration * 60);
+    const tick = window.setInterval(() => {
+      setSimpleTimerRemaining((prev) => {
+        if (prev <= 1) {
+          window.clearInterval(tick);
+          setTimerRunning(false);
+          setPracticePhase('done');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(tick);
+  }, [timerRunning, selectedGuide, practicePhase, practiceDuration]);
+
+  const handleAbortPractice = useCallback(() => {
+    setTimerRunning(false);
+    setTimerPhaseIdx(0);
+    setTimerRound(1);
+    setSimpleTimerRemaining(0);
+    setPracticeAborted(true);
+    setPracticeActive(false);
+    setPracticePhase('guide');
+    setSelectedGuide(null);
+    setPracticeType(null);
+    setMoodBefore('');
+    setMoodAfter('');
+    setPracticeNote('');
+    setSessionStartedAt(null);
+  }, []);
+
   const handleCompletePractice = useCallback(async () => {
-    if (!practiceType || practicePhase !== 'done') return;
+    if (!practiceType || practicePhase !== 'done' || practiceAborted) return;
     const practiceName = selectedGuide?.name ?? program?.items.find((i) => i.type === practiceType)?.name ?? '実践';
+    const elapsedSeconds = sessionStartedAt ? Math.max(1, Math.round((Date.now() - sessionStartedAt) / 1000)) : practiceDuration * 60;
+    const autoDuration = Math.max(1, Math.round(elapsedSeconds / 60));
     const logParams = {
       practice_type: practiceType,
       practice_name: practiceName,
-      duration_min: practiceDuration,
+      duration_min: practiceDuration || autoDuration,
       mood_before: moodBefore || null,
       mood_after: moodAfter || null,
       note: practiceNote || null,
@@ -712,8 +761,11 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setTimerRunning(false);
     setTimerPhaseIdx(0);
     setTimerRound(1);
+    setSessionStartedAt(null);
+    setSimpleTimerRemaining(0);
+    setPracticeAborted(false);
     setStep('step7');
-  }, [practiceType, program, practiceDuration, moodBefore, moodAfter, practiceNote, auth, growth, formSpecialty, teacherContext, conversationContext, selectedGuide, practicePhase]);
+  }, [practiceType, program, practiceDuration, moodBefore, moodAfter, practiceNote, auth, growth, formSpecialty, teacherContext, conversationContext, selectedGuide, practicePhase, practiceAborted, sessionStartedAt]);
 
   const steps: Array<{ id: StepId; label: string; n: string }> = [
     { id: 'step1', label: '今の状態', n: '1' },
@@ -1180,7 +1232,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     <button
                       key={g.id}
                       className={`practice-guide-card ${selectedGuide?.id === g.id ? 'selected' : ''}`}
-                      onClick={() => setSelectedGuide(g)}
+                      onClick={() => { setSelectedGuide(g); setPracticeDuration(g.defaultDuration); }}
                     >
                       <strong>{g.name}</strong>
                       <span className="practice-guide-purpose">{g.purpose}</span>
@@ -1205,21 +1257,20 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   <div className="practice-guide-estimate-row">
                     <span>目安: {selectedGuide.estimate}</span>
                   </div>
-                  <div className="practice-guide-duration">
-                    <label>実践時間（分）</label>
-                    <input type="number" min={1} max={120} value={practiceDuration}
-                      onChange={(e) => setPracticeDuration(Number(e.target.value))} />
-                  </div>
                   <button
                     className="primary-button practice-start-btn"
                     onClick={() => {
                       if (safetyBlocked) return;
                       setPracticePhase('active');
                       setPracticeActive(true);
+                      setSessionStartedAt(Date.now());
+                      setPracticeAborted(false);
                       if (selectedGuide.hasTimer) {
                         setTimerRunning(true);
                         setTimerPhaseIdx(0);
                         setTimerRound(1);
+                      } else {
+                        setTimerRunning(true);
                       }
                     }}
                   >
@@ -1230,7 +1281,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             </div>
           )}
 
-          {/* Phase: Active — practice with optional timer */}
+          {/* Phase: Active — practice with timer */}
           {practicePhase === 'active' && selectedGuide && (
             <div className="practice-active-section">
               <div className="practice-active-header">
@@ -1257,14 +1308,25 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 </div>
               )}
 
-              {!selectedGuide.hasTimer && (
-                <div className="practice-non-timer-guide">
-                  <ol>
-                    {selectedGuide.steps.map((s, i) => (
-                      <li key={i}>{s}</li>
-                    ))}
-                  </ol>
-                  <p className="practice-non-timer-note">手順に沿って、ゆっくり実践してください。</p>
+              {!selectedGuide.hasTimer && timerRunning && (
+                <div className="practice-timer">
+                  <div className="breathing-orb-stage">
+                    <div className="breathing-orb-halo" />
+                    <div className="breathing-circle is-running" aria-live="polite">
+                      <div className="breathing-circle-content">
+                        <strong>実践中</strong>
+                        <span>{Math.floor(simpleTimerRemaining / 60)}:{String(simpleTimerRemaining % 60).padStart(2, '0')}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="practice-timer-body">手順に沿って、ゆっくり実践してください。</p>
+                  <div className="practice-non-timer-guide">
+                    <ol>
+                      {selectedGuide.steps.map((s, i) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ol>
+                  </div>
                 </div>
               )}
 
@@ -1305,20 +1367,24 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 )}
               </div>
 
-              <button
-                className="gold-button practice-complete-btn"
-                onClick={() => {
-                  setTimerRunning(false);
-                  setPracticePhase('done');
-                }}
-              >
-                実践を完了する
-              </button>
+              <div className="practice-active-actions">
+                <button
+                  className="secondary-button practice-abort-btn"
+                  onClick={handleAbortPractice}
+                >
+                  中止する
+                </button>
+              </div>
+              <p className="practice-active-hint">
+                {selectedGuide.hasTimer
+                  ? `タイマー完了後に自動的に記録画面へ進みます。${selectedGuide.timerRounds}周完了までお待ちください。`
+                  : 'タイマー完了後に自動的に記録画面へ進みます。'}
+              </p>
             </div>
           )}
 
           {/* Phase: Done — post-practice recording */}
-          {practicePhase === 'done' && (
+          {practicePhase === 'done' && !practiceAborted && (
             <div className="practice-done-section">
               <h4>実践おつかれさまでした</h4>
               <p>実践の記録を入力してください。</p>
