@@ -1483,11 +1483,8 @@ export default function App() {
                     <p className="hero-subcopy">「探す」から「続ける」まで。あなたのYoga Journeyを支えるYoga AI。</p>
                   </div>
                   <div className="hero-actions wrap top-hero-actions">
-                    <button className="primary-button hero-primary-cta" onClick={() => moveTo('ai-teacher')}>
-                      <span className="hero-cta-icon">🧘</span>
-                      <span>AI先生を体験する</span>
-                    </button>
-                    <button className="ghost-button hero-secondary-cta" onClick={() => moveTo('diagnosis')}>無料AI診断を始める</button>
+                    <button className="primary-button hero-primary-cta" onClick={() => moveTo('diagnosis')}>無料AI診断を始める</button>
+                    <button className="ghost-button hero-secondary-cta" onClick={() => moveTo('ai-teacher')}>AI先生を体験する</button>
                   </div>
                 </section>
 
@@ -1997,6 +1994,7 @@ export default function App() {
             onOpenProYoga={() => moveTo('pro-yoga')}
             latestDiagnosis={null}
             initialMinutes={aiTeacherMinutes}
+            entryTarget={entryTarget}
           />
         )}
         {page === 'breathing-meditation' && (

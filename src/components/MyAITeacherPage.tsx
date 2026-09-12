@@ -29,6 +29,7 @@ interface MyAITeacherPageProps {
   onOpenProYoga: () => void;
   latestDiagnosis: DiagnosisRecord | null;
   initialMinutes?: number;
+  entryTarget?: string | null;
 }
 
 type StepId = 'home' | 'step1' | 'step2' | 'step3' | 'step4' | 'step5' | 'step6' | 'step7' | 'step8';
@@ -379,7 +380,7 @@ function resolvePosesFromProgram(prog: TodayProgram | null): ConcretePose[] {
   return poses;
 }
 
-export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onOpenProYoga, latestDiagnosis, initialMinutes }: MyAITeacherPageProps) {
+export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onOpenProYoga, latestDiagnosis, initialMinutes, entryTarget }: MyAITeacherPageProps) {
   const auth = useAuth();
   const [step, setStep] = useState<StepId>('home');
   const [persona, setPersona] = useState<AITeacherPersona | null>(null);
@@ -845,8 +846,31 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     { id: 'step8', label: '先生の成長', n: '8' },
   ];
 
+  const isEventDemo = entryTarget === 'event-demo';
+
+  const handleEventDemoStart = useCallback(() => {
+    if (safetyBlocked) return;
+    setConcretePoses(getDefaultPlanPoses());
+    setPracticeType('asana');
+    setSelectedGuide(null);
+    setPracticePhase('guide');
+    setPosePhase('list');
+    setCurrentPoseIdx(0);
+    setStep('step6');
+  }, [safetyBlocked]);
+
   return (
     <div className="page-shell ai-teacher-shell">
+      {isEventDemo && (
+        <section className="panel event-demo-hero">
+          <span className="eyebrow">Yoga AI / イベント体験</span>
+          <h2>AI先生を体験してみよう</h2>
+          <p>山のポーズ・呼吸・瞑想をAI先生と一緒に数分で体験できます。</p>
+          <button className="primary-button event-demo-start-btn" onClick={handleEventDemoStart} disabled={safetyBlocked}>
+            {safetyBlocked ? '安全のため現在制限されています' : 'AI先生デモを始める'}
+          </button>
+        </section>
+      )}
       <section className="hero-panel compact-hero ai-teacher-hero">
         <div className="ai-teacher-hero-main">
           <div className="ai-teacher-hero-top-bar">
@@ -1714,10 +1738,13 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   <button className="primary-button practice-save-btn" onClick={handleCompletePractice} disabled={isSavingPractice}>
                     {isSavingPractice ? '保存中…' : '記録して完了する'}
                   </button>
-                  <div className="pose-final-nav">
-                    <button className="ghost-button" onClick={onOpenMyPage}>myYOGAカルテを見る</button>
-                    <button className="ghost-button" onClick={onOpenDiagnosis}>AI診断を受ける</button>
-                    <a className="ghost-button pose-final-line-link" href="https://line.me/R/" target="_blank" rel="noopener noreferrer">LINEで続ける</a>
+                  <div className="pose-final-continue">
+                    <p className="pose-final-line-benefit">今日のヨガやAI先生を、イベントのあともLINEから続けられます。</p>
+                    <a className="primary-button pose-final-line-cta" href="https://line.me/R/" target="_blank" rel="noopener noreferrer">LINEでYoga AIを続ける</a>
+                    <div className="pose-final-nav">
+                      <button className="ghost-button" onClick={onOpenDiagnosis}>AI診断を受ける</button>
+                      <button className="ghost-button" onClick={onOpenMyPage}>{auth.user ? 'myYOGAカルテを見る' : 'ログインしてカルテに残す'}</button>
+                    </div>
                   </div>
                 </div>
               )}
