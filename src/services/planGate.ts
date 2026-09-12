@@ -92,3 +92,32 @@ export function getPracticeEntryGate(input: PracticeEntryGateInput): PracticeEnt
 export function practiceEntryAllows(verdict: PracticeEntryVerdict): boolean {
   return verdict === 'ALLOW_PRACTICE';
 }
+
+// ── Today Context Signature ──
+// Used to detect stale plans when Today Context changes.
+
+export function computeTodayContextSignature(input: {
+  todayCheckResult: 'none' | 'mild' | 'pain' | 'unknown' | null;
+  requestedMode: RequestedMode;
+  selectionResolved: boolean;
+  availableMinutes: number | null;
+  intensityPreference: string | null;
+  mood: string | null;
+}): string {
+  return [
+    input.todayCheckResult ?? 'null',
+    input.requestedMode ?? 'null',
+    String(input.selectionResolved),
+    String(input.availableMinutes ?? 'null'),
+    input.intensityPreference ?? 'null',
+    input.mood ?? 'null',
+  ].join('|');
+}
+
+export function isPlanStale(
+  planSignature: string | undefined,
+  currentSignature: string,
+): boolean {
+  if (!planSignature) return true;
+  return planSignature !== currentSignature;
+}

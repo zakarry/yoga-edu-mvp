@@ -56,6 +56,7 @@ export interface TodayProgram {
   items: ProgramItem[];
   generatedAt: string;
   basedOn: 'diagnosis' | 'history' | 'default';
+  todayContextSignature?: string;
 }
 
 export function loadTodayProgram(): TodayProgram | null {

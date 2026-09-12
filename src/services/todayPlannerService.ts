@@ -42,7 +42,7 @@ function calcGapDays(lastPracticeAt?: string): number | null {
 export function generateTodayPlan(context: TeacherContext): TodayPlan {
   const signals: string[] = [];
   const notes: string[] = [];
-  const items: TodayPlanItem[] = [];
+  let items: TodayPlanItem[] = [];
 
   const { practiceSummary, preferences, sessionIntent, memorySummary, todayContext } = context;
   const requestedMode = todayContext?.requestedMode ?? null;
@@ -204,6 +204,16 @@ export function generateTodayPlan(context: TeacherContext): TodayPlan {
   const totalMinutes = items.reduce((sum, i) => sum + i.minutes, 0);
   const title = `今日の${totalMinutes}分プログラム`;
   const summary = `${primaryType === 'asana' ? 'アーサナ' : primaryType === 'pranayama' ? '呼吸法' : '瞑想'}中心の${totalMinutes}分メニューです。`;
+
+  if (requestedMode === 'breath_meditation' && items.some((i) => i.type === 'asana')) {
+    items = items.filter((i) => i.type !== 'asana');
+    if (items.length === 0) {
+      items = [
+        { type: 'pranayama', name: 'Box Breathing', minutes: Math.max(3, Math.round(targetMinutes * 0.5)) },
+        { type: 'dhyana', name: '1分間マインドフルネス', minutes: Math.max(2, Math.round(targetMinutes * 0.3)) },
+      ];
+    }
+  }
 
   return {
     title,
