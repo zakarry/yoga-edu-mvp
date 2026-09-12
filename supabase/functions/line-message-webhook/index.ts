@@ -254,7 +254,7 @@ Deno.serve(async (req: Request) => {
   const channelSecret = Deno.env.get("LINE_MESSAGING_CHANNEL_SECRET");
   if (!channelSecret) {
     console.error("line-webhook: LINE_MESSAGING_CHANNEL_SECRET not configured");
-    return new Response(JSON.stringify({ error: "server_error" }), { status: 500 });
+    return new Response("OK", { status: 200 });
   }
 
   const rawBody = await req.text();
@@ -265,10 +265,23 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({ error: "invalid_signature" }), { status: 401 });
   }
 
+  let body: { events?: unknown[] };
+  try {
+    body = JSON.parse(rawBody);
+  } catch {
+    return new Response("OK", { status: 200 });
+  }
+
+  const events = body?.events;
+  if (!Array.isArray(events) || events.length === 0) {
+    return new Response("OK", { status: 200 });
+  }
+
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !serviceRoleKey) {
-    return new Response(JSON.stringify({ error: "server_error" }), { status: 500 });
+    console.error("line-webhook: missing supabase env");
+    return new Response("OK", { status: 200 });
   }
 
   const adminClient = createClient(supabaseUrl, serviceRoleKey, {
@@ -276,25 +289,25 @@ Deno.serve(async (req: Request) => {
   });
 
   try {
-    const body = JSON.parse(rawBody);
-    const events = body?.events;
-    if (!Array.isArray(events) || events.length === 0) {
-      return new Response(JSON.stringify({ ok: true }), { status: 200 });
-    }
-
     for (const event of events) {
-      if (event?.type !== "message" || event?.message?.type !== "text") continue;
+      if (typeof event !== "object" || event === null) continue;
+      const ev = event as Record<string, unknown>;
 
-      const lineUserId = event.source?.userId;
-      const replyToken = event.replyToken;
-      const userText = event.message.text ?? "";
+      if (ev.type !== "message") continue;
+
+      const message = ev.message as Record<string, unknown> | undefined;
+      if (!message || message.type !== "text") continue;
+
+      const source = ev.source as Record<string, unknown> | undefined;
+      const lineUserId = typeof source?.userId === "string" ? source.userId : "";
+      const replyToken = typeof ev.replyToken === "string" ? ev.replyToken : "";
+      const userText = typeof message.text === "string" ? message.text : "";
 
       if (!lineUserId || !replyToken) continue;
 
       const safety = isSafetySensitive(userText);
       const intent = classifyIntent(userText);
 
-      // Resolve LINE user → Yoga AI user
       let userId: string | null = null;
       let isLoggedIn = false;
       let membershipTier: string | null = null;
@@ -318,7 +331,6 @@ Deno.serve(async (req: Request) => {
         membershipTier = profile?.membership_tier ?? null;
       }
 
-      // Rate limit
       const rateLimited = await checkRateLimit(adminClient, lineUserId);
       if (rateLimited) {
         await sendLineReply(replyToken, "少し続けて送信されていますね。\n1分ほど時間をおいてから、また送ってください。");
@@ -333,7 +345,6 @@ Deno.serve(async (req: Request) => {
         continue;
       }
 
-      // Log user message
       await adminClient.from("line_ai_messages").insert({
         user_id: userId,
         line_user_id: lineUserId,
@@ -343,7 +354,6 @@ Deno.serve(async (req: Request) => {
         safety_flag: safety,
       });
 
-      // Generate response
       let responseText: string;
 
       if (safety) {
@@ -355,10 +365,8 @@ Deno.serve(async (req: Request) => {
         responseText = getDeterministicResponse(intent, isLoggedIn);
       }
 
-      // Send reply
       await sendLineReply(replyToken, responseText);
 
-      // Log assistant message
       await adminClient.from("line_ai_messages").insert({
         user_id: userId,
         line_user_id: lineUserId,
@@ -369,9 +377,9 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    return new Response("OK", { status: 200 });
   } catch (err) {
     console.error("line-webhook: unhandled error", err);
-    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    return new Response("OK", { status: 200 });
   }
 });
