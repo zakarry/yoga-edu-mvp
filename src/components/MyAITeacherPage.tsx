@@ -854,9 +854,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPracticeType('asana');
     setSelectedGuide(null);
     setPracticePhase('guide');
-    setPosePhase('list');
+    setPosePhase('guide');
     setCurrentPoseIdx(0);
     setStep('step6');
+    setTimeout(() => {
+      poseGuideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
   }, [safetyBlocked]);
 
   return (
