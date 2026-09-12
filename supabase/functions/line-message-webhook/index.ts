@@ -1,4 +1,4 @@
-import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+type SupabaseClient = Awaited<ReturnType<typeof import("npm:@supabase/supabase-js@2.45.4")["createClient"]>>;
 
 const LINE_REPLY_URL = "https://api.line.me/v2/bot/message/reply";
 const LLM_MODEL = Deno.env.get("LLM_MODEL") ?? "gpt-4o-mini";
@@ -196,7 +196,7 @@ async function verifySignature(body: string, signature: string, channelSecret: s
   return expected === signature;
 }
 
-async function checkRateLimit(adminClient: ReturnType<typeof createClient>, lineUserId: string): Promise<boolean> {
+async function checkRateLimit(adminClient: SupabaseClient, lineUserId: string): Promise<boolean> {
   const oneMinuteAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_SECONDS * 1000).toISOString();
   const { count, error } = await adminClient
     .from("line_ai_messages")
@@ -236,6 +236,8 @@ async function sendLineReply(replyToken: string, text: string): Promise<boolean>
 }
 
 Deno.serve(async (req: Request) => {
+  console.log("line-webhook: request received", req.method);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: {
       "Access-Control-Allow-Origin": "*",
@@ -252,6 +254,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const channelSecret = Deno.env.get("LINE_MESSAGING_CHANNEL_SECRET");
+  console.log("line-webhook: secret configured:", !!channelSecret);
   if (!channelSecret) {
     console.error("line-webhook: LINE_MESSAGING_CHANNEL_SECRET missing");
     return new Response(JSON.stringify({ error: "server_configuration_error" }), {
@@ -262,8 +265,10 @@ Deno.serve(async (req: Request) => {
 
   const rawBody = await req.text();
   const signature = req.headers.get("X-Line-Signature") ?? "";
+  console.log("line-webhook: signature present:", signature.length > 0);
 
   const valid = await verifySignature(rawBody, signature, channelSecret);
+  console.log("line-webhook: signature valid:", valid);
   if (!valid) {
     return new Response(JSON.stringify({ error: "invalid_signature" }), { status: 401 });
   }
@@ -272,12 +277,15 @@ Deno.serve(async (req: Request) => {
   try {
     body = JSON.parse(rawBody);
   } catch {
-    return new Response("OK", { status: 200 });
+    console.log("line-webhook: JSON parse failed, returning 200");
+    return new Response("OK", { status: 200, headers: { "Content-Type": "text/plain" } });
   }
 
   const events = body?.events;
+  console.log("line-webhook: events is array:", Array.isArray(events), "length:", Array.isArray(events) ? events.length : "N/A");
   if (!Array.isArray(events) || events.length === 0) {
-    return new Response("OK", { status: 200 });
+    console.log("line-webhook: empty events, returning 200");
+    return new Response("OK", { status: 200, headers: { "Content-Type": "text/plain" } });
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -287,6 +295,7 @@ Deno.serve(async (req: Request) => {
     return new Response("OK", { status: 200 });
   }
 
+  const { createClient } = await import("npm:@supabase/supabase-js@2.45.4");
   const adminClient = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
