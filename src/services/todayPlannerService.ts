@@ -111,18 +111,13 @@ export function generateTodayPlan(context: TeacherContext): TodayPlan {
   secondaryType = remaining[0];
   tertiaryType = remaining[1];
 
-  // Safety: only TODAY's concern/pain shifts the plan — Memory alone does not
-  const todayHasIssue = !!(todayContext?.todayPain);
-  const todayHasMildConcern = !!(todayContext?.todayConcern) && !todayHasIssue;
-  if (todayHasIssue && primaryType === 'asana') {
-    notes.push('今日痛みがあるため、呼吸法または瞑想を中心に構成します（個別治療的ポーズは行いません）');
-    primaryType = 'pranayama';
-    secondaryType = 'dhyana';
-    const remaining2 = allTypes.filter((t) => t !== primaryType && t !== secondaryType);
-    tertiaryType = remaining2[0];
-  } else if (todayHasMildConcern && primaryType === 'asana') {
+  // Safety: "痛みがある" is blocked before plan generation by the UI Safety Gate.
+  // The planner only handles "少し気になる" — gentle load, no therapeutic sequencing.
+  const todayHasMildConcern = !!(todayContext?.todayConcern);
+  if (todayHasMildConcern) {
     notes.push('今日気になる部分があるため、無理のない範囲で構成します（深い可動域や高負荷は避けます）');
-  } else if (recentAsana >= 2 && recentPranayama === 0) {
+  }
+  if (recentAsana >= 2 && recentPranayama === 0) {
     notes.push('最近アーサナが続いているので、呼吸法も少し入れています');
     if (primaryType !== 'pranayama') {
       secondaryType = 'pranayama';

@@ -421,6 +421,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [teacherContext, setTeacherContext] = useState<TeacherContext | null>(null);
   const [todayContext, setTodayContext] = useState<TodayContext>(emptyTodayContext());
   const [showTodayCheck, setShowTodayCheck] = useState(false);
+  const [todayCheckResult, setTodayCheckResult] = useState<'none' | 'mild' | 'pain' | 'unknown' | null>(null);
   const [nextSuggestion, setNextSuggestion] = useState<NextSuggestion | null>(loadNextSuggestion());
   const [showContextSignals, setShowContextSignals] = useState(false);
   const [showExampleGuide, setShowExampleGuide] = useState(false);
@@ -917,7 +918,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               {persona ? '先生を育てる / 設定' : 'AI先生をつくる'}
             </button>
           </div>
-          {showTodayCheck && (() => {
+          {showTodayCheck && todayCheckResult === null && (() => {
             const mem = teacherContext?.memorySummary;
             if (!mem || mem.activeConcerns.length === 0) return null;
             return (
@@ -927,29 +928,69 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   <button className="secondary-button" onClick={() => {
                     const updated = { ...todayContext, todayConcern: null, todayPain: null };
                     setTodayContext(updated);
+                    setTodayCheckResult('none');
                     setShowTodayCheck(false);
                     handleGenerateProgram(updated);
                   }}>今日は気にならない</button>
                   <button className="secondary-button" onClick={() => {
                     const updated = { ...todayContext, todayConcern: '少し気になる', todayPain: null };
                     setTodayContext(updated);
+                    setTodayCheckResult('mild');
                     setShowTodayCheck(false);
                     handleGenerateProgram(updated);
                   }}>少し気になる</button>
                   <button className="secondary-button" onClick={() => {
                     const updated = { ...todayContext, todayPain: '痛みがある', todayConcern: null };
                     setTodayContext(updated);
+                    setTodayCheckResult('pain');
                     setShowTodayCheck(false);
-                    handleGenerateProgram(updated);
                   }}>痛みがある</button>
                   <button className="ghost-button" onClick={() => {
+                    setTodayCheckResult('unknown');
                     setShowTodayCheck(false);
-                    handleGenerateProgram();
                   }}>答えたくない</button>
                 </div>
               </div>
             );
           })()}
+          {todayCheckResult === 'pain' && (
+            <div className="ai-teacher-today-check ai-teacher-safety-gate">
+              <p>今日は痛みがあるとのことなので、AI先生から個別の身体判断やポーズ提案は行いません。無理に実践せず、必要に応じて医療専門家や信頼できる指導者に相談してください。</p>
+              <div className="ai-teacher-today-check-options">
+                <button className="secondary-button" onClick={() => {
+                  setTodayCheckResult(null);
+                  setStep('step5');
+                }}>一般的な呼吸・瞑想について見る</button>
+                <button className="ghost-button" onClick={() => {
+                  setTodayCheckResult(null);
+                  setStep('home');
+                }}>今日は実践しない</button>
+              </div>
+            </div>
+          )}
+          {todayCheckResult === 'unknown' && (
+            <div className="ai-teacher-today-check">
+              <p>わかりました。身体の状態を前提にせず、一般的な短い実践をご案内できます。</p>
+              <div className="ai-teacher-today-check-options">
+                <button className="secondary-button" onClick={() => {
+                  const updated = { ...todayContext, todayConcern: null, todayPain: null };
+                  setTodayContext(updated);
+                  setTodayCheckResult(null);
+                  handleGenerateProgram(updated);
+                }}>一般的な短い実践</button>
+                <button className="secondary-button" onClick={() => {
+                  const updated = { ...todayContext, requestedType: 'pranayama' as const, todayConcern: null, todayPain: null };
+                  setTodayContext(updated);
+                  setTodayCheckResult(null);
+                  handleGenerateProgram(updated);
+                }}>呼吸・瞑想中心</button>
+                <button className="ghost-button" onClick={() => {
+                  setTodayCheckResult(null);
+                  setStep('home');
+                }}>今日はやめておく</button>
+              </div>
+            </div>
+          )}
         </div>
         <div className="ai-teacher-hero-kpis">
           <div className="ai-teacher-hero-kpi">
