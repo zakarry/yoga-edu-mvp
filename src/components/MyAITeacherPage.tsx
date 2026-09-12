@@ -854,7 +854,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             <button className="ghost-button ai-teacher-back-btn" onClick={onBackHome}>TOPへ戻る</button>
           </div>
           <h2>あなたのAI先生</h2>
-          <p>今日のあなたに合わせて、ヨガ・呼吸・瞑想をサポート。</p>
+          <p>AI先生が、今日の状態に合わせてヨガ・呼吸・瞑想を一緒にガイドします。</p>
           {persona && (
             <div className="ai-teacher-hero-teacher">
               <span className="ai-teacher-hero-avatar">{persona.avatar}</span>
@@ -938,8 +938,11 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             <button className="primary-button" onClick={handleGenerateProgram} disabled={safetyBlocked}>
               {safetyBlocked ? '安全のため現在プログラム生成を制限しています' : '今日のプログラムを生成する'}
             </button>
+            <button className="secondary-button" onClick={() => { setConcretePoses(getDefaultPlanPoses()); setPracticeType('asana'); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); }} disabled={safetyBlocked}>
+              デモをすぐ始める
+            </button>
             {!persona && (
-              <button className="secondary-button" onClick={() => setStep('step4')}>AI先生をつくる</button>
+              <button className="ghost-button" onClick={() => setStep('step4')}>AI先生をつくる</button>
             )}
           </div>
           {safetyCautioned && !safetyBlocked && (
@@ -1265,6 +1268,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       {step === 'step6' && (
         <section className="panel ai-teacher-step-panel">
           <h3>STEP 6 — 実践AI先生</h3>
+          <p className="ai-teacher-step-intro">お手本を見てから、順番に実践します。全部終わったら記録しましょう。</p>
           {safetyBlocked && (
             <p className="ai-teacher-safety-note safety-blocked">
               安全のため実践を開始できません。専門家にご相談ください。
@@ -1710,6 +1714,11 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   <button className="primary-button practice-save-btn" onClick={handleCompletePractice} disabled={isSavingPractice}>
                     {isSavingPractice ? '保存中…' : '記録して完了する'}
                   </button>
+                  <div className="pose-final-nav">
+                    <button className="ghost-button" onClick={onOpenMyPage}>myYOGAカルテを見る</button>
+                    <button className="ghost-button" onClick={onOpenDiagnosis}>AI診断を受ける</button>
+                    <a className="ghost-button pose-final-line-link" href="https://line.me/R/" target="_blank" rel="noopener noreferrer">LINEで続ける</a>
+                  </div>
                 </div>
               )}
             </div>
