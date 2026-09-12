@@ -50,6 +50,7 @@ export interface ProgramItem {
   name: string;
   type: 'asana' | 'pranayama' | 'dhyana';
   durationMin: number;
+  practiceId?: string;
 }
 
 export interface TodayProgram {

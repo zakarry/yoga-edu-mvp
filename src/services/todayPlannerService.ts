@@ -1,9 +1,11 @@
 import type { TeacherContext, PracticeType } from './teacherContextService';
+import { PRACTICE_IDS_BY_TYPE, GENTLE_PRACTICE_IDS_BY_TYPE, getPoseById } from '../lib/poseLibrary';
 
 export interface TodayPlanItem {
   type: PracticeType;
   name: string;
   minutes: number;
+  practiceId?: string;
   reason?: string;
   knowledgeMasterId?: string;
   knowledgeTitle?: string;
@@ -19,18 +21,16 @@ export interface TodayPlan {
   sourceSignals: string[];
 }
 
-const PRACTICE_NAMES: Record<PracticeType, string[]> = {
-  asana: ['やさしいストレッチ', 'サンフロウ', '山のポーズから立ち木のポーズ', '初心者向けアーサナ'],
-  pranayama: ['ボックスブリージング', '腹式呼吸', '交替鼻呼吸'],
-  dhyana: ['1分間マインドフルネス', 'ボディスキャン瞑想', '呼吸の観察'],
-};
+function pickPracticeId(type: PracticeType, gentle: boolean, index: number): string {
+  const pool = gentle
+    ? (GENTLE_PRACTICE_IDS_BY_TYPE[type] ?? PRACTICE_IDS_BY_TYPE[type])
+    : PRACTICE_IDS_BY_TYPE[type];
+  return pool[index % pool.length];
+}
 
-function pickName(type: PracticeType, preferred?: string): string {
-  if (preferred) {
-    const found = PRACTICE_NAMES[type].find((n) => n.includes(preferred));
-    if (found) return found;
-  }
-  return PRACTICE_NAMES[type][0];
+function practiceName(id: string): string {
+  const pose = getPoseById(id);
+  return pose?.name ?? id;
 }
 
 function calcGapDays(lastPracticeAt?: string): number | null {
@@ -151,41 +151,65 @@ export function generateTodayPlan(context: TeacherContext): TodayPlan {
     notes.push('呼吸法をよく選ぶため、候補の先頭に近づけています');
   }
 
-  const primaryMin = Math.max(3, Math.round(targetMinutes * 0.5));
-  const secondaryMin = Math.max(2, Math.round(targetMinutes * 0.3));
+  const isGentle = requestedMode === 'gentle' || (!!todayContext?.todayConcern && requestedMode !== 'breath_meditation');
+  const gentleMul = isGentle ? 0.7 : 1;
+
+  const primaryMin = Math.max(isGentle ? 2 : 3, Math.round(targetMinutes * 0.5 * gentleMul));
+  const secondaryMin = Math.max(2, Math.round(targetMinutes * 0.3 * gentleMul));
   const tertiaryMin = Math.max(1, targetMinutes - primaryMin - secondaryMin);
 
   if (requestedMode === 'breath_meditation') {
-    items.push({ type: 'pranayama', name: pickName('pranayama'), minutes: Math.max(3, Math.round(targetMinutes * 0.5)) });
-    items.push({ type: 'dhyana', name: pickName('dhyana'), minutes: Math.max(2, Math.round(targetMinutes * 0.3)) });
+    const breathId = pickPracticeId('pranayama', false, 0);
+    items.push({ type: 'pranayama', name: practiceName(breathId), minutes: Math.max(3, Math.round(targetMinutes * 0.5)), practiceId: breathId });
+    const medId = pickPracticeId('dhyana', false, 0);
+    items.push({ type: 'dhyana', name: practiceName(medId), minutes: Math.max(2, Math.round(targetMinutes * 0.3)), practiceId: medId });
     const breathRemainder = Math.max(1, targetMinutes - items[0].minutes - items[1].minutes);
     if (breathRemainder > 0) {
-      items.push({ type: 'pranayama', name: '腹式呼吸', minutes: breathRemainder });
+      const breath2Id = pickPracticeId('pranayama', false, 1);
+      items.push({ type: 'pranayama', name: practiceName(breath2Id), minutes: breathRemainder, practiceId: breath2Id });
     }
   } else if (requestedMode === 'general_short') {
-    items.push({ type: 'asana', name: '山のポーズ', minutes: Math.max(2, Math.round(targetMinutes * 0.4)) });
-    items.push({ type: 'pranayama', name: 'やさしい呼吸', minutes: Math.max(2, Math.round(targetMinutes * 0.3)) });
+    const asanaId = pickPracticeId('asana', false, 0);
+    items.push({ type: 'asana', name: practiceName(asanaId), minutes: Math.max(2, Math.round(targetMinutes * 0.4)), practiceId: asanaId });
+    const breathId = pickPracticeId('pranayama', false, 0);
+    items.push({ type: 'pranayama', name: practiceName(breathId), minutes: Math.max(2, Math.round(targetMinutes * 0.3)), practiceId: breathId });
     const shortRemainder = Math.max(1, targetMinutes - items[0].minutes - items[1].minutes);
     if (shortRemainder > 0) {
-      items.push({ type: 'dhyana', name: '短い瞑想', minutes: shortRemainder });
+      const medId = pickPracticeId('dhyana', false, 0);
+      items.push({ type: 'dhyana', name: practiceName(medId), minutes: shortRemainder, practiceId: medId });
     }
   } else {
+    const pId = pickPracticeId(primaryType, isGentle, 0);
     items.push({
       type: primaryType,
-      name: pickName(primaryType, requestedStyle ?? undefined),
+      name: practiceName(pId),
       minutes: primaryMin,
+      practiceId: pId,
       reason: primaryType === requestedType ? 'ご希望の実践タイプです' : undefined,
     });
+    const sId = pickPracticeId(secondaryType, isGentle, 0);
     items.push({
       type: secondaryType,
-      name: pickName(secondaryType),
+      name: practiceName(sId),
       minutes: secondaryMin,
+      practiceId: sId,
     });
     if (tertiaryMin > 0) {
+      const tId = pickPracticeId(tertiaryType, isGentle, 0);
       items.push({
         type: tertiaryType,
-        name: pickName(tertiaryType),
+        name: practiceName(tId),
         minutes: tertiaryMin,
+        practiceId: tId,
+      });
+    }
+    if (isGentle && primaryType === 'asana') {
+      const restId = pickPracticeId('asana', true, 3);
+      items.push({
+        type: 'asana',
+        name: practiceName(restId),
+        minutes: Math.max(2, Math.round(targetMinutes * 0.2)),
+        practiceId: restId,
       });
     }
   }
@@ -208,9 +232,11 @@ export function generateTodayPlan(context: TeacherContext): TodayPlan {
   if (requestedMode === 'breath_meditation' && items.some((i) => i.type === 'asana')) {
     items = items.filter((i) => i.type !== 'asana');
     if (items.length === 0) {
+      const fbBreathId = pickPracticeId('pranayama', false, 0);
+      const fbMedId = pickPracticeId('dhyana', false, 0);
       items = [
-        { type: 'pranayama', name: 'Box Breathing', minutes: Math.max(3, Math.round(targetMinutes * 0.5)) },
-        { type: 'dhyana', name: '1分間マインドフルネス', minutes: Math.max(2, Math.round(targetMinutes * 0.3)) },
+        { type: 'pranayama', name: practiceName(fbBreathId), minutes: Math.max(3, Math.round(targetMinutes * 0.5)), practiceId: fbBreathId },
+        { type: 'dhyana', name: practiceName(fbMedId), minutes: Math.max(2, Math.round(targetMinutes * 0.3)), practiceId: fbMedId },
       ];
     }
   }

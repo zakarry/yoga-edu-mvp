@@ -268,6 +268,22 @@ export function resolveConcretePoses(name: string): ConcretePose[] {
   return [];
 }
 
+export function getPoseById(id: string): ConcretePose | undefined {
+  return POSE_BY_ID[id];
+}
+
+export const PRACTICE_IDS_BY_TYPE: Record<string, string[]> = {
+  asana: ['tadasana', 'catcow', 'uttanasana', 'vrksasana', 'balasana', 'savasana', 'paschimottanasana'],
+  pranayama: ['box-breathing', 'abdominal-breathing'],
+  dhyana: ['mindfulness-1min'],
+};
+
+export const GENTLE_PRACTICE_IDS_BY_TYPE: Record<string, string[]> = {
+  asana: ['tadasana', 'catcow', 'balasana', 'savasana'],
+  pranayama: ['abdominal-breathing', 'box-breathing'],
+  dhyana: ['mindfulness-1min'],
+};
+
 export function getDefaultPlanPoses(): ConcretePose[] {
   return [
     POSE_BY_ID['tadasana'],
