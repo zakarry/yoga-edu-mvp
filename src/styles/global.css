@@ -7729,7 +7729,7 @@ html, body {
 
 .pose-guide-image {
   max-width: 100%;
-  max-height: 240px;
+  max-height: 340px;
   object-fit: contain;
   border-radius: 12px;
   background: rgba(220, 236, 225, 0.15);
@@ -7893,7 +7893,7 @@ html, body {
   }
 
   .pose-guide-image {
-    max-height: 200px;
+    max-height: 300px;
   }
 
   .pose-guide-detail-row {
@@ -7956,8 +7956,8 @@ html, body {
 }
 
 .pose-stage-image {
-  width: 100px;
-  height: 100px;
+  width: 140px;
+  height: 140px;
   object-fit: contain;
   border-radius: 8px;
   background: rgba(220, 236, 225, 0.2);
@@ -8013,8 +8013,8 @@ html, body {
   }
 
   .pose-stage-image {
-    width: 72px;
-    height: 72px;
+    width: 110px;
+    height: 110px;
   }
 
   .pose-stage-info strong {

@@ -1377,7 +1377,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           )}
 
           {/* Phase: Guide — show visual guide for current pose */}
-          {posePhase === 'guide' && !safetyBlocked && concretePoses[currentPoseIdx] && (
+          {posePhase === 'guide' && practicePhase !== 'done' && !safetyBlocked && concretePoses[currentPoseIdx] && (
             <div ref={poseGuideRef} className="pose-guide-section">
               {/* Progress indicator */}
               <div className="pose-progress-bar">
