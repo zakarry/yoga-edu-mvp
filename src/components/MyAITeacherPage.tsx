@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '../lib/auth';
 import { savePracticeLog, getPracticeLogs, type PracticeLog } from '../services/practiceLogService';
 import {
@@ -373,7 +373,7 @@ function buildLocalContextFast(growth: AITeacherGrowth, sessionIntent?: Conversa
 // ── Component ──
 
 function resolvePosesFromProgram(prog: TodayProgram | null): ConcretePose[] {
-  if (!prog || !prog.items || prog.items.length === 0) return getDefaultPlanPoses();
+  if (!prog || !prog.items || prog.items.length === 0) return [];
   const poses: ConcretePose[] = [];
   for (const item of prog.items) {
     const resolved = resolveConcretePoses(item.name);
@@ -381,7 +381,6 @@ function resolvePosesFromProgram(prog: TodayProgram | null): ConcretePose[] {
       poses.push(...resolved);
     }
   }
-  if (poses.length === 0) return getDefaultPlanPoses();
   return poses;
 }
 
@@ -429,7 +428,11 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [nextSuggestion, setNextSuggestion] = useState<NextSuggestion | null>(loadNextSuggestion());
   const [showContextSignals, setShowContextSignals] = useState(false);
   const [showExampleGuide, setShowExampleGuide] = useState(false);
-  const [concretePoses, setConcretePoses] = useState<ConcretePose[]>([]);
+  const [concretePosesOverride, setConcretePosesOverride] = useState<ConcretePose[] | null>(null);
+  const concretePoses = useMemo(() => {
+    if (concretePosesOverride) return concretePosesOverride;
+    return resolvePosesFromProgram(program);
+  }, [concretePosesOverride, program]);
   const [currentPoseIdx, setCurrentPoseIdx] = useState(0);
   const [posePhase, setPosePhase] = useState<'list' | 'guide' | 'active' | 'done'>('list');
   const [poseElapsedTotal, setPoseElapsedTotal] = useState(0);
@@ -508,7 +511,6 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       });
       if (saved.todayContextSignature && saved.todayContextSignature === initialSig) {
         setProgram(saved);
-        setConcretePoses(resolvePosesFromProgram(saved));
       } else {
         try { localStorage.removeItem('todayYoga'); } catch { /* ignore */ }
       }
@@ -603,7 +605,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
   const invalidatePlan = useCallback(() => {
     setProgram(null);
-    setConcretePoses([]);
+    setConcretePosesOverride(null);
     setCurrentPoseIdx(0);
     setPosePhase('list');
     setPracticePhase('guide');
@@ -623,12 +625,6 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       todayCheckRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 80);
   }, []);
-
-  useEffect(() => {
-    if (step === 'step6' && concretePoses.length === 0 && !safetyBlocked && !practiceEntryBlocked) {
-      setConcretePoses(getDefaultPlanPoses());
-    }
-  }, [step, concretePoses.length, safetyBlocked, practiceEntryBlocked]);
 
   const handleGenerateProgram = useCallback(async (overrideToday?: TodayContext) => {
     if (safetyBlocked) return;
@@ -684,8 +680,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     };
     setProgram(newProgram);
     saveTodayProgram(newProgram);
-    const poses = resolvePosesFromProgram(newProgram);
-    setConcretePoses(poses);
+    setConcretePosesOverride(null);
     setCurrentPoseIdx(0);
     setPosePhase('list');
     setStep('step2');
@@ -952,7 +947,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
   const handleEventDemoStart = useCallback(() => {
     if (safetyBlocked || !practiceEntryAllows(practiceEntryVerdict)) return;
-    setConcretePoses(getDefaultPlanPoses());
+    setConcretePosesOverride(getDefaultPlanPoses());
     setPracticeType('asana');
     setSelectedGuide(null);
     setPracticePhase('guide');
@@ -1169,7 +1164,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             {planGateVerdict === 'BLOCK_SAFETY' && (
               <span className="ai-teacher-safety-gate-text">安全のため実践を制限しています</span>
             )}
-            <button className="secondary-button" onClick={() => { if (!practiceEntryBlocked) { setConcretePoses(getDefaultPlanPoses()); setPracticeType('asana'); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); } }} disabled={safetyBlocked || practiceEntryBlocked || (memoryConcerns.length > 0 && (planIsStale || !program))}>
+            <button className="secondary-button" onClick={() => { if (!practiceEntryBlocked) { setConcretePosesOverride(getDefaultPlanPoses()); setPracticeType('asana'); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); } }} disabled={safetyBlocked || practiceEntryBlocked || (memoryConcerns.length > 0 && (planIsStale || !program))}>
               デモをすぐ始める
             </button>
             {!persona && (
