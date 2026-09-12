@@ -297,6 +297,17 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
               <p className="result-section-copy">
                 初心者でも見やすいように、身体・心・呼吸・理解・実践の5つにまとめています。より細かな8項目の見直しはマイページで確認できます。
               </p>
+              <details className="result-score-explanation">
+                <summary>このスコアは？</summary>
+                <div className="result-score-explanation-body">
+                  <p>
+                    あなたが診断で入力した情報（ヨガ経験、運動習慣、目標、好きなスタイル、参加方法、体の状態など）をもとに、8つの項目（柔軟性、筋力・安定、姿勢バランス、ストレス管理、呼吸への意識、ヨガ理解、実践頻度、生活リズム）を算出し、それらを「身体・心・呼吸・理解・実践」の5つにまとめています。
+                  </p>
+                  <p>
+                    プロフィール登録だけでなく、診断で答えたすべての質問がスコアに反映されます。実践記録が増えることで、より精度の高い提案につながります。
+                  </p>
+                </div>
+              </details>
             </div>
           </div>
 

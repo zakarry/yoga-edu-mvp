@@ -20,6 +20,7 @@ import { attachKnowledgeToTodayPlan, fetchKnowledgeExplanation, type TodayPlanWi
 import type { KnowledgeExplanation } from '../services/teacherKnowledgeService';
 import { runLLMRequestDryRun, type DryRunResult } from '../services/llmRequestDryRun';
 import type { LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
+import { resolveConcretePoses, getDefaultPlanPoses, type ConcretePose } from '../lib/poseLibrary';
 
 interface MyAITeacherPageProps {
   onBackHome: () => void;
@@ -76,6 +77,20 @@ const CAMERA_GUIDE: Record<LangCode, string> = {
   en: 'Place your phone so your whole body is visible.',
   zh: '请把手机放在能拍到全身的位置。',
   ko: '전신이 화면에 들어오도록 휴대폰을 놓아 주세요.',
+};
+
+const CAMERA_TOGGLE_LABEL: Record<LangCode, { on: string; off: string }> = {
+  ja: { on: '自分の動きを画面で確認する', off: '画面を閉じる' },
+  en: { on: 'Check your movement on screen', off: 'Close screen' },
+  zh: { on: '在画面上确认自己的动作', off: '关闭画面' },
+  ko: { on: '화면에서 자신의 움직임 확인하기', off: '화면 닫기' },
+};
+
+const CAMERA_DISCLAIMER: Record<LangCode, string> = {
+  ja: '※AI先生はカメラ映像から姿勢の診断・採点は行いません。自分の動きを確認するための鏡のような機能です。',
+  en: '※AI Teacher does not diagnose or score your posture from camera. It is like a mirror to check your own movement.',
+  zh: '※AI老师不会通过摄像头诊断或评分您的姿势。它只是确认自己动作的镜子功能。',
+  ko: '※AI 선생님은 카메라 영상에서 자세를 진단하거나 채점하지 않습니다. 자신의 움직임을 확인하기 위한 거울 같은 기능입니다.',
 };
 
 const PRACTICE_START_GUIDE: Record<LangCode, string> = {
@@ -187,12 +202,13 @@ const PRACTICE_GUIDES: Record<'pranayama' | 'dhyana' | 'asana', PracticeGuide[]>
     {
       id: 'today-plan-asana',
       name: '今日のアーサナ',
-      purpose: 'Today Planで安全に選ばれたポーズを実践します',
+      purpose: '今日のプログラムで選ばれたポーズを順番に実践します',
       steps: [
-        'Today Planのポーズを確認する',
-        '各ポーズの指示に従ってゆっくり動く',
+        '下に表示されている今日のポーズを確認する',
+        '各ポーズのお手本を見てから、ゆっくり動く',
         '無理のない範囲で行う',
         '呼吸と動きを合わせる',
+        '全ポーズ終了後、記録画面へ進む',
       ],
       estimate: '5〜10分',
       defaultDuration: 10,
@@ -350,6 +366,19 @@ function buildLocalContextFast(growth: AITeacherGrowth, sessionIntent?: Conversa
 
 // ── Component ──
 
+function resolvePosesFromProgram(prog: TodayProgram | null): ConcretePose[] {
+  if (!prog || !prog.items || prog.items.length === 0) return getDefaultPlanPoses();
+  const poses: ConcretePose[] = [];
+  for (const item of prog.items) {
+    const resolved = resolveConcretePoses(item.name);
+    if (resolved.length > 0) {
+      poses.push(...resolved);
+    }
+  }
+  if (poses.length === 0) return getDefaultPlanPoses();
+  return poses;
+}
+
 export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onOpenProYoga, latestDiagnosis, initialMinutes }: MyAITeacherPageProps) {
   const auth = useAuth();
   const [step, setStep] = useState<StepId>('home');
@@ -387,6 +416,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [teacherContext, setTeacherContext] = useState<TeacherContext | null>(null);
   const [nextSuggestion, setNextSuggestion] = useState<NextSuggestion | null>(loadNextSuggestion());
   const [showContextSignals, setShowContextSignals] = useState(false);
+  const [showExampleGuide, setShowExampleGuide] = useState(false);
+  const [concretePoses, setConcretePoses] = useState<ConcretePose[]>([]);
+  const [currentPoseIdx, setCurrentPoseIdx] = useState(0);
+  const [posePhase, setPosePhase] = useState<'list' | 'guide' | 'active' | 'done'>('list');
   const [showMemorySummary, setShowMemorySummary] = useState(false);
   const [dryRunInput, setDryRunInput] = useState('');
   const [dryRunResult, setDryRunResult] = useState<DryRunResult | null>(null);
@@ -437,6 +470,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       setFormTeachingLang(p.teachingLanguage);
     }
     setProgram(loadTodayProgram());
+    const saved = loadTodayProgram();
+    if (saved) {
+      setConcretePoses(resolvePosesFromProgram(saved));
+    }
   }, []);
 
   // Demo feedback rotation during active practice (adapted by prefs)
@@ -493,6 +530,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const safetyBlocked = isSafetyBlocked(latestDiagnosis?.safety_state) || sessionSafetyBlocked;
   const safetyCautioned = isSafetyCautioned(latestDiagnosis?.safety_state);
 
+  useEffect(() => {
+    if (step === 'step6' && concretePoses.length === 0 && !safetyBlocked) {
+      setConcretePoses(getDefaultPlanPoses());
+    }
+  }, [step, concretePoses.length, safetyBlocked]);
+
   const handleGenerateProgram = useCallback(async () => {
     if (safetyBlocked) return;
     const ctx = await buildTeacherContext(auth.user?.id ?? null, growth, conversationContext);
@@ -536,6 +579,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     };
     setProgram(newProgram);
     saveTodayProgram(newProgram);
+    const poses = resolvePosesFromProgram(newProgram);
+    setConcretePoses(poses);
+    setCurrentPoseIdx(0);
+    setPosePhase('list');
     setStep('step2');
   }, [safetyBlocked, auth.user, growth, conversationContext, testPlanMode, testPlanCompositeMode]);
 
@@ -678,6 +725,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPracticeAborted(true);
     setPracticeActive(false);
     setPracticePhase('guide');
+    setPosePhase('list');
     setSelectedGuide(null);
     setPracticeType(null);
     setMoodBefore('');
@@ -762,6 +810,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPracticeNote('');
     setSelectedGuide(null);
     setPracticePhase('guide');
+    setPosePhase('list');
     setTimerRunning(false);
     setTimerPhaseIdx(0);
     setTimerRound(1);
@@ -1200,7 +1249,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         </section>
       )}
 
-      {/* STEP 6: Practice with camera */}
+      {/* STEP 6: Practice with today's plan and visual guides */}
       {step === 'step6' && (
         <section className="panel ai-teacher-step-panel">
           <h3>STEP 6 — 実践AI先生</h3>
@@ -1210,95 +1259,262 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             </p>
           )}
 
-          {/* Phase: Guide — select practice type and guide */}
-          {practicePhase === 'guide' && (
-            <div className="practice-guide-section">
-              <div className="practice-type-selector">
-                <label>実践の種類</label>
-                <div className="chip-grid">
-                  {(['pranayama', 'dhyana', 'asana'] as const).map((pt) => (
-                    <button
-                      key={pt}
-                      className={`select-chip ${practiceType === pt ? 'active' : ''}`}
-                      onClick={() => {
-                        setPracticeType(pt);
-                        setSelectedGuide(null);
-                      }}
-                    >
-                      {pt === 'pranayama' ? '呼吸法' : pt === 'dhyana' ? '瞑想' : 'アーサナ'}
-                    </button>
+          {/* Camera disclaimer — always visible */}
+          <div className="ai-teacher-camera-disclaimer">
+            <p>
+              ※カメラは自分の動きを確認するための鏡機能です。AI先生は姿勢の診断・採点・安全判定は行いません。
+            </p>
+          </div>
+
+          {/* Phase: List — show all concrete poses */}
+          {posePhase === 'list' && !safetyBlocked && (
+            <div className="today-plan-inline-display">
+              <div className="today-plan-inline-header">
+                <h4>今日のプログラム</h4>
+                {concretePoses.length > 0 && (
+                  <span className="pose-progress-text">{concretePoses.length}つの実践</span>
+                )}
+              </div>
+
+              {concretePoses.length === 0 ? (
+                <div className="today-plan-empty">
+                  <p>プログラムがまだありません。</p>
+                  <button className="primary-button" onClick={handleGenerateProgram} disabled={safetyBlocked}>
+                    プログラムを生成する
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <ol className="today-plan-pose-list">
+                    {concretePoses.map((pose, idx) => (
+                      <li key={idx} className="today-plan-pose-card">
+                        <div className="today-plan-pose-card-header">
+                          <span className="today-plan-pose-number">{idx + 1}</span>
+                          <span className={`type-pill ${pose.type}`}>
+                            {pose.type === 'asana' ? 'アーサナ' : pose.type === 'pranayama' ? '呼吸法' : '瞑想'}
+                          </span>
+                        </div>
+                        <div className="today-plan-pose-visual">
+                          <img src={pose.image} alt={pose.name} className="today-plan-pose-thumb" loading="lazy" />
+                          <div className="today-plan-pose-info">
+                            <strong className="today-plan-pose-name">{pose.name}</strong>
+                            {pose.sanskrit && (
+                              <span className="today-plan-pose-sanskrit">{pose.sanskrit}</span>
+                            )}
+                            <span className="today-plan-pose-duration">目安：{pose.durationLabel}</span>
+                          </div>
+                        </div>
+                        <button
+                          className="primary-button today-plan-pose-start-btn"
+                          onClick={() => {
+                            setCurrentPoseIdx(idx);
+                            setPosePhase('guide');
+                          }}
+                        >
+                          このポーズのお手本を見る
+                        </button>
+                      </li>
+                    ))}
+                  </ol>
+
+                  <button
+                    className="primary-button today-plan-start-all-btn"
+                    onClick={() => {
+                      setCurrentPoseIdx(0);
+                      setPosePhase('guide');
+                    }}
+                  >
+                    最初から順番に実践する
+                  </button>
+
+                  {/* Program basis */}
+                  {todayPlan && todayPlan.sourceSignals.length > 0 && (
+                    <div className="ai-teacher-program-basis">
+                      <button
+                        className="ai-teacher-collapse-toggle"
+                        onClick={() => setShowContextSignals((v) => !v)}
+                      >
+                        このプログラムについて {showContextSignals ? '▲' : '▼'}
+                      </button>
+                      {showContextSignals && (
+                        <>
+                          <ul className="ai-teacher-signal-list">
+                            {todayPlan.sourceSignals.map((s, idx) => <li key={idx}>{s}</li>)}
+                          </ul>
+                          {todayPlan.adaptationNotes.length > 0 && (
+                            <div className="ai-teacher-plan-reasons">
+                              <h5>なぜこのプログラム？</h5>
+                              <ul>
+                                {todayPlan.adaptationNotes.map((note, idx) => <li key={idx}>{note}</li>)}
+                              </ul>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Phase: Guide — show visual guide for current pose */}
+          {posePhase === 'guide' && !safetyBlocked && concretePoses[currentPoseIdx] && (
+            <div className="pose-guide-section">
+              {/* Progress indicator */}
+              <div className="pose-progress-bar">
+                <span className="pose-progress-current">{currentPoseIdx + 1} / {concretePoses.length}</span>
+                <div className="pose-progress-dots">
+                  {concretePoses.map((_, idx) => (
+                    <span
+                      key={idx}
+                      className={`pose-progress-dot ${idx === currentPoseIdx ? 'active' : ''} ${idx < currentPoseIdx ? 'done' : ''}`}
+                    />
                   ))}
                 </div>
               </div>
 
-              {practiceType && !safetyBlocked && (
-                <div className="practice-guide-list">
-                  <h4>今日の{practiceType === 'pranayama' ? '呼吸法' : practiceType === 'dhyana' ? '瞑想' : 'アーサナ'}</h4>
-                  {getGuidesForType(practiceType).map((g) => (
-                    <button
-                      key={g.id}
-                      className={`practice-guide-card ${selectedGuide?.id === g.id ? 'selected' : ''}`}
-                      onClick={() => { setSelectedGuide(g); setPracticeDuration(g.defaultDuration); }}
-                    >
-                      <strong>{g.name}</strong>
-                      <span className="practice-guide-purpose">{g.purpose}</span>
-                      <span className="practice-guide-estimate">目安: {g.estimate}</span>
-                    </button>
-                  ))}
+              <div className="pose-guide-card">
+                <div className="pose-guide-header">
+                  <h4>{concretePoses[currentPoseIdx].name}</h4>
+                  {concretePoses[currentPoseIdx].sanskrit && (
+                    <span className="pose-guide-sanskrit">{concretePoses[currentPoseIdx].sanskrit}</span>
+                  )}
                 </div>
-              )}
 
-              {selectedGuide && (
-                <div className="practice-guide-detail">
-                  <h4>{selectedGuide.name}</h4>
-                  <p className="practice-guide-purpose">{selectedGuide.purpose}</p>
-                  <div className="practice-guide-steps">
-                    <strong>手順</strong>
-                    <ol>
-                      {selectedGuide.steps.map((s, i) => (
-                        <li key={i}>{s}</li>
-                      ))}
-                    </ol>
+                <div className="pose-guide-image-wrap">
+                  <img
+                    src={concretePoses[currentPoseIdx].image}
+                    alt={concretePoses[currentPoseIdx].name}
+                    className="pose-guide-image"
+                  />
+                </div>
+
+                <div className="pose-guide-details">
+                  <div className="pose-guide-detail-row">
+                    <strong>開始姿勢</strong>
+                    <p>{concretePoses[currentPoseIdx].startPose}</p>
                   </div>
-                  <div className="practice-guide-estimate-row">
-                    <span>目安: {selectedGuide.estimate}</span>
+                  <div className="pose-guide-detail-row">
+                    <strong>動き方</strong>
+                    <p>{concretePoses[currentPoseIdx].movement}</p>
                   </div>
+                  <div className="pose-guide-detail-row">
+                    <strong>呼吸</strong>
+                    <p>{concretePoses[currentPoseIdx].breathing}</p>
+                  </div>
+                  <div className="pose-guide-detail-row">
+                    <strong>目安時間</strong>
+                    <p>{concretePoses[currentPoseIdx].durationLabel}</p>
+                  </div>
+                  <div className="pose-guide-detail-row pose-caution-row">
+                    <strong>注意</strong>
+                    <p>{concretePoses[currentPoseIdx].caution}</p>
+                  </div>
+                </div>
+
+                {/* Knowledge link if available */}
+                {(() => {
+                  const planItem = todayPlan?.items.find(
+                    (i) => i.knowledgeMasterId && concretePoses[currentPoseIdx].name.includes(i.name)
+                  );
+                  if (auth.user && planItem?.knowledgeMasterId) {
+                    return (
+                      <button
+                        className="knowledge-link-button"
+                        onClick={async () => {
+                          if (!planItem?.knowledgeMasterId) return;
+                          setKnowledgeLoading(true);
+                          setKnowledgeExplanation(null);
+                          const entry = await fetchKnowledgeExplanation(planItem.knowledgeMasterId);
+                          setKnowledgeExplanation(entry);
+                          setKnowledgeLoading(false);
+                        }}
+                      >
+                        詳しく知る
+                      </button>
+                    );
+                  }
+                  return null;
+                })()}
+
+                <div className="pose-guide-actions">
                   <button
-                    className="primary-button practice-start-btn"
+                    className="ghost-button pose-guide-back-btn"
+                    onClick={() => setPosePhase('list')}
+                  >
+                    一覧に戻る
+                  </button>
+                  <button
+                    className="primary-button pose-guide-start-btn"
                     onClick={() => {
-                      if (safetyBlocked) return;
+                      setPracticeType(concretePoses[currentPoseIdx].type);
+                      setPracticeDuration(concretePoses[currentPoseIdx].defaultMinutes);
                       setPracticePhase('active');
                       setPracticeActive(true);
                       setSessionStartedAt(Date.now());
                       setPracticeAborted(false);
                       setPracticeSessionId(crypto.randomUUID());
-                      if (selectedGuide.hasTimer) {
-                        setTimerRunning(true);
-                        setTimerPhaseIdx(0);
-                        setTimerRound(1);
+                      setTimerRunning(true);
+                      if (concretePoses[currentPoseIdx].id === 'box-breathing') {
+                        const guide = PRACTICE_GUIDES.pranayama.find((g) => g.id === 'box-breathing');
+                        if (guide) {
+                          setSelectedGuide(guide);
+                          setTimerPhaseIdx(0);
+                          setTimerRound(1);
+                        } else {
+                          setSimpleTimerRemaining(concretePoses[currentPoseIdx].defaultMinutes * 60);
+                        }
                       } else {
-                        setTimerRunning(true);
+                        setSelectedGuide(null);
+                        setSimpleTimerRemaining(concretePoses[currentPoseIdx].defaultMinutes * 60);
                       }
                     }}
                   >
                     実践スタート
                   </button>
                 </div>
+              </div>
+
+              {knowledgeLoading && (
+                <div className="knowledge-explanation-box">
+                  <p className="knowledge-loading">読み込み中…</p>
+                </div>
+              )}
+              {knowledgeExplanation && (
+                <div className="knowledge-explanation-box">
+                  <h4 className="knowledge-explanation-title">{knowledgeExplanation.title}</h4>
+                  <p className="knowledge-explanation-text">{knowledgeExplanation.publicContent}</p>
+                  <span className="chat-knowledge-badge">Yoga Knowledgeを参考にしています</span>
+                  <button className="ghost-button knowledge-close-button" onClick={() => setKnowledgeExplanation(null)}>閉じる</button>
+                </div>
               )}
             </div>
           )}
 
           {/* Phase: Active — practice with timer */}
-          {practicePhase === 'active' && selectedGuide && (
+          {practicePhase === 'active' && posePhase !== 'done' && (
             <div className="practice-active-section">
               <div className="practice-active-header">
-                <h4>{selectedGuide.name}</h4>
+                <h4>{concretePoses[currentPoseIdx]?.name ?? selectedGuide?.name ?? '実践中'}</h4>
                 <span className="practice-active-round">
-                  {selectedGuide.hasTimer ? `${timerRound} / ${selectedGuide.timerRounds} 周` : '実践中'}
+                  {currentPoseIdx + 1} / {concretePoses.length}
                 </span>
               </div>
 
-              {selectedGuide.hasTimer && timerRunning && (
+              {/* Progress indicator during practice */}
+              <div className="pose-progress-bar">
+                <div className="pose-progress-dots">
+                  {concretePoses.map((_, idx) => (
+                    <span
+                      key={idx}
+                      className={`pose-progress-dot ${idx === currentPoseIdx ? 'active' : ''} ${idx < currentPoseIdx ? 'done' : ''}`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {selectedGuide?.hasTimer && timerRunning && (
                 <div className="practice-timer">
                   <div className="breathing-orb-stage">
                     <div className="breathing-orb-halo" />
@@ -1315,7 +1531,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 </div>
               )}
 
-              {!selectedGuide.hasTimer && timerRunning && (
+              {(!selectedGuide || !selectedGuide.hasTimer) && timerRunning && (
                 <div className="practice-timer">
                   <div className="breathing-orb-stage">
                     <div className="breathing-orb-halo" />
@@ -1326,14 +1542,17 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                       </div>
                     </div>
                   </div>
-                  <p className="practice-timer-body">手順に沿って、ゆっくり実践してください。</p>
-                  <div className="practice-non-timer-guide">
-                    <ol>
-                      {selectedGuide.steps.map((s, i) => (
-                        <li key={i}>{s}</li>
-                      ))}
-                    </ol>
-                  </div>
+                  <p className="practice-timer-body">お手本を見ながら、ゆっくり実践してください。</p>
+                  {concretePoses[currentPoseIdx] && (
+                    <div className="practice-active-guide-mini">
+                      <img src={concretePoses[currentPoseIdx].image} alt="" className="practice-active-mini-img" />
+                      <div className="practice-active-mini-info">
+                        <strong>{concretePoses[currentPoseIdx].name}</strong>
+                        <p>{concretePoses[currentPoseIdx].movement}</p>
+                        <p className="practice-active-mini-breathing">{concretePoses[currentPoseIdx].breathing}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1343,32 +1562,19 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     className={cameraOn ? 'secondary-button' : 'primary-button'}
                     onClick={() => setCameraOn((v) => !v)}
                   >
-                    {cameraOn ? 'カメラをOFFにする' : 'カメラをONにする'}
+                    {cameraOn ? CAMERA_TOGGLE_LABEL.ja.off : CAMERA_TOGGLE_LABEL.ja.on}
                   </button>
-                  {cameraOn && (
-                    <span className="ai-teacher-camera-status">AI先生があなたの実践を見守っています</span>
-                  )}
                 </div>
                 {cameraOn && (
                   <div className="ai-teacher-video-wrap">
                     <div className="ai-teacher-video-container">
                       <video ref={videoRef} autoPlay muted playsInline className="ai-teacher-video ai-teacher-video-mirror" />
                       <div className="ai-teacher-camera-overlay">
-                        <span className="ai-teacher-overlay-eye">👁</span>
-                        <span className="ai-teacher-overlay-text">{persona?.name ?? 'AI先生'} があなたの実践を見守っています</span>
+                        <span className="ai-teacher-overlay-text">自分の動きを確認中</span>
                       </div>
                     </div>
-                    {persona && (
-                      <div className="ai-teacher-camera-teacher">
-                        <span className="ai-teacher-camera-avatar">{persona.avatar}</span>
-                        <div className="ai-teacher-camera-teacher-info">
-                          <strong>{persona.name}</strong>
-                          <span>{PERSONALITY_OPTIONS.find((p) => p.v === persona.personality)?.label ?? persona.personality}</span>
-                        </div>
-                      </div>
-                    )}
                     <p className="ai-teacher-demo-note">
-                      現在はデモ機能です。姿勢や安全性を医学的・専門的に判定するものではありません。
+                      {CAMERA_DISCLAIMER.ja}
                     </p>
                   </div>
                 )}
@@ -1383,39 +1589,107 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 </button>
               </div>
               <p className="practice-active-hint">
-                {selectedGuide.hasTimer
-                  ? `タイマー完了後に自動的に記録画面へ進みます。${selectedGuide.timerRounds}周完了までお待ちください。`
-                  : 'タイマー完了後に自動的に記録画面へ進みます。'}
+                タイマー完了後に自動的に次のポーズへ進みます。
               </p>
             </div>
           )}
 
-          {/* Phase: Done — post-practice recording */}
+          {/* Phase: Done — after pose practice, show next pose or final recording */}
           {practicePhase === 'done' && !practiceAborted && (
             <div className="practice-done-section">
-              <h4>実践おつかれさまでした</h4>
-              <p>実践の記録を入力してください。</p>
-              <div className="field-grid">
-                <div className="field">
-                  <label>実践後の気分</label>
-                  <select value={moodAfter} onChange={(e) => setMoodAfter(e.target.value)}>
-                    <option value="">選択してください</option>
-                    {MOOD_AFTER_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                </div>
-                <div className="field">
-                  <label>実践時間（分）</label>
-                  <input type="number" min={1} max={120} value={practiceDuration}
-                    onChange={(e) => setPracticeDuration(Number(e.target.value))} />
+              <div className="pose-progress-bar">
+                <span className="pose-progress-current">{currentPoseIdx + 1} / {concretePoses.length} 完了</span>
+                <div className="pose-progress-dots">
+                  {concretePoses.map((_, idx) => (
+                    <span
+                      key={idx}
+                      className={`pose-progress-dot ${idx <= currentPoseIdx ? 'done' : ''}`}
+                    />
+                  ))}
                 </div>
               </div>
-              <div className="field">
-                <label>自由メモ（任意）</label>
-                <input value={practiceNote} onChange={(e) => setPracticeNote(e.target.value)} placeholder="今日の気づきやメモ" />
-              </div>
-              <button className="primary-button practice-save-btn" onClick={handleCompletePractice} disabled={isSavingPractice}>
-                {isSavingPractice ? '保存中…' : '記録して完了する'}
-              </button>
+
+              <h4>おつかれさまでした</h4>
+              {currentPoseIdx < concretePoses.length - 1 ? (
+                <div className="pose-next-section">
+                  <p>{concretePoses[currentPoseIdx].name} 完了！次のポーズへ進みましょう。</p>
+                  <div className="pose-next-preview">
+                    <img src={concretePoses[currentPoseIdx + 1].image} alt="" className="pose-next-thumb" />
+                    <div>
+                      <strong>次：{concretePoses[currentPoseIdx + 1].name}</strong>
+                      {concretePoses[currentPoseIdx + 1].sanskrit && (
+                        <span className="pose-next-sanskrit">{concretePoses[currentPoseIdx + 1].sanskrit}</span>
+                      )}
+                      <span className="pose-next-duration">{concretePoses[currentPoseIdx + 1].durationLabel}</span>
+                    </div>
+                  </div>
+                  <div className="pose-next-actions">
+                    <button
+                      className="ghost-button"
+                      onClick={() => {
+                        setPracticePhase('guide');
+                        setCurrentPoseIdx(currentPoseIdx + 1);
+                      }}
+                    >
+                      次のポーズのお手本を見る
+                    </button>
+                    <button
+                      className="primary-button"
+                      onClick={() => {
+                        setCurrentPoseIdx(currentPoseIdx + 1);
+                        setPracticeType(concretePoses[currentPoseIdx + 1].type);
+                        setPracticeDuration(concretePoses[currentPoseIdx + 1].defaultMinutes);
+                        setPracticePhase('active');
+                        setPracticeActive(true);
+                        setSessionStartedAt(Date.now());
+                        setPracticeAborted(false);
+                        setPracticeSessionId(crypto.randomUUID());
+                        setTimerRunning(true);
+                        if (concretePoses[currentPoseIdx + 1].id === 'box-breathing') {
+                          const guide = PRACTICE_GUIDES.pranayama.find((g) => g.id === 'box-breathing');
+                          if (guide) {
+                            setSelectedGuide(guide);
+                            setTimerPhaseIdx(0);
+                            setTimerRound(1);
+                          } else {
+                            setSimpleTimerRemaining(concretePoses[currentPoseIdx + 1].defaultMinutes * 60);
+                          }
+                        } else {
+                          setSelectedGuide(null);
+                          setSimpleTimerRemaining(concretePoses[currentPoseIdx + 1].defaultMinutes * 60);
+                        }
+                      }}
+                    >
+                      次のポーズへ
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="pose-final-section">
+                  <p>全プログラム完了！今日の実践を記録しましょう。</p>
+                  <div className="field-grid">
+                    <div className="field">
+                      <label>実践後の気分</label>
+                      <select value={moodAfter} onChange={(e) => setMoodAfter(e.target.value)}>
+                        <option value="">選択してください</option>
+                        {MOOD_AFTER_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                    </div>
+                    <div className="field">
+                      <label>実践時間（分）</label>
+                      <input type="number" min={1} max={120} value={practiceDuration}
+                        onChange={(e) => setPracticeDuration(Number(e.target.value))} />
+                    </div>
+                  </div>
+                  <div className="field">
+                    <label>自由メモ（任意）</label>
+                    <input value={practiceNote} onChange={(e) => setPracticeNote(e.target.value)} placeholder="今日の気づきやメモ" />
+                  </div>
+                  <button className="primary-button practice-save-btn" onClick={handleCompletePractice} disabled={isSavingPractice}>
+                    {isSavingPractice ? '保存中…' : '記録して完了する'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

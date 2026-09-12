@@ -237,6 +237,17 @@ export function MyPage({ history, onRestart, onDetail, onBackHome, cloudDiagnosi
             <p className="result-section-copy">
               初心者でも見やすいように、身体・心・呼吸・理解・実践の5つにまとめています。詳細は下の展開から確認できます。
             </p>
+            <details className="result-score-explanation">
+              <summary>このスコアは？</summary>
+              <div className="result-score-explanation-body">
+                <p>
+                  診断で入力した情報（ヨガ経験、運動習慣、目標、好きなスタイル、参加方法、体の状態など）をもとに、8つの詳細項目を算出し、5つにまとめて表示しています。
+                </p>
+                <p>
+                  プロフィール登録だけでなく、診断の全質問が反映されます。実践を重ねることで変化を比較できます。
+                </p>
+              </div>
+            </details>
           </div>
         </div>
 
