@@ -251,9 +251,9 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  const channelSecret = Deno.env.get("LINE_CHANNEL_SECRET");
+  const channelSecret = Deno.env.get("LINE_MESSAGING_CHANNEL_SECRET");
   if (!channelSecret) {
-    console.error("line-webhook: LINE_CHANNEL_SECRET not configured");
+    console.error("line-webhook: LINE_MESSAGING_CHANNEL_SECRET not configured");
     return new Response(JSON.stringify({ error: "server_error" }), { status: 500 });
   }
 
