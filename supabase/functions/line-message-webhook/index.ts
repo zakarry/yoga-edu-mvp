@@ -51,7 +51,7 @@ function classifyIntent(text: string): Intent {
   if (/^(こんにちは|こんばんは|おはよう|はじめまして|hi|hello|やっと|久しぶり)/.test(t)) {
     return "GREETING";
   }
-  if (/(今日|きょう).*(する|やる|やろう|実践|プログラム|ヨガ|提案|おすすめ)/.test(t) || /今日.*何/.test(t)) {
+  if (/(今日|きょう).*(したい|しよう|やりたい|やろう|プログラム|メニュー|提案|おすすめ)/.test(t) || /今日.*何/.test(t)) {
     return "TODAY_YOGA";
   }
   if (/(呼吸|ブレス|腹式|鼻呼吸|ボックスブリージング|box breathing)/.test(t)) {
@@ -115,9 +115,7 @@ function getDeterministicResponse(intent: Intent, isLoggedIn: boolean): string {
       return "ヨガの学びや検定をご利用いただけます。\n画面下のメニューを開いて『学び・検定』をタップしてください。";
 
     case "GENERAL_YOGA":
-      return isLoggedIn
-        ? "ヨガの実践、素敵ですね。\n画面下のメニューを開いて『今日のヨガ』をタップすると、今日のプログラムをご案内できます。"
-        : "ヨガに興味を持っていただきありがとうございます。\n画面下のメニューを開いて『AI先生』をタップすると、あなたに合った実践をご案内できます。";
+      return "身体を動かす習慣があるんですね。\n毎日のYogaを始める、とても良い入口です。\n呼吸や短い実践も試してみたい場合は、\n画面下のメニューを開いて『AI先生』をタップしてください。";
 
     case "SAFETY_SENSITIVE":
       return "その状態では、LINE上で個別の身体判断はできません。\n無理に実践せず、必要に応じて医療専門家や信頼できる指導者にご相談ください。\nYoga AIでは一般的な呼吸や学びの案内はできます。";
