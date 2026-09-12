@@ -23,7 +23,7 @@ import type { LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
 import { resolveConcretePoses, getDefaultPlanPoses, getPoseKnowledgeLink, type ConcretePose, type PoseStage } from '../lib/poseLibrary';
 import { loadLocalMemory, summarizeMemory, getMemory } from '../services/aiTeacherMemoryService';
 import { emptyTodayContext, type TodayContext, type RequestedMode } from '../types/aiTeacherLayers';
-import { getPlanGate, gateVerdictAllowsGeneration, gateStateMessage, type PlanGateVerdict } from '../services/planGate';
+import { getPlanGate, gateVerdictAllowsGeneration, gateStateMessage, getPracticeEntryGate, practiceEntryAllows, type PlanGateVerdict, type PracticeEntryVerdict } from '../services/planGate';
 
 interface MyAITeacherPageProps {
   onBackHome: () => void;
@@ -425,6 +425,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [todayCheckResult, setTodayCheckResult] = useState<'none' | 'mild' | 'pain' | 'unknown' | null>(null);
   const [memoryLoaded, setMemoryLoaded] = useState(false);
   const [memoryConcerns, setMemoryConcerns] = useState<string[]>([]);
+  const todayCheckRef = useRef<HTMLDivElement>(null);
   const [nextSuggestion, setNextSuggestion] = useState<NextSuggestion | null>(loadNextSuggestion());
   const [showContextSignals, setShowContextSignals] = useState(false);
   const [showExampleGuide, setShowExampleGuide] = useState(false);
@@ -556,12 +557,6 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const safetyBlocked = isSafetyBlocked(latestDiagnosis?.safety_state) || sessionSafetyBlocked;
   const safetyCautioned = isSafetyCautioned(latestDiagnosis?.safety_state);
 
-  useEffect(() => {
-    if (step === 'step6' && concretePoses.length === 0 && !safetyBlocked) {
-      setConcretePoses(getDefaultPlanPoses());
-    }
-  }, [step, concretePoses.length, safetyBlocked]);
-
   const planGateVerdict: PlanGateVerdict = getPlanGate({
     memoryLoaded,
     hasMemoryConcerns: memoryConcerns.length > 0,
@@ -572,6 +567,29 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   });
 
   const planGenerationBlocked = !gateVerdictAllowsGeneration(planGateVerdict);
+
+  const practiceEntryVerdict: PracticeEntryVerdict = getPracticeEntryGate({
+    memoryLoaded,
+    hasMemoryConcerns: memoryConcerns.length > 0,
+    todayCheckResult,
+    selectionResolved: todayContext.selectionResolved,
+    safetyBlocked,
+  });
+
+  const practiceEntryBlocked = !practiceEntryAllows(practiceEntryVerdict);
+
+  const handleShowTodayCheck = useCallback(() => {
+    setShowTodayCheck(true);
+    setTimeout(() => {
+      todayCheckRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 80);
+  }, []);
+
+  useEffect(() => {
+    if (step === 'step6' && concretePoses.length === 0 && !safetyBlocked && !practiceEntryBlocked) {
+      setConcretePoses(getDefaultPlanPoses());
+    }
+  }, [step, concretePoses.length, safetyBlocked, practiceEntryBlocked]);
 
   const handleGenerateProgram = useCallback(async (overrideToday?: TodayContext) => {
     if (safetyBlocked) return;
@@ -893,7 +911,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const isEventDemo = entryTarget === 'event-demo';
 
   const handleEventDemoStart = useCallback(() => {
-    if (safetyBlocked) return;
+    if (safetyBlocked || !practiceEntryAllows(practiceEntryVerdict)) return;
     setConcretePoses(getDefaultPlanPoses());
     setPracticeType('asana');
     setSelectedGuide(null);
@@ -904,7 +922,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setTimeout(() => {
       poseGuideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 80);
-  }, [safetyBlocked]);
+  }, [safetyBlocked, practiceEntryVerdict]);
 
   return (
     <div className="page-shell ai-teacher-shell">
@@ -913,7 +931,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           <span className="eyebrow">Yoga AI / イベント体験</span>
           <h2>AI先生を体験してみよう</h2>
           <p>山のポーズ・呼吸・瞑想をAI先生と一緒に数分で体験できます。</p>
-          <button className="primary-button event-demo-start-btn" onClick={handleEventDemoStart} disabled={safetyBlocked || planGateVerdict === 'BLOCK_SAFETY'}>
+          <button className="primary-button event-demo-start-btn" onClick={handleEventDemoStart} disabled={safetyBlocked || practiceEntryBlocked}>
             {safetyBlocked ? '安全のため現在制限されています' : 'AI先生デモを始める'}
           </button>
         </section>
@@ -960,12 +978,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               {persona ? '先生を育てる / 設定' : 'AI先生をつくる'}
             </button>
           </div>
-          {showTodayCheck && todayCheckResult === null && (() => {
-            const mem = teacherContext?.memorySummary;
-            if (!mem || mem.activeConcerns.length === 0) return null;
-            return (
-              <div className="ai-teacher-today-check">
-                <p>以前、{mem.activeConcerns[0].split('に')[0]}に不安があると教えてもらっています。今日の状態はいかがですか？</p>
+          {showTodayCheck && todayCheckResult === null && memoryConcerns.length > 0 && (
+            <div className="ai-teacher-today-check" ref={todayCheckRef}>
+              <p>以前、{memoryConcerns[0].split('に')[0]}に不安があると教えてもらっています。今日の状態はいかがですか？</p>
                 <div className="ai-teacher-today-check-options">
                   <button className="secondary-button" onClick={() => {
                     const updated = { ...todayContext, todayConcern: null, todayPain: null, requestedMode: 'normal' as RequestedMode, selectionResolved: true };
@@ -993,10 +1008,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   }}>答えたくない</button>
                 </div>
               </div>
-            );
-          })()}
+          )}
           {todayCheckResult === 'pain' && (
-            <div className="ai-teacher-today-check ai-teacher-safety-gate">
+            <div className="ai-teacher-today-check ai-teacher-safety-gate" ref={todayCheckRef}>
               <p>今日は痛みがあるとのことなので、AI先生から個別の身体判断やポーズ提案は行いません。無理に実践せず、必要に応じて医療専門家や信頼できる指導者に相談してください。</p>
               <div className="ai-teacher-today-check-options">
                 <button className="secondary-button" onClick={() => {
@@ -1012,7 +1026,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             </div>
           )}
           {todayCheckResult === 'unknown' && (
-            <div className="ai-teacher-today-check">
+            <div className="ai-teacher-today-check" ref={todayCheckRef}>
               <p>わかりました。身体の状態を前提にせず、一般的な短い実践をご案内できます。</p>
               <div className="ai-teacher-today-check-options">
                 <button className="secondary-button" onClick={() => {
@@ -1078,10 +1092,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               };
               return (
                 <article key={pt} className="ai-teacher-pillar-card"
-                  onClick={() => { if (!safetyBlocked) { setPracticeType(pt); setSelectedGuide(null); setPracticePhase('guide'); setStep('step6'); } }}
+                  onClick={() => { if (!safetyBlocked && !practiceEntryBlocked) { setPracticeType(pt); setSelectedGuide(null); setPracticePhase('guide'); setStep('step6'); } }}
                   role="button" tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter' && !safetyBlocked) { setPracticeType(pt); setSelectedGuide(null); setPracticePhase('guide'); setStep('step6'); } }}
-                  style={safetyBlocked ? { pointerEvents: 'none', opacity: 0.5 } : undefined}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !safetyBlocked && !practiceEntryBlocked) { setPracticeType(pt); setSelectedGuide(null); setPracticePhase('guide'); setStep('step6'); } }}
+                  style={(safetyBlocked || practiceEntryBlocked) ? { pointerEvents: 'none', opacity: 0.5 } : undefined}
                 >
                   <span className="ai-teacher-pillar-label">{labels[pt]}</span>
                   <strong>{subs[pt]}</strong>
@@ -1110,7 +1124,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             {planGateVerdict === 'BLOCK_SAFETY' && (
               <span className="ai-teacher-safety-gate-text">安全のため実践を制限しています</span>
             )}
-            <button className="secondary-button" onClick={() => { setConcretePoses(getDefaultPlanPoses()); setPracticeType('asana'); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); }} disabled={safetyBlocked || planGateVerdict === 'BLOCK_SAFETY'}>
+            <button className="secondary-button" onClick={() => { if (!practiceEntryBlocked) { setConcretePoses(getDefaultPlanPoses()); setPracticeType('asana'); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); } }} disabled={safetyBlocked || practiceEntryBlocked}>
               デモをすぐ始める
             </button>
             {!persona && (
@@ -1143,8 +1157,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             <div className="ai-teacher-next-suggestion">
               <p>{nextSuggestion.text}</p>
               {nextSuggestion.suggestedType && (
-                <button className="secondary-button" disabled={safetyBlocked} onClick={() => {
-                  if (safetyBlocked) return;
+                <button className="secondary-button" disabled={safetyBlocked || practiceEntryBlocked} onClick={() => {
+                  if (safetyBlocked || practiceEntryBlocked) return;
                   setPracticeType(nextSuggestion.suggestedType as 'asana' | 'pranayama' | 'dhyana');
                   if (nextSuggestion.suggestedDuration) setPracticeDuration(nextSuggestion.suggestedDuration);
                   setSelectedGuide(null); setPracticePhase('guide');
@@ -1152,7 +1166,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   clearNextSuggestion();
                   setNextSuggestion(null);
                 }}>
-                  {safetyBlocked ? '安全確認が必要です' : 'この提案で始める'}
+                  {safetyBlocked ? '安全確認が必要です' : practiceEntryBlocked ? '今日の状態を確認してください' : 'この提案で始める'}
                 </button>
               )}
             </div>
@@ -1206,13 +1220,13 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   </span>
                   <strong>{item.name}</strong>
                   <span className="ai-teacher-duration">約{item.durationMin}分</span>
-                  <button className="secondary-button" disabled={safetyBlocked} onClick={() => {
-                    if (safetyBlocked) return;
+                  <button className="secondary-button" disabled={safetyBlocked || practiceEntryBlocked} onClick={() => {
+                    if (safetyBlocked || practiceEntryBlocked) return;
                     setPracticeType(item.type);
                     setPracticeDuration(item.durationMin);
                     setSelectedGuide(null); setPracticePhase('guide');
                     setStep('step6');
-                  }}>{safetyBlocked ? '安全確認が必要です' : '実践する'}</button>
+                  }}>{safetyBlocked ? '安全確認が必要です' : practiceEntryBlocked ? '今日の状態を確認してください' : '実践する'}</button>
                   {showKnowledgeLink && planItem?.knowledgeLinks && planItem.knowledgeLinks.length > 0 ? (
                     planItem.knowledgeLinks.map((link, linkIdx) => (
                       <button
@@ -1458,6 +1472,14 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               安全のため実践を開始できません。専門家にご相談ください。
             </p>
           )}
+          {practiceEntryBlocked && !safetyBlocked && (
+            <div className="ai-teacher-practice-gate-block">
+              <p>以前教えてもらった身体の不安があります。今日の状態を確認してから始めましょう。</p>
+              <button className="primary-button" onClick={handleShowTodayCheck}>
+                今日の状態を確認する
+              </button>
+            </div>
+          )}
 
           {/* Camera disclaimer — always visible */}
           <div className="ai-teacher-camera-disclaimer">
@@ -1668,6 +1690,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   <button
                     className="primary-button pose-guide-start-btn"
                     onClick={() => {
+                      if (practiceEntryBlocked) return;
                       const pose = concretePoses[currentPoseIdx];
                       setPracticeType(pose.type);
                       setPracticeDuration(pose.defaultMinutes);
@@ -1960,8 +1983,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               <h4>次回の提案</h4>
               <p>{nextSuggestion.text}</p>
               {nextSuggestion.suggestedType && (
-                <button className="secondary-button" disabled={safetyBlocked} onClick={() => {
-                  if (safetyBlocked) return;
+                <button className="secondary-button" disabled={safetyBlocked || practiceEntryBlocked} onClick={() => {
+                  if (safetyBlocked || practiceEntryBlocked) return;
                   setPracticeType(nextSuggestion.suggestedType as 'asana' | 'pranayama' | 'dhyana');
                   if (nextSuggestion.suggestedDuration) setPracticeDuration(nextSuggestion.suggestedDuration);
                   setSelectedGuide(null); setPracticePhase('guide');
@@ -1969,7 +1992,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   clearNextSuggestion();
                   setNextSuggestion(null);
                 }}>
-                  {safetyBlocked ? '安全確認が必要です' : 'この提案で始める'}
+                  {safetyBlocked ? '安全確認が必要です' : practiceEntryBlocked ? '今日の状態を確認してください' : 'この提案で始める'}
                 </button>
               )}
             </div>

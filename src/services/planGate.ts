@@ -59,3 +59,36 @@ export function gateStateMessage(state: PlanGateState): string {
     default: return '';
   }
 }
+
+// ── Practice Entry Gate ──
+// Guards ALL practice entry paths, not just plan generation.
+
+export type PracticeEntryVerdict =
+  | 'ALLOW_PRACTICE'
+  | 'REQUIRE_TODAY_CHECK'
+  | 'REQUIRE_USER_SELECTION'
+  | 'BLOCK_SAFETY'
+  | 'BLOCK_LOADING';
+
+export interface PracticeEntryGateInput {
+  memoryLoaded: boolean;
+  hasMemoryConcerns: boolean;
+  todayCheckResult: 'none' | 'mild' | 'pain' | 'unknown' | null;
+  selectionResolved: boolean;
+  safetyBlocked: boolean;
+}
+
+export function getPracticeEntryGate(input: PracticeEntryGateInput): PracticeEntryVerdict {
+  if (input.safetyBlocked) return 'BLOCK_SAFETY';
+  if (!input.memoryLoaded) return 'BLOCK_LOADING';
+  if (input.hasMemoryConcerns) {
+    if (input.todayCheckResult === null) return 'REQUIRE_TODAY_CHECK';
+    if (input.todayCheckResult === 'pain') return 'BLOCK_SAFETY';
+    if (input.todayCheckResult === 'unknown' && !input.selectionResolved) return 'REQUIRE_USER_SELECTION';
+  }
+  return 'ALLOW_PRACTICE';
+}
+
+export function practiceEntryAllows(verdict: PracticeEntryVerdict): boolean {
+  return verdict === 'ALLOW_PRACTICE';
+}
