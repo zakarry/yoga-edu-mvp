@@ -211,7 +211,7 @@ const PRACTICE_GUIDES: Record<'pranayama' | 'dhyana' | 'asana', PracticeGuide[]>
       purpose: '今日のプログラムで選ばれたポーズを順番に実践します',
       steps: [
         '下に表示されている今日のポーズを確認する',
-        '各ポーズのお手本を見てから、ゆっくり動く',
+        '各ポーズのお手本画像を見てから、ゆっくり動く',
         '無理のない範囲で行う',
         '呼吸と動きを合わせる',
         '全ポーズ終了後、記録画面へ進む',
@@ -454,7 +454,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [dryRunResult, setDryRunResult] = useState<DryRunResult | null>(null);
   const [dryRunLoading, setDryRunLoading] = useState(false);
   const dryRunMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('testPlan') === 'llm-dry-run';
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const guideVideoRef = useRef<HTMLVideoElement>(null);
+  const practiceVideoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
@@ -610,37 +611,55 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     return () => clearInterval(interval);
   }, [cameraOn, practiceActive, persona, growth.prefs.cue]);
 
-  // Camera management
+  // Camera stream acquisition — only on cameraOn toggle or facing mode switch
   useEffect(() => {
-    if (cameraOn) {
-      (async () => {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraFacingMode }, audio: false });
-          streamRef.current = stream;
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            videoRef.current.play().catch(() => {});
-          }
-        } catch {
-          setCameraOn(false);
-        }
-      })();
-    } else {
+    if (!cameraOn) {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop());
         streamRef.current = null;
       }
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
+      return;
     }
+    let cancelled = false;
+    (async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraFacingMode }, audio: false });
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        streamRef.current = stream;
+        const target = practicePhase === 'active' ? practiceVideoRef.current : guideVideoRef.current;
+        if (target) {
+          target.srcObject = stream;
+          target.play().catch(() => {});
+        }
+      } catch {
+        if (!cancelled) setCameraOn(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [cameraOn, cameraFacingMode]);
+
+  // Re-attach stream when phase changes (video element swaps)
+  useEffect(() => {
+    if (!streamRef.current) return;
+    const target = practicePhase === 'active' ? practiceVideoRef.current : guideVideoRef.current;
+    if (target && target.srcObject !== streamRef.current) {
+      target.srcObject = streamRef.current;
+      target.play().catch(() => {});
+    }
+  }, [practicePhase]);
+
+  // Stop stream on unmount
+  useEffect(() => {
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop());
         streamRef.current = null;
       }
     };
-  }, [cameraOn, cameraFacingMode]);
+  }, []);
 
   const safetyBlocked = isSafetyBlocked(latestDiagnosis?.safety_state) || sessionSafetyBlocked;
   const safetyCautioned = isSafetyCautioned(latestDiagnosis?.safety_state);
@@ -1143,7 +1162,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           <h2>あなたのAI先生</h2>
           <p>AI先生が、今日の状態に合わせてヨガ・呼吸・瞑想を一緒にガイドします。</p>
           <p className="ai-teacher-brand-note">Yoga Knowledgeを基礎に、アーサナ・呼吸法・瞑想を流れとして分かりやすくガイドするAI先生です。使うほど、あなたの好みや継続傾向を覚えていきます。</p>
-          <p className="ai-teacher-camera-hint-home">お手本を見ながら、カメラを鏡として自分の動きも確認できます。</p>
+          <p className="ai-teacher-camera-hint-home">お手本画像を見ながら、カメラを鏡として自分の動きも確認できます。</p>
           {persona && (
             <div className="ai-teacher-hero-teacher">
               <span className="ai-teacher-hero-avatar">{persona.avatar}</span>
@@ -1692,7 +1711,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       {step === 'step6' && !safetyBlocked && !practiceEntryBlocked && (
         <section className="panel ai-teacher-step-panel">
           <h3>STEP 6 — 実践AI先生</h3>
-          <p className="ai-teacher-step-intro">お手本を見てから、順番に実践します。全部終わったら記録しましょう。</p>
+          <p className="ai-teacher-step-intro">お手本画像を見てから、順番に実践します。全部終わったら記録しましょう。</p>
           {planIsStale && program && (
             <div className="ai-teacher-practice-gate-block">
               <p>今日の状態が変わりました。今日のヨガを再生成してから実践してください。</p>
@@ -1757,7 +1776,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                             }, 50);
                           }}
                         >
-                          このポーズのお手本を見る
+                          このポーズのお手本画像を見る
                         </button>
                       </li>
                     ))}
@@ -1952,11 +1971,11 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   >
                     {cameraOn ? 'カメラを閉じる' : 'カメラを鏡として使う'}
                   </button>
-                  <p className="ai-teacher-camera-hint">お手本を見ながら、自分の動きを画面で確認できます。</p>
+                  <p className="ai-teacher-camera-hint">お手本画像を見ながら、自分の動きを画面で確認できます。</p>
                   {cameraOn && (
                     <div className="ai-teacher-video-wrap">
                       <div className="ai-teacher-video-container">
-                        <video ref={videoRef} autoPlay muted playsInline className="ai-teacher-video ai-teacher-video-mirror" />
+                        <video ref={guideVideoRef} autoPlay muted playsInline className="ai-teacher-video ai-teacher-video-mirror" />
                         <div className="ai-teacher-camera-overlay">
                           <span className="ai-teacher-overlay-text">自分の動きを確認中</span>
                           <button
@@ -2056,7 +2075,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               {cameraOn && (
                 <div className="practice-sticky-camera">
                   <div className="ai-teacher-video-container">
-                    <video ref={videoRef} autoPlay muted playsInline className="ai-teacher-video ai-teacher-video-mirror" />
+                    <video ref={practiceVideoRef} autoPlay muted playsInline className="ai-teacher-video ai-teacher-video-mirror" />
                     <div className="ai-teacher-camera-overlay">
                       <span className="ai-teacher-overlay-text">自分の動きを確認中</span>
                       <button
@@ -2105,7 +2124,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                       </div>
                     </div>
                   </div>
-                  <p className="practice-timer-body">お手本を見ながら、ゆっくり実践してください。</p>
+                  <p className="practice-timer-body">お手本画像を見ながら、ゆっくり実践してください。</p>
                 </div>
               )}
 
@@ -2180,7 +2199,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               {currentPoseIdx < concretePoses.length - 1 ? (
                 <div className="pose-next-section">
                   <h4>おつかれさまでした</h4>
-                  <p>{concretePoses[currentPoseIdx].name} 完了！次のポーズのお手本を見ましょう。</p>
+                  <p>{concretePoses[currentPoseIdx].name} 完了！次のポーズのお手本画像を見ましょう。</p>
                   <div className="pose-next-preview">
                     <img src={concretePoses[currentPoseIdx + 1].image} alt="" className="pose-next-thumb" />
                     <div>
@@ -2203,7 +2222,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                         }, 50);
                       }}
                     >
-                      次のポーズのお手本を見る
+                      次のポーズのお手本画像を見る
                     </button>
                     <button
                       className="ghost-button"
