@@ -18,6 +18,7 @@ export interface VoiceGuideEngine {
   stop(): void;
   pause(): void;
   resume(): void;
+  unlock(): void;
   getStatus(): { status: VoiceStatus; voiceName: string | null; error: string | null };
 }
 
@@ -129,31 +130,61 @@ const PHRASE_MAP: Record<string, string> = {
   'マインドフルネスを始めます。': 'voice-start-mindfulness',
 };
 
-const audioCache: Map<string, HTMLAudioElement> = new Map();
-
-function getAudioForKey(key: string): HTMLAudioElement | null {
-  if (audioCache.has(key)) return audioCache.get(key)!;
-  const audio = new Audio(`/voice/${key}.mp3`);
-  audio.preload = 'auto';
-  audioCache.set(key, audio);
-  return audio;
+function getVoiceKey(text: string): string | null {
+  return PHRASE_MAP[text] ?? null;
 }
 
-function getAudioForPhrase(text: string): HTMLAudioElement | null {
-  const key = PHRASE_MAP[text];
-  if (!key) return null;
-  return getAudioForKey(key);
+const audioBufferCache: Map<string, AudioBuffer> = new Map();
+const audioElementCache: Map<string, HTMLAudioElement> = new Map();
+let sharedAudioContext: AudioContext | null = null;
+let lastDiagnostic: { contextState: string; lastCue: string | null; lastPlayResult: string | null; lastError: string | null } = {
+  contextState: 'none', lastCue: null, lastPlayResult: null, lastError: null,
+};
+
+function getAudioContext(): AudioContext | null {
+  if (sharedAudioContext) return sharedAudioContext;
+  const Ctx = (window as any).AudioContext ?? (window as any).webkitAudioContext;
+  if (!Ctx) return null;
+  const ctx = new Ctx();
+  sharedAudioContext = ctx;
+  lastDiagnostic.contextState = ctx.state;
+  return ctx;
 }
 
-export function preloadVoicePhrases(phrases: string[]): void {
-  for (const p of phrases) {
-    getAudioForPhrase(p);
+async function fetchAndDecode(key: string): Promise<AudioBuffer | null> {
+  if (audioBufferCache.has(key)) return audioBufferCache.get(key)!;
+  const ctx = getAudioContext();
+  if (!ctx) return null;
+  try {
+    const resp = await fetch(`/voice/${key}.mp3`);
+    if (!resp.ok) return null;
+    const arrayBuf = await resp.arrayBuffer();
+    const audioBuf = await ctx.decodeAudioData(arrayBuf);
+    audioBufferCache.set(key, audioBuf);
+    return audioBuf;
+  } catch {
+    return null;
   }
 }
 
-export function preloadVoiceKeys(keys: string[]): void {
+function getAudioElementForKey(key: string): HTMLAudioElement | null {
+  if (audioElementCache.has(key)) return audioElementCache.get(key)!;
+  const audio = new Audio(`/voice/${key}.mp3`);
+  audio.preload = 'auto';
+  audioElementCache.set(key, audio);
+  return audio;
+}
+
+export async function preloadVoiceKeys(keys: string[]): Promise<void> {
   for (const k of keys) {
-    getAudioForKey(k);
+    await fetchAndDecode(k);
+  }
+}
+
+export async function preloadVoicePhrases(phrases: string[]): Promise<void> {
+  for (const p of phrases) {
+    const key = getVoiceKey(p);
+    if (key) await fetchAndDecode(key);
   }
 }
 
@@ -172,37 +203,109 @@ class BrowserTTSEngine implements VoiceGuideEngine {
   stop() { stopSpeech(); }
   pause() { pauseSpeech(); }
   resume() { resumeSpeech(); }
+  unlock() {}
   getStatus() { return getVoiceStatus(); }
 }
 
 class AudioFileEngine implements VoiceGuideEngine {
   readonly type: EngineType = 'audio-file';
   readonly available = true;
-  private current: HTMLAudioElement | null = null;
+  private currentSource: AudioBufferSourceNode | null = null;
+  private fallbackAudio: HTMLAudioElement | null = null;
+
+  unlock(): void {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(() => {
+        lastDiagnostic.contextState = ctx.state;
+      }).catch(() => {});
+    }
+  }
 
   speak(text: string): void {
     this.stop();
-    const audio = getAudioForPhrase(text);
+    const key = getVoiceKey(text);
+    if (!key) return;
+    lastDiagnostic.lastCue = key;
+
+    const ctx = getAudioContext();
+    if (!ctx) {
+      this.playFallback(key);
+      return;
+    }
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    const buffer = audioBufferCache.get(key);
+    if (!buffer) {
+      fetchAndDecode(key).then((buf) => {
+        if (buf) this.playBuffer(buf);
+        else this.playFallback(key);
+      });
+      return;
+    }
+    this.playBuffer(buffer);
+  }
+
+  private playBuffer(buffer: AudioBuffer): void {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.onended = () => {
+      if (this.currentSource === source) this.currentSource = null;
+    };
+    source.start();
+    this.currentSource = source;
+    lastDiagnostic.lastPlayResult = 'started';
+    lastDiagnostic.contextState = ctx.state;
+  }
+
+  private playFallback(key: string): void {
+    const audio = getAudioElementForKey(key);
     if (!audio) return;
     audio.currentTime = 0;
-    audio.play().catch(() => {});
-    this.current = audio;
+    audio.play().catch(() => {
+      lastDiagnostic.lastPlayResult = 'failed';
+      lastDiagnostic.lastError = 'fallback-play-failed';
+    });
+    this.fallbackAudio = audio;
+    lastDiagnostic.lastPlayResult = 'fallback';
   }
+
   stop(): void {
-    if (this.current) {
-      this.current.pause();
-      this.current.currentTime = 0;
-      this.current = null;
+    if (this.currentSource) {
+      try { this.currentSource.stop(); } catch { /* already stopped */ }
+      this.currentSource = null;
+    }
+    if (this.fallbackAudio) {
+      this.fallbackAudio.pause();
+      this.fallbackAudio.currentTime = 0;
+      this.fallbackAudio = null;
     }
   }
+
   pause(): void {
-    if (this.current) this.current.pause();
+    const ctx = getAudioContext();
+    if (ctx) ctx.suspend().catch(() => {});
+    if (this.fallbackAudio) this.fallbackAudio.pause();
   }
+
   resume(): void {
-    if (this.current) this.current.play().catch(() => {});
+    const ctx = getAudioContext();
+    if (ctx) ctx.resume().catch(() => {});
+    if (this.fallbackAudio) this.fallbackAudio.play().catch(() => {});
   }
+
   getStatus() {
-    return { status: 'available' as VoiceStatus, voiceName: 'Audio Guide', error: null };
+    const ctx = getAudioContext();
+    const state = ctx?.state ?? 'none';
+    lastDiagnostic.contextState = state;
+    return { status: 'available' as VoiceStatus, voiceName: 'Audio Guide', error: lastDiagnostic.lastError };
   }
 }
 
@@ -224,21 +327,27 @@ export function getEngineType(): EngineType {
   return getVoiceGuideEngine().type;
 }
 
+export function unlockAudioContext(): void {
+  getVoiceGuideEngine().unlock();
+}
+
+export function getAudioDiagnostic(): { contextState: string; lastCue: string | null; lastPlayResult: string | null; lastError: string | null } {
+  const ctx = getAudioContext();
+  return {
+    contextState: ctx?.state ?? lastDiagnostic.contextState,
+    lastCue: lastDiagnostic.lastCue,
+    lastPlayResult: lastDiagnostic.lastPlayResult,
+    lastError: lastDiagnostic.lastError,
+  };
+}
+
 export function buildAsanaVoiceGuide(poseName: string, totalMinutes: number): VoiceGuideSequence {
   const totalSeconds = totalMinutes * 60;
   const cues: VoiceCue[] = [
     { text: `${poseName}を始めます。`, atSeconds: 0 },
-    { text: '足裏を安定させ、自然に立ちましょう。', atSeconds: 5 },
-    { text: '肩の力を抜いて、呼吸を続けます。', atSeconds: 15 },
-    { text: '無理に胸を張る必要はありません。自然な姿勢で。', atSeconds: 30 },
-    { text: '体の感覚に注意を向けましょう。', atSeconds: 45 },
+    { text: '自然に呼吸しましょう。', atSeconds: 5 },
+    { text: '肩の力を抜きましょう。', atSeconds: 15 },
   ];
-  if (totalSeconds > 60) {
-    cues.push({ text: 'ここ数呼吸、この姿勢を保ちましょう。', atSeconds: 60 });
-  }
-  if (totalSeconds > 90) {
-    cues.push({ text: '残り時間も、ゆっくり呼吸を続けます。', atSeconds: 90 });
-  }
   cues.push({ text: 'あと30秒です。', atSeconds: Math.max(0, totalSeconds - 30) });
   cues.push({ text: 'あと15秒です。', atSeconds: Math.max(0, totalSeconds - 15) });
   cues.push({ text: 'あと少しです。', atSeconds: Math.max(0, totalSeconds - 5) });

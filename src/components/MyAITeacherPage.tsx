@@ -25,7 +25,7 @@ import { resolveConcretePoses, getDefaultPlanPoses, getPoseKnowledgeLink, getPos
 import { loadLocalMemory, summarizeMemory, getMemory } from '../services/aiTeacherMemoryService';
 import { emptyTodayContext, type TodayContext, type RequestedMode } from '../types/aiTeacherLayers';
 import { getPlanGate, gateVerdictAllowsGeneration, gateStateMessage, getPracticeEntryGate, practiceEntryAllows, computeTodayContextSignature, isPlanStale, type PlanGateVerdict, type PracticeEntryVerdict } from '../services/planGate';
-import { isTTSAvailable, buildVoiceGuide, getVoiceStatus, getVoiceGuideEngine, getEngineType, preloadVoicePhrases, preloadVoiceKeys, ALL_VOICE_KEYS, REMAINING_CUES, BOX_BREATHING_PHASE_CUES, type VoiceGuideSequence, type VoiceStatus, type EngineType } from '../lib/voiceGuide';
+import { isTTSAvailable, buildVoiceGuide, getVoiceStatus, getVoiceGuideEngine, getEngineType, preloadVoicePhrases, preloadVoiceKeys, unlockAudioContext, getAudioDiagnostic, ALL_VOICE_KEYS, REMAINING_CUES, BOX_BREATHING_PHASE_CUES, type VoiceGuideSequence, type VoiceStatus, type EngineType } from '../lib/voiceGuide';
 
 interface MyAITeacherPageProps {
   onBackHome: () => void;
@@ -537,6 +537,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   }, [voiceEngine]);
 
   const handleTestVoice = useCallback(() => {
+    unlockAudioContext();
     voiceEngine.speak('AI先生の音声ガイドです。');
     setVoiceDiag((prev) => ({ ...prev, lastEvent: 'speak', errorCode: null }));
     refreshVoiceDiag();
@@ -1001,6 +1002,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
   const startVoiceGuide = useCallback((pose: ConcretePose) => {
     if (!voiceGuideOn) return;
+    unlockAudioContext();
     const seq = buildVoiceGuide(pose);
     voiceGuideRef.current = seq;
     firedCuesRef.current = new Set();
@@ -1956,7 +1958,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   </div>
                 )}
                 <div className="ai-teacher-voice-diag">
-                  <span>engine: {engineType === 'browser-tts' ? 'Browser TTS' : engineType === 'audio-file' ? 'Audio fallback' : 'none'}</span>
+                  <span>engine: {engineType === 'browser-tts' ? 'Browser TTS' : engineType === 'audio-file' ? 'AudioContext' : 'none'}</span>
                   <span>speechSynthesis: {ttsAvailable ? 'available' : 'unavailable'}</span>
                   {ttsAvailable && <span>voices: {voiceDiag.voicesCount}件</span>}
                   {ttsAvailable && <span>JA voices: {voiceDiag.jaCount}件</span>}
@@ -1966,6 +1968,17 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   {voiceDiag.lastEvent && <span>last event: {voiceDiag.lastEvent}</span>}
                   {voiceDiag.errorCode && <span className="ai-teacher-voice-diag-error">error: {voiceDiag.errorCode}</span>}
                 </div>
+                {engineType === 'audio-file' && (() => {
+                  const ad = getAudioDiagnostic();
+                  return (
+                    <div className="ai-teacher-voice-diag">
+                      <span>context: {ad.contextState}</span>
+                      {ad.lastCue && <span>lastCue: {ad.lastCue}</span>}
+                      {ad.lastPlayResult && <span>play: {ad.lastPlayResult}</span>}
+                      {ad.lastError && <span className="ai-teacher-voice-diag-error">err: {ad.lastError}</span>}
+                    </div>
+                  );
+                })()}
 
                 {/* Camera mirror — available before and during practice */}
                 <div className="ai-teacher-camera-section ai-teacher-camera-section--guide">
