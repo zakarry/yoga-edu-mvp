@@ -293,6 +293,15 @@ export function getDefaultPlanPoses(): ConcretePose[] {
   ].filter(Boolean);
 }
 
+export function getDefaultPosesByType(type: 'asana' | 'pranayama' | 'dhyana'): ConcretePose[] {
+  const ids: Record<string, string[]> = {
+    asana: ['tadasana', 'catcow', 'vrksasana', 'uttanasana', 'balasana', 'savasana'],
+    pranayama: ['box-breathing', 'abdominal-breathing'],
+    dhyana: ['mindfulness-1min'],
+  };
+  return (ids[type] ?? []).map((id) => POSE_BY_ID[id]).filter(Boolean);
+}
+
 export interface PoseKnowledgeLink {
   available: boolean;
   knowledgeEntryId?: string;

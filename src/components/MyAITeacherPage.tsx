@@ -21,7 +21,7 @@ import { attachKnowledgeToTodayPlan, fetchKnowledgeExplanation, type TodayPlanWi
 import type { KnowledgeExplanation } from '../services/teacherKnowledgeService';
 import { runLLMRequestDryRun, type DryRunResult } from '../services/llmRequestDryRun';
 import type { LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
-import { resolveConcretePoses, getDefaultPlanPoses, getPoseKnowledgeLink, getPoseById, type ConcretePose, type PoseStage } from '../lib/poseLibrary';
+import { resolveConcretePoses, getDefaultPlanPoses, getDefaultPosesByType, getPoseKnowledgeLink, getPoseById, type ConcretePose, type PoseStage } from '../lib/poseLibrary';
 import { loadLocalMemory, summarizeMemory, getMemory } from '../services/aiTeacherMemoryService';
 import { emptyTodayContext, type TodayContext, type RequestedMode } from '../types/aiTeacherLayers';
 import { getPlanGate, gateVerdictAllowsGeneration, gateStateMessage, getPracticeEntryGate, practiceEntryAllows, computeTodayContextSignature, isPlanStale, type PlanGateVerdict, type PracticeEntryVerdict } from '../services/planGate';
@@ -717,6 +717,11 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     return true;
   }, [safetyBlocked, practiceEntryBlocked, planIsStale, program]);
 
+  const canStartDirectPractice = useCallback(() => {
+    if (safetyBlocked || practiceEntryBlocked) return false;
+    return true;
+  }, [safetyBlocked, practiceEntryBlocked]);
+
   const handleShowTodayCheck = useCallback(() => {
     setShowTodayCheck(true);
     setTimeout(() => {
@@ -1322,16 +1327,16 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               };
               return (
                 <article key={pt} className="ai-teacher-pillar-card"
-                  onClick={() => { if (canEnterPracticeStep()) { setPracticeType(pt); setSelectedGuide(null); setPracticePhase('guide'); setStep('step6'); } }}
+                  onClick={() => { if (canStartDirectPractice()) { setConcretePosesOverride(getDefaultPosesByType(pt)); setPracticeType(pt); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); } }}
                   role="button" tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter' && canEnterPracticeStep()) { setPracticeType(pt); setSelectedGuide(null); setPracticePhase('guide'); setStep('step6'); } }}
-                  style={(safetyBlocked || practiceEntryBlocked || planIsStale || !program) ? { pointerEvents: 'none', opacity: 0.5 } : undefined}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && canStartDirectPractice()) { setConcretePosesOverride(getDefaultPosesByType(pt)); setPracticeType(pt); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); } }}
+                  style={(safetyBlocked || practiceEntryBlocked) ? { pointerEvents: 'none', opacity: 0.5 } : undefined}
                 >
                   <span className="ai-teacher-pillar-label">{labels[pt]}</span>
                   <strong>{subs[pt]}</strong>
                   <p>{descs[pt]}</p>
-                  <button type="button" className="secondary-button ai-teacher-pillar-button" disabled={safetyBlocked}>
-                    {safetyBlocked ? '安全確認が必要です' : '実践を始める'}
+                  <button type="button" className="secondary-button ai-teacher-pillar-button" disabled={safetyBlocked || practiceEntryBlocked}>
+                    {safetyBlocked ? '安全確認が必要です' : practiceEntryBlocked ? '今日の状態を確認してください' : '実践を始める'}
                   </button>
                 </article>
               );
