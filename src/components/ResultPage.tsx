@@ -192,7 +192,16 @@ export function BreathworkExperience({
       });
 
       if (round > 0 && repeatCues.length > 0) {
+        const phaseCueTimes = new Set<number>();
+        let phaseOffset = 0;
+        for (const phase of phases) {
+          const cueText = phaseCues[phase.label] ?? phaseCues[phase.key] ?? '';
+          if (cueText) phaseCueTimes.add(phaseOffset);
+          phaseOffset += phase.seconds;
+        }
+
         repeatCues.forEach((cue) => {
+          if (phaseCueTimes.has(cue.at)) return;
           const t = window.setTimeout(() => playCue(cue), (roundStart + cue.at) * 1000);
           timersRef.current.push(t);
         });
