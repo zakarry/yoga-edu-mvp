@@ -393,6 +393,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [selectedMeditationId, setSelectedMeditationId] = useState<string | null>(null);
   const [selectedBreathworkId, setSelectedBreathworkId] = useState<string | null>(null);
   const [directPractice, setDirectPractice] = useState<{ id: string; type: 'asana' | 'pranayama' | 'dhyana' } | null>(null);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [moodBefore, setMoodBefore] = useState<string>('');
   const [moodAfter, setMoodAfter] = useState<string>('');
   const [practiceNote, setPracticeNote] = useState<string>('');
@@ -999,6 +1000,55 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     voiceEngine.stop();
     setCurrentSubtitle('');
   }, [voiceEngine]);
+
+  const handlePracticeBack = useCallback(() => {
+    if (practiceActive && practicePhase === 'active') {
+      setShowExitConfirm(true);
+    } else {
+      confirmPracticeExit();
+    }
+  }, [practiceActive, practicePhase]);
+
+  const confirmPracticeExit = useCallback(() => {
+    setShowExitConfirm(false);
+    setTimerRunning(false);
+    setPracticeActive(false);
+    setPracticePhase('guide');
+    setPosePhase('list');
+    setPracticeAborted(true);
+    setPracticePaused(false);
+    voiceEngine.stop();
+    setCurrentSubtitle('');
+    if (selectedBreathworkId) {
+      setSelectedBreathworkId(null);
+      setDirectPractice(null);
+    }
+    if (selectedMeditationId) {
+      setSelectedMeditationId(null);
+      setDirectPractice(null);
+    }
+    setPoseElapsedTotal(0);
+    setSessionStartedAt(null);
+    setPracticeSessionId(null);
+  }, [voiceEngine, selectedBreathworkId, selectedMeditationId]);
+
+  useEffect(() => {
+    if (step !== 'step6') return;
+    history.pushState({ step6: true }, '');
+    const onPop = () => {
+      if (practiceActive && practicePhase === 'active') {
+        setShowExitConfirm(true);
+        history.pushState({ step6: true }, '');
+      } else {
+        confirmPracticeExit();
+        setStep('home');
+      }
+    };
+    window.addEventListener('popstate', onPop);
+    return () => {
+      window.removeEventListener('popstate', onPop);
+    };
+  }, [step, practiceActive, practicePhase, confirmPracticeExit]);
 
   const startVoiceGuide = useCallback((pose: ConcretePose) => {
     if (!voiceGuideOn) return;
@@ -1802,9 +1852,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   </div>
                 ))}
               </div>
-              <button className="ghost-button" onClick={() => setStep('home')} style={{ marginTop: 16 }}>
-                戻る
-              </button>
+              <button className="ghost-button practice-back-btn" onClick={handlePracticeBack}>← 戻る</button>
             </div>
           )}
 
@@ -1827,6 +1875,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             }
             return (
               <div className="breathwork-active-section">
+                <button className="ghost-button practice-back-btn" onClick={handlePracticeBack}>← 戻る</button>
                 <BreathworkExperience entryId={selectedBreathworkId} />
                 <div className="practice-active-actions" style={{ marginTop: 24 }}>
                   <button
@@ -1862,6 +1911,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             if (!entry) return null;
             return (
               <div className="meditation-active-section">
+                <button className="ghost-button practice-back-btn" onClick={handlePracticeBack}>← 戻る</button>
                 <MeditationExperience entry={entry} />
                 <div className="practice-active-actions" style={{ marginTop: 24 }}>
                   <button
@@ -2011,6 +2061,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           {/* Phase: Guide — show visual guide for current pose */}
           {posePhase === 'guide' && practicePhase === 'guide' && concretePoses[currentPoseIdx] && (
             <div ref={poseGuideRef} className="pose-guide-section">
+              <button className="ghost-button practice-back-btn" onClick={handlePracticeBack}>← 戻る</button>
               {/* Progress indicator */}
               <div className="pose-progress-bar">
                 <span className="pose-progress-current">{currentPoseIdx + 1} / {concretePoses.length}</span>
@@ -2288,6 +2339,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           {/* Phase: Active — practice with timer */}
           {practicePhase === 'active' && posePhase !== 'done' && !(practiceType === 'dhyana' && selectedMeditationId) && !(practiceType === 'pranayama' && selectedBreathworkId) && (
             <div ref={activePracticeRef} className="practice-active-section">
+              <button className="ghost-button practice-back-btn" onClick={handlePracticeBack}>← 戻る</button>
               <div className="practice-active-header">
                 <h4>{concretePoses[currentPoseIdx]?.name ?? selectedGuide?.name ?? '実践中'}</h4>
                 <span className="practice-active-round">
@@ -2509,6 +2561,17 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             </div>
           )}
 
+          {showExitConfirm && (
+            <div className="practice-exit-confirm-overlay" onClick={() => setShowExitConfirm(false)}>
+              <div className="practice-exit-confirm-dialog" onClick={(e) => e.stopPropagation()}>
+                <p className="practice-exit-confirm-text">実践を終了して戻りますか？</p>
+                <div className="practice-exit-confirm-actions">
+                  <button className="primary-button" onClick={() => setShowExitConfirm(false)}>続ける</button>
+                  <button className="ghost-button" onClick={confirmPracticeExit}>終了して戻る</button>
+                </div>
+              </div>
+            </div>
+          )}
           {saveStatus && <p className="ai-teacher-save-status">{saveStatus}</p>}
         </section>
       )}
