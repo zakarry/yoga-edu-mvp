@@ -510,19 +510,55 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>('stopped');
   const [voiceName, setVoiceName] = useState<string | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [voiceDiag, setVoiceDiag] = useState<{ voicesCount: number; jaCount: number; lastEvent: string | null; errorCode: string | null; speaking: boolean; pending: boolean; paused: boolean }>({ voicesCount: 0, jaCount: 0, lastEvent: null, errorCode: null, speaking: false, pending: false, paused: false });
 
-  const refreshVoiceStatus = useCallback(() => {
+  const refreshVoiceDiag = useCallback(() => {
+    if (!ttsAvailable) return;
+    const synth = window.speechSynthesis;
+    const voices = synth.getVoices();
+    const jaCount = voices.filter((v) => v.lang === 'ja-JP' || v.lang.startsWith('ja')).length;
+    setVoiceDiag((prev) => ({
+      voicesCount: voices.length,
+      jaCount,
+      lastEvent: prev.lastEvent,
+      errorCode: prev.errorCode,
+      speaking: synth.speaking,
+      pending: synth.pending,
+      paused: synth.paused,
+    }));
     const s = getVoiceStatus();
     setVoiceStatus(s.status);
     setVoiceName(s.voiceName);
     setVoiceError(s.error);
-  }, []);
+  }, [ttsAvailable]);
 
   const handleTestVoice = useCallback(() => {
     if (!ttsAvailable) return;
-    speak('AI先生の音声ガイドです。');
-    setTimeout(refreshVoiceStatus, 100);
-  }, [ttsAvailable, refreshVoiceStatus]);
+    const synth = window.speechSynthesis;
+    synth.cancel();
+    synth.resume();
+    const u = new SpeechSynthesisUtterance('AI先生の音声ガイドです。');
+    u.lang = 'ja-JP';
+    u.rate = 1;
+    u.pitch = 1;
+    u.volume = 1;
+    const voices = synth.getVoices();
+    const jaVoice = voices.find((v) => v.lang === 'ja-JP') ?? voices.find((v) => v.lang.startsWith('ja'));
+    if (jaVoice) u.voice = jaVoice;
+    u.onstart = () => setVoiceDiag((prev) => ({ ...prev, lastEvent: 'onstart', errorCode: null }));
+    u.onend = () => setVoiceDiag((prev) => ({ ...prev, lastEvent: 'onend', speaking: false }));
+    u.onerror = (e) => setVoiceDiag((prev) => ({ ...prev, lastEvent: 'onerror', errorCode: (e as SpeechSynthesisErrorEvent).error || 'unknown' }));
+    synth.speak(u);
+    refreshVoiceDiag();
+  }, [ttsAvailable, refreshVoiceDiag]);
+
+  useEffect(() => {
+    if (!ttsAvailable) return;
+    refreshVoiceDiag();
+    const handler = () => refreshVoiceDiag();
+    window.speechSynthesis.addEventListener('voiceschanged', handler);
+    return () => window.speechSynthesis.removeEventListener('voiceschanged', handler);
+  }, [ttsAvailable, refreshVoiceDiag]);
 
   useEffect(() => {
     const p = loadPersona();
@@ -1881,6 +1917,18 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     </span>
                     {voiceName && <span className="ai-teacher-voice-status-name">音声: {voiceName}</span>}
                     {voiceError && <span className="ai-teacher-voice-status-error">音声ガイドを再生できませんでした。字幕を見ながら実践できます。</span>}
+                  </div>
+                )}
+                {ttsAvailable && (
+                  <div className="ai-teacher-voice-diag">
+                    <span>speechSynthesis: available</span>
+                    <span>voices: {voiceDiag.voicesCount}件</span>
+                    <span>JA voices: {voiceDiag.jaCount}件</span>
+                    <span>speaking: {voiceDiag.speaking ? 'true' : 'false'}</span>
+                    <span>pending: {voiceDiag.pending ? 'true' : 'false'}</span>
+                    <span>paused: {voiceDiag.paused ? 'true' : 'false'}</span>
+                    {voiceDiag.lastEvent && <span>last event: {voiceDiag.lastEvent}</span>}
+                    {voiceDiag.errorCode && <span className="ai-teacher-voice-diag-error">error: {voiceDiag.errorCode}</span>}
                   </div>
                 )}
 

@@ -5292,6 +5292,19 @@ h1 {
   color: var(--school);
   width: 100%;
 }
+.ai-teacher-voice-diag {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 4px 0 8px;
+  font-size: 11px;
+  color: var(--muted);
+  font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+}
+.ai-teacher-voice-diag-error {
+  color: var(--school);
+  font-weight: 700;
+}
 
 /* Sticky camera during practice */
 .practice-sticky-camera {
