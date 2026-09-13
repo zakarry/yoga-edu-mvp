@@ -6,11 +6,6 @@ interface MeditationExperienceProps {
   entry: MeditationCatalogEntry;
 }
 
-interface ActiveEvent {
-  event: MeditationTimelineEvent;
-  subtitle: string;
-}
-
 export function MeditationExperience({ entry }: MeditationExperienceProps) {
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -19,24 +14,21 @@ export function MeditationExperience({ entry }: MeditationExperienceProps) {
   const [currentSubtitle, setCurrentSubtitle] = useState<string>('');
   const [inSilence, setInSilence] = useState(false);
 
-  const timersRef = useRef<number[]>([]);
-  const intervalRef = useRef<number | null>(null);
+  const startTimestampRef = useRef<number>(0);
+  const pausedAtRef = useRef<number | null>(null);
+  const pauseAccumRef = useRef<number>(0);
+  const rafRef = useRef<number | null>(null);
   const firedEventsRef = useRef<Set<number>>(new Set());
   const voiceEngine = getVoiceGuideEngine();
 
   const totalSec = entry.durationSec;
-  const remainingSec = Math.max(0, totalSec - elapsedSec);
-  const mins = Math.floor(remainingSec / 60);
-  const secs = remainingSec % 60;
 
-  const clearTimers = useCallback(() => {
-    timersRef.current.forEach((t) => window.clearTimeout(t));
-    timersRef.current = [];
-    if (intervalRef.current !== null) {
-      window.clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
+  const getElapsed = useCallback(() => {
+    if (startTimestampRef.current === 0) return 0;
+    const now = Date.now();
+    const pauseOffset = pauseAccumRef.current + (pausedAtRef.current !== null ? now - pausedAtRef.current : 0);
+    return Math.min(totalSec, (now - startTimestampRef.current - pauseOffset) / 1000);
+  }, [totalSec]);
 
   const fireEvent = useCallback(
     (event: MeditationTimelineEvent) => {
@@ -63,84 +55,91 @@ export function MeditationExperience({ entry }: MeditationExperienceProps) {
     [voiceEngine],
   );
 
-  const start = useCallback(() => {
-    clearTimers();
-    firedEventsRef.current = new Set();
-    setIsRunning(true);
-    setIsPaused(false);
-    setIsCompleted(false);
-    setElapsedSec(0);
-    setInSilence(false);
+  const checkTimeline = useCallback(() => {
+    const elapsed = getElapsed();
+    setElapsedSec(Math.floor(elapsed));
 
     const sortedTimeline = [...entry.timeline].sort((a, b) => a.atSec - b.atSec);
 
-    sortedTimeline.forEach((event, idx) => {
-      if (event.type === 'subtitle') {
-        const t = window.setTimeout(() => {
-          if (!firedEventsRef.current.has(idx)) {
-            firedEventsRef.current.add(idx);
-            setCurrentSubtitle(event.text ?? '');
-          }
-        }, event.atSec * 1000);
-        timersRef.current.push(t);
-        return;
-      }
-
-      const t = window.setTimeout(() => {
-        if (firedEventsRef.current.has(idx)) return;
-        firedEventsRef.current.add(idx);
+    for (let i = 0; i < sortedTimeline.length; i++) {
+      if (firedEventsRef.current.has(i)) continue;
+      const event = sortedTimeline[i];
+      if (elapsed >= event.atSec) {
+        firedEventsRef.current.add(i);
         fireEvent(event);
 
         if (event.type === 'complete') {
           setIsRunning(false);
           setIsCompleted(true);
-          if (intervalRef.current !== null) {
-            window.clearInterval(intervalRef.current);
-            intervalRef.current = null;
+          if (rafRef.current !== null) {
+            cancelAnimationFrame(rafRef.current);
+            rafRef.current = null;
           }
+          return;
         }
-      }, event.atSec * 1000);
-      timersRef.current.push(t);
-    });
+      }
+    }
 
-    intervalRef.current = window.setInterval(() => {
-      setElapsedSec((prev) => {
-        const next = prev + 1;
-        if (next >= totalSec) {
-          return totalSec;
+    if (elapsed >= totalSec && !firedEventsRef.current.has(sortedTimeline.length - 1)) {
+      const lastEvent = sortedTimeline[sortedTimeline.length - 1];
+      if (lastEvent.type === 'complete') {
+        firedEventsRef.current.add(sortedTimeline.length - 1);
+        fireEvent(lastEvent);
+        setIsRunning(false);
+        setIsCompleted(true);
+        if (rafRef.current !== null) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
         }
-        return next;
-      });
-    }, 1000);
-  }, [entry.timeline, totalSec, clearTimers, fireEvent]);
+      }
+    }
+  }, [entry.timeline, totalSec, getElapsed, fireEvent]);
+
+  const start = useCallback(() => {
+    voiceEngine.stop();
+    firedEventsRef.current = new Set();
+    startTimestampRef.current = Date.now();
+    pauseAccumRef.current = 0;
+    pausedAtRef.current = null;
+    setIsRunning(true);
+    setIsPaused(false);
+    setIsCompleted(false);
+    setElapsedSec(0);
+    setInSilence(false);
+    setCurrentSubtitle('');
+
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+    }
+    const loop = () => {
+      checkTimeline();
+      if (rafRef.current !== null) {
+        rafRef.current = requestAnimationFrame(loop);
+      }
+    };
+    rafRef.current = requestAnimationFrame(loop);
+  }, [checkTimeline, voiceEngine]);
 
   const pause = useCallback(() => {
     setIsPaused(true);
+    pausedAtRef.current = Date.now();
     voiceEngine.pause();
-    if (intervalRef.current !== null) {
-      window.clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
   }, [voiceEngine]);
 
   const resume = useCallback(() => {
+    if (pausedAtRef.current !== null) {
+      pauseAccumRef.current += Date.now() - pausedAtRef.current;
+      pausedAtRef.current = null;
+    }
     setIsPaused(false);
     voiceEngine.resume();
-    if (intervalRef.current === null) {
-      intervalRef.current = window.setInterval(() => {
-        setElapsedSec((prev) => {
-          const next = prev + 1;
-          if (next >= totalSec) {
-            return totalSec;
-          }
-          return next;
-        });
-      }, 1000);
-    }
   }, [voiceEngine]);
 
   const stop = useCallback(() => {
-    clearTimers();
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
     voiceEngine.stop();
     setIsRunning(false);
     setIsPaused(false);
@@ -148,15 +147,25 @@ export function MeditationExperience({ entry }: MeditationExperienceProps) {
     setElapsedSec(0);
     setCurrentSubtitle('');
     setInSilence(false);
-  }, [clearTimers, voiceEngine]);
+    firedEventsRef.current = new Set();
+    startTimestampRef.current = 0;
+    pauseAccumRef.current = 0;
+    pausedAtRef.current = null;
+  }, [voiceEngine]);
 
   useEffect(() => {
     return () => {
-      clearTimers();
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
       voiceEngine.stop();
     };
-  }, [clearTimers, voiceEngine]);
+  }, [voiceEngine]);
 
+  const remainingSec = Math.max(0, totalSec - elapsedSec);
+  const mins = Math.floor(remainingSec / 60);
+  const secs = remainingSec % 60;
   const displayTime = `${mins}:${secs.toString().padStart(2, '0')}`;
 
   return (

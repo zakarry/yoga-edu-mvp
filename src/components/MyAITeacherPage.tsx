@@ -2096,9 +2096,13 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                       setSessionStartedAt(Date.now());
                       setPracticeAborted(false);
                       setPracticeSessionId(crypto.randomUUID());
-                      setTimerRunning(true);
                       setPracticePaused(false);
-                      if (pose.id === 'box-breathing') {
+                      if (pose.type === 'dhyana') {
+                        setSelectedMeditationId(pose.id);
+                        setTimerRunning(false);
+                        setSelectedGuide(null);
+                      } else if (pose.id === 'box-breathing') {
+                        setTimerRunning(true);
                         const guide = PRACTICE_GUIDES.pranayama.find((g) => g.id === 'box-breathing');
                         if (guide) {
                           setSelectedGuide(guide);
@@ -2107,11 +2111,13 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                         } else {
                           setSimpleTimerRemaining(pose.defaultMinutes * 60);
                         }
+                        startVoiceGuide(pose);
                       } else {
+                        setTimerRunning(true);
                         setSelectedGuide(null);
                         setSimpleTimerRemaining(pose.defaultMinutes * 60);
+                        startVoiceGuide(pose);
                       }
-                      startVoiceGuide(pose);
                     }}
                   >
                     実践スタート
@@ -2136,7 +2142,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           )}
 
           {/* Phase: Active — practice with timer */}
-          {practicePhase === 'active' && posePhase !== 'done' && (
+          {practicePhase === 'active' && posePhase !== 'done' && !(practiceType === 'dhyana' && selectedMeditationId) && (
             <div ref={activePracticeRef} className="practice-active-section">
               <div className="practice-active-header">
                 <h4>{concretePoses[currentPoseIdx]?.name ?? selectedGuide?.name ?? '実践中'}</h4>

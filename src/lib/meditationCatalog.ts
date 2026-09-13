@@ -96,7 +96,7 @@ export const MEDITATION_CATALOG: MeditationCatalogEntry[] = [
       { atSec: 123, type: 'voice', text: '吸う息、吐く息を通じて、この空間の空気と自分の身体が地続きになっていきます。', audioKey: 'voice-mindfulness-14' },
       { atSec: 133, type: 'voice', text: '自分が自然と一体化していく感覚を楽しみましょう。', audioKey: 'voice-mindfulness-15' },
       { atSec: 140, type: 'voice', text: '何かをしようとせず、ただ、環境の中に身を委ねておきます。', audioKey: 'voice-mindfulness-16' },
-      { atSec: 148, type: 'silence', durationSec: 92, text: '今ここにある感覚に意識を向けます' },
+      { atSec: 148, type: 'silence', durationSec: 132, text: '今ここにある感覚に意識を向けます' },
       { atSec: 280, type: 'voice', text: 'まもなく、5分間の時間が終わります。', audioKey: 'voice-mindfulness-end-1' },
       { atSec: 285, type: 'voice', text: 'ゆっくりと手先や足先を動かし、ご自身の身体に意識を戻していきます。', audioKey: 'voice-mindfulness-end-2' },
       { atSec: 295, type: 'voice', text: '準備ができたら、ゆっくりと目を開けてください。', audioKey: 'voice-mindfulness-end-3' },

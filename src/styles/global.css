@@ -8756,8 +8756,9 @@ html, body {
 }
 
 .meditation-visual.is-silent .meditation-breath-circle {
-  animation: meditationSilentPulse 12s ease-in-out infinite;
-  opacity: 0.5;
+  animation: none;
+  opacity: 0.35;
+  transform: scale(0.9);
 }
 
 .meditation-visual.is-done .meditation-breath-circle {
@@ -8786,10 +8787,7 @@ html, body {
   50% { transform: scale(1.05); opacity: 1; }
 }
 
-@keyframes meditationSilentPulse {
-  0%, 100% { transform: scale(0.88); opacity: 0.4; }
-  50% { transform: scale(0.92); opacity: 0.5; }
-}
+
 
 .meditation-info {
   display: grid;
