@@ -1797,7 +1797,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                             }, 50);
                           }}
                         >
-                          このポーズのお手本画像を見る
+                          {pose.type === 'asana' ? 'このポーズのお手本を見る' : '呼吸ガイドを見る'}
                         </button>
                       </li>
                     ))}
@@ -2003,7 +2003,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   >
                     {cameraOn ? 'カメラを閉じる' : 'カメラを鏡として使う'}
                   </button>
-                  <p className="ai-teacher-camera-hint">お手本画像を見ながら、自分の動きを画面で確認できます。</p>
+                  <p className="ai-teacher-camera-hint">{concretePoses[currentPoseIdx]?.type === 'asana' ? 'お手本を見ながら、自分の動きを画面で確認できます。' : '呼吸ガイドに合わせて、自分の姿勢を画面で確認できます。'}</p>
                   {cameraOn && (
                     <div className="ai-teacher-video-wrap">
                       <div className="ai-teacher-video-container">
@@ -2254,7 +2254,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                         }, 50);
                       }}
                     >
-                      次のポーズのお手本画像を見る
+                      {concretePoses[currentPoseIdx]?.type === 'asana' ? '次のポーズのお手本を見る' : '次の呼吸ガイドを見る'}
                     </button>
                     <button
                       className="ghost-button"

@@ -166,6 +166,22 @@ const PHRASE_MAP: Record<string, string> = {
   '足裏で床を感じ、まっすぐ立ちましょう。': 'voice-tadasana-r1',
   '肩の力を抜いて、自然な呼吸を続けます。': 'voice-tadasana-r2',
   '全身の力を抜いて、楽な姿勢をとりましょう。': 'voice-savasana-r1',
+  '胸式呼吸を始めます。肩の力を抜いて、楽な姿勢をとりましょう。': 'voice-start-thoracic',
+  '苦しくなければ、鼻からゆっくり吸います。胸郭が前後左右に広がる感覚を感じてみましょう。': 'voice-thoracic-1',
+  '鼻からゆっくり吐きます。胸郭が自然に戻るのを感じましょう。': 'voice-thoracic-2',
+  '無理に大きく吸おうとせず、楽にできる範囲で続けましょう。': 'voice-thoracic-3',
+  'もう一度、胸の広がりを感じながら吸います。': 'voice-thoracic-r1',
+  'ゆっくり吐いて、力を抜きましょう。': 'voice-thoracic-r2',
+  'お腹が膨らむのを感じながら吸います。': 'voice-abdominal-1',
+  'ゆっくり吐いて、お腹が戻るのを感じます。': 'voice-abdominal-2',
+  'もう一度、お腹の膨らみを感じながら吸います。': 'voice-abdominal-r1',
+  'ゆっくり吐いて、お腹を戻しましょう。': 'voice-abdominal-r2',
+  'Box Breathingを始めます。4秒吸って、4秒止めて、4秒吐いて、4秒止めます。': 'voice-box-intro',
+  '無理のない範囲で行いましょう。': 'voice-box-intro-2',
+  '鼻から吸います。': 'voice-box-inhale',
+  'ゆっくり吐きます。': 'voice-box-exhale',
+  '最後の呼吸です。': 'voice-box-final',
+  'お疲れさまでした。自然な呼吸に戻しましょう。': 'voice-box-end',
 };
 
 function getVoiceKey(text: string): string | null {
@@ -526,25 +542,28 @@ export function buildMeditationVoiceGuide(poseId: string, poseName: string, tota
 
 export function buildBoxBreathingVoiceGuide(): VoiceGuideSequence {
   const cues: VoiceCue[] = [
-    { text: 'Box Breathingを始めます。', atSeconds: 0 },
-    { text: '吸います。', atSeconds: 1 },
-    { text: '止めます。', atSeconds: 5 },
-    { text: '吐きます。', atSeconds: 9 },
+    { text: 'Box Breathingを始めます。4秒吸って、4秒止めて、4秒吐いて、4秒止めます。', atSeconds: 0 },
+    { text: '無理のない範囲で行いましょう。', atSeconds: 5 },
+    { text: '鼻から吸います。', atSeconds: 9 },
     { text: '止めます。', atSeconds: 13 },
-    { text: '吸います。', atSeconds: 17 },
+    { text: 'ゆっくり吐きます。', atSeconds: 17 },
     { text: '止めます。', atSeconds: 21 },
-    { text: '吐きます。', atSeconds: 25 },
+    { text: '鼻から吸います。', atSeconds: 25 },
     { text: '止めます。', atSeconds: 29 },
-    { text: '吸います。', atSeconds: 33 },
+    { text: 'ゆっくり吐きます。', atSeconds: 33 },
     { text: '止めます。', atSeconds: 37 },
-    { text: '吐きます。', atSeconds: 41 },
+    { text: '鼻から吸います。', atSeconds: 41 },
     { text: '止めます。', atSeconds: 45 },
-    { text: '吸います。', atSeconds: 49 },
+    { text: 'ゆっくり吐きます。', atSeconds: 49 },
     { text: '止めます。', atSeconds: 53 },
-    { text: '吐きます。', atSeconds: 57 },
-    { text: '止めます。', atSeconds: 61 },
+    { text: '最後の呼吸です。', atSeconds: 57 },
+    { text: '鼻から吸います。', atSeconds: 58 },
+    { text: '止めます。', atSeconds: 62 },
+    { text: 'ゆっくり吐きます。', atSeconds: 66 },
+    { text: '止めます。', atSeconds: 70 },
+    { text: 'お疲れさまでした。自然な呼吸に戻しましょう。', atSeconds: 74 },
   ];
-  return { cues, totalSeconds: 64 };
+  return { cues, totalSeconds: 76 };
 }
 
 export function buildVoiceGuide(pose: { id: string; name: string; type: 'asana' | 'pranayama' | 'dhyana'; defaultMinutes: number }): VoiceGuideSequence {
@@ -564,9 +583,9 @@ export function buildVoiceGuide(pose: { id: string; name: string; type: 'asana' 
 }
 
 export const BOX_BREATHING_PHASE_CUES: Record<string, string> = {
-  '吸う': '吸います。',
+  '吸う': '鼻から吸います。',
   '止める': '止めます。',
-  '吐く': '吐きます。',
+  '吐く': 'ゆっくり吐きます。',
 };
 
 export const REMAINING_CUES: Array<{ atRemaining: number; text: string }> = [
@@ -633,4 +652,20 @@ export const ALL_VOICE_KEYS: string[] = [
   'voice-start-test-pose',
   'voice-test-pose-1',
   'voice-test-pose-2',
+  'voice-start-thoracic',
+  'voice-thoracic-1',
+  'voice-thoracic-2',
+  'voice-thoractic-3',
+  'voice-thoracic-r1',
+  'voice-thoracic-r2',
+  'voice-abdominal-1',
+  'voice-abdominal-2',
+  'voice-abdominal-r1',
+  'voice-abdominal-r2',
+  'voice-box-intro',
+  'voice-box-intro-2',
+  'voice-box-inhale',
+  'voice-box-exhale',
+  'voice-box-final',
+  'voice-box-end',
 ];

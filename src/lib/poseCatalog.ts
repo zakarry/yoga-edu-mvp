@@ -426,9 +426,11 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
       '息を止めるのが苦しいときは無理をしない。自然な呼吸に戻してよい',
     ],
     voiceGuide: {
-      intro: 'Box Breathingを始めます。',
-      firstRound: [],
-      completion: 'お疲れさまでした。',
+      intro: 'Box Breathingを始めます。4秒吸って、4秒止めて、4秒吐いて、4秒止めます。',
+      firstRound: [
+        { at: 5, text: '無理のない範囲で行いましょう。' },
+      ],
+      completion: 'お疲れさまでした。自然な呼吸に戻しましょう。',
     },
     planner: {
       beginnerFriendly: true,
@@ -469,7 +471,16 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
       intro: '腹式呼吸を始めます。',
       firstRound: [
         { at: 5, text: '肩の力を抜きましょう。' },
+        { at: 15, text: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。' },
+        { at: 25, text: 'お腹が膨らむのを感じながら吸います。' },
+        { at: 35, text: 'ゆっくり吐いて、お腹が戻るのを感じます。' },
       ],
+      secondRound: [
+        { at: 0, text: 'もう一度、お腹の膨らみを感じながら吸います。' },
+        { at: 10, text: 'ゆっくり吐いて、お腹を戻しましょう。' },
+      ],
+      breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+      breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
       completion: 'お疲れさまでした。',
     },
     planner: {
@@ -484,6 +495,56 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     knowledge: {
       knowledgeMasterId: 'YK-0318',
       zukanSlug: 'yk-0318',
+      verified: true,
+      professionalYogaRelated: null,
+    },
+    status: 'active',
+  },
+  {
+    id: 'thoracic-breathing',
+    type: 'pranayama',
+    nameJa: '胸式呼吸',
+    nameSanskrit: 'Thoracic Breathing',
+    nameEn: 'Chest Breathing',
+    image: '/pose-abdominal-breathing.webp',
+    defaultDurationMin: 3,
+    beginnerInstructions: [
+      '楽な姿勢で座るか仰向けになる',
+      '鼻からゆっくり吸い、胸郭が広がるのを感じる。ゆっくり鼻から吐き、胸郭が戻るのを感じる',
+    ],
+    breathingInstructions: [
+      '胸郭の動きを感じながら呼吸する。無理に大きく吸わず楽な範囲で',
+    ],
+    generalCautions: [
+      '肩に力を入れない。苦しいときは通常の呼吸に戻す',
+    ],
+    voiceGuide: {
+      intro: '胸式呼吸を始めます。肩の力を抜いて、楽な姿勢をとりましょう。',
+      firstRound: [
+        { at: 5, text: '苦しくなければ、鼻からゆっくり吸います。胸郭が前後左右に広がる感覚を感じてみましょう。' },
+        { at: 20, text: '鼻からゆっくり吐きます。胸郭が自然に戻るのを感じましょう。' },
+        { at: 35, text: '無理に大きく吸おうとせず、楽にできる範囲で続けましょう。' },
+      ],
+      secondRound: [
+        { at: 0, text: 'もう一度、胸の広がりを感じながら吸います。' },
+        { at: 10, text: 'ゆっくり吐いて、力を抜きましょう。' },
+      ],
+      breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+      breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
+      completion: 'お疲れさまでした。',
+    },
+    planner: {
+      beginnerFriendly: true,
+      gentleAllowed: true,
+      intensity: 'low',
+      advancedBalance: false,
+      deepRange: false,
+      highLoad: false,
+      transitionComplexity: 'low',
+    },
+    knowledge: {
+      knowledgeMasterId: 'YK-0317',
+      zukanSlug: 'yk-0317',
       verified: true,
       professionalYogaRelated: null,
     },
