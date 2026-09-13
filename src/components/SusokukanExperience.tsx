@@ -37,7 +37,7 @@ export function SusokukanExperience() {
         {state.status === 'paused' && <button className="primary-button" onClick={() => session.current?.resume()}>再開する</button>}
         {active && <button className="ghost-button" onClick={() => session.current?.stop()}>中止する</button>}
       </div>
-      <div className="meditation-description"><p>最初の50秒で数息観の説明を聞き、その後4分10秒は静寂の中で呼吸を数えます。</p><span className="meditation-tradition">禅Yoga</span></div>
+      <div className="meditation-description"><p>最初の1分で数息観の説明を聞き、その後4分は静寂の中で呼吸を数えます。</p><span className="meditation-tradition">禅Yoga</span></div>
     </div>
   );
 }
