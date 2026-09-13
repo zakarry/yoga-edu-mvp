@@ -5238,7 +5238,87 @@ h1 {
 .practice-non-timer-guide li { color: var(--text); font-size: 14px; line-height: 1.7; }
 .practice-non-timer-note { font-size: 13px; color: var(--green-strong); font-weight: 600; }
 .practice-complete-btn { font-size: 16px; padding: 14px 22px; }
-.practice-active-actions { display: flex; gap: 12px; justify-content: center; }
+.practice-active-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+/* Voice guide toggle */
+.ai-teacher-voice-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(108, 138, 118, 0.06);
+  border: 1px solid rgba(108, 138, 118, 0.12);
+}
+.ai-teacher-voice-toggle-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.ai-teacher-voice-unavailable {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Sticky camera during practice */
+.practice-sticky-camera {
+  position: sticky;
+  top: 56px;
+  z-index: 10;
+  margin-bottom: 12px;
+}
+.practice-sticky-camera .ai-teacher-video-container {
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(16, 37, 66, 0.12);
+}
+.practice-sticky-camera video {
+  width: 100%;
+  max-height: 40vh;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+/* Mini guide overlay on sticky camera */
+.practice-mini-guide-overlay {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 10px;
+  background: rgba(16, 37, 66, 0.75);
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+.practice-mini-guide-overlay img {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+.practice-mini-guide-overlay span {
+  font-size: 11px;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Subtitle during practice */
+.practice-subtitle {
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(16, 37, 66, 0.06);
+  border: 1px solid rgba(16, 37, 66, 0.1);
+  font-size: 15px;
+  color: var(--navy);
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.5;
+  margin: 8px 0;
+}
 .practice-abort-btn { font-size: 14px; padding: 10px 18px; color: var(--muted); }
 .practice-active-hint { font-size: 13px; color: var(--muted); text-align: center; line-height: 1.6; }
 

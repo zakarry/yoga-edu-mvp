@@ -25,6 +25,7 @@ import { resolveConcretePoses, getDefaultPlanPoses, getPoseKnowledgeLink, getPos
 import { loadLocalMemory, summarizeMemory, getMemory } from '../services/aiTeacherMemoryService';
 import { emptyTodayContext, type TodayContext, type RequestedMode } from '../types/aiTeacherLayers';
 import { getPlanGate, gateVerdictAllowsGeneration, gateStateMessage, getPracticeEntryGate, practiceEntryAllows, computeTodayContextSignature, isPlanStale, type PlanGateVerdict, type PracticeEntryVerdict } from '../services/planGate';
+import { isTTSAvailable, speak, pauseSpeech, resumeSpeech, stopSpeech, buildVoiceGuide, type VoiceGuideSequence } from '../lib/voiceGuide';
 
 interface MyAITeacherPageProps {
   onBackHome: () => void;
@@ -498,6 +499,14 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [practiceAborted, setPracticeAborted] = useState(false);
   const [practiceSessionId, setPracticeSessionId] = useState<string | null>(null);
   const [isSavingPractice, setIsSavingPractice] = useState(false);
+  const [voiceGuideOn, setVoiceGuideOn] = useState(true);
+  const [practicePaused, setPracticePaused] = useState(false);
+  const [currentSubtitle, setCurrentSubtitle] = useState('');
+  const voiceGuideRef = useRef<VoiceGuideSequence | null>(null);
+  const voiceCueIdxRef = useRef(0);
+  const voiceTimerRef = useRef<number | null>(null);
+  const practiceStartTsRef = useRef<number>(0);
+  const ttsAvailable = isTTSAvailable();
 
   useEffect(() => {
     const p = loadPersona();
@@ -819,6 +828,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 setPracticeDuration(elapsedMin);
               }
               setPracticePhase('done');
+              stopSpeech();
+              if (voiceTimerRef.current) { window.clearTimeout(voiceTimerRef.current); voiceTimerRef.current = null; }
+              setCurrentSubtitle('');
             } else {
               setTimerRound(nextRound);
               setTimerPhaseIdx(0);
@@ -850,6 +862,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             setPracticeDuration(elapsedMin);
           }
           setPracticePhase('done');
+          stopSpeech();
+          if (voiceTimerRef.current) { window.clearTimeout(voiceTimerRef.current); voiceTimerRef.current = null; }
+          setCurrentSubtitle('');
           return 0;
         }
         return prev - 1;
@@ -875,7 +890,53 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPracticeNote('');
     setSessionStartedAt(null);
     setPracticeSessionId(null);
+    setPracticePaused(false);
+    stopSpeech();
+    if (voiceTimerRef.current) { window.clearTimeout(voiceTimerRef.current); voiceTimerRef.current = null; }
+    setCurrentSubtitle('');
   }, []);
+
+  const startVoiceGuide = useCallback((pose: ConcretePose) => {
+    if (!voiceGuideOn) return;
+    const seq = buildVoiceGuide(pose);
+    voiceGuideRef.current = seq;
+    voiceCueIdxRef.current = 0;
+    practiceStartTsRef.current = Date.now();
+    if (seq.cues.length > 0) {
+      speak(seq.cues[0].text);
+      setCurrentSubtitle(seq.cues[0].text);
+    }
+    scheduleNextVoiceCue();
+  }, [voiceGuideOn]);
+
+  const scheduleNextVoiceCue = useCallback(() => {
+    const seq = voiceGuideRef.current;
+    if (!seq || voiceCueIdxRef.current >= seq.cues.length - 1) return;
+    const nextIdx = voiceCueIdxRef.current + 1;
+    const nextCue = seq.cues[nextIdx];
+    const elapsed = (Date.now() - practiceStartTsRef.current) / 1000;
+    const delayMs = Math.max(0, (nextCue.atSeconds - elapsed) * 1000);
+    voiceTimerRef.current = window.setTimeout(() => {
+      voiceCueIdxRef.current = nextIdx;
+      speak(nextCue.text);
+      setCurrentSubtitle(nextCue.text);
+      scheduleNextVoiceCue();
+    }, delayMs);
+  }, []);
+
+  const handlePausePractice = useCallback(() => {
+    setTimerRunning(false);
+    setPracticePaused(true);
+    pauseSpeech();
+    if (voiceTimerRef.current) { window.clearTimeout(voiceTimerRef.current); voiceTimerRef.current = null; }
+  }, []);
+
+  const handleResumePractice = useCallback(() => {
+    setTimerRunning(true);
+    setPracticePaused(false);
+    resumeSpeech();
+    scheduleNextVoiceCue();
+  }, [scheduleNextVoiceCue]);
 
   const handleCompletePractice = useCallback(async () => {
     if (!practiceType || practicePhase !== 'done' || practiceAborted || isSavingPractice) return;
@@ -957,6 +1018,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setTimerRunning(false);
     setTimerPhaseIdx(0);
     setTimerRound(1);
+    setPracticePaused(false);
+    stopSpeech();
+    if (voiceTimerRef.current) { window.clearTimeout(voiceTimerRef.current); voiceTimerRef.current = null; }
+    setCurrentSubtitle('');
     setSessionStartedAt(null);
     setSimpleTimerRemaining(0);
     setPracticeAborted(false);
@@ -1771,6 +1836,20 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   );
                 })()}
 
+                {/* Voice guide toggle */}
+                <div className="ai-teacher-voice-toggle">
+                  <span className="ai-teacher-voice-toggle-label">音声ガイド</span>
+                  <button
+                    className={voiceGuideOn ? 'secondary-button' : 'ghost-button'}
+                    onClick={() => setVoiceGuideOn((v) => !v)}
+                  >
+                    {voiceGuideOn ? 'ON' : 'OFF'}
+                  </button>
+                  {!ttsAvailable && voiceGuideOn && (
+                    <span className="ai-teacher-voice-unavailable">この端末では音声ガイドを利用できません。字幕で案内します。</span>
+                  )}
+                </div>
+
                 {/* Camera mirror — available before and during practice */}
                 <div className="ai-teacher-camera-section ai-teacher-camera-section--guide">
                   <button
@@ -1819,6 +1898,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                       setPracticeAborted(false);
                       setPracticeSessionId(crypto.randomUUID());
                       setTimerRunning(true);
+                      setPracticePaused(false);
                       if (pose.id === 'box-breathing') {
                         const guide = PRACTICE_GUIDES.pranayama.find((g) => g.id === 'box-breathing');
                         if (guide) {
@@ -1832,6 +1912,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                         setSelectedGuide(null);
                         setSimpleTimerRemaining(pose.defaultMinutes * 60);
                       }
+                      startVoiceGuide(pose);
                     }}
                   >
                     実践スタート
@@ -1877,6 +1958,31 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 </div>
               </div>
 
+              {/* Sticky camera + mini guide during practice */}
+              {cameraOn && (
+                <div className="practice-sticky-camera">
+                  <div className="ai-teacher-video-container">
+                    <video ref={videoRef} autoPlay muted playsInline className="ai-teacher-video ai-teacher-video-mirror" />
+                    <div className="ai-teacher-camera-overlay">
+                      <span className="ai-teacher-overlay-text">自分の動きを確認中</span>
+                      <button
+                        className="ghost-button ai-teacher-camera-switch-btn"
+                        onClick={() => setCameraFacingMode((m) => m === 'user' ? 'environment' : 'user')}
+                      >
+                        {cameraFacingMode === 'user' ? '背面へ切替' : '前面へ切替'}
+                      </button>
+                    </div>
+                    {concretePoses[currentPoseIdx] && (
+                      <div className="practice-mini-guide-overlay">
+                        <img src={concretePoses[currentPoseIdx].image} alt="" />
+                        <span>{concretePoses[currentPoseIdx].name}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Timer */}
               {selectedGuide?.hasTimer && timerRunning && (
                 <div className="practice-timer">
                   <div className="breathing-orb-stage">
@@ -1906,50 +2012,45 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     </div>
                   </div>
                   <p className="practice-timer-body">お手本を見ながら、ゆっくり実践してください。</p>
-                  {concretePoses[currentPoseIdx] && (
-                    <div className="practice-active-guide-mini">
-                      <img src={concretePoses[currentPoseIdx].image} alt="" className="practice-active-mini-img" />
-                      <div className="practice-active-mini-info">
-                        <strong>{concretePoses[currentPoseIdx].name}</strong>
-                        <p>{concretePoses[currentPoseIdx].movement}</p>
-                        <p className="practice-active-mini-breathing">{concretePoses[currentPoseIdx].breathing}</p>
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
 
-              <div className="ai-teacher-camera-section">
-                <div className="ai-teacher-camera-header">
-                  <button
-                    className={cameraOn ? 'secondary-button' : 'primary-button'}
-                    onClick={() => setCameraOn((v) => !v)}
-                  >
-                    {cameraOn ? 'カメラを閉じる' : 'カメラを鏡として使う'}
-                  </button>
+              {/* Subtitle */}
+              {currentSubtitle && (
+                <div className="practice-subtitle" aria-live="polite">
+                  {currentSubtitle}
                 </div>
-                {cameraOn && (
-                  <div className="ai-teacher-video-wrap">
-                    <div className="ai-teacher-video-container">
-                      <video ref={videoRef} autoPlay muted playsInline className="ai-teacher-video ai-teacher-video-mirror" />
-                      <div className="ai-teacher-camera-overlay">
-                        <span className="ai-teacher-overlay-text">自分の動きを確認中</span>
-                        <button
-                          className="ghost-button ai-teacher-camera-switch-btn"
-                          onClick={() => setCameraFacingMode((m) => m === 'user' ? 'environment' : 'user')}
-                        >
-                          {cameraFacingMode === 'user' ? '背面へ切替' : '前面へ切替'}
-                        </button>
-                      </div>
-                    </div>
-                    <p className="ai-teacher-demo-note">
-                      {CAMERA_DISCLAIMER.ja}
-                    </p>
-                  </div>
-                )}
-              </div>
+              )}
+
+              {/* Camera toggle (if not already on) */}
+              {!cameraOn && (
+                <div className="ai-teacher-camera-section">
+                  <button
+                    className="primary-button"
+                    onClick={() => setCameraOn(true)}
+                  >
+                    カメラを鏡として使う
+                  </button>
+                  <p className="ai-teacher-demo-note">{CAMERA_DISCLAIMER.ja}</p>
+                </div>
+              )}
 
               <div className="practice-active-actions">
+                {practicePaused ? (
+                  <button
+                    className="primary-button"
+                    onClick={handleResumePractice}
+                  >
+                    再開する
+                  </button>
+                ) : (
+                  <button
+                    className="secondary-button"
+                    onClick={handlePausePractice}
+                  >
+                    一時停止
+                  </button>
+                )}
                 <button
                   className="secondary-button practice-abort-btn"
                   onClick={handleAbortPractice}
