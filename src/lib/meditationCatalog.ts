@@ -48,9 +48,9 @@ export const MEDITATION_CATALOG: MeditationCatalogEntry[] = [
     durationSec: 300,
     description: '呼吸を数えることに意識を集中する5分間の集中瞑想。',
     timeline: [
-      // Captions are measured against one complete 50-second narration file.
+      // Captions are measured against one complete 60-second narration file.
       ...susokukanNarration.map(cue => ({ ...cue, type: 'voice' as const })),
-      { atSec: 50, type: 'silence', durationSec: 250, text: '呼吸を数えながら、静寂の時間を過ごします' },
+      { atSec: 60, type: 'silence', durationSec: 240, text: '呼吸を数えながら、静寂の時間を過ごします' },
       { atSec: 300, type: 'complete', text: 'お疲れさまでした' },
     ],
     visual: { type: 'minimal' },

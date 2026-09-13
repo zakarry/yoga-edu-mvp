@@ -14,8 +14,11 @@ try {
   const text = captions.map(c => c.text).join('');
   for (const required of ['吸って吐いて、みっつー。', 'とう（十）まで行ったら、また一に戻ります。', '雑念がうまれたら、一から数え直します。', 'それでは、ここから静寂に入ります']) assert.ok(text.includes(required), required);
   assert.equal(captions.length, 11);
-  assert.ok(captions.every((c, i) => c.atSec < 50 && (i === 0 || c.atSec > captions[i - 1].atSec)));
-  const wav = await readFile('public/voice/susokukan-intro-full-v1.wav');
+  assert.equal(captions[5].spokenText, 'すって、はいて、ひとぉーつ、');
+  assert.equal(captions.at(-1).spokenText, 'それでは、ここからせいじゃくにはいります');
+  assert.ok(captions.every(c => !c.spokenText.includes('静寂に入ります')));
+  assert.ok(captions.every((c, i) => c.atSec < 60 && (i === 0 || c.atSec > captions[i - 1].atSec)));
+  const wav = await readFile('public/voice/susokukan-intro-full-v2.wav');
   assert.equal(wav.toString('ascii', 0, 4), 'RIFF');
   let rate, dataBytes;
   for (let pos = 12; pos + 8 <= wav.length;) {
@@ -25,9 +28,9 @@ try {
     if (tag === 'data') dataBytes = size;
     pos += 8 + size + (size % 2);
   }
-  assert.equal(dataBytes / rate, 50, 'Narration file is exactly 50 seconds');
-  assert.match(susokukanSubtitle(49), /静寂に入ります/);
-  assert.match(susokukanSubtitle(50), /^静寂/);
+  assert.equal(dataBytes / rate, 60, 'Narration file is exactly 60 seconds');
+  assert.match(susokukanSubtitle(59), /静寂に入ります/);
+  assert.match(susokukanSubtitle(60), /^静寂/);
   let now = 0, state, frameId = 0;
   const frames = new Map();
   globalThis.requestAnimationFrame = fn => { frames.set(++frameId, fn); return frameId; };
@@ -51,15 +54,15 @@ try {
   player.pause(); now += 30000; tick();
   assert.equal(state.elapsed, 44);
   assert.ok(audio.paused);
-  player.resume(); audio.currentTime = 49; tick();
-  assert.equal(state.elapsed, 49);
-  audio.currentTime = 50; audio.onended(); tick();
-  assert.equal(state.elapsed, 50);
+  player.resume(); audio.currentTime = 59; tick();
+  assert.equal(state.elapsed, 59);
+  audio.currentTime = 60; audio.onended(); tick();
+  assert.equal(state.elapsed, 60);
   now += 100000; tick(); player.pause();
-  assert.equal(state.elapsed, 150);
+  assert.equal(state.elapsed, 160);
   now += 60000; tick();
-  assert.equal(state.elapsed, 150, 'Pausing also freezes silence');
-  player.resume(); now += 149000; tick();
+  assert.equal(state.elapsed, 160, 'Pausing also freezes silence');
+  player.resume(); now += 139000; tick();
   assert.equal(state.elapsed, 299);
   now += 1000; tick();
   assert.equal(state.status, 'completed');
@@ -72,5 +75,5 @@ try {
   assert.equal(state.status, 'error', 'Missing audio is not reported as successful silence');
   assert.equal(frames.size, 0);
   player.dispose();
-  console.log('PASS: complete script, 50-second audio, media-synced captions, pause/resume, 250-second silence, stop/restart, audio error');
+  console.log('PASS: complete script, 60-second audio, media-synced captions, pause/resume, 240-second silence, stop/restart, audio error');
 } finally { await rm(dir, { recursive: true, force: true }); }
