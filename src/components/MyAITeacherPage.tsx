@@ -2296,17 +2296,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                         setSelectedMeditationId(pose.id);
                         setTimerRunning(false);
                         setSelectedGuide(null);
-                      } else if (pose.id === 'box-breathing') {
-                        setTimerRunning(true);
-                        const guide = PRACTICE_GUIDES.pranayama.find((g) => g.id === 'box-breathing');
-                        if (guide) {
-                          setSelectedGuide(guide);
-                          setTimerPhaseIdx(0);
-                          setTimerRound(1);
-                        } else {
-                          setSimpleTimerRemaining(pose.defaultMinutes * 60);
-                        }
-                        startVoiceGuide(pose);
+                      } else if (pose.type === 'pranayama') {
+                        setSelectedBreathworkId(pose.id);
+                        setTimerRunning(false);
+                        setSelectedGuide(null);
                       } else {
                         setTimerRunning(true);
                         setSelectedGuide(null);
@@ -2505,6 +2498,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                         setCurrentPoseIdx(currentPoseIdx + 1);
                         setPracticePhase('guide');
                         setPosePhase('guide');
+                        setSelectedBreathworkId(null);
+                        setSelectedMeditationId(null);
+                        setDirectPractice(null);
+                        setPracticeActive(false);
                         setTimeout(() => {
                           poseGuideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }, 50);

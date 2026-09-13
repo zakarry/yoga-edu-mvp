@@ -125,15 +125,15 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
         { at: 5, text: '無理のない範囲で行いましょう。' },
       ],
       phaseCues: {
-        '吸う': '鼻からゆっくり吸って。',
-        '止める': 'そのまま止めます。',
-        '吐く': '鼻からゆっくり吐いて。',
+        '吸う': '鼻からゆっくり吸います。',
+        '止める': '息を止めます。',
+        '吐く': '鼻からゆっくり吐きます。',
       },
       repeatCues: [
-        { at: 0, text: '鼻からゆっくり吸って。' },
-        { at: 4, text: 'そのまま止めます。' },
-        { at: 8, text: '鼻からゆっくり吐いて。' },
-        { at: 12, text: 'そのまま止めます。' },
+        { at: 0, text: '鼻からゆっくり吸います。' },
+        { at: 4, text: '息を止めます。' },
+        { at: 8, text: '鼻からゆっくり吐きます。' },
+        { at: 12, text: '息を止めます。' },
       ],
       completion: [
         { at: 0, text: '最後の呼吸です。' },
@@ -149,6 +149,13 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     nameEn: 'Abdominal Breathing',
     category: 'pranayama',
     defaultDurationMin: 3,
+    pattern: {
+      inhaleSec: 4,
+      holdAfterInhaleSec: 0,
+      exhaleSec: 6,
+      holdAfterExhaleSec: 0,
+      rounds: 6,
+    },
     visual: {
       type: 'body_breathing',
       bodyFocus: 'belly',
@@ -189,16 +196,22 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     voiceGuide: {
       intro: [
         { at: 0, text: '腹式呼吸を始めます。肩の力を抜いて、楽な姿勢をとりましょう。' },
-        { at: 6, text: '鼻からゆっくり吸って、お腹がふくらむのを感じます。' },
-        { at: 14, text: '鼻からゆっくり吐いて、お腹がやさしく戻ります。' },
+        { at: 6, text: '苦しくなければ、鼻からゆっくり吸います。' },
+        { at: 12, text: 'お腹がやさしく広がる感覚を感じます。' },
+        { at: 18, text: '鼻からゆっくり吐いて、お腹がやさしく戻ります。' },
       ],
+      phaseCues: {
+        '吸う': '鼻からゆっくり吸います。',
+        '吐く': '鼻からゆっくり吐いて、力を抜きます。',
+      },
       repeatCues: [
-        { at: 0, text: '鼻からゆっくり吸って、お腹がふくらむのを感じます。' },
-        { at: 8, text: '鼻からゆっくり吐いて、お腹がやさしく戻ります。' },
-        { at: 16, text: '呼吸は無理のない範囲で続けましょう。' },
+        { at: 0, text: 'もう一度、鼻からゆっくり吸います。' },
+        { at: 6, text: 'お腹の広がりを感じましょう。' },
+        { at: 12, text: '鼻からゆっくり吐いて、力を抜きます。' },
       ],
       completion: [
-        { at: 0, text: 'お疲れさまでした。自然な呼吸に戻しましょう。' },
+        { at: 0, text: '最後の呼吸です。' },
+        { at: 3, text: '自然な呼吸に戻しましょう。' },
       ],
     },
     status: 'active',
@@ -210,6 +223,13 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     nameEn: 'Chest Breathing',
     category: 'pranayama',
     defaultDurationMin: 3,
+    pattern: {
+      inhaleSec: 4,
+      holdAfterInhaleSec: 0,
+      exhaleSec: 6,
+      holdAfterExhaleSec: 0,
+      rounds: 6,
+    },
     visual: {
       type: 'body_breathing',
       bodyFocus: 'chest',
@@ -249,16 +269,22 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     voiceGuide: {
       intro: [
         { at: 0, text: '胸式呼吸を始めます。肩の力を抜いて、楽な姿勢をとりましょう。' },
-        { at: 6, text: '鼻から吸って、胸の広がりを感じます。' },
-        { at: 14, text: '鼻から吐いて、胸がやさしく戻るのを感じます。' },
+        { at: 6, text: '苦しくなければ、鼻からゆっくり吸います。' },
+        { at: 12, text: '胸郭が前後左右にやさしく広がる感覚を感じます。' },
+        { at: 18, text: '鼻からゆっくり吐いて、胸郭が自然に戻るのを感じます。' },
       ],
+      phaseCues: {
+        '吸う': '鼻からゆっくり吸います。',
+        '吐く': '鼻からゆっくり吐いて、力を抜きます。',
+      },
       repeatCues: [
-        { at: 0, text: '鼻から吸って、胸の広がりを感じます。' },
-        { at: 8, text: '鼻から吐いて、胸がやさしく戻るのを感じます。' },
-        { at: 16, text: '肩を上げすぎず、無理のない呼吸で続けましょう。' },
+        { at: 0, text: 'もう一度、鼻からゆっくり吸います。' },
+        { at: 6, text: '胸の広がりを感じましょう。' },
+        { at: 12, text: '鼻からゆっくり吐いて、力を抜きます。' },
       ],
       completion: [
-        { at: 0, text: 'お疲れさまでした。自然な呼吸に戻しましょう。' },
+        { at: 0, text: '最後の呼吸です。' },
+        { at: 3, text: '自然な呼吸に戻しましょう。' },
       ],
     },
     status: 'active',
@@ -270,6 +296,13 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     nameEn: 'Complete Yoga Breathing',
     category: 'pranayama',
     defaultDurationMin: 3,
+    pattern: {
+      inhaleSec: 6,
+      holdAfterInhaleSec: 0,
+      exhaleSec: 8,
+      holdAfterExhaleSec: 0,
+      rounds: 4,
+    },
     visual: {
       type: 'layered_breathing',
       layers: ['belly', 'chest', 'clavicle'],
