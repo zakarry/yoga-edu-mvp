@@ -449,6 +449,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [posePhase, setPosePhase] = useState<'list' | 'guide' | 'active' | 'done'>('list');
   const [poseElapsedTotal, setPoseElapsedTotal] = useState(0);
   const poseGuideRef = useRef<HTMLDivElement>(null);
+  const activePracticeRef = useRef<HTMLDivElement>(null);
   const [showMemorySummary, setShowMemorySummary] = useState(false);
   const [dryRunInput, setDryRunInput] = useState('');
   const [dryRunResult, setDryRunResult] = useState<DryRunResult | null>(null);
@@ -915,6 +916,14 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
     return () => window.clearInterval(tick);
   }, [timerRunning, timerPhaseIdx, timerRound, selectedGuide]);
+
+  useEffect(() => {
+    if (practicePhase !== 'active') return;
+    const raf = requestAnimationFrame(() => {
+      activePracticeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [practicePhase]);
 
   useEffect(() => {
     if (!timerRunning || selectedGuide?.hasTimer || practicePhase !== 'active') return;
@@ -2074,7 +2083,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
           {/* Phase: Active — practice with timer */}
           {practicePhase === 'active' && posePhase !== 'done' && (
-            <div className="practice-active-section">
+            <div ref={activePracticeRef} className="practice-active-section">
               <div className="practice-active-header">
                 <h4>{concretePoses[currentPoseIdx]?.name ?? selectedGuide?.name ?? '実践中'}</h4>
                 <span className="practice-active-round">

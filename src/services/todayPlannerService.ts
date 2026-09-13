@@ -1,5 +1,6 @@
 import type { TeacherContext, PracticeType } from './teacherContextService';
-import { PRACTICE_IDS_BY_TYPE, GENTLE_PRACTICE_IDS_BY_TYPE, getPoseById } from '../lib/poseLibrary';
+import { getPoseById } from '../lib/poseLibrary';
+import { getPlannerPoses, type PoseType } from '../lib/poseCatalog';
 
 export interface TodayPlanItem {
   type: PracticeType;
@@ -22,10 +23,9 @@ export interface TodayPlan {
 }
 
 function pickPracticeId(type: PracticeType, gentle: boolean, index: number): string {
-  const pool = gentle
-    ? (GENTLE_PRACTICE_IDS_BY_TYPE[type] ?? PRACTICE_IDS_BY_TYPE[type])
-    : PRACTICE_IDS_BY_TYPE[type];
-  return pool[index % pool.length];
+  const pool = getPlannerPoses(type as PoseType, gentle);
+  if (pool.length === 0) return '';
+  return pool[index % pool.length].id;
 }
 
 function practiceName(id: string): string {
