@@ -5108,6 +5108,32 @@ h1 {
   display: grid;
   gap: 12px;
 }
+.ai-teacher-camera-section--guide {
+  margin: 16px 0;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(16, 37, 66, 0.04);
+}
+.ai-teacher-camera-hint {
+  font-size: 13px;
+  color: rgba(16, 37, 66, 0.6);
+  margin: 0;
+}
+.ai-teacher-camera-hint-home {
+  font-size: 13px;
+  color: rgba(16, 37, 66, 0.55);
+  margin: 4px 0 0;
+}
+.ai-teacher-camera-switch-btn {
+  pointer-events: auto;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+}
 .ai-teacher-camera-header {
   display: flex;
   align-items: center;

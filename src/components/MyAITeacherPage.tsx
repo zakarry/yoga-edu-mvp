@@ -403,6 +403,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [cameraOn, setCameraOn] = useState(false);
+  const [cameraFacingMode, setCameraFacingMode] = useState<'user' | 'environment'>('user');
   const [practiceActive, setPracticeActive] = useState(false);
   const [practiceType, setPracticeType] = useState<'asana' | 'pranayama' | 'dhyana' | null>(null);
   const [moodBefore, setMoodBefore] = useState<string>('');
@@ -564,7 +565,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     if (cameraOn) {
       (async () => {
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraFacingMode }, audio: false });
           streamRef.current = stream;
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
@@ -589,7 +590,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         streamRef.current = null;
       }
     };
-  }, [cameraOn]);
+  }, [cameraOn, cameraFacingMode]);
 
   const safetyBlocked = isSafetyBlocked(latestDiagnosis?.safety_state) || sessionSafetyBlocked;
   const safetyCautioned = isSafetyCautioned(latestDiagnosis?.safety_state);
@@ -1012,6 +1013,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           <h2>あなたのAI先生</h2>
           <p>AI先生が、今日の状態に合わせてヨガ・呼吸・瞑想を一緒にガイドします。</p>
           <p className="ai-teacher-brand-note">Yoga Knowledgeを基礎に、アーサナ・呼吸法・瞑想を流れとして分かりやすくガイドするAI先生です。使うほど、あなたの好みや継続傾向を覚えていきます。</p>
+          <p className="ai-teacher-camera-hint-home">お手本を見ながら、カメラを鏡として自分の動きも確認できます。</p>
           {persona && (
             <div className="ai-teacher-hero-teacher">
               <span className="ai-teacher-hero-avatar">{persona.avatar}</span>
@@ -1769,6 +1771,34 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   );
                 })()}
 
+                {/* Camera mirror — available before and during practice */}
+                <div className="ai-teacher-camera-section ai-teacher-camera-section--guide">
+                  <button
+                    className={cameraOn ? 'secondary-button' : 'primary-button'}
+                    onClick={() => setCameraOn((v) => !v)}
+                  >
+                    {cameraOn ? 'カメラを閉じる' : 'カメラを鏡として使う'}
+                  </button>
+                  <p className="ai-teacher-camera-hint">お手本を見ながら、自分の動きを画面で確認できます。</p>
+                  {cameraOn && (
+                    <div className="ai-teacher-video-wrap">
+                      <div className="ai-teacher-video-container">
+                        <video ref={videoRef} autoPlay muted playsInline className="ai-teacher-video ai-teacher-video-mirror" />
+                        <div className="ai-teacher-camera-overlay">
+                          <span className="ai-teacher-overlay-text">自分の動きを確認中</span>
+                          <button
+                            className="ghost-button ai-teacher-camera-switch-btn"
+                            onClick={() => setCameraFacingMode((m) => m === 'user' ? 'environment' : 'user')}
+                          >
+                            {cameraFacingMode === 'user' ? '背面へ切替' : '前面へ切替'}
+                          </button>
+                        </div>
+                      </div>
+                      <p className="ai-teacher-demo-note">{CAMERA_DISCLAIMER.ja}</p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="pose-guide-actions">
                   <button
                     className="ghost-button pose-guide-back-btn"
@@ -1895,7 +1925,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     className={cameraOn ? 'secondary-button' : 'primary-button'}
                     onClick={() => setCameraOn((v) => !v)}
                   >
-                    {cameraOn ? CAMERA_TOGGLE_LABEL.ja.off : CAMERA_TOGGLE_LABEL.ja.on}
+                    {cameraOn ? 'カメラを閉じる' : 'カメラを鏡として使う'}
                   </button>
                 </div>
                 {cameraOn && (
@@ -1904,6 +1934,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                       <video ref={videoRef} autoPlay muted playsInline className="ai-teacher-video ai-teacher-video-mirror" />
                       <div className="ai-teacher-camera-overlay">
                         <span className="ai-teacher-overlay-text">自分の動きを確認中</span>
+                        <button
+                          className="ghost-button ai-teacher-camera-switch-btn"
+                          onClick={() => setCameraFacingMode((m) => m === 'user' ? 'environment' : 'user')}
+                        >
+                          {cameraFacingMode === 'user' ? '背面へ切替' : '前面へ切替'}
+                        </button>
                       </div>
                     </div>
                     <p className="ai-teacher-demo-note">
