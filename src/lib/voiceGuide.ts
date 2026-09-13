@@ -185,6 +185,11 @@ const PHRASE_MAP: Record<string, string> = {
   'テスト呼吸法を始めます。': 'voice-start-test-breathwork',
   '鼻からゆっくり吸います。': 'voice-test-breathwork-2',
   'もう一度、ゆっくり吸います。': 'voice-test-breathwork-r1',
+  '完全なヨガ呼吸を始めます。': 'voice-start-complete-breathing',
+  'まずお腹を膨らませ、次に胸郭を広げ、最後に鎖骨周りも少し広げます。': 'voice-complete-breathing-3',
+  'ゆっくり吐いて、上から順に戻します。': 'voice-complete-breathing-4',
+  'もう一度、お腹から胸、鎖骨の順に吸います。': 'voice-complete-breathing-r1',
+  'ゆっくり吐いて、上から順に戻しましょう。': 'voice-complete-breathing-r2',
 };
 
 function getVoiceKey(text: string): string | null {
@@ -676,4 +681,11 @@ export const ALL_VOICE_KEYS: string[] = [
   'voice-test-breathwork-2',
   'voice-test-breathwork-r1',
   'voice-test-breathwork-r2',
+  'voice-start-complete-breathing',
+  'voice-complete-breathing-1',
+  'voice-complete-breathing-2',
+  'voice-complete-breathing-3',
+  'voice-complete-breathing-4',
+  'voice-complete-breathing-r1',
+  'voice-complete-breathing-r2',
 ];

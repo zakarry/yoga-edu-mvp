@@ -242,6 +242,64 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     status: 'active',
   },
   {
+    id: 'complete-yoga-breathing',
+    nameJa: '完全なヨガ呼吸',
+    nameSanskrit: 'Dirgha Pranayama',
+    nameEn: 'Complete Yoga Breathing',
+    category: 'pranayama',
+    defaultDurationMin: 3,
+    visual: {
+      type: 'static',
+      asset: '/pose-abdominal-breathing.webp',
+    },
+    instructions: {
+      intro: [
+        '楽な姿勢で座るか仰向けになる',
+        '鼻から吸い、お腹→胸→鎖骨の順に膨らませる。ゆっくり鼻から吐き、上から順に戻す',
+      ],
+      firstRound: [
+        '肩の力を抜きましょう',
+        '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます',
+        'まずお腹を膨らませ、次に胸郭を広げ、最後に鎖骨周りも少し広げます',
+        'ゆっくり吐いて、上から順に戻します',
+      ],
+      repeatRound: [
+        'もう一度、お腹から胸、鎖骨の順に吸います',
+        'ゆっくり吐いて、上から順に戻しましょう',
+      ],
+      completion: [
+        'お疲れさまでした',
+      ],
+    },
+    breathing: {
+      recommendNasalBreathing: true,
+      nasalCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+    },
+    safety: {
+      beginnerFriendly: true,
+      gentleAllowed: true,
+    },
+    knowledge: {
+      knowledgeMasterId: 'YK-0313',
+      zukanSlug: 'yk-0313',
+      verified: true,
+      professionalYogaRelated: null,
+    },
+    voiceGuide: {
+      intro: [
+        { at: 0, text: '完全なヨガ呼吸を始めます。' },
+        { at: 5, text: '肩の力を抜きましょう。' },
+        { at: 15, text: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。' },
+        { at: 25, text: 'まずお腹を膨らませ、次に胸郭を広げ、最後に鎖骨周りも少し広げます。' },
+        { at: 40, text: 'ゆっくり吐いて、上から順に戻します。' },
+      ],
+      completion: [
+        { at: 0, text: 'お疲れさまでした。' },
+      ],
+    },
+    status: 'active',
+  },
+  {
     id: 'test-breathwork',
     nameJa: 'テスト呼吸法',
     nameSanskrit: 'TestPranayama',
