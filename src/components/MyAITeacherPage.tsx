@@ -881,7 +881,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPracticeAborted(true);
     setPracticeActive(false);
     setPracticePhase('guide');
-    setPosePhase('list');
+    setPosePhase('guide');
     setPoseElapsedTotal(0);
     setSelectedGuide(null);
     setPracticeType(null);
