@@ -1,4 +1,6 @@
 import type { PoseStage } from './poseLibrary';
+import type { BreathworkCatalogEntry } from './breathworkCatalog';
+import { BREATHWORK_CATALOG, getPlannerBreathwork } from './breathworkCatalog';
 
 export type PoseType = 'asana' | 'pranayama' | 'dhyana';
 export type PoseIntensity = 'low' | 'medium' | 'high';
@@ -408,149 +410,6 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     status: 'active',
   },
   {
-    id: 'box-breathing',
-    type: 'pranayama',
-    nameJa: 'Box Breathing',
-    nameSanskrit: 'Sama Vritti Pranayama',
-    nameEn: 'Box Breathing',
-    image: '/pose-box-breathing.webp',
-    defaultDurationMin: 2,
-    beginnerInstructions: [
-      '楽な姿勢で座る（椅子でも床でもOK）',
-      '4秒吸う → 4秒止める → 4秒吐く → 4秒止める。これを繰り返す',
-    ],
-    breathingInstructions: [
-      '鼻から呼吸。4つのフェーズを同じ長さで保つ',
-    ],
-    generalCautions: [
-      '息を止めるのが苦しいときは無理をしない。自然な呼吸に戻してよい',
-    ],
-    voiceGuide: {
-      intro: 'Box Breathingを始めます。4秒吸って、4秒止めて、4秒吐いて、4秒止めます。',
-      firstRound: [
-        { at: 5, text: '無理のない範囲で行いましょう。' },
-      ],
-      completion: 'お疲れさまでした。自然な呼吸に戻しましょう。',
-    },
-    planner: {
-      beginnerFriendly: true,
-      gentleAllowed: true,
-      intensity: 'low',
-      advancedBalance: false,
-      deepRange: false,
-      highLoad: false,
-      transitionComplexity: 'low',
-    },
-    knowledge: {
-      knowledgeEntryId: 'b4dbb7d1-f1c5-4141-8f6d-398cde68bc8c',
-      zukanSlug: 'box-breathing',
-      verified: true,
-      professionalYogaRelated: null,
-    },
-    status: 'active',
-  },
-  {
-    id: 'abdominal-breathing',
-    type: 'pranayama',
-    nameJa: '腹式呼吸',
-    nameSanskrit: 'Diaphragmatic Breathing',
-    nameEn: 'Abdominal Breathing',
-    image: '/pose-abdominal-breathing.webp',
-    defaultDurationMin: 3,
-    beginnerInstructions: [
-      '仰向けまたは椅子に座り、片手をお腹に置く',
-      '鼻から吸い、お腹が膨らむのを感じる。ゆっくり鼻から吐き、お腹が戻るのを感じる',
-    ],
-    breathingInstructions: [
-      '胸よりお腹を動かす。無理に深く吸わず自然な範囲で',
-    ],
-    generalCautions: [
-      '肩や胸に力を入れない。苦しいときは通常の呼吸に戻す',
-    ],
-    voiceGuide: {
-      intro: '腹式呼吸を始めます。',
-      firstRound: [
-        { at: 5, text: '肩の力を抜きましょう。' },
-        { at: 15, text: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。' },
-        { at: 25, text: 'お腹が膨らむのを感じながら吸います。' },
-        { at: 35, text: 'ゆっくり吐いて、お腹が戻るのを感じます。' },
-      ],
-      secondRound: [
-        { at: 0, text: 'もう一度、お腹の膨らみを感じながら吸います。' },
-        { at: 10, text: 'ゆっくり吐いて、お腹を戻しましょう。' },
-      ],
-      breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
-      breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
-      completion: 'お疲れさまでした。',
-    },
-    planner: {
-      beginnerFriendly: true,
-      gentleAllowed: true,
-      intensity: 'low',
-      advancedBalance: false,
-      deepRange: false,
-      highLoad: false,
-      transitionComplexity: 'low',
-    },
-    knowledge: {
-      knowledgeMasterId: 'YK-0318',
-      zukanSlug: 'yk-0318',
-      verified: true,
-      professionalYogaRelated: null,
-    },
-    status: 'active',
-  },
-  {
-    id: 'thoracic-breathing',
-    type: 'pranayama',
-    nameJa: '胸式呼吸',
-    nameSanskrit: 'Thoracic Breathing',
-    nameEn: 'Chest Breathing',
-    image: '/pose-abdominal-breathing.webp',
-    defaultDurationMin: 3,
-    beginnerInstructions: [
-      '楽な姿勢で座るか仰向けになる',
-      '鼻からゆっくり吸い、胸郭が広がるのを感じる。ゆっくり鼻から吐き、胸郭が戻るのを感じる',
-    ],
-    breathingInstructions: [
-      '胸郭の動きを感じながら呼吸する。無理に大きく吸わず楽な範囲で',
-    ],
-    generalCautions: [
-      '肩に力を入れない。苦しいときは通常の呼吸に戻す',
-    ],
-    voiceGuide: {
-      intro: '胸式呼吸を始めます。肩の力を抜いて、楽な姿勢をとりましょう。',
-      firstRound: [
-        { at: 5, text: '苦しくなければ、鼻からゆっくり吸います。胸郭が前後左右に広がる感覚を感じてみましょう。' },
-        { at: 20, text: '鼻からゆっくり吐きます。胸郭が自然に戻るのを感じましょう。' },
-        { at: 35, text: '無理に大きく吸おうとせず、楽にできる範囲で続けましょう。' },
-      ],
-      secondRound: [
-        { at: 0, text: 'もう一度、胸の広がりを感じながら吸います。' },
-        { at: 10, text: 'ゆっくり吐いて、力を抜きましょう。' },
-      ],
-      breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
-      breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
-      completion: 'お疲れさまでした。',
-    },
-    planner: {
-      beginnerFriendly: true,
-      gentleAllowed: true,
-      intensity: 'low',
-      advancedBalance: false,
-      deepRange: false,
-      highLoad: false,
-      transitionComplexity: 'low',
-    },
-    knowledge: {
-      knowledgeMasterId: 'YK-0317',
-      zukanSlug: 'yk-0317',
-      verified: true,
-      professionalYogaRelated: null,
-    },
-    status: 'active',
-  },
-  {
     id: 'mindfulness-1min',
     type: 'dhyana',
     nameJa: '1分間マインドフルネス',
@@ -651,11 +510,11 @@ for (const entry of POSE_CATALOG) {
 }
 
 export function getCatalogEntry(id: string): PoseCatalogEntry | undefined {
-  return CATALOG_BY_ID[id];
+  return CATALOG_BY_ID[id] ?? breathworkToPoseEntry(id);
 }
 
 export function getCatalogEntryByName(name: string): PoseCatalogEntry | undefined {
-  return CATALOG_BY_NAME[name] ?? CATALOG_BY_ALIAS[name];
+  return CATALOG_BY_NAME[name] ?? CATALOG_BY_ALIAS[name] ?? breathworkToPoseEntryByName(name);
 }
 
 export function getActivePoses(): PoseCatalogEntry[] {
@@ -663,10 +522,16 @@ export function getActivePoses(): PoseCatalogEntry[] {
 }
 
 export function getActivePosesByType(type: PoseType): PoseCatalogEntry[] {
+  if (type === 'pranayama') {
+    return BREATHWORK_CATALOG.filter((e) => e.status === 'active').map(breathworkEntryToPoseEntry);
+  }
   return POSE_CATALOG.filter((e) => e.status === 'active' && e.type === type);
 }
 
 export function getPlannerPoses(type: PoseType, gentle: boolean): PoseCatalogEntry[] {
+  if (type === 'pranayama') {
+    return getPlannerBreathwork(gentle).map(breathworkEntryToPoseEntry);
+  }
   return POSE_CATALOG.filter((e) => {
     if (e.status !== 'active' && e.status !== 'draft') return false;
     if (e.type !== type) return false;
@@ -677,4 +542,50 @@ export function getPlannerPoses(type: PoseType, gentle: boolean): PoseCatalogEnt
 
 export function getDefaultPlanPoseIds(): string[] {
   return ['tadasana', 'catcow', 'box-breathing', 'mindfulness-1min'];
+}
+
+function breathworkEntryToPoseEntry(bw: BreathworkCatalogEntry): PoseCatalogEntry {
+  const firstRound = bw.voiceGuide.intro.map((c) => ({ at: c.at, text: c.text }));
+  const completionText = bw.voiceGuide.completion[0]?.text ?? 'お疲れさまでした。';
+  return {
+    id: bw.id,
+    type: 'pranayama' as PoseType,
+    nameJa: bw.nameJa,
+    nameSanskrit: bw.nameSanskrit,
+    nameEn: bw.nameEn,
+    aliases: bw.aliases,
+    image: bw.visual.asset ?? '',
+    defaultDurationMin: bw.defaultDurationMin,
+    beginnerInstructions: [...bw.instructions.intro, ...bw.instructions.firstRound],
+    breathingInstructions: bw.breathing.recommendNasalBreathing ? [bw.breathing.nasalCue ?? ''] : [],
+    generalCautions: [],
+    voiceGuide: {
+      intro: bw.voiceGuide.intro[0]?.text ?? `${bw.nameJa}を始めます。`,
+      firstRound,
+      secondRound: bw.voiceGuide.repeatCues?.map((c) => ({ at: c.at, text: c.text })),
+      breathingCue: bw.breathing.nasalCue,
+      completion: completionText,
+    },
+    planner: {
+      beginnerFriendly: bw.safety.beginnerFriendly,
+      gentleAllowed: bw.safety.gentleAllowed,
+      intensity: 'low' as PoseIntensity,
+      advancedBalance: false,
+      deepRange: false,
+      highLoad: false,
+      transitionComplexity: 'low' as PoseTransitionComplexity,
+    },
+    knowledge: bw.knowledge,
+    status: bw.status as PoseStatus,
+  };
+}
+
+function breathworkToPoseEntry(id: string): PoseCatalogEntry | undefined {
+  const bw = BREATHWORK_CATALOG.find((e) => e.id === id);
+  return bw ? breathworkEntryToPoseEntry(bw) : undefined;
+}
+
+function breathworkToPoseEntryByName(name: string): PoseCatalogEntry | undefined {
+  const bw = BREATHWORK_CATALOG.find((e) => e.nameJa === name || e.aliases?.includes(name));
+  return bw ? breathworkEntryToPoseEntry(bw) : undefined;
 }

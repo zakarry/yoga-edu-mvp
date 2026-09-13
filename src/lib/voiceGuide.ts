@@ -182,6 +182,9 @@ const PHRASE_MAP: Record<string, string> = {
   'ゆっくり吐きます。': 'voice-box-exhale',
   '最後の呼吸です。': 'voice-box-final',
   'お疲れさまでした。自然な呼吸に戻しましょう。': 'voice-box-end',
+  'テスト呼吸法を始めます。': 'voice-start-test-breathwork',
+  '鼻からゆっくり吸います。': 'voice-test-breathwork-2',
+  'もう一度、ゆっくり吸います。': 'voice-test-breathwork-r1',
 };
 
 function getVoiceKey(text: string): string | null {
@@ -668,4 +671,9 @@ export const ALL_VOICE_KEYS: string[] = [
   'voice-box-exhale',
   'voice-box-final',
   'voice-box-end',
+  'voice-start-test-breathwork',
+  'voice-test-breathwork-1',
+  'voice-test-breathwork-2',
+  'voice-test-breathwork-r1',
+  'voice-test-breathwork-r2',
 ];
