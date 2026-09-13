@@ -26,6 +26,8 @@ import { loadLocalMemory, summarizeMemory, getMemory } from '../services/aiTeach
 import { emptyTodayContext, type TodayContext, type RequestedMode } from '../types/aiTeacherLayers';
 import { getPlanGate, gateVerdictAllowsGeneration, gateStateMessage, getPracticeEntryGate, practiceEntryAllows, computeTodayContextSignature, isPlanStale, type PlanGateVerdict, type PracticeEntryVerdict } from '../services/planGate';
 import { isTTSAvailable, buildVoiceGuide, getVoiceStatus, getVoiceGuideEngine, getEngineType, preloadVoicePhrases, preloadVoiceKeys, unlockAudioContext, getAudioDiagnostic, ALL_VOICE_KEYS, REMAINING_CUES, BOX_BREATHING_PHASE_CUES, type VoiceGuideSequence, type VoiceStatus, type EngineType } from '../lib/voiceGuide';
+import { getActiveMeditations, getMeditationEntry, type MeditationCatalogEntry } from '../lib/meditationCatalog';
+import { MeditationExperience } from './MeditationExperience';
 
 interface MyAITeacherPageProps {
   onBackHome: () => void;
@@ -174,36 +176,14 @@ const PRACTICE_GUIDES: Record<'pranayama' | 'dhyana' | 'asana', PracticeGuide[]>
       defaultDuration: 3,
     },
   ],
-  dhyana: [
-    {
-      id: 'mindful-breath',
-      name: '1分間マインドフルネス',
-      purpose: '呼吸に意識を向け、今この瞬間に戻る短い瞑想',
-      steps: [
-        '背筋を伸ばして楽な姿勢で座る',
-        '目を閉じるか、薄く開いて前に置く',
-        '呼吸の動き（鼻の奥、胸、お腹）に注意を向ける',
-        '呼吸がそれてきたら、やさしく呼吸に戻す',
-        '1分間、ただ呼吸を観察し続ける',
-      ],
-      estimate: '1分',
-      defaultDuration: 1,
-    },
-    {
-      id: 'body-scan',
-      name: 'ボディスキャン',
-      purpose: '体の各部分に意識を向け、緊張を手放す瞑想',
-      steps: [
-        '仰向けに寝るか、椅子に座る',
-        '足のつま先から順番に意識を向ける',
-        'ふくらはぎ、太もも、お腹、胸、腕、肩、頭まで',
-        '各部分で緊張がないか感じ、あればゆるめる',
-        '最後に全身を感じて終わる',
-      ],
-      estimate: '3〜5分',
-      defaultDuration: 5,
-    },
-  ],
+  dhyana: getActiveMeditations().map((m) => ({
+    id: m.id,
+    name: m.nameJa,
+    purpose: m.description,
+    steps: m.timeline.filter((t) => t.type === 'voice' && t.text).map((t) => t.text!),
+    estimate: `${Math.round(m.durationSec / 60)}分`,
+    defaultDuration: Math.round(m.durationSec / 60),
+  })),
   asana: [
     {
       id: 'today-plan-asana',
@@ -407,6 +387,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [cameraFacingMode, setCameraFacingMode] = useState<'user' | 'environment'>('user');
   const [practiceActive, setPracticeActive] = useState(false);
   const [practiceType, setPracticeType] = useState<'asana' | 'pranayama' | 'dhyana' | null>(null);
+  const [selectedMeditationId, setSelectedMeditationId] = useState<string | null>(null);
   const [moodBefore, setMoodBefore] = useState<string>('');
   const [moodAfter, setMoodAfter] = useState<string>('');
   const [practiceNote, setPracticeNote] = useState<string>('');
@@ -1332,13 +1313,13 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               const descs = {
                 asana: '目的や体調に合わせて、今日のポーズを選んで実践します。',
                 pranayama: 'ボックスブリージングなど、リズムを整える呼吸を案内します。',
-                dhyana: '1分の静かな時間で、心を落ち着かせます。',
+                dhyana: '5分間の瞑想で、心を整えます。',
               };
               return (
                 <article key={pt} className="ai-teacher-pillar-card"
-                  onClick={() => { if (canStartDirectPractice()) { setConcretePosesOverride(getDefaultPosesByType(pt)); setPracticeType(pt); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); } }}
+                  onClick={() => { if (canStartDirectPractice()) { if (pt === 'dhyana') { setSelectedMeditationId(null); setStep('step6'); setPracticeType('dhyana'); setPracticePhase('guide'); setPosePhase('list'); setConcretePosesOverride(getDefaultPosesByType(pt)); setSelectedGuide(null); } else { setConcretePosesOverride(getDefaultPosesByType(pt)); setPracticeType(pt); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); } } }}
                   role="button" tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter' && canStartDirectPractice()) { setConcretePosesOverride(getDefaultPosesByType(pt)); setPracticeType(pt); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); } }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && canStartDirectPractice()) { if (pt === 'dhyana') { setSelectedMeditationId(null); setStep('step6'); setPracticeType('dhyana'); setPracticePhase('guide'); setPosePhase('list'); setConcretePosesOverride(getDefaultPosesByType(pt)); setSelectedGuide(null); } else { setConcretePosesOverride(getDefaultPosesByType(pt)); setPracticeType(pt); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); } } }}
                   style={(safetyBlocked || practiceEntryBlocked) ? { pointerEvents: 'none', opacity: 0.5 } : undefined}
                 >
                   <span className="ai-teacher-pillar-label">{labels[pt]}</span>
@@ -1749,8 +1730,81 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             </p>
           </div>
 
+          {/* Meditation selection — when practiceType is dhyana and no meditation selected */}
+          {practiceType === 'dhyana' && !selectedMeditationId && posePhase === 'list' && (
+            <div className="meditation-select-section">
+              <h4>瞑想を選ぶ</h4>
+              <div className="meditation-select-grid">
+                {getActiveMeditations().map((m) => (
+                  <div key={m.id} className="meditation-select-card">
+                    <div className="meditation-select-card-header">
+                      <strong className="meditation-select-card-title">{m.nameJa}</strong>
+                      <span className="meditation-select-card-category">
+                        {m.category === 'concentration' ? '集中瞑想' : m.category === 'mindfulness' ? 'マインドフルネス' : 'その他'}
+                      </span>
+                    </div>
+                    <p className="meditation-select-card-desc">{m.description}</p>
+                    {m.tradition && <span className="meditation-tradition">{m.tradition}</span>}
+                    <div className="meditation-select-card-meta">
+                      <span className="meditation-select-card-duration">目安：{Math.round(m.durationSec / 60)}分</span>
+                      <button
+                        className="meditation-select-card-btn"
+                        onClick={() => {
+                          setSelectedMeditationId(m.id);
+                          setPracticePhase('active');
+                          setPracticeActive(true);
+                          setSessionStartedAt(Date.now());
+                          setPracticeAborted(false);
+                          setPracticeSessionId(crypto.randomUUID());
+                        }}
+                      >
+                        瞑想を始める
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button className="ghost-button" onClick={() => setStep('home')} style={{ marginTop: 16 }}>
+                戻る
+              </button>
+            </div>
+          )}
+
+          {/* Meditation active — when a meditation is selected */}
+          {practiceType === 'dhyana' && selectedMeditationId && practicePhase === 'active' && (() => {
+            const entry = getMeditationEntry(selectedMeditationId);
+            if (!entry) return null;
+            return (
+              <div className="meditation-active-section">
+                <MeditationExperience entry={entry} />
+                <div className="practice-active-actions" style={{ marginTop: 24 }}>
+                  <button
+                    className="secondary-button"
+                    onClick={() => {
+                      setSelectedMeditationId(null);
+                      setPracticePhase('done');
+                      setPracticeActive(false);
+                    }}
+                  >
+                    完了して記録する
+                  </button>
+                  <button
+                    className="ghost-button"
+                    onClick={() => {
+                      setSelectedMeditationId(null);
+                      setPracticePhase('guide');
+                      setPracticeActive(false);
+                    }}
+                  >
+                    中止する
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Phase: List — show all concrete poses */}
-          {posePhase === 'list' && (
+          {posePhase === 'list' && practiceType !== 'dhyana' && (
             <div className="today-plan-inline-display">
               <div className="today-plan-inline-header">
                 <h4>今日のプログラム</h4>

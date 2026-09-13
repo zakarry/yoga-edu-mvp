@@ -1,6 +1,7 @@
 import type { PoseStage } from './poseLibrary';
 import type { BreathworkCatalogEntry } from './breathworkCatalog';
 import { BREATHWORK_CATALOG, getPlannerBreathwork } from './breathworkCatalog';
+import { getPlannerMeditations, type MeditationCatalogEntry } from './meditationCatalog';
 
 export type PoseType = 'asana' | 'pranayama' | 'dhyana';
 export type PoseIntensity = 'low' | 'medium' | 'high';
@@ -510,7 +511,7 @@ for (const entry of POSE_CATALOG) {
 }
 
 export function getCatalogEntry(id: string): PoseCatalogEntry | undefined {
-  return CATALOG_BY_ID[id] ?? breathworkToPoseEntry(id);
+  return CATALOG_BY_ID[id] ?? breathworkToPoseEntry(id) ?? meditationToPoseEntry(id);
 }
 
 export function getCatalogEntryByName(name: string): PoseCatalogEntry | undefined {
@@ -525,12 +526,24 @@ export function getActivePosesByType(type: PoseType): PoseCatalogEntry[] {
   if (type === 'pranayama') {
     return BREATHWORK_CATALOG.filter((e) => e.status === 'active').map(breathworkEntryToPoseEntry);
   }
+  if (type === 'dhyana') {
+    const meditations = getPlannerMeditations();
+    if (meditations.length > 0) {
+      return meditations.map(meditationEntryToPoseEntry);
+    }
+  }
   return POSE_CATALOG.filter((e) => e.status === 'active' && e.type === type);
 }
 
 export function getPlannerPoses(type: PoseType, gentle: boolean): PoseCatalogEntry[] {
   if (type === 'pranayama') {
     return getPlannerBreathwork(gentle).map(breathworkEntryToPoseEntry);
+  }
+  if (type === 'dhyana') {
+    const meditations = getPlannerMeditations();
+    if (meditations.length > 0) {
+      return meditations.map(meditationEntryToPoseEntry);
+    }
   }
   return POSE_CATALOG.filter((e) => {
     if (e.status !== 'active' && e.status !== 'draft') return false;
@@ -588,4 +601,47 @@ function breathworkToPoseEntry(id: string): PoseCatalogEntry | undefined {
 function breathworkToPoseEntryByName(name: string): PoseCatalogEntry | undefined {
   const bw = BREATHWORK_CATALOG.find((e) => e.nameJa === name || e.aliases?.includes(name));
   return bw ? breathworkEntryToPoseEntry(bw) : undefined;
+}
+
+function meditationEntryToPoseEntry(m: MeditationCatalogEntry): PoseCatalogEntry {
+  const voiceCues = m.timeline
+    .filter((t) => t.type === 'voice' && t.text)
+    .map((t) => ({ at: t.atSec, text: t.text! }));
+  const completionEvent = m.timeline.find((t) => t.type === 'complete');
+  return {
+    id: m.id,
+    type: 'dhyana' as PoseType,
+    nameJa: m.nameJa,
+    nameSanskrit: undefined,
+    nameEn: m.nameEn,
+    aliases: undefined,
+    image: m.visual?.asset ?? '/pose-mindfulness.webp',
+    defaultDurationMin: Math.round(m.durationSec / 60),
+    beginnerInstructions: [m.description],
+    breathingInstructions: [],
+    generalCautions: [],
+    voiceGuide: {
+      intro: voiceCues[0]?.text ?? `${m.nameJa}を始めます。`,
+      firstRound: voiceCues,
+      secondRound: undefined,
+      breathingCue: undefined,
+      completion: completionEvent?.text ?? 'お疲れさまでした。',
+    },
+    planner: {
+      beginnerFriendly: true,
+      gentleAllowed: true,
+      intensity: 'low' as PoseIntensity,
+      advancedBalance: false,
+      deepRange: false,
+      highLoad: false,
+      transitionComplexity: 'low' as PoseTransitionComplexity,
+    },
+    knowledge: m.knowledge as unknown as KnowledgeLink,
+    status: m.status as PoseStatus,
+  };
+}
+
+function meditationToPoseEntry(id: string): PoseCatalogEntry | undefined {
+  const m = getPlannerMeditations().find((e) => e.id === id);
+  return m ? meditationEntryToPoseEntry(m) : undefined;
 }

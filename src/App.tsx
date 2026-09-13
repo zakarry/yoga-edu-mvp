@@ -39,8 +39,10 @@ import { initLiffOnce, useLiff, attemptLiffAutoLogin, isAutoLoginAttempted } fro
 import { addTeacherRelationship } from './services/teacherRelationshipService';
 import { fetchDirectory } from './services/directoryService';
 import { getActiveBreathwork } from './lib/breathworkCatalog';
+import { getActiveMeditations, getMeditationEntry } from './lib/meditationCatalog';
+import { MeditationExperience } from './components/MeditationExperience';
 
-type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map' | 'box-breathing' | 'breathing-meditation' | 'breathwork-practice' | 'learn';
+type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map' | 'box-breathing' | 'breathing-meditation' | 'breathwork-practice' | 'meditation' | 'learn';
 
 type FilterType = SearchItem['type'] | 'all';
 
@@ -1044,6 +1046,7 @@ function MeditationTimer({ seconds }: { seconds: number }) {
 export default function App() {
   const [page, setPage] = useState<PageKey>('home');
   const [breathworkEntryId, setBreathworkEntryId] = useState<string | null>(null);
+  const [meditationEntryId, setMeditationEntryId] = useState<string | null>(null);
   const [teacherList, setTeacherList] = useState<Teacher[]>(initialTeachers);
   const [schoolList, setSchoolList] = useState<School[]>(initialSchools);
   const [eventList, setEventList] = useState<EventItem[]>(initialEvents);
@@ -2072,6 +2075,55 @@ export default function App() {
             <section className="panel">
               <BreathworkExperience entryId={breathworkEntryId} />
             </section>
+          </div>
+        )}
+        {page === 'meditation' && (
+          <div className="page-shell">
+            <section className="hero-panel compact-hero">
+              <div>
+                <button className="ghost-button" onClick={() => moveTo('home')}>TOPへ戻る</button>
+                <span className="eyebrow">瞑想</span>
+                <h2>瞑想ガイド</h2>
+                <p>5分間の瞑想を音声ガイド付きで実践します。静かな環境でご利用ください。</p>
+              </div>
+            </section>
+            <section className="panel">
+              <div className="meditation-select-grid">
+                {getActiveMeditations().map((m) => (
+                  <div key={m.id} className="meditation-select-card">
+                    <div className="meditation-select-card-header">
+                      <strong className="meditation-select-card-title">{m.nameJa}</strong>
+                      <span className="meditation-select-card-category">
+                        {m.category === 'concentration' ? '集中瞑想' : m.category === 'mindfulness' ? 'マインドフルネス' : 'その他'}
+                      </span>
+                    </div>
+                    <p className="meditation-select-card-desc">{m.description}</p>
+                    {m.tradition && <span className="meditation-tradition">{m.tradition}</span>}
+                    <div className="meditation-select-card-meta">
+                      <span className="meditation-select-card-duration">目安：{Math.round(m.durationSec / 60)}分</span>
+                      <button
+                        className="meditation-select-card-btn"
+                        onClick={() => {
+                          setMeditationEntryId(m.id);
+                          moveTo('meditation');
+                        }}
+                      >
+                        瞑想を始める
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+            {meditationEntryId && (() => {
+              const entry = getMeditationEntry(meditationEntryId);
+              if (!entry) return null;
+              return (
+                <section className="panel">
+                  <MeditationExperience entry={entry} />
+                </section>
+              );
+            })()}
           </div>
         )}
         {page === 'site-map' && (
