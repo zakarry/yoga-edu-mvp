@@ -1,12 +1,18 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { MeditationCatalogEntry, MeditationTimelineEvent } from '../lib/meditationCatalog';
 import { getVoiceGuideEngine } from '../lib/voiceGuide';
+import { SusokukanExperience } from './SusokukanExperience';
 
 interface MeditationExperienceProps {
   entry: MeditationCatalogEntry;
 }
 
 export function MeditationExperience({ entry }: MeditationExperienceProps) {
+  if (entry.id === 'susokukan-5min') return <SusokukanExperience />;
+  return <TimelineMeditationExperience entry={entry} />;
+}
+
+function TimelineMeditationExperience({ entry }: MeditationExperienceProps) {
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
