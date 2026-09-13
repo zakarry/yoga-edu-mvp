@@ -5,7 +5,8 @@ import { MapView } from './MapView';
 import { TopBackLink } from './TopBackLink';
 import { BreathworkVisual, buildPhasesFromPattern, type BreathPhase } from './BreathworkVisual';
 import { getBreathworkEntry, type BreathworkCatalogEntry, type BreathworkPattern } from '../lib/breathworkCatalog';
-import { getVoiceGuideEngine } from '../lib/voiceGuide';
+import { getVoiceGuideEngine, playBreathworkAudio, prepareBreathworkAudio, unlockBreathworkAudio } from '../lib/voiceGuide';
+import { getBreathworkIntro, getBreathworkPhaseSequence, usesBreathworkSequence, waitForBreathwork } from '../lib/breathworkSequence';
 
 export interface YogaPoseRecommendation {
   category: string;
@@ -77,6 +78,9 @@ export function BreathworkExperience({
   const [isCompleted, setIsCompleted] = useState(false);
   const [activeLayer, setActiveLayer] = useState<number | undefined>(undefined);
   const [subtitle, setSubtitle] = useState('');
+  const [preparing, setPreparing] = useState(true);
+  const [phaseDuration, setPhaseDuration] = useState<number | undefined>();
+  const [audioFailed, setAudioFailed] = useState(false);
   const timersRef = useRef<number[]>([]);
   const voiceEngine = getVoiceGuideEngine();
 
@@ -109,8 +113,89 @@ export function BreathworkExperience({
     setIsRunning(true);
     setIsCompleted(false);
     setCurrentRound(1);
+    setActiveLayer(undefined);
     setSubtitle('');
     voiceEngine.unlock();
+    setPreparing(true);
+    setAudioFailed(false);
+
+    if (usesBreathworkSequence(entry.id)) {
+      const controller = new AbortController();
+      const { signal } = controller;
+      const intro = getBreathworkIntro(entry);
+      const finalCue = { at: 0, text: '最後の呼吸です。', audioKey: 'voice-box-final' };
+      const ending = { at: 0, text: '自然な呼吸に戻りましょう。', audioKey: 'voice-abdominal-end-2' };
+      const allCues = [...intro, finalCue, ending,
+        ...[0, 1].flatMap((round) => phases.flatMap((p) => getBreathworkPhaseSequence(entry, p.key, round)))];
+      const durations = new Map<string, number>();
+      const loaded = Promise.all([...new Set(allCues.map((c) => c.audioKey).filter((k): k is string => !!k))].map(async (key) => {
+        const buffer = await prepareBreathworkAudio(key);
+        if (buffer) durations.set(key, buffer.duration);
+      }));
+      const play = async (cue: { text: string; audioKey?: string }) => {
+        if (signal.aborted) return;
+        const ok = await playBreathworkAudio(cue, signal, () => setSubtitle(cue.text));
+        if (!ok && !signal.aborted) {
+          setAudioFailed(true);
+          // Failed media still gets a readable subtitle slot, then progresses.
+          await waitForBreathwork(Math.max(1200, cue.text.length * 110), signal);
+        }
+      };
+      const run = async () => {
+        for (const cue of intro) {
+          if (signal.aborted) return;
+          await play(cue);
+          await waitForBreathwork(400, signal);
+        }
+        await loaded;
+        for (let round = 0; round < totalRounds; round++) {
+          if (signal.aborted) return;
+          if (round === totalRounds - 1) {
+            setPreparing(true);
+            await play(finalCue);
+            await waitForBreathwork(400, signal);
+          }
+          for (let index = 0; index < phases.length; index++) {
+            if (signal.aborted) return;
+            const phase = phases[index];
+            const cues = getBreathworkPhaseSequence(entry, phase.key, round);
+            const speechSeconds = cues.reduce((sum, cue) => sum + (durations.get(cue.audioKey ?? '') ?? cue.text.length * 0.11 + 1), 0) + Math.max(0, cues.length - 1) * 0.4;
+            // Body cues have room to finish within the displayed phase; Box
+            // retains its four-second rhythm with its short recorded cues.
+            const seconds = entry.id === 'box-breathing' ? phase.seconds : Math.max(phase.seconds, Math.ceil(speechSeconds));
+            setPreparing(false);
+            setCurrentRound(round + 1);
+            setPhaseIndex(index);
+            setPhaseDuration(seconds);
+            setRemainingSeconds(seconds);
+            const started = performance.now();
+            const tick = window.setInterval(() => {
+              if (!signal.aborted) setRemainingSeconds(Math.max(0, seconds - (performance.now() - started) / 1000));
+            }, 100);
+            timersRef.current.push(tick);
+            await Promise.all([
+              waitForBreathwork(seconds * 1000, signal),
+              (async () => {
+                for (let i = 0; i < cues.length; i++) {
+                  if (signal.aborted) return;
+                  if (i > 0) await waitForBreathwork(400, signal);
+                  await play(cues[i]);
+                }
+              })(),
+            ]);
+            window.clearInterval(tick);
+          }
+        }
+        if (signal.aborted) return;
+        setPreparing(true);
+        await play(ending);
+        if (signal.aborted) return;
+        setIsRunning(false);
+        setIsCompleted(true);
+      };
+      void run();
+      return () => { controller.abort(); clearTimers(); };
+    }
 
     const vg = entry.voiceGuide;
     const phaseCues = vg.phaseCues ?? {};
@@ -177,16 +262,26 @@ export function BreathworkExperience({
             const exhalePart = phase.seconds / layers.length;
             layers.forEach((_, i) => {
               const reverseIdx = layers.length - 1 - i;
-              if (reverseIdx === 2) return;
-              const t = window.setTimeout(() => setActiveLayer(reverseIdx), phaseStart * 1000 + Math.round(exhalePart * (i + 1) * 1000));
+              if (i === 0) return;
+              const t = window.setTimeout(() => setActiveLayer(reverseIdx), phaseStart * 1000 + Math.round(exhalePart * i * 1000));
               timersRef.current.push(t);
             });
           }
         }
 
         const t = window.setTimeout(() => {
+          setPreparing(false);
           setPhaseIndex(phaseIdx);
+          setPhaseDuration(phase.seconds);
           setRemainingSeconds(phase.seconds);
+          // Complete breathing keeps its audio timeline. A caption belongs to
+          // the phase in which it was spoken; clear it at the next boundary.
+          // Repeat cues scheduled at this boundary run afterwards and supply
+          // their own caption without cancelling or restarting the audio.
+          if (entry.id === 'complete-yoga-breathing') setSubtitle('');
+          if (entry.visual.type === 'layered_breathing') {
+            setActiveLayer(phase.key === 'inhale' ? 0 : (entry.visual.layers?.length ?? 3) - 1);
+          }
         }, phaseStart * 1000);
         timersRef.current.push(t);
       });
@@ -230,7 +325,7 @@ export function BreathworkExperience({
     return () => {
       clearTimers();
     };
-  }, [runId]);
+  }, [runId, entryId]);
 
   useEffect(() => {
     return () => {
@@ -244,12 +339,12 @@ export function BreathworkExperience({
   }
 
   const currentPhase = phases[phaseIndex];
-  const phaseKey: BreathPhase = currentPhase?.key ?? 'idle';
+  const phaseKey: BreathPhase = preparing ? 'idle' : currentPhase?.key ?? 'idle';
   const phaseLabel = currentPhase?.label ?? '準備';
 
   return (
     <div
-      className="breathing-experience-layout"
+      className="breathing-experience-layout bw-experience"
       style={totalDuration > 0 ? ({ '--bw-duration': `${totalDuration}s` } as CSSProperties) : undefined}
     >
       <div className="breathing-visual-panel">
@@ -260,10 +355,11 @@ export function BreathworkExperience({
           isRunning={isRunning}
           isCompleted={isCompleted}
           activeLayer={activeLayer}
+          phaseDurationSeconds={phaseDuration}
         />
 
         <div className="breathing-controls">
-          {isRunning && totalRounds > 1 && (
+          {isRunning && !preparing && totalRounds > 1 && (
             <span className="breathing-round-indicator">ラウンド {currentRound} / {totalRounds}</span>
           )}
           {subtitle && isRunning && (
@@ -280,10 +376,11 @@ export function BreathworkExperience({
           {!isRunning && !isCompleted && (
             <p className="breathing-live-copy">準備ができたら開始してください。</p>
           )}
+          {audioFailed && <p role="status">音声の一部を再生できませんでした。字幕に合わせて続けられます。</p>}
           <button
             type="button"
             className="secondary-button breathing-replay-button"
-            onClick={() => setRunId((value) => value + 1)}
+            onClick={() => { unlockBreathworkAudio(); voiceEngine.unlock(); setRunId((value) => value + 1); }}
           >
             もう一回やる
           </button>

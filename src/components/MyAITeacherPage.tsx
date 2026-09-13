@@ -25,7 +25,7 @@ import { resolveConcretePoses, getDefaultPlanPoses, getDefaultPosesByType, getPo
 import { loadLocalMemory, summarizeMemory, getMemory } from '../services/aiTeacherMemoryService';
 import { emptyTodayContext, type TodayContext, type RequestedMode } from '../types/aiTeacherLayers';
 import { getPlanGate, gateVerdictAllowsGeneration, gateStateMessage, getPracticeEntryGate, practiceEntryAllows, computeTodayContextSignature, isPlanStale, type PlanGateVerdict, type PracticeEntryVerdict } from '../services/planGate';
-import { isTTSAvailable, buildVoiceGuide, getVoiceStatus, getVoiceGuideEngine, getEngineType, preloadVoicePhrases, preloadVoiceKeys, unlockAudioContext, getAudioDiagnostic, ALL_VOICE_KEYS, REMAINING_CUES, BOX_BREATHING_PHASE_CUES, type VoiceGuideSequence, type VoiceStatus, type EngineType } from '../lib/voiceGuide';
+import { isTTSAvailable, buildVoiceGuide, getVoiceStatus, getVoiceGuideEngine, getEngineType, preloadVoicePhrases, preloadVoiceKeys, unlockAudioContext, unlockBreathworkAudio, getAudioDiagnostic, ALL_VOICE_KEYS, REMAINING_CUES, BOX_BREATHING_PHASE_CUES, type VoiceGuideSequence, type VoiceStatus, type EngineType } from '../lib/voiceGuide';
 import { getActiveMeditations, getMeditationEntry, type MeditationCatalogEntry } from '../lib/meditationCatalog';
 import { getBreathworkEntry } from '../lib/breathworkCatalog';
 import { MeditationExperience } from './MeditationExperience';
@@ -1504,6 +1504,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     if (safetyBlocked || practiceEntryBlocked || (memoryConcerns.length > 0 && (planIsStale || !program))) return;
                     const practiceId = item.practiceId ?? '';
                     if (item.type === 'pranayama' && practiceId) {
+                      unlockBreathworkAudio();
                       setSelectedBreathworkId(practiceId);
                       setSelectedMeditationId(null);
                       setDirectPractice({ id: practiceId, type: 'pranayama' });
@@ -1874,7 +1875,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               );
             }
             return (
-              <div className="breathwork-active-section">
+              <div ref={activePracticeRef} className="breathwork-active-section">
                 <button className="ghost-button practice-back-btn" onClick={handlePracticeBack}>← 戻る</button>
                 <BreathworkExperience entryId={selectedBreathworkId} />
                 <div className="practice-active-actions" style={{ marginTop: 24 }}>
@@ -2297,6 +2298,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                         setTimerRunning(false);
                         setSelectedGuide(null);
                       } else if (pose.type === 'pranayama') {
+                        unlockBreathworkAudio();
                         setSelectedBreathworkId(pose.id);
                         setTimerRunning(false);
                         setSelectedGuide(null);
