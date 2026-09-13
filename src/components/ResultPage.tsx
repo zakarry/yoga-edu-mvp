@@ -1,10 +1,11 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useState, useRef, useCallback, type CSSProperties } from 'react';
 import { SearchItem } from '../data';
 import { CardList } from './CardList';
 import { MapView } from './MapView';
 import { TopBackLink } from './TopBackLink';
 import { BreathworkVisual, buildPhasesFromPattern, type BreathPhase } from './BreathworkVisual';
-import { getBreathworkEntry } from '../lib/breathworkCatalog';
+import { getBreathworkEntry, type BreathworkCatalogEntry, type BreathworkPattern } from '../lib/breathworkCatalog';
+import { getVoiceGuideEngine } from '../lib/voiceGuide';
 
 export interface YogaPoseRecommendation {
   category: string;
@@ -70,89 +71,150 @@ export function BreathworkExperience({
   const entry = getBreathworkEntry(entryId);
   const [runId, setRunId] = useState(0);
   const [phaseIndex, setPhaseIndex] = useState(0);
+  const [currentRound, setCurrentRound] = useState(1);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [activeLayer, setActiveLayer] = useState<number | undefined>(undefined);
+  const [subtitle, setSubtitle] = useState('');
+  const timersRef = useRef<number[]>([]);
+  const voiceEngine = getVoiceGuideEngine();
 
   const phases = entry?.pattern ? buildPhasesFromPattern(entry.pattern) : [];
+  const totalRounds = entry?.pattern?.rounds ?? 1;
   const totalDuration = phases.reduce((sum, p) => sum + p.seconds, 0);
+
+  const clearTimers = useCallback(() => {
+    timersRef.current.forEach((t) => window.clearTimeout(t));
+    timersRef.current = [];
+  }, []);
 
   useEffect(() => {
     setRunId(1);
   }, []);
 
   useEffect(() => {
-    if (runId === 0 || phases.length === 0) return;
+    if (runId === 0 || phases.length === 0 || !entry) return;
 
-    const timers: number[] = [];
+    clearTimers();
     setIsRunning(true);
     setIsCompleted(false);
+    setCurrentRound(1);
+    setSubtitle('');
+    voiceEngine.stop();
 
-    const schedulePhase = (index: number) => {
-      const current = phases[index];
-      if (!current) return;
+    const vg = entry.voiceGuide;
+    const phaseCues = vg.phaseCues ?? {};
+    const repeatCues = vg.repeatCues ?? [];
 
-      setPhaseIndex(index);
-      setRemainingSeconds(current.seconds);
+    vg.intro.forEach((cue) => {
+      const t = window.setTimeout(() => {
+        voiceEngine.speak(cue.text);
+        setSubtitle(cue.text);
+      }, cue.at * 1000);
+      timersRef.current.push(t);
+    });
 
-      if (entry?.visual.type === 'layered_breathing') {
-        if (current.key === 'inhale') {
-          setActiveLayer(0);
-        } else if (current.key === 'exhale') {
-          setActiveLayer(2);
+    const introTotalSec = vg.intro.length > 0
+      ? Math.max(...vg.intro.map((c) => c.at)) + 3
+      : 0;
+
+    const roundDuration = totalDuration;
+
+    for (let round = 0; round < totalRounds; round++) {
+      const roundStart = introTotalSec + round * roundDuration;
+
+      phases.forEach((phase, phaseIdx) => {
+        const phaseStart = roundStart + phases.slice(0, phaseIdx).reduce((s, p) => s + p.seconds, 0);
+        const cueText = phaseCues[phase.label] ?? phaseCues[phase.key] ?? '';
+        if (cueText) {
+          const t = window.setTimeout(() => {
+            voiceEngine.speak(cueText);
+            setSubtitle(cueText);
+          }, phaseStart * 1000);
+          timersRef.current.push(t);
         }
-      }
 
-      for (let s = 1; s < current.seconds; s++) {
-        timers.push(
-          window.setTimeout(() => setRemainingSeconds(current.seconds - s), s * 1000),
-        );
-      }
-
-      if (entry?.visual.type === 'layered_breathing') {
-        if (current.key === 'inhale') {
-          const layers = entry.visual.layers ?? ['belly', 'chest', 'clavicle'];
-          const inhalePart = current.seconds / layers.length;
-          layers.forEach((_, i) => {
-            if (i === 0) return;
-            timers.push(
-              window.setTimeout(() => setActiveLayer(i), Math.round(inhalePart * i * 1000)),
-            );
-          });
-        } else if (current.key === 'exhale') {
-          const layers = entry.visual.layers ?? ['belly', 'chest', 'clavicle'];
-          const exhalePart = current.seconds / layers.length;
-          layers.forEach((_, i) => {
-            const reverseIdx = layers.length - 1 - i;
-            if (reverseIdx === 2) return;
-            timers.push(
-              window.setTimeout(() => setActiveLayer(reverseIdx), Math.round(exhalePart * (i + 1) * 1000)),
-            );
-          });
+        for (let s = 1; s < phase.seconds; s++) {
+          const t = window.setTimeout(() => {
+            setRemainingSeconds(phase.seconds - s);
+          }, (phaseStart + s) * 1000);
+          timersRef.current.push(t);
         }
+
+        if (entry.visual.type === 'layered_breathing') {
+          if (phase.key === 'inhale') {
+            const layers = entry.visual.layers ?? ['belly', 'chest', 'clavicle'];
+            const inhalePart = phase.seconds / layers.length;
+            layers.forEach((_, i) => {
+              if (i === 0) return;
+              const t = window.setTimeout(() => setActiveLayer(i), phaseStart * 1000 + Math.round(inhalePart * i * 1000));
+              timersRef.current.push(t);
+            });
+          } else if (phase.key === 'exhale') {
+            const layers = entry.visual.layers ?? ['belly', 'chest', 'clavicle'];
+            const exhalePart = phase.seconds / layers.length;
+            layers.forEach((_, i) => {
+              const reverseIdx = layers.length - 1 - i;
+              if (reverseIdx === 2) return;
+              const t = window.setTimeout(() => setActiveLayer(reverseIdx), phaseStart * 1000 + Math.round(exhalePart * (i + 1) * 1000));
+              timersRef.current.push(t);
+            });
+          }
+        }
+
+        const t = window.setTimeout(() => {
+          setPhaseIndex(phaseIdx);
+          setRemainingSeconds(phase.seconds);
+        }, phaseStart * 1000);
+        timersRef.current.push(t);
+      });
+
+      if (round > 0 && repeatCues.length > 0) {
+        repeatCues.forEach((cue) => {
+          const t = window.setTimeout(() => {
+            voiceEngine.speak(cue.text);
+            setSubtitle(cue.text);
+          }, (roundStart + cue.at) * 1000);
+          timersRef.current.push(t);
+        });
       }
 
-      if (index < phases.length - 1) {
-        timers.push(window.setTimeout(() => schedulePhase(index + 1), current.seconds * 1000));
-        return;
-      }
+      const t = window.setTimeout(() => {
+        setCurrentRound(round + 1);
+      }, roundStart * 1000);
+      timersRef.current.push(t);
+    }
 
-      timers.push(
-        window.setTimeout(() => {
-          setIsRunning(false);
-          setIsCompleted(true);
-          setActiveLayer(undefined);
-        }, current.seconds * 1000),
-      );
-    };
+    const lastRoundEnd = introTotalSec + totalRounds * roundDuration;
 
-    schedulePhase(0);
+    vg.completion.forEach((cue) => {
+      const t = window.setTimeout(() => {
+        voiceEngine.speak(cue.text);
+        setSubtitle(cue.text);
+      }, (lastRoundEnd + cue.at) * 1000);
+      timersRef.current.push(t);
+    });
+
+    const endT = window.setTimeout(() => {
+      setIsRunning(false);
+      setIsCompleted(true);
+      setActiveLayer(undefined);
+    }, (lastRoundEnd + 3) * 1000);
+    timersRef.current.push(endT);
 
     return () => {
-      timers.forEach((timer) => window.clearTimeout(timer));
+      clearTimers();
+      voiceEngine.stop();
     };
   }, [runId]);
+
+  useEffect(() => {
+    return () => {
+      clearTimers();
+      voiceEngine.stop();
+    };
+  }, []);
 
   if (!entry) {
     return <p>呼吸法が見つかりません。</p>;
@@ -161,7 +223,6 @@ export function BreathworkExperience({
   const currentPhase = phases[phaseIndex];
   const phaseKey: BreathPhase = currentPhase?.key ?? 'idle';
   const phaseLabel = currentPhase?.label ?? '準備';
-  const phaseBody = entry.instructions.firstRound[phaseIndex] ?? entry.instructions.intro[0] ?? '';
 
   return (
     <div
@@ -179,13 +240,23 @@ export function BreathworkExperience({
         />
 
         <div className="breathing-controls">
-          <p className="breathing-live-copy">
-            {isCompleted
-              ? '1回分が終わりました。落ち着いて続けたいときは、もう一回やるを押してください。'
-              : isRunning
-                ? `${phaseLabel}の時間です。${phaseBody}`
-                : '準備ができたら開始してください。'}
-          </p>
+          {isRunning && totalRounds > 1 && (
+            <span className="breathing-round-indicator">ラウンド {currentRound} / {totalRounds}</span>
+          )}
+          {subtitle && isRunning && (
+            <p className="breathing-live-copy">{subtitle}</p>
+          )}
+          {!subtitle && isRunning && (
+            <p className="breathing-live-copy">{phaseLabel}の時間です</p>
+          )}
+          {isCompleted && (
+            <p className="breathing-live-copy">
+              {totalRounds}回分が終わりました。落ち着いて続けたいときは、もう一回やるを押してください。
+            </p>
+          )}
+          {!isRunning && !isCompleted && (
+            <p className="breathing-live-copy">準備ができたら開始してください。</p>
+          )}
           <button
             type="button"
             className="secondary-button breathing-replay-button"

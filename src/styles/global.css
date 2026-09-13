@@ -9085,3 +9085,14 @@ html, body {
   gap: 12px;
   justify-content: center;
 }
+
+.breathing-round-indicator {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green-strong);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(173, 229, 207, 0.25);
+  margin-bottom: 8px;
+  display: inline-block;
+}

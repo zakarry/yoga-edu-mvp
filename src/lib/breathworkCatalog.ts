@@ -125,15 +125,15 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
         { at: 5, text: '無理のない範囲で行いましょう。' },
       ],
       phaseCues: {
-        '吸う': '鼻から吸います。',
-        '止める': '止めます。',
-        '吐く': 'ゆっくり吐きます。',
+        '吸う': '鼻からゆっくり吸って。',
+        '止める': 'そのまま止めます。',
+        '吐く': '鼻からゆっくり吐いて。',
       },
       repeatCues: [
-        { at: 0, text: '鼻から吸います。' },
-        { at: 4, text: '止めます。' },
-        { at: 8, text: 'ゆっくり吐きます。' },
-        { at: 12, text: '止めます。' },
+        { at: 0, text: '鼻からゆっくり吸って。' },
+        { at: 4, text: 'そのまま止めます。' },
+        { at: 8, text: '鼻からゆっくり吐いて。' },
+        { at: 12, text: 'そのまま止めます。' },
       ],
       completion: [
         { at: 0, text: '最後の呼吸です。' },
@@ -188,10 +188,17 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     },
     voiceGuide: {
       intro: [
-        { at: 0, text: '腹式呼吸を始めます。' },
+        { at: 0, text: '腹式呼吸を始めます。肩の力を抜いて、楽な姿勢をとりましょう。' },
+        { at: 6, text: '鼻からゆっくり吸って、お腹がふくらむのを感じます。' },
+        { at: 14, text: '鼻からゆっくり吐いて、お腹がやさしく戻ります。' },
+      ],
+      repeatCues: [
+        { at: 0, text: '鼻からゆっくり吸って、お腹がふくらむのを感じます。' },
+        { at: 8, text: '鼻からゆっくり吐いて、お腹がやさしく戻ります。' },
+        { at: 16, text: '呼吸は無理のない範囲で続けましょう。' },
       ],
       completion: [
-        { at: 0, text: 'お疲れさまでした。' },
+        { at: 0, text: 'お疲れさまでした。自然な呼吸に戻しましょう。' },
       ],
     },
     status: 'active',
@@ -242,9 +249,16 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     voiceGuide: {
       intro: [
         { at: 0, text: '胸式呼吸を始めます。肩の力を抜いて、楽な姿勢をとりましょう。' },
+        { at: 6, text: '鼻から吸って、胸の広がりを感じます。' },
+        { at: 14, text: '鼻から吐いて、胸がやさしく戻るのを感じます。' },
+      ],
+      repeatCues: [
+        { at: 0, text: '鼻から吸って、胸の広がりを感じます。' },
+        { at: 8, text: '鼻から吐いて、胸がやさしく戻るのを感じます。' },
+        { at: 16, text: '肩を上げすぎず、無理のない呼吸で続けましょう。' },
       ],
       completion: [
-        { at: 0, text: 'お疲れさまでした。' },
+        { at: 0, text: 'お疲れさまでした。自然な呼吸に戻しましょう。' },
       ],
     },
     status: 'active',
@@ -301,8 +315,12 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
         { at: 25, text: 'まずお腹を膨らませ、次に胸郭を広げ、最後に鎖骨周りも少し広げます。' },
         { at: 40, text: 'ゆっくり吐いて、上から順に戻します。' },
       ],
+      repeatCues: [
+        { at: 0, text: 'お腹から胸、鎖骨の順に吸います。' },
+        { at: 10, text: 'ゆっくり吐いて、上から順に戻します。' },
+      ],
       completion: [
-        { at: 0, text: 'お疲れさまでした。' },
+        { at: 0, text: 'お疲れさまでした。自然な呼吸に戻しましょう。' },
       ],
     },
     status: 'active',
