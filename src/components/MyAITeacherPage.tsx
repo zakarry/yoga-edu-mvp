@@ -509,27 +509,28 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       setFormUiLang(p.uiLanguage);
       setFormTeachingLang(p.teachingLanguage);
     }
+    const savedTodayCtx = loadTodayContextSession<TodayContext>();
+    let restoredCheckResult: 'none' | 'pain' | 'unknown' | null = null;
+    if (savedTodayCtx) {
+      setTodayContext(savedTodayCtx);
+      if (savedTodayCtx.todayPain) { setTodayCheckResult('pain'); restoredCheckResult = 'pain'; }
+      else if (savedTodayCtx.selectionResolved) { setTodayCheckResult('none'); restoredCheckResult = 'none'; }
+    }
     const saved = loadTodayProgram();
     if (saved) {
-      const initialSig = computeTodayContextSignature({
-        todayCheckResult: null,
-        requestedMode: null,
-        selectionResolved: false,
-        availableMinutes: null,
-        intensityPreference: null,
-        mood: null,
+      const restoredSig = computeTodayContextSignature({
+        todayCheckResult: restoredCheckResult,
+        requestedMode: savedTodayCtx?.requestedMode ?? null,
+        selectionResolved: savedTodayCtx?.selectionResolved ?? false,
+        availableMinutes: savedTodayCtx?.availableMinutes ?? null,
+        intensityPreference: savedTodayCtx?.intensityPreference ?? null,
+        mood: savedTodayCtx?.mood ?? null,
       });
-      if (saved.todayContextSignature && saved.todayContextSignature === initialSig) {
+      if (saved.todayContextSignature && saved.todayContextSignature === restoredSig) {
         setProgram(saved);
       } else {
         try { localStorage.removeItem('todayYoga'); } catch { /* ignore */ }
       }
-    }
-    const savedTodayCtx = loadTodayContextSession<TodayContext>();
-    if (savedTodayCtx) {
-      setTodayContext(savedTodayCtx);
-      if (savedTodayCtx.todayPain) setTodayCheckResult('pain');
-      else if (savedTodayCtx.selectionResolved) setTodayCheckResult('none');
     }
   }, []);
 
@@ -1531,32 +1532,35 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         </section>
       )}
 
-      {/* STEP 6: Practice with today's plan and visual guides */}
-      {step === 'step6' && safetyBlocked && (
+      {/* STEP 6: Safety Gate — exclusive when safetyBlocked or practiceEntryBlocked (pain) */}
+      {step === 'step6' && (safetyBlocked || practiceEntryBlocked) && (
         <section className="panel ai-teacher-step-panel">
           <h3>STEP 6 — 実践AI先生</h3>
           <div className="ai-teacher-practice-gate-block">
-            <p>今日は痛みがあるとのことなので、AI先生から個別のポーズ提案は行いません。無理に実践せず、必要に応じて医療専門家や信頼できる指導者に相談してください。</p>
-            <div className="ai-teacher-today-check-options">
-              <button className="secondary-button" onClick={() => { setTodayCheckResult(null); setStep('step5'); }}>一般的な呼吸・瞑想について見る</button>
-              <button className="ghost-button" onClick={() => { setTodayCheckResult(null); setStep('home'); }}>今日は実践しない</button>
-            </div>
-          </div>
-        </section>
-      )}
-      {step === 'step6' && !safetyBlocked && (
-        <section className="panel ai-teacher-step-panel">
-          <h3>STEP 6 — 実践AI先生</h3>
-          <p className="ai-teacher-step-intro">お手本を見てから、順番に実践します。全部終わったら記録しましょう。</p>
-          {practiceEntryBlocked && (
-            <div className="ai-teacher-practice-gate-block">
+            {safetyBlocked ? (
+              <p>今日は痛みがあるとのことなので、AI先生から個別のポーズ提案は行いません。無理に実践せず、必要に応じて医療専門家や信頼できる指導者に相談してください。</p>
+            ) : (
               <p>以前教えてもらった身体の不安があります。今日の状態を確認してから始めましょう。</p>
+            )}
+            {safetyBlocked ? (
+              <div className="ai-teacher-today-check-options">
+                <button className="secondary-button" onClick={() => { setTodayCheckResult(null); setStep('step5'); }}>一般的な呼吸・瞑想について見る</button>
+                <button className="ghost-button" onClick={() => { setTodayCheckResult(null); setStep('home'); }}>今日は実践しない</button>
+              </div>
+            ) : (
               <button className="primary-button" onClick={handleShowTodayCheck}>
                 今日の状態を確認する
               </button>
-            </div>
-          )}
-          {!practiceEntryBlocked && planIsStale && program && (
+            )}
+          </div>
+        </section>
+      )}
+      {/* STEP 6: Normal practice — only when not safetyBlocked and not practiceEntryBlocked */}
+      {step === 'step6' && !safetyBlocked && !practiceEntryBlocked && (
+        <section className="panel ai-teacher-step-panel">
+          <h3>STEP 6 — 実践AI先生</h3>
+          <p className="ai-teacher-step-intro">お手本を見てから、順番に実践します。全部終わったら記録しましょう。</p>
+          {planIsStale && program && (
             <div className="ai-teacher-practice-gate-block">
               <p>今日の状態が変わりました。今日のヨガを再生成してから実践してください。</p>
               <button className="primary-button" onClick={() => void handleGenerateProgram()}>
@@ -1565,17 +1569,15 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             </div>
           )}
 
-          {/* Camera disclaimer — only when practice is accessible */}
-          {!practiceEntryBlocked && (
+          {/* Camera disclaimer */}
           <div className="ai-teacher-camera-disclaimer">
             <p>
               ※カメラは自分の動きを確認するための鏡機能です。AI先生は姿勢の診断・採点・安全判定は行いません。
             </p>
           </div>
-          )}
 
           {/* Phase: List — show all concrete poses */}
-          {posePhase === 'list' && !safetyBlocked && !practiceEntryBlocked && (
+          {posePhase === 'list' && (
             <div className="today-plan-inline-display">
               <div className="today-plan-inline-header">
                 <h4>今日のプログラム</h4>
@@ -1673,7 +1675,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           )}
 
           {/* Phase: Guide — show visual guide for current pose */}
-          {posePhase === 'guide' && practicePhase !== 'done' && !safetyBlocked && !practiceEntryBlocked && concretePoses[currentPoseIdx] && (
+          {posePhase === 'guide' && practicePhase !== 'done' && concretePoses[currentPoseIdx] && (
             <div ref={poseGuideRef} className="pose-guide-section">
               {/* Progress indicator */}
               <div className="pose-progress-bar">
