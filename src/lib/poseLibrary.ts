@@ -65,11 +65,24 @@ function entryToConcrete(entry: PoseCatalogEntry): ConcretePose {
 
 export const CONCRETE_POSES: ConcretePose[] = POSE_CATALOG.map(entryToConcrete);
 
+const ALL_CATALOG_ENTRIES: PoseCatalogEntry[] = [
+  ...POSE_CATALOG,
+  ...getActivePosesByType('pranayama'),
+  ...getActivePosesByType('dhyana'),
+];
+
 const POSE_BY_NAME: Record<string, ConcretePose> = {};
 const POSE_BY_ID: Record<string, ConcretePose> = {};
+for (const entry of ALL_CATALOG_ENTRIES) {
+  const concrete = entryToConcrete(entry);
+  if (!POSE_BY_ID[concrete.id]) {
+    POSE_BY_ID[concrete.id] = concrete;
+    POSE_BY_NAME[concrete.name] = concrete;
+  }
+}
 for (const p of CONCRETE_POSES) {
-  POSE_BY_NAME[p.name] = p;
-  POSE_BY_ID[p.id] = p;
+  if (!POSE_BY_ID[p.id]) POSE_BY_ID[p.id] = p;
+  if (!POSE_BY_NAME[p.name]) POSE_BY_NAME[p.name] = p;
 }
 
 const ABSTRACT_TO_CONCRETE: Record<string, string[]> = {

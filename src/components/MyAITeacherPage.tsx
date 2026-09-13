@@ -27,7 +27,10 @@ import { emptyTodayContext, type TodayContext, type RequestedMode } from '../typ
 import { getPlanGate, gateVerdictAllowsGeneration, gateStateMessage, getPracticeEntryGate, practiceEntryAllows, computeTodayContextSignature, isPlanStale, type PlanGateVerdict, type PracticeEntryVerdict } from '../services/planGate';
 import { isTTSAvailable, buildVoiceGuide, getVoiceStatus, getVoiceGuideEngine, getEngineType, preloadVoicePhrases, preloadVoiceKeys, unlockAudioContext, getAudioDiagnostic, ALL_VOICE_KEYS, REMAINING_CUES, BOX_BREATHING_PHASE_CUES, type VoiceGuideSequence, type VoiceStatus, type EngineType } from '../lib/voiceGuide';
 import { getActiveMeditations, getMeditationEntry, type MeditationCatalogEntry } from '../lib/meditationCatalog';
+import { getBreathworkEntry } from '../lib/breathworkCatalog';
 import { MeditationExperience } from './MeditationExperience';
+import { BreathworkExperience } from './ResultPage';
+import { BreathworkVisual } from './BreathworkVisual';
 
 interface MyAITeacherPageProps {
   onBackHome: () => void;
@@ -388,6 +391,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [practiceActive, setPracticeActive] = useState(false);
   const [practiceType, setPracticeType] = useState<'asana' | 'pranayama' | 'dhyana' | null>(null);
   const [selectedMeditationId, setSelectedMeditationId] = useState<string | null>(null);
+  const [selectedBreathworkId, setSelectedBreathworkId] = useState<string | null>(null);
+  const [directPractice, setDirectPractice] = useState<{ id: string; type: 'asana' | 'pranayama' | 'dhyana' } | null>(null);
   const [moodBefore, setMoodBefore] = useState<string>('');
   const [moodAfter, setMoodAfter] = useState<string>('');
   const [practiceNote, setPracticeNote] = useState<string>('');
@@ -1447,10 +1452,43 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   <span className="ai-teacher-duration">約{item.durationMin}分</span>
                   <button className="secondary-button" disabled={safetyBlocked || practiceEntryBlocked || (memoryConcerns.length > 0 && (planIsStale || !program))} onClick={() => {
                     if (safetyBlocked || practiceEntryBlocked || (memoryConcerns.length > 0 && (planIsStale || !program))) return;
-                    setPracticeType(item.type);
-                    setPracticeDuration(item.durationMin);
-                    setSelectedGuide(null); setPracticePhase('guide');
-                    setStep('step6');
+                    const practiceId = item.practiceId ?? '';
+                    if (item.type === 'pranayama' && practiceId) {
+                      setSelectedBreathworkId(practiceId);
+                      setSelectedMeditationId(null);
+                      setDirectPractice({ id: practiceId, type: 'pranayama' });
+                      setPracticeType('pranayama');
+                      setPracticePhase('active');
+                      setPracticeActive(true);
+                      setSessionStartedAt(Date.now());
+                      setPracticeAborted(false);
+                      setPracticeSessionId(crypto.randomUUID());
+                      setTimerRunning(false);
+                      setSelectedGuide(null);
+                      setStep('step6');
+                    } else if (item.type === 'dhyana' && practiceId) {
+                      setSelectedMeditationId(practiceId);
+                      setSelectedBreathworkId(null);
+                      setDirectPractice({ id: practiceId, type: 'dhyana' });
+                      setPracticeType('dhyana');
+                      setPracticePhase('active');
+                      setPracticeActive(true);
+                      setSessionStartedAt(Date.now());
+                      setPracticeAborted(false);
+                      setPracticeSessionId(crypto.randomUUID());
+                      setTimerRunning(false);
+                      setSelectedGuide(null);
+                      setStep('step6');
+                    } else {
+                      setPracticeType(item.type);
+                      setPracticeDuration(item.durationMin);
+                      setSelectedGuide(null);
+                      setSelectedMeditationId(null);
+                      setSelectedBreathworkId(null);
+                      setDirectPractice(null);
+                      setPracticePhase('guide');
+                      setStep('step6');
+                    }
                   }}>{safetyBlocked ? '安全確認が必要です' : practiceEntryBlocked ? '今日の状態を確認してください' : (memoryConcerns.length > 0 && (planIsStale || !program)) ? 'プログラムを再生成してください' : '実践する'}</button>
                   {showKnowledgeLink && planItem?.knowledgeLinks && planItem.knowledgeLinks.length > 0 ? (
                     planItem.knowledgeLinks.map((link, linkIdx) => (
@@ -1770,6 +1808,54 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             </div>
           )}
 
+          {/* Breathwork direct practice — when a breathwork item is selected from STEP2 */}
+          {practiceType === 'pranayama' && selectedBreathworkId && practicePhase === 'active' && (() => {
+            const entry = getBreathworkEntry(selectedBreathworkId);
+            if (!entry) {
+              return (
+                <div className="practice-error-section">
+                  <p>この実践データを読み込めませんでした。</p>
+                  <p className="practice-error-id">ID: {selectedBreathworkId} / type: pranayama</p>
+                  <button className="ghost-button" onClick={() => {
+                    setSelectedBreathworkId(null);
+                    setDirectPractice(null);
+                    setPracticePhase('guide');
+                    setPracticeActive(false);
+                  }}>戻る</button>
+                </div>
+              );
+            }
+            return (
+              <div className="breathwork-active-section">
+                <BreathworkExperience entryId={selectedBreathworkId} />
+                <div className="practice-active-actions" style={{ marginTop: 24 }}>
+                  <button
+                    className="secondary-button"
+                    onClick={() => {
+                      setSelectedBreathworkId(null);
+                      setDirectPractice(null);
+                      setPracticePhase('done');
+                      setPracticeActive(false);
+                    }}
+                  >
+                    完了して記録する
+                  </button>
+                  <button
+                    className="ghost-button"
+                    onClick={() => {
+                      setSelectedBreathworkId(null);
+                      setDirectPractice(null);
+                      setPracticePhase('guide');
+                      setPracticeActive(false);
+                    }}
+                  >
+                    中止する
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Meditation active — when a meditation is selected */}
           {practiceType === 'dhyana' && selectedMeditationId && practicePhase === 'active' && (() => {
             const entry = getMeditationEntry(selectedMeditationId);
@@ -1832,7 +1918,28 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                           </span>
                         </div>
                         <div className="today-plan-pose-visual">
-                          <img src={pose.image} alt={pose.name} className="today-plan-pose-thumb" loading="lazy" />
+                          {pose.type === 'asana' && pose.image && (
+                            <img src={pose.image} alt={pose.name} className="today-plan-pose-thumb" loading="lazy"
+                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                            />
+                          )}
+                          {pose.type === 'asana' && !pose.image && (
+                            <div className="today-plan-pose-thumb-fallback">{pose.name}</div>
+                          )}
+                          {pose.type === 'pranayama' && (
+                            <div className="today-plan-pose-thumb-icon">
+                              <div className="breathing-circle is-running" style={{ width: 60, height: 60 }}>
+                                <div className="breathing-circle-content">
+                                  <strong style={{ fontSize: 10 }}>呼吸</strong>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          {pose.type === 'dhyana' && (
+                            <div className="today-plan-pose-thumb-icon">
+                              <div className="meditation-breath-circle" style={{ width: 60, height: 60, opacity: 0.4 }} />
+                            </div>
+                          )}
                           <div className="today-plan-pose-info">
                             <strong className="today-plan-pose-name">{pose.name}</strong>
                             {pose.sanskrit && (
@@ -1926,11 +2033,48 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 </div>
 
                 <div className="pose-guide-image-wrap">
-                  <img
-                    src={concretePoses[currentPoseIdx].image}
-                    alt={concretePoses[currentPoseIdx].name}
-                    className={`pose-guide-image${concretePoses[currentPoseIdx].id === 'tadasana' ? ' pose-guide-image--portrait' : ''}`}
-                  />
+                  {concretePoses[currentPoseIdx].type === 'asana' && concretePoses[currentPoseIdx].image && (
+                    <img
+                      src={concretePoses[currentPoseIdx].image}
+                      alt={concretePoses[currentPoseIdx].name}
+                      className={`pose-guide-image${concretePoses[currentPoseIdx].id === 'tadasana' ? ' pose-guide-image--portrait' : ''}`}
+                      onError={(e) => {
+                        const img = e.currentTarget;
+                        img.style.display = 'none';
+                        const fallback = img.nextElementSibling as HTMLElement | null;
+                        if (fallback) fallback.style.display = 'flex';
+                      }}
+                    />
+                  )}
+                  {(concretePoses[currentPoseIdx].type === 'asana' && !concretePoses[currentPoseIdx].image) && (
+                    <div className="pose-guide-image-fallback">
+                      <span>{concretePoses[currentPoseIdx].name}</span>
+                    </div>
+                  )}
+                  {concretePoses[currentPoseIdx].type === 'pranayama' && (() => {
+                    const bwEntry = getBreathworkEntry(concretePoses[currentPoseIdx].id);
+                    if (!bwEntry) return (
+                      <div className="pose-guide-image-fallback">
+                        <span>呼吸法</span>
+                      </div>
+                    );
+                    return (
+                      <BreathworkVisual
+                        breathwork={bwEntry}
+                        phase="idle"
+                        remainingSeconds={0}
+                        isRunning={false}
+                        isCompleted={false}
+                        activeLayer={undefined}
+                      />
+                    );
+                  })()}
+                  {concretePoses[currentPoseIdx].type === 'dhyana' && (
+                    <div className="pose-guide-image-fallback pose-guide-meditation-fallback">
+                      <div className="meditation-breath-circle" style={{ width: 80, height: 80, opacity: 0.4 }} />
+                      <span>瞑想</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Multi-stage images if available */}
@@ -2142,7 +2286,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           )}
 
           {/* Phase: Active — practice with timer */}
-          {practicePhase === 'active' && posePhase !== 'done' && !(practiceType === 'dhyana' && selectedMeditationId) && (
+          {practicePhase === 'active' && posePhase !== 'done' && !(practiceType === 'dhyana' && selectedMeditationId) && !(practiceType === 'pranayama' && selectedBreathworkId) && (
             <div ref={activePracticeRef} className="practice-active-section">
               <div className="practice-active-header">
                 <h4>{concretePoses[currentPoseIdx]?.name ?? selectedGuide?.name ?? '実践中'}</h4>

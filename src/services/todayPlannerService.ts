@@ -1,6 +1,8 @@
 import type { TeacherContext, PracticeType } from './teacherContextService';
 import { getPoseById } from '../lib/poseLibrary';
 import { getPlannerPoses, type PoseType } from '../lib/poseCatalog';
+import { getMeditationEntry } from '../lib/meditationCatalog';
+import { getBreathworkEntry } from '../lib/breathworkCatalog';
 
 export interface TodayPlanItem {
   type: PracticeType;
@@ -31,6 +33,14 @@ function pickPracticeId(type: PracticeType, gentle: boolean, index: number): str
 function practiceName(id: string): string {
   const pose = getPoseById(id);
   return pose?.name ?? id;
+}
+
+function catalogDurationMin(id: string, fallbackMin: number): number {
+  const meditation = getMeditationEntry(id);
+  if (meditation) return Math.round(meditation.durationSec / 60);
+  const breathwork = getBreathworkEntry(id);
+  if (breathwork) return breathwork.defaultDurationMin;
+  return fallbackMin;
 }
 
 function calcGapDays(lastPracticeAt?: string): number | null {
@@ -162,7 +172,7 @@ export function generateTodayPlan(context: TeacherContext): TodayPlan {
     const breathId = pickPracticeId('pranayama', false, 0);
     items.push({ type: 'pranayama', name: practiceName(breathId), minutes: Math.max(3, Math.round(targetMinutes * 0.5)), practiceId: breathId });
     const medId = pickPracticeId('dhyana', false, 0);
-    items.push({ type: 'dhyana', name: practiceName(medId), minutes: Math.max(2, Math.round(targetMinutes * 0.3)), practiceId: medId });
+    items.push({ type: 'dhyana', name: practiceName(medId), minutes: catalogDurationMin(medId, Math.max(2, Math.round(targetMinutes * 0.3))), practiceId: medId });
     const breathRemainder = Math.max(1, targetMinutes - items[0].minutes - items[1].minutes);
     if (breathRemainder > 0) {
       const breath2Id = pickPracticeId('pranayama', false, 1);
@@ -176,7 +186,7 @@ export function generateTodayPlan(context: TeacherContext): TodayPlan {
     const shortRemainder = Math.max(1, targetMinutes - items[0].minutes - items[1].minutes);
     if (shortRemainder > 0) {
       const medId = pickPracticeId('dhyana', false, 0);
-      items.push({ type: 'dhyana', name: practiceName(medId), minutes: shortRemainder, practiceId: medId });
+      items.push({ type: 'dhyana', name: practiceName(medId), minutes: catalogDurationMin(medId, shortRemainder), practiceId: medId });
     }
   } else {
     const pId = pickPracticeId(primaryType, isGentle, 0);
@@ -236,7 +246,7 @@ export function generateTodayPlan(context: TeacherContext): TodayPlan {
       const fbMedId = pickPracticeId('dhyana', false, 0);
       items = [
         { type: 'pranayama', name: practiceName(fbBreathId), minutes: Math.max(3, Math.round(targetMinutes * 0.5)), practiceId: fbBreathId },
-        { type: 'dhyana', name: practiceName(fbMedId), minutes: Math.max(2, Math.round(targetMinutes * 0.3)), practiceId: fbMedId },
+        { type: 'dhyana', name: practiceName(fbMedId), minutes: catalogDurationMin(fbMedId, Math.max(2, Math.round(targetMinutes * 0.3))), practiceId: fbMedId },
       ];
     }
   }
