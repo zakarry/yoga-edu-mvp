@@ -3206,7 +3206,7 @@ h1 {
 }
 
 .breathing-circle.is-running {
-  animation: boxBreathingPulse 16s linear 1 both;
+  animation: boxBreathingPulse var(--bw-duration, 16s) linear 1 both;
 }
 
 .breathing-circle.is-completed {
@@ -3273,6 +3273,12 @@ h1 {
     animation: none;
     transform: scale(0.96);
   }
+  .bw-body-region.is-breathing {
+    animation: none !important;
+  }
+  .bw-layered-region.is-active {
+    animation: none !important;
+  }
 }
 
 @media (max-width: 768px) {
@@ -3309,6 +3315,270 @@ h1 {
 
   .breathing-replay-button {
     width: 100%;
+  }
+}
+
+/* --- breathwork body breathing visual --- */
+.bw-body-stage {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+  width: min(100%, 280px);
+  margin-inline: auto;
+}
+
+.bw-body-figure {
+  position: relative;
+  width: 180px;
+  height: 220px;
+  display: grid;
+  place-items: center;
+}
+
+.bw-body-silhouette {
+  position: absolute;
+  inset: 0;
+  border-radius: 50% 50% 42% 42% / 38% 38% 62% 62%;
+  background: linear-gradient(180deg, rgba(203, 241, 223, 0.35) 0%, rgba(153, 215, 224, 0.25) 50%, rgba(123, 178, 226, 0.18) 100%);
+  border: 2px solid rgba(108, 138, 118, 0.25);
+}
+
+.bw-body-region {
+  position: absolute;
+  border-radius: 50%;
+  transition: transform 0.8s ease-in-out, opacity 0.4s ease;
+  z-index: 1;
+}
+
+.bw-body-belly {
+  width: 90px;
+  height: 70px;
+  bottom: 28%;
+  left: 50%;
+  transform: translateX(-50%) scale(0.85);
+  background: radial-gradient(circle, rgba(173, 229, 207, 0.55) 0%, rgba(141, 215, 214, 0.3) 70%, transparent 100%);
+}
+
+.bw-body-chest {
+  width: 100px;
+  height: 76px;
+  top: 22%;
+  left: 50%;
+  transform: translateX(-50%) scale(0.85);
+  background: radial-gradient(circle, rgba(173, 229, 207, 0.55) 0%, rgba(141, 215, 214, 0.3) 70%, transparent 100%);
+}
+
+.bw-body-figure.is-breathing .bw-body-belly {
+  animation: bwBellyPulse var(--bw-duration, 6s) ease-in-out infinite;
+}
+
+.bw-body-figure.is-breathing .bw-body-chest {
+  animation: bwChestPulse var(--bw-duration, 6s) ease-in-out infinite;
+}
+
+.bw-body-figure.is-done .bw-body-region {
+  transform: translateX(-50%) scale(0.85);
+  animation: none;
+}
+
+.bw-body-label {
+  display: grid;
+  gap: 4px;
+  text-align: center;
+  color: var(--navy);
+}
+
+.bw-body-label strong {
+  font-size: clamp(20px, 3.5vw, 24px);
+}
+
+.bw-body-label span {
+  font-size: clamp(18px, 3vw, 22px);
+  font-weight: 700;
+  color: var(--green-strong);
+}
+
+@keyframes bwBellyPulse {
+  0%, 100% { transform: translateX(-50%) scale(0.85); }
+  50% { transform: translateX(-50%) scale(1.08); }
+}
+
+@keyframes bwChestPulse {
+  0%, 100% { transform: translateX(-50%) scale(0.85); }
+  50% { transform: translateX(-50%) scale(1.06); }
+}
+
+/* --- breathwork layered breathing visual --- */
+.bw-layered-stage {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+  width: min(100%, 320px);
+  margin-inline: auto;
+}
+
+.bw-layered-figure {
+  position: relative;
+  width: 180px;
+  height: 240px;
+  display: grid;
+  place-items: center;
+}
+
+.bw-layered-silhouette {
+  position: absolute;
+  inset: 0;
+  border-radius: 50% 50% 42% 42% / 38% 38% 62% 62%;
+  background: linear-gradient(180deg, rgba(203, 241, 223, 0.35) 0%, rgba(153, 215, 224, 0.25) 50%, rgba(123, 178, 226, 0.18) 100%);
+  border: 2px solid rgba(108, 138, 118, 0.25);
+}
+
+.bw-layered-region {
+  position: absolute;
+  border-radius: 50%;
+  left: 50%;
+  transform: translateX(-50%) scale(0.82);
+  transition: transform 0.6s ease, opacity 0.4s ease, box-shadow 0.6s ease;
+  z-index: 1;
+  opacity: 0.4;
+}
+
+.bw-layer-belly {
+  width: 86px;
+  height: 64px;
+  bottom: 18%;
+  background: radial-gradient(circle, rgba(108, 138, 118, 0.4) 0%, rgba(108, 138, 118, 0.15) 70%, transparent 100%);
+}
+
+.bw-layer-chest {
+  width: 96px;
+  height: 72px;
+  top: 28%;
+  background: radial-gradient(circle, rgba(108, 138, 118, 0.4) 0%, rgba(108, 138, 118, 0.15) 70%, transparent 100%);
+}
+
+.bw-layer-clavicle {
+  width: 80px;
+  height: 56px;
+  top: 10%;
+  background: radial-gradient(circle, rgba(108, 138, 118, 0.4) 0%, rgba(108, 138, 118, 0.15) 70%, transparent 100%);
+}
+
+.bw-layered-region.is-active {
+  transform: translateX(-50%) scale(1.1);
+  opacity: 1;
+  box-shadow: 0 0 24px rgba(108, 138, 118, 0.35);
+}
+
+.bw-layered-region.is-filled {
+  opacity: 0.7;
+  transform: translateX(-50%) scale(1.0);
+}
+
+.bw-layered-figure.is-done .bw-layered-region {
+  transform: translateX(-50%) scale(0.82);
+  opacity: 0.4;
+  box-shadow: none;
+}
+
+.bw-layered-steps {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.bw-layered-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(108, 138, 118, 0.25);
+  background: rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+}
+
+.bw-layered-step.is-active {
+  border-color: var(--green-strong);
+  background: rgba(173, 229, 207, 0.35);
+}
+
+.bw-layered-step.is-done {
+  opacity: 0.5;
+}
+
+.bw-layered-step-num {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(108, 138, 118, 0.15);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.bw-layered-step.is-active .bw-layered-step-num {
+  background: var(--green-strong);
+  color: white;
+}
+
+.bw-layered-step-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.bw-layered-timer {
+  display: grid;
+  gap: 4px;
+  text-align: center;
+  color: var(--navy);
+}
+
+.bw-layered-timer strong {
+  font-size: clamp(20px, 3.5vw, 24px);
+}
+
+.bw-layered-timer span {
+  font-size: clamp(18px, 3vw, 22px);
+  font-weight: 700;
+  color: var(--green-strong);
+}
+
+/* --- breathwork gif/static visual --- */
+.bw-gif-stage, .bw-static-stage {
+  width: min(100%, 280px);
+  display: grid;
+  place-items: center;
+  margin-inline: auto;
+}
+
+.bw-gif-image, .bw-static-image {
+  width: 100%;
+  max-width: 280px;
+  border-radius: 20px;
+  border: 1px solid rgba(16, 37, 66, 0.08);
+}
+
+@media (max-width: 640px) {
+  .bw-body-stage, .bw-layered-stage {
+    width: min(100%, 260px);
+  }
+  .bw-body-figure, .bw-layered-figure {
+    width: 160px;
+    height: 200px;
+  }
+  .bw-layered-figure {
+    height: 220px;
+  }
+  .bw-layered-steps {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .bw-layered-step {
+    padding: 6px 10px;
   }
 }
 
@@ -8410,5 +8680,40 @@ html, body {
 
   .pose-stage-info p {
     font-size: 12px;
+  }
+}
+
+/* --- breathwork select grid --- */
+.breathwork-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.breathwork-select-card {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(16,37,66,.08);
+  background: linear-gradient(180deg, #fff 0%, #f7faf8 100%);
+  text-align: left;
+  transition: transform .16s ease, box-shadow .16s ease;
+}
+.breathwork-select-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(16,37,66,.1);
+}
+.breathwork-select-card strong {
+  font-size: 16px;
+  color: var(--navy);
+}
+.breathwork-select-card span {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+@media (max-width: 640px) {
+  .breathwork-select-grid {
+    grid-template-columns: 1fr;
   }
 }

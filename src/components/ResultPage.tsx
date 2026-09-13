@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { SearchItem } from '../data';
 import { CardList } from './CardList';
 import { MapView } from './MapView';
 import { TopBackLink } from './TopBackLink';
+import { BreathworkVisual, buildPhasesFromPattern, type BreathPhase } from './BreathworkVisual';
+import { getBreathworkEntry } from '../lib/breathworkCatalog';
 
 export interface YogaPoseRecommendation {
   category: string;
@@ -47,57 +49,92 @@ interface ResultPageProps {
   onDetail: (item: SearchItem) => void;
 }
 
-const BOX_BREATHING_PHASES = [
-  {
-    label: '吸う',
-    seconds: 4,
-    body: '鼻からゆっくり吸って、胸やお腹にやさしく空気を入れます。',
-  },
-  {
-    label: '止める',
-    seconds: 4,
-    body: '苦しくない範囲で、そのまま静かにキープします。',
-  },
-  {
-    label: '吐く',
-    seconds: 4,
-    body: '鼻から細く長く吐いて、肩の力も一緒にゆるめます。',
-  },
-  {
-    label: '止める',
-    seconds: 4,
-    body: '次の呼吸の前に、落ち着いてひと呼吸ぶん間を取ります。',
-  },
-] as const;
+const BOX_BREATHING_STEPS = [
+  { num: '1', title: '鼻から4秒吸う', body: '肩を上げすぎず、やさしく息を取り入れます。' },
+  { num: '2', title: '4秒止める', body: '苦しくない範囲で、呼吸を静かにキープします。' },
+  { num: '3', title: '鼻から4秒吐く', body: '細く長く、力を抜きながら吐いていきます。' },
+  { num: '4', title: '4秒止める', body: '次の呼吸の前に、落ち着いて1回区切ります。' },
+];
 
 export function BoxBreathingExperience() {
+  return <BreathworkExperience entryId="box-breathing" steps={BOX_BREATHING_STEPS} />;
+}
+
+export function BreathworkExperience({
+  entryId,
+  steps,
+}: {
+  entryId: string;
+  steps?: { num: string; title: string; body: string }[];
+}) {
+  const entry = getBreathworkEntry(entryId);
   const [runId, setRunId] = useState(0);
   const [phaseIndex, setPhaseIndex] = useState(0);
-  const [remainingSeconds, setRemainingSeconds] = useState(4);
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [activeLayer, setActiveLayer] = useState<number | undefined>(undefined);
+
+  const phases = entry?.pattern ? buildPhasesFromPattern(entry.pattern) : [];
+  const totalDuration = phases.reduce((sum, p) => sum + p.seconds, 0);
 
   useEffect(() => {
     setRunId(1);
   }, []);
 
   useEffect(() => {
-    if (runId === 0) return;
+    if (runId === 0 || phases.length === 0) return;
 
     const timers: number[] = [];
     setIsRunning(true);
     setIsCompleted(false);
 
     const schedulePhase = (index: number) => {
+      const current = phases[index];
+      if (!current) return;
+
       setPhaseIndex(index);
-      setRemainingSeconds(4);
+      setRemainingSeconds(current.seconds);
 
-      timers.push(window.setTimeout(() => setRemainingSeconds(3), 1000));
-      timers.push(window.setTimeout(() => setRemainingSeconds(2), 2000));
-      timers.push(window.setTimeout(() => setRemainingSeconds(1), 3000));
+      if (entry?.visual.type === 'layered_breathing') {
+        if (current.key === 'inhale') {
+          setActiveLayer(0);
+        } else if (current.key === 'exhale') {
+          setActiveLayer(2);
+        }
+      }
 
-      if (index < BOX_BREATHING_PHASES.length - 1) {
-        timers.push(window.setTimeout(() => schedulePhase(index + 1), 4000));
+      for (let s = 1; s < current.seconds; s++) {
+        timers.push(
+          window.setTimeout(() => setRemainingSeconds(current.seconds - s), s * 1000),
+        );
+      }
+
+      if (entry?.visual.type === 'layered_breathing') {
+        if (current.key === 'inhale') {
+          const layers = entry.visual.layers ?? ['belly', 'chest', 'clavicle'];
+          const inhalePart = current.seconds / layers.length;
+          layers.forEach((_, i) => {
+            if (i === 0) return;
+            timers.push(
+              window.setTimeout(() => setActiveLayer(i), Math.round(inhalePart * i * 1000)),
+            );
+          });
+        } else if (current.key === 'exhale') {
+          const layers = entry.visual.layers ?? ['belly', 'chest', 'clavicle'];
+          const exhalePart = current.seconds / layers.length;
+          layers.forEach((_, i) => {
+            const reverseIdx = layers.length - 1 - i;
+            if (reverseIdx === 2) return;
+            timers.push(
+              window.setTimeout(() => setActiveLayer(reverseIdx), Math.round(exhalePart * (i + 1) * 1000)),
+            );
+          });
+        }
+      }
+
+      if (index < phases.length - 1) {
+        timers.push(window.setTimeout(() => schedulePhase(index + 1), current.seconds * 1000));
         return;
       }
 
@@ -105,7 +142,8 @@ export function BoxBreathingExperience() {
         window.setTimeout(() => {
           setIsRunning(false);
           setIsCompleted(true);
-        }, 4000),
+          setActiveLayer(undefined);
+        }, current.seconds * 1000),
       );
     };
 
@@ -116,67 +154,74 @@ export function BoxBreathingExperience() {
     };
   }, [runId]);
 
-  const currentPhase = BOX_BREATHING_PHASES[phaseIndex] ?? BOX_BREATHING_PHASES[0];
+  if (!entry) {
+    return <p>呼吸法が見つかりません。</p>;
+  }
+
+  const currentPhase = phases[phaseIndex];
+  const phaseKey: BreathPhase = currentPhase?.key ?? 'idle';
+  const phaseLabel = currentPhase?.label ?? '準備';
+  const phaseBody = entry.instructions.firstRound[phaseIndex] ?? entry.instructions.intro[0] ?? '';
 
   return (
-    <div className="breathing-experience-layout">
+    <div
+      className="breathing-experience-layout"
+      style={totalDuration > 0 ? ({ '--bw-duration': `${totalDuration}s` } as CSSProperties) : undefined}
+    >
       <div className="breathing-visual-panel">
-        <div className="breathing-orb-stage">
-          <div className="breathing-orb-halo" />
-          <div
-            key={runId}
-            className={`breathing-circle ${isRunning ? 'is-running' : ''} ${isCompleted ? 'is-completed' : ''}`}
-            aria-live="polite"
-          >
-            <div className="breathing-circle-content">
-              <strong>{isCompleted ? '完了' : currentPhase.label}</strong>
-              <span>{isCompleted ? '1回終了' : `${remainingSeconds}`}</span>
-            </div>
-          </div>
-        </div>
+        <BreathworkVisual
+          breathwork={entry}
+          phase={phaseKey}
+          remainingSeconds={remainingSeconds}
+          isRunning={isRunning}
+          isCompleted={isCompleted}
+          activeLayer={activeLayer}
+        />
 
         <div className="breathing-controls">
           <p className="breathing-live-copy">
             {isCompleted
               ? '1回分が終わりました。落ち着いて続けたいときは、もう一回やるを押してください。'
-              : `${currentPhase.label}の時間です。${currentPhase.body}`}
+              : isRunning
+                ? `${phaseLabel}の時間です。${phaseBody}`
+                : '準備ができたら開始してください。'}
           </p>
-          <button type="button" className="secondary-button breathing-replay-button" onClick={() => setRunId((value) => value + 1)}>
+          <button
+            type="button"
+            className="secondary-button breathing-replay-button"
+            onClick={() => setRunId((value) => value + 1)}
+          >
             もう一回やる
           </button>
         </div>
       </div>
 
-      <div className="breathing-steps" aria-label="ボックスブリージングの手順">
-        <div className="breathing-step">
-          <span>1</span>
-          <div>
-            <strong>鼻から4秒吸う</strong>
-            <p>肩を上げすぎず、やさしく息を取り入れます。</p>
-          </div>
+      {steps && steps.length > 0 && (
+        <div className="breathing-steps" aria-label={`${entry.nameJa}の手順`}>
+          {steps.map((step) => (
+            <div className="breathing-step" key={step.num}>
+              <span>{step.num}</span>
+              <div>
+                <strong>{step.title}</strong>
+                <p>{step.body}</p>
+              </div>
+            </div>
+          ))}
         </div>
-        <div className="breathing-step">
-          <span>2</span>
-          <div>
-            <strong>4秒止める</strong>
-            <p>苦しくない範囲で、呼吸を静かにキープします。</p>
-          </div>
+      )}
+
+      {!steps && entry.instructions.firstRound.length > 0 && (
+        <div className="breathing-steps" aria-label={`${entry.nameJa}の手順`}>
+          {entry.instructions.firstRound.map((text, i) => (
+            <div className="breathing-step" key={i}>
+              <span>{i + 1}</span>
+              <div>
+                <p>{text}</p>
+              </div>
+            </div>
+          ))}
         </div>
-        <div className="breathing-step">
-          <span>3</span>
-          <div>
-            <strong>鼻から4秒吐く</strong>
-            <p>細く長く、力を抜きながら吐いていきます。</p>
-          </div>
-        </div>
-        <div className="breathing-step">
-          <span>4</span>
-          <div>
-            <strong>4秒止める</strong>
-            <p>次の呼吸の前に、落ち着いて1回区切ります。</p>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

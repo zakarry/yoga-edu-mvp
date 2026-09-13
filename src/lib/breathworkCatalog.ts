@@ -1,6 +1,12 @@
 import type { VoiceCueDef, KnowledgeLink } from './poseCatalog';
 
-export type BreathworkVisualType = 'static' | 'circle' | 'phase_animation';
+export type BreathworkVisualType =
+  | 'static'
+  | 'circle'
+  | 'phase_animation'
+  | 'body_breathing'
+  | 'layered_breathing'
+  | 'gif';
 export type BreathworkStatus = 'active' | 'draft' | 'review_required';
 
 export interface BreathworkPattern {
@@ -14,6 +20,8 @@ export interface BreathworkPattern {
 export interface BreathworkVisual {
   type: BreathworkVisualType;
   asset?: string;
+  bodyFocus?: 'belly' | 'chest' | 'clavicle';
+  layers?: ('belly' | 'chest' | 'clavicle')[];
 }
 
 export interface BreathworkInstructions {
@@ -142,8 +150,8 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     category: 'pranayama',
     defaultDurationMin: 3,
     visual: {
-      type: 'static',
-      asset: '/pose-abdominal-breathing.webp',
+      type: 'body_breathing',
+      bodyFocus: 'belly',
     },
     instructions: {
       intro: [
@@ -196,8 +204,8 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     category: 'pranayama',
     defaultDurationMin: 3,
     visual: {
-      type: 'static',
-      asset: '/pose-abdominal-breathing.webp',
+      type: 'body_breathing',
+      bodyFocus: 'chest',
     },
     instructions: {
       intro: [
@@ -249,8 +257,8 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     category: 'pranayama',
     defaultDurationMin: 3,
     visual: {
-      type: 'static',
-      asset: '/pose-abdominal-breathing.webp',
+      type: 'layered_breathing',
+      layers: ['belly', 'chest', 'clavicle'],
     },
     instructions: {
       intro: [

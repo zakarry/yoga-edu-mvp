@@ -15,7 +15,7 @@ import {
 import { DiagnosisForm } from './components/DiagnosisForm';
 import { CardList } from './components/CardList';
 import { MapView } from './components/MapView';
-import { DiagnosisResult, ResultPage, YogaPoseRecommendation, BoxBreathingExperience } from './components/ResultPage';
+import { DiagnosisResult, ResultPage, YogaPoseRecommendation, BoxBreathingExperience, BreathworkExperience } from './components/ResultPage';
 import { FieldConfig, FormSectionConfig, RegisterForm } from './components/RegisterForm';
 import { ProYogaPage } from './components/ProYogaPage';
 import { ProDrillPage } from './ProDrillPage';
@@ -38,8 +38,9 @@ import { useAuth, getLastAuthEvent } from './lib/auth';
 import { initLiffOnce, useLiff, attemptLiffAutoLogin, isAutoLoginAttempted } from './lib/liff';
 import { addTeacherRelationship } from './services/teacherRelationshipService';
 import { fetchDirectory } from './services/directoryService';
+import { getActiveBreathwork } from './lib/breathworkCatalog';
 
-type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map' | 'box-breathing' | 'breathing-meditation' | 'learn';
+type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map' | 'box-breathing' | 'breathing-meditation' | 'breathwork-practice' | 'learn';
 
 type FilterType = SearchItem['type'] | 'all';
 
@@ -1042,6 +1043,7 @@ function MeditationTimer({ seconds }: { seconds: number }) {
 
 export default function App() {
   const [page, setPage] = useState<PageKey>('home');
+  const [breathworkEntryId, setBreathworkEntryId] = useState<string | null>(null);
   const [teacherList, setTeacherList] = useState<Teacher[]>(initialTeachers);
   const [schoolList, setSchoolList] = useState<School[]>(initialSchools);
   const [eventList, setEventList] = useState<EventItem[]>(initialEvents);
@@ -2010,6 +2012,25 @@ export default function App() {
               </div>
             </section>
             <section className="panel">
+              <h3 style={{ marginBottom: 12 }}>呼吸法を選んで実践する</h3>
+              <p style={{ marginBottom: 16 }}>呼吸ガイドを見るボタンから視覚ガイド付きで練習できます。</p>
+              <div className="breathwork-select-grid">
+                {getActiveBreathwork().map((bw) => (
+                  <button
+                    key={bw.id}
+                    className="breathwork-select-card"
+                    onClick={() => {
+                      setBreathworkEntryId(bw.id);
+                      moveTo('breathwork-practice');
+                    }}
+                  >
+                    <strong>{bw.nameJa}</strong>
+                    <span>{bw.instructions.intro[0]}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+            <section className="panel">
               <h3 style={{ marginBottom: 12 }}>Step 1: 呼吸（3分）</h3>
               <p style={{ marginBottom: 16 }}>4秒吸う・4秒止める・4秒吐く・4秒止めるを繰り返します。</p>
               <BoxBreathingExperience />
@@ -2035,6 +2056,21 @@ export default function App() {
             </section>
             <section className="panel">
               <BoxBreathingExperience />
+            </section>
+          </div>
+        )}
+        {page === 'breathwork-practice' && breathworkEntryId && (
+          <div className="page-shell">
+            <section className="hero-panel compact-hero">
+              <div>
+                <button className="ghost-button" onClick={() => moveTo('home')}>TOPへ戻る</button>
+                <span className="eyebrow">呼吸ガイド</span>
+                <h2>呼吸の動きを見る</h2>
+                <p>視覚ガイドに合わせて呼吸を整えます。無理のない範囲で続けましょう。</p>
+              </div>
+            </section>
+            <section className="panel">
+              <BreathworkExperience entryId={breathworkEntryId} />
             </section>
           </div>
         )}
