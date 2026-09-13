@@ -509,17 +509,19 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       setFormUiLang(p.uiLanguage);
       setFormTeachingLang(p.teachingLanguage);
     }
-    const savedTodayCtx = loadTodayContextSession<TodayContext>();
-    let restoredCheckResult: 'none' | 'pain' | 'unknown' | null = null;
+    const savedSession = loadTodayContextSession<TodayContext>();
+    const savedTodayCtx = savedSession?.todayContext ?? null;
+    const restoredCheckResult = savedSession?.todayCheckResult ?? null;
     if (savedTodayCtx) {
       setTodayContext(savedTodayCtx);
-      if (savedTodayCtx.todayPain) { setTodayCheckResult('pain'); restoredCheckResult = 'pain'; }
-      else if (savedTodayCtx.selectionResolved) { setTodayCheckResult('none'); restoredCheckResult = 'none'; }
+      if (restoredCheckResult === 'none' || restoredCheckResult === 'mild' || restoredCheckResult === 'pain' || restoredCheckResult === 'unknown') {
+        setTodayCheckResult(restoredCheckResult);
+      }
     }
     const saved = loadTodayProgram();
     if (saved) {
       const restoredSig = computeTodayContextSignature({
-        todayCheckResult: restoredCheckResult,
+        todayCheckResult: restoredCheckResult as 'none' | 'pain' | 'unknown' | null,
         requestedMode: savedTodayCtx?.requestedMode ?? null,
         selectionResolved: savedTodayCtx?.selectionResolved ?? false,
         availableMinutes: savedTodayCtx?.availableMinutes ?? null,
@@ -535,8 +537,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   }, []);
 
   useEffect(() => {
-    saveTodayContextSession(todayContext);
-  }, [todayContext]);
+    saveTodayContextSession(todayContext, todayCheckResult);
+  }, [todayContext, todayCheckResult]);
 
   // Demo feedback rotation during active practice (adapted by prefs)
   useEffect(() => {
@@ -1535,7 +1537,6 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       {/* STEP 6: Safety Gate — exclusive when safetyBlocked or practiceEntryBlocked (pain) */}
       {step === 'step6' && (safetyBlocked || practiceEntryBlocked) && (
         <section className="panel ai-teacher-step-panel">
-          <h3>STEP 6 — 実践AI先生</h3>
           <div className="ai-teacher-practice-gate-block">
             {safetyBlocked ? (
               <p>今日は痛みがあるとのことなので、AI先生から個別のポーズ提案は行いません。無理に実践せず、必要に応じて医療専門家や信頼できる指導者に相談してください。</p>

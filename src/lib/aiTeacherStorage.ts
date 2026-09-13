@@ -189,21 +189,32 @@ export function getLocalPracticeSummary(): { asana: number; pranayama: number; d
 
 // ── Today Context session persistence (sessionStorage, per-session only) ──
 
-const TODAY_CONTEXT_SESSION_KEY = 'yoga-ai-today-context-session-v1';
+const TODAY_CONTEXT_SESSION_KEY = 'yoga-ai-today-context-session-v2';
 
-export function saveTodayContextSession(ctx: unknown): void {
+export interface TodayContextSession<T = unknown> {
+  todayContext: T;
+  todayCheckResult: string | null;
+}
+
+export function saveTodayContextSession(ctx: unknown, todayCheckResult: string | null): void {
   try {
-    sessionStorage.setItem(TODAY_CONTEXT_SESSION_KEY, JSON.stringify(ctx));
+    const payload: TodayContextSession = { todayContext: ctx, todayCheckResult };
+    sessionStorage.setItem(TODAY_CONTEXT_SESSION_KEY, JSON.stringify(payload));
   } catch {
     // ignore
   }
 }
 
-export function loadTodayContextSession<T>(): T | null {
+export function loadTodayContextSession<T = unknown>(): TodayContextSession<T> | null {
   try {
     const raw = sessionStorage.getItem(TODAY_CONTEXT_SESSION_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as T;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && 'todayContext' in parsed) {
+      return parsed as TodayContextSession<T>;
+    }
+    // v1 backward compat: raw was just the context object
+    return { todayContext: parsed as T, todayCheckResult: null };
   } catch {
     return null;
   }
