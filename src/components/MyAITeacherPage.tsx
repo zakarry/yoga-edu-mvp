@@ -25,7 +25,7 @@ import { resolveConcretePoses, getDefaultPlanPoses, getPoseKnowledgeLink, getPos
 import { loadLocalMemory, summarizeMemory, getMemory } from '../services/aiTeacherMemoryService';
 import { emptyTodayContext, type TodayContext, type RequestedMode } from '../types/aiTeacherLayers';
 import { getPlanGate, gateVerdictAllowsGeneration, gateStateMessage, getPracticeEntryGate, practiceEntryAllows, computeTodayContextSignature, isPlanStale, type PlanGateVerdict, type PracticeEntryVerdict } from '../services/planGate';
-import { isTTSAvailable, speak, pauseSpeech, resumeSpeech, stopSpeech, buildVoiceGuide, getVoiceStatus, type VoiceGuideSequence, type VoiceStatus } from '../lib/voiceGuide';
+import { isTTSAvailable, buildVoiceGuide, getVoiceStatus, getVoiceGuideEngine, getEngineType, preloadVoicePhrases, REMAINING_CUES, BOX_BREATHING_PHASE_CUES, type VoiceGuideSequence, type VoiceStatus, type EngineType } from '../lib/voiceGuide';
 
 interface MyAITeacherPageProps {
   onBackHome: () => void;
@@ -503,62 +503,51 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [practicePaused, setPracticePaused] = useState(false);
   const [currentSubtitle, setCurrentSubtitle] = useState('');
   const voiceGuideRef = useRef<VoiceGuideSequence | null>(null);
-  const voiceCueIdxRef = useRef(0);
-  const voiceTimerRef = useRef<number | null>(null);
-  const practiceStartTsRef = useRef<number>(0);
+  const firedCuesRef = useRef<Set<string>>(new Set());
+  const lastBoxPhaseRef = useRef<string>('');
   const ttsAvailable = isTTSAvailable();
+  const voiceEngine = getVoiceGuideEngine();
+  const [engineType, setEngineType] = useState<EngineType>(voiceEngine.type);
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>('stopped');
   const [voiceName, setVoiceName] = useState<string | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [voiceDiag, setVoiceDiag] = useState<{ voicesCount: number; jaCount: number; lastEvent: string | null; errorCode: string | null; speaking: boolean; pending: boolean; paused: boolean }>({ voicesCount: 0, jaCount: 0, lastEvent: null, errorCode: null, speaking: false, pending: false, paused: false });
 
   const refreshVoiceDiag = useCallback(() => {
-    if (!ttsAvailable) return;
-    const synth = window.speechSynthesis;
-    const voices = synth.getVoices();
-    const jaCount = voices.filter((v) => v.lang === 'ja-JP' || v.lang.startsWith('ja')).length;
-    setVoiceDiag((prev) => ({
-      voicesCount: voices.length,
-      jaCount,
-      lastEvent: prev.lastEvent,
-      errorCode: prev.errorCode,
-      speaking: synth.speaking,
-      pending: synth.pending,
-      paused: synth.paused,
-    }));
-    const s = getVoiceStatus();
+    const synth = isTTSAvailable() ? window.speechSynthesis : null;
+    if (synth) {
+      const voices = synth.getVoices();
+      const jaCount = voices.filter((v) => v.lang === 'ja-JP' || v.lang.startsWith('ja')).length;
+      setVoiceDiag((prev) => ({
+        voicesCount: voices.length,
+        jaCount,
+        lastEvent: prev.lastEvent,
+        errorCode: prev.errorCode,
+        speaking: synth.speaking,
+        pending: synth.pending,
+        paused: synth.paused,
+      }));
+    }
+    setEngineType(voiceEngine.type);
+    const s = voiceEngine.getStatus();
     setVoiceStatus(s.status);
     setVoiceName(s.voiceName);
     setVoiceError(s.error);
-  }, [ttsAvailable]);
+  }, [voiceEngine]);
 
   const handleTestVoice = useCallback(() => {
-    if (!ttsAvailable) return;
-    const synth = window.speechSynthesis;
-    synth.cancel();
-    synth.resume();
-    const u = new SpeechSynthesisUtterance('AI先生の音声ガイドです。');
-    u.lang = 'ja-JP';
-    u.rate = 1;
-    u.pitch = 1;
-    u.volume = 1;
-    const voices = synth.getVoices();
-    const jaVoice = voices.find((v) => v.lang === 'ja-JP') ?? voices.find((v) => v.lang.startsWith('ja'));
-    if (jaVoice) u.voice = jaVoice;
-    u.onstart = () => setVoiceDiag((prev) => ({ ...prev, lastEvent: 'onstart', errorCode: null }));
-    u.onend = () => setVoiceDiag((prev) => ({ ...prev, lastEvent: 'onend', speaking: false }));
-    u.onerror = (e) => setVoiceDiag((prev) => ({ ...prev, lastEvent: 'onerror', errorCode: (e as SpeechSynthesisErrorEvent).error || 'unknown' }));
-    synth.speak(u);
+    voiceEngine.speak('AI先生の音声ガイドです。');
+    setVoiceDiag((prev) => ({ ...prev, lastEvent: 'speak', errorCode: null }));
     refreshVoiceDiag();
-  }, [ttsAvailable, refreshVoiceDiag]);
+  }, [voiceEngine, refreshVoiceDiag]);
 
   useEffect(() => {
-    if (!ttsAvailable) return;
     refreshVoiceDiag();
+    if (!isTTSAvailable()) return;
     const handler = () => refreshVoiceDiag();
     window.speechSynthesis.addEventListener('voiceschanged', handler);
     return () => window.speechSynthesis.removeEventListener('voiceschanged', handler);
-  }, [ttsAvailable, refreshVoiceDiag]);
+  }, [refreshVoiceDiag]);
 
   useEffect(() => {
     const p = loadPersona();
@@ -880,8 +869,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 setPracticeDuration(elapsedMin);
               }
               setPracticePhase('done');
-              stopSpeech();
-              if (voiceTimerRef.current) { window.clearTimeout(voiceTimerRef.current); voiceTimerRef.current = null; }
+              voiceEngine.stop();
               setCurrentSubtitle('');
             } else {
               setTimerRound(nextRound);
@@ -914,8 +902,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             setPracticeDuration(elapsedMin);
           }
           setPracticePhase('done');
-          stopSpeech();
-          if (voiceTimerRef.current) { window.clearTimeout(voiceTimerRef.current); voiceTimerRef.current = null; }
+          voiceEngine.stop();
           setCurrentSubtitle('');
           return 0;
         }
@@ -924,6 +911,48 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     }, 1000);
     return () => window.clearInterval(tick);
   }, [timerRunning, selectedGuide, practicePhase, practiceDuration]);
+
+  const fireCue = useCallback((text: string) => {
+    if (!voiceGuideOn) return;
+    if (firedCuesRef.current.has(text)) return;
+    firedCuesRef.current.add(text);
+    voiceEngine.speak(text);
+    setCurrentSubtitle(text);
+  }, [voiceGuideOn, voiceEngine]);
+
+  useEffect(() => {
+    if (!timerRunning || practicePaused || !voiceGuideOn) return;
+    const seq = voiceGuideRef.current;
+    if (!seq) return;
+    if (selectedGuide?.hasTimer) {
+      const phase = selectedGuide.timerPhases![timerPhaseIdx];
+      if (!phase) return;
+      const phaseLabel = phase.label ?? '';
+      if (phaseLabel !== lastBoxPhaseRef.current) {
+        lastBoxPhaseRef.current = phaseLabel;
+        const cue = BOX_BREATHING_PHASE_CUES[phaseLabel];
+        if (cue) fireCue(cue);
+      }
+    } else {
+      const remaining = simpleTimerRemaining;
+      for (const cue of REMAINING_CUES) {
+        if (remaining === cue.atRemaining) {
+          fireCue(cue.text);
+          break;
+        }
+      }
+      for (const cue of seq.cues) {
+        if (remaining === seq.totalSeconds - cue.atSeconds && cue.atSeconds > 0) {
+          fireCue(cue.text);
+          break;
+        }
+      }
+      if (remaining === 0 && seq.cues.length > 0) {
+        const lastCue = seq.cues[seq.cues.length - 1];
+        fireCue(lastCue.text);
+      }
+    }
+  }, [timerRunning, practicePaused, voiceGuideOn, simpleTimerRemaining, timerPhaseIdx, selectedGuide, fireCue]);
 
   const handleAbortPractice = useCallback(() => {
     setTimerRunning(false);
@@ -943,52 +972,37 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setSessionStartedAt(null);
     setPracticeSessionId(null);
     setPracticePaused(false);
-    stopSpeech();
-    if (voiceTimerRef.current) { window.clearTimeout(voiceTimerRef.current); voiceTimerRef.current = null; }
+    voiceEngine.stop();
     setCurrentSubtitle('');
-  }, []);
+  }, [voiceEngine]);
 
   const startVoiceGuide = useCallback((pose: ConcretePose) => {
     if (!voiceGuideOn) return;
     const seq = buildVoiceGuide(pose);
     voiceGuideRef.current = seq;
-    voiceCueIdxRef.current = 0;
-    practiceStartTsRef.current = Date.now();
+    firedCuesRef.current = new Set();
+    lastBoxPhaseRef.current = '';
+    const allTexts = seq.cues.map((c) => c.text).concat(REMAINING_CUES.map((c) => c.text));
+    preloadVoicePhrases(allTexts);
     if (seq.cues.length > 0) {
-      speak(seq.cues[0].text);
-      setCurrentSubtitle(seq.cues[0].text);
+      const firstCue = seq.cues[0];
+      firedCuesRef.current.add(firstCue.text);
+      voiceEngine.speak(firstCue.text);
+      setCurrentSubtitle(firstCue.text);
     }
-    scheduleNextVoiceCue();
-  }, [voiceGuideOn]);
-
-  const scheduleNextVoiceCue = useCallback(() => {
-    const seq = voiceGuideRef.current;
-    if (!seq || voiceCueIdxRef.current >= seq.cues.length - 1) return;
-    const nextIdx = voiceCueIdxRef.current + 1;
-    const nextCue = seq.cues[nextIdx];
-    const elapsed = (Date.now() - practiceStartTsRef.current) / 1000;
-    const delayMs = Math.max(0, (nextCue.atSeconds - elapsed) * 1000);
-    voiceTimerRef.current = window.setTimeout(() => {
-      voiceCueIdxRef.current = nextIdx;
-      speak(nextCue.text);
-      setCurrentSubtitle(nextCue.text);
-      scheduleNextVoiceCue();
-    }, delayMs);
-  }, []);
+  }, [voiceGuideOn, voiceEngine]);
 
   const handlePausePractice = useCallback(() => {
     setTimerRunning(false);
     setPracticePaused(true);
-    pauseSpeech();
-    if (voiceTimerRef.current) { window.clearTimeout(voiceTimerRef.current); voiceTimerRef.current = null; }
-  }, []);
+    voiceEngine.pause();
+  }, [voiceEngine]);
 
   const handleResumePractice = useCallback(() => {
     setTimerRunning(true);
     setPracticePaused(false);
-    resumeSpeech();
-    scheduleNextVoiceCue();
-  }, [scheduleNextVoiceCue]);
+    voiceEngine.resume();
+  }, [voiceEngine]);
 
   const handleCompletePractice = useCallback(async () => {
     if (!practiceType || practicePhase !== 'done' || practiceAborted || isSavingPractice) return;
@@ -1071,8 +1085,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setTimerPhaseIdx(0);
     setTimerRound(1);
     setPracticePaused(false);
-    stopSpeech();
-    if (voiceTimerRef.current) { window.clearTimeout(voiceTimerRef.current); voiceTimerRef.current = null; }
+    voiceEngine.stop();
     setCurrentSubtitle('');
     setSessionStartedAt(null);
     setSimpleTimerRemaining(0);
@@ -1919,18 +1932,17 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     {voiceError && <span className="ai-teacher-voice-status-error">音声ガイドを再生できませんでした。字幕を見ながら実践できます。</span>}
                   </div>
                 )}
-                {ttsAvailable && (
-                  <div className="ai-teacher-voice-diag">
-                    <span>speechSynthesis: available</span>
-                    <span>voices: {voiceDiag.voicesCount}件</span>
-                    <span>JA voices: {voiceDiag.jaCount}件</span>
-                    <span>speaking: {voiceDiag.speaking ? 'true' : 'false'}</span>
-                    <span>pending: {voiceDiag.pending ? 'true' : 'false'}</span>
-                    <span>paused: {voiceDiag.paused ? 'true' : 'false'}</span>
-                    {voiceDiag.lastEvent && <span>last event: {voiceDiag.lastEvent}</span>}
-                    {voiceDiag.errorCode && <span className="ai-teacher-voice-diag-error">error: {voiceDiag.errorCode}</span>}
-                  </div>
-                )}
+                <div className="ai-teacher-voice-diag">
+                  <span>engine: {engineType === 'browser-tts' ? 'Browser TTS' : engineType === 'audio-file' ? 'Audio fallback' : 'none'}</span>
+                  <span>speechSynthesis: {ttsAvailable ? 'available' : 'unavailable'}</span>
+                  {ttsAvailable && <span>voices: {voiceDiag.voicesCount}件</span>}
+                  {ttsAvailable && <span>JA voices: {voiceDiag.jaCount}件</span>}
+                  {ttsAvailable && <span>speaking: {voiceDiag.speaking ? 'true' : 'false'}</span>}
+                  {ttsAvailable && <span>pending: {voiceDiag.pending ? 'true' : 'false'}</span>}
+                  {ttsAvailable && <span>paused: {voiceDiag.paused ? 'true' : 'false'}</span>}
+                  {voiceDiag.lastEvent && <span>last event: {voiceDiag.lastEvent}</span>}
+                  {voiceDiag.errorCode && <span className="ai-teacher-voice-diag-error">error: {voiceDiag.errorCode}</span>}
+                </div>
 
                 {/* Camera mirror — available before and during practice */}
                 <div className="ai-teacher-camera-section ai-teacher-camera-section--guide">

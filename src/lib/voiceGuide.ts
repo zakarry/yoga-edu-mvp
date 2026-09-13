@@ -9,6 +9,17 @@ export interface VoiceGuideSequence {
 }
 
 export type VoiceStatus = 'available' | 'playing' | 'stopped' | 'unavailable';
+export type EngineType = 'browser-tts' | 'audio-file' | 'none';
+
+export interface VoiceGuideEngine {
+  readonly type: EngineType;
+  readonly available: boolean;
+  speak(text: string): void;
+  stop(): void;
+  pause(): void;
+  resume(): void;
+  getStatus(): { status: VoiceStatus; voiceName: string | null; error: string | null };
+}
 
 let currentUtterance: SpeechSynthesisUtterance | null = null;
 let cachedJaVoice: SpeechSynthesisVoice | null = null;
@@ -23,10 +34,9 @@ function pickJapaneseVoice(): SpeechSynthesisVoice | null {
   if (!isTTSAvailable()) return null;
   const voices = window.speechSynthesis.getVoices();
   if (voices.length === 0) return null;
-  const ja = voices.find((v) => v.lang === 'ja-JP')
+  return voices.find((v) => v.lang === 'ja-JP')
     ?? voices.find((v) => v.lang.startsWith('ja'))
     ?? null;
-  return ja;
 }
 
 function ensureVoice(): SpeechSynthesisVoice | null {
@@ -93,6 +103,105 @@ export function stopSpeech(): void {
   if (!isTTSAvailable()) return;
   window.speechSynthesis.cancel();
   currentUtterance = null;
+}
+
+const PHRASE_MAP: Record<string, string> = {
+  'AI先生の音声ガイドです。': 'voice-test',
+  '吸います。': 'voice-inhale',
+  '止めます。': 'voice-hold',
+  '吐きます。': 'voice-exhale',
+  '自然に呼吸しましょう。': 'voice-breathe-natural',
+  '肩の力を抜きましょう。': 'voice-relax-shoulders',
+  'あと30秒です。': 'voice-30s',
+  'あと15秒です。': 'voice-15s',
+  'あと少しです。': 'voice-almost-done',
+  'お疲れさまでした。': 'voice-good-job',
+  '次のポーズへ進みます。': 'voice-next-pose',
+};
+
+const audioCache: Map<string, HTMLAudioElement> = new Map();
+
+function getAudioForPhrase(text: string): HTMLAudioElement | null {
+  const fileBase = PHRASE_MAP[text];
+  if (!fileBase) return null;
+  if (audioCache.has(fileBase)) return audioCache.get(fileBase)!;
+  const audio = new Audio(`/voice/${fileBase}.wav`);
+  audio.preload = 'auto';
+  audioCache.set(fileBase, audio);
+  return audio;
+}
+
+export function preloadVoicePhrases(phrases: string[]): void {
+  for (const p of phrases) {
+    getAudioForPhrase(p);
+  }
+}
+
+export function isLiffEnvironment(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent;
+  if (ua.includes('Line/')) return true;
+  if (typeof (window as any).liff !== 'undefined' && (window as any).liff?.isInClient?.()) return true;
+  return false;
+}
+
+class BrowserTTSEngine implements VoiceGuideEngine {
+  readonly type: EngineType = 'browser-tts';
+  get available() { return isTTSAvailable(); }
+  speak(text: string) { speak(text); }
+  stop() { stopSpeech(); }
+  pause() { pauseSpeech(); }
+  resume() { resumeSpeech(); }
+  getStatus() { return getVoiceStatus(); }
+}
+
+class AudioFileEngine implements VoiceGuideEngine {
+  readonly type: EngineType = 'audio-file';
+  readonly available = true;
+  private current: HTMLAudioElement | null = null;
+
+  speak(text: string): void {
+    this.stop();
+    const audio = getAudioForPhrase(text);
+    if (!audio) return;
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+    this.current = audio;
+  }
+  stop(): void {
+    if (this.current) {
+      this.current.pause();
+      this.current.currentTime = 0;
+      this.current = null;
+    }
+  }
+  pause(): void {
+    if (this.current) this.current.pause();
+  }
+  resume(): void {
+    if (this.current) this.current.play().catch(() => {});
+  }
+  getStatus() {
+    return { status: 'available' as VoiceStatus, voiceName: 'Audio File', error: null };
+  }
+}
+
+let activeEngine: VoiceGuideEngine | null = null;
+
+export function getVoiceGuideEngine(): VoiceGuideEngine {
+  if (activeEngine) return activeEngine;
+  if (isLiffEnvironment()) {
+    activeEngine = new AudioFileEngine();
+  } else if (isTTSAvailable()) {
+    activeEngine = new BrowserTTSEngine();
+  } else {
+    activeEngine = new AudioFileEngine();
+  }
+  return activeEngine;
+}
+
+export function getEngineType(): EngineType {
+  return getVoiceGuideEngine().type;
 }
 
 export function buildAsanaVoiceGuide(poseName: string, totalMinutes: number): VoiceGuideSequence {
@@ -186,3 +295,15 @@ export function buildVoiceGuide(pose: { id: string; name: string; type: 'asana' 
       return buildAsanaVoiceGuide(pose.name, pose.defaultMinutes);
   }
 }
+
+export const BOX_BREATHING_PHASE_CUES: Record<string, string> = {
+  '吸う': '吸います。',
+  '止める': '止めます。',
+  '吐く': '吐きます。',
+};
+
+export const REMAINING_CUES: Array<{ atRemaining: number; text: string }> = [
+  { atRemaining: 30, text: 'あと30秒です。' },
+  { atRemaining: 15, text: 'あと15秒です。' },
+  { atRemaining: 5, text: 'あと少しです。' },
+];
