@@ -490,6 +490,80 @@ export function unlockAudioContext(): void {
   getVoiceGuideEngine().unlock();
 }
 
+// Opt-in for Breathwork only. Existing Asana/Meditation engine semantics remain
+// unchanged. Callers await each cue, so a new cue never cancels its predecessor.
+export function unlockBreathworkAudio(): void {
+  try {
+    const ctx = getAudioContext();
+    if (ctx && ctx.state !== 'running') void ctx.resume().catch(() => {});
+  } catch { /* Playback reports failure without blocking the practice. */ }
+}
+
+export async function prepareBreathworkAudio(key: string): Promise<AudioBuffer | null> {
+  let timeout: ReturnType<typeof setTimeout>;
+  try {
+    return await Promise.race([
+      fetchAndDecode(key),
+      new Promise<null>((resolve) => { timeout = setTimeout(() => resolve(null), 8000); }),
+    ]);
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout!);
+  }
+}
+
+export async function playBreathworkAudio(
+  cue: { text: string; audioKey?: string },
+  signal: AbortSignal,
+  onStart: () => void,
+): Promise<boolean> {
+  const key = cue.audioKey ?? getVoiceKey(cue.text);
+  if (signal.aborted) return false;
+  const buffer = key ? await prepareBreathworkAudio(key) : null;
+  if (signal.aborted) return false;
+  onStart();
+  if (!buffer) return false; // Keep subtitles/timeline usable on MP3 failure.
+  const ctx = getAudioContext();
+  if (!ctx) return false;
+  return new Promise<boolean>((resolve) => {
+    let source: AudioBufferSourceNode | null = null;
+    let settled = false;
+    let watchdog: ReturnType<typeof setTimeout>;
+    const finish = (ok: boolean) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(watchdog);
+      signal.removeEventListener('abort', cancel);
+      if (source) {
+        source.onended = null;
+        try { source.stop(); } catch { /* already ended */ }
+        source.disconnect();
+      }
+      resolve(ok);
+    };
+    const cancel = () => finish(false);
+    signal.addEventListener('abort', cancel, { once: true });
+    // Some mobile WebViews leave resume pending. Bound that wait and keep going.
+    watchdog = setTimeout(() => finish(false), 5000);
+    const start = () => {
+      if (settled || signal.aborted) return finish(false);
+      try {
+        if (ctx.state !== 'running') return finish(false);
+        source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.onended = () => finish(true);
+        clearTimeout(watchdog);
+        watchdog = setTimeout(() => finish(false), (buffer.duration + 3) * 1000);
+        source.start();
+      } catch { finish(false); }
+    };
+    if (ctx.state === 'running') start();
+    else ctx.resume().then(start, () => finish(false));
+  });
+}
+
 export function getAudioDiagnostic(): { contextState: string; lastCue: string | null; lastPlayResult: string | null; lastError: string | null } {
   const ctx = getAudioContext();
   return {
