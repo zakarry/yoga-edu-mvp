@@ -128,6 +128,25 @@ const PHRASE_MAP: Record<string, string> = {
   '子供のポーズを始めます。': 'voice-start-balasana',
   '休息のポーズを始めます。': 'voice-start-savasana',
   'マインドフルネスを始めます。': 'voice-start-mindfulness',
+  '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。': 'voice-nose-breath',
+  '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。': 'voice-nose-breath-2',
+  '足裏で床を感じ、自然に立ちます。': 'voice-tadasana-1',
+  '背骨を無理なく伸ばし、肩の力を抜きます。': 'voice-tadasana-2',
+  '自然な呼吸を続けましょう。': 'voice-tadasana-3',
+  '吸いながら胸を開き、背中をやさしく反らします。': 'voice-catcow-1',
+  '吐きながら背中を丸め、おへそを見るようにします。': 'voice-catcow-2',
+  '首は無理に反らさず、呼吸に合わせてゆっくり動きましょう。': 'voice-catcow-3',
+  '軸足にゆっくり体重を乗せます。': 'voice-vrksasana-1',
+  '視線を一点に置くと、バランスを取りやすくなります。': 'voice-vrksasana-2',
+  'ふらついたら無理せず足を下ろして大丈夫です。': 'voice-vrksasana-3',
+  '膝は無理に伸ばしきらなくて大丈夫です。': 'voice-uttanasana-1',
+  '股関節からゆっくり前へ倒します。': 'voice-uttanasana-2',
+  '床に手をつける必要はありません。無理のない位置で止まりましょう。': 'voice-uttanasana-3',
+  'お尻をかかとの方向へゆっくり下ろします。': 'voice-balasana-1',
+  '背中を広げるように、楽に呼吸しましょう。': 'voice-balasana-2',
+  '苦しくない位置で休みます。': 'voice-balasana-3',
+  '全身の力を抜いて、楽な姿勢をとります。': 'voice-savasana-1',
+  '呼吸をコントロールしようとせず、自然に任せましょう。': 'voice-savasana-2',
 };
 
 function getVoiceKey(text: string): string | null {
@@ -221,7 +240,7 @@ class AudioFileEngine implements VoiceGuideEngine {
   readonly available = true;
   private currentSource: AudioBufferSourceNode | null = null;
   private fallbackAudio: HTMLAudioElement | null = null;
-  private pendingSpeak: string | null = null;
+  private pendingSpeak: { key: string; text?: string } | null = null;
   private isResuming = false;
 
   unlock(): void {
@@ -233,9 +252,9 @@ class AudioFileEngine implements VoiceGuideEngine {
         this.isResuming = false;
         lastDiagnostic.contextState = ctx.state;
         if (this.pendingSpeak) {
-          const key = this.pendingSpeak;
+          const pending = this.pendingSpeak;
           this.pendingSpeak = null;
-          this.speakByKey(key);
+          this.speakByKey(pending.key, pending.text);
         }
       }).catch(() => { this.isResuming = false; });
     }
@@ -244,21 +263,24 @@ class AudioFileEngine implements VoiceGuideEngine {
   speak(text: string): void {
     this.stop();
     const key = getVoiceKey(text);
-    if (!key) return;
-    this.speakByKey(key);
+    if (!key) {
+      if (isTTSAvailable()) { speak(text); }
+      return;
+    }
+    this.speakByKey(key, text);
   }
 
-  private speakByKey(key: string): void {
+  private speakByKey(key: string, fallbackText?: string): void {
     lastDiagnostic.lastCue = key;
     const ctx = getAudioContext();
     if (!ctx) {
-      this.playFallback(key);
+      this.playFallback(key, fallbackText);
       return;
     }
 
     if (ctx.state === 'suspended') {
       if (this.isResuming) {
-        this.pendingSpeak = key;
+        this.pendingSpeak = { key, text: fallbackText };
         return;
       }
       this.isResuming = true;
@@ -268,9 +290,9 @@ class AudioFileEngine implements VoiceGuideEngine {
         if (this.pendingSpeak) {
           const pending = this.pendingSpeak;
           this.pendingSpeak = null;
-          this.speakByKey(pending);
+          this.speakByKey(pending.key, pending.text);
         } else {
-          this.speakByKey(key);
+          this.speakByKey(key, fallbackText);
         }
       }).catch(() => { this.isResuming = false; });
       return;
@@ -280,7 +302,7 @@ class AudioFileEngine implements VoiceGuideEngine {
     if (!buffer) {
       fetchAndDecode(key).then((buf) => {
         if (buf) this.playBuffer(buf);
-        else this.playFallback(key);
+        else this.playFallback(key, fallbackText);
       });
       return;
     }
@@ -302,7 +324,12 @@ class AudioFileEngine implements VoiceGuideEngine {
     lastDiagnostic.contextState = ctx.state;
   }
 
-  private playFallback(key: string): void {
+  private playFallback(key: string, fallbackText?: string): void {
+    if (fallbackText && isTTSAvailable()) {
+      speak(fallbackText);
+      lastDiagnostic.lastPlayResult = 'tts-fallback';
+      return;
+    }
     const audio = getAudioElementForKey(key);
     if (!audio) return;
     audio.currentTime = 0;
@@ -342,9 +369,9 @@ class AudioFileEngine implements VoiceGuideEngine {
         this.isResuming = false;
         lastDiagnostic.contextState = ctx.state;
         if (this.pendingSpeak) {
-          const key = this.pendingSpeak;
+          const pending = this.pendingSpeak;
           this.pendingSpeak = null;
-          this.speakByKey(key);
+          this.speakByKey(pending.key, pending.text);
         }
       }).catch(() => { this.isResuming = false; });
     }
@@ -391,13 +418,50 @@ export function getAudioDiagnostic(): { contextState: string; lastCue: string | 
   };
 }
 
-export function buildAsanaVoiceGuide(poseName: string, totalMinutes: number): VoiceGuideSequence {
+const POSE_SPECIFIC_CUES: Record<string, Array<{ text: string; atSeconds: number }>> = {
+  'tadasana': [
+    { text: '足裏で床を感じ、自然に立ちます。', atSeconds: 5 },
+    { text: '背骨を無理なく伸ばし、肩の力を抜きます。', atSeconds: 15 },
+    { text: '自然な呼吸を続けましょう。', atSeconds: 25 },
+  ],
+  'catcow': [
+    { text: '吸いながら胸を開き、背中をやさしく反らします。', atSeconds: 5 },
+    { text: '吐きながら背中を丸め、おへそを見るようにします。', atSeconds: 15 },
+    { text: '首は無理に反らさず、呼吸に合わせてゆっくり動きましょう。', atSeconds: 25 },
+  ],
+  'vrksasana': [
+    { text: '軸足にゆっくり体重を乗せます。', atSeconds: 5 },
+    { text: '視線を一点に置くと、バランスを取りやすくなります。', atSeconds: 15 },
+    { text: 'ふらついたら無理せず足を下ろして大丈夫です。', atSeconds: 25 },
+  ],
+  'uttanasana': [
+    { text: '膝は無理に伸ばしきらなくて大丈夫です。', atSeconds: 5 },
+    { text: '股関節からゆっくり前へ倒します。', atSeconds: 15 },
+    { text: '床に手をつける必要はありません。無理のない位置で止まりましょう。', atSeconds: 25 },
+  ],
+  'balasana': [
+    { text: 'お尻をかかとの方向へゆっくり下ろします。', atSeconds: 5 },
+    { text: '背中を広げるように、楽に呼吸しましょう。', atSeconds: 15 },
+    { text: '苦しくない位置で休みます。', atSeconds: 25 },
+  ],
+  'savasana': [
+    { text: '全身の力を抜いて、楽な姿勢をとります。', atSeconds: 5 },
+    { text: '呼吸をコントロールしようとせず、自然に任せましょう。', atSeconds: 15 },
+  ],
+};
+
+export function buildAsanaVoiceGuide(poseId: string, poseName: string, totalMinutes: number): VoiceGuideSequence {
   const totalSeconds = totalMinutes * 60;
   const cues: VoiceCue[] = [
     { text: `${poseName}を始めます。`, atSeconds: 0 },
-    { text: '自然に呼吸しましょう。', atSeconds: 5 },
-    { text: '肩の力を抜きましょう。', atSeconds: 15 },
   ];
+  const specificCues = POSE_SPECIFIC_CUES[poseId] ?? [];
+  for (const cue of specificCues) {
+    if (cue.atSeconds < totalSeconds - 30) {
+      cues.push({ text: cue.text, atSeconds: cue.atSeconds });
+    }
+  }
+  cues.push({ text: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。', atSeconds: Math.min(10, Math.max(0, totalSeconds - 30)) });
   cues.push({ text: 'あと30秒です。', atSeconds: Math.max(0, totalSeconds - 30) });
   cues.push({ text: 'あと15秒です。', atSeconds: Math.max(0, totalSeconds - 15) });
   cues.push({ text: 'あと少しです。', atSeconds: Math.max(0, totalSeconds - 5) });
@@ -410,8 +474,7 @@ export function buildPranayamaVoiceGuide(poseName: string, totalMinutes: number)
   const totalSeconds = totalMinutes * 60;
   const cues: VoiceCue[] = [
     { text: `${poseName}を始めます。`, atSeconds: 0 },
-    { text: '自然に呼吸しましょう。', atSeconds: 5 },
-    { text: '肩の力を抜きましょう。', atSeconds: 15 },
+    { text: '肩の力を抜きましょう。', atSeconds: 5 },
   ];
   cues.push({ text: 'あと30秒です。', atSeconds: Math.max(0, totalSeconds - 30) });
   cues.push({ text: 'あと15秒です。', atSeconds: Math.max(0, totalSeconds - 15) });
@@ -425,8 +488,7 @@ export function buildMeditationVoiceGuide(poseName: string, totalMinutes: number
   const totalSeconds = totalMinutes * 60;
   const cues: VoiceCue[] = [
     { text: `${poseName}を始めます。`, atSeconds: 0 },
-    { text: '自然に呼吸しましょう。', atSeconds: 5 },
-    { text: '肩の力を抜きましょう。', atSeconds: 15 },
+    { text: '肩の力を抜きましょう。', atSeconds: 5 },
   ];
   cues.push({ text: 'あと30秒です。', atSeconds: Math.max(0, totalSeconds - 30) });
   cues.push({ text: 'あと15秒です。', atSeconds: Math.max(0, totalSeconds - 15) });
@@ -465,13 +527,13 @@ export function buildVoiceGuide(pose: { id: string; name: string; type: 'asana' 
   }
   switch (pose.type) {
     case 'asana':
-      return buildAsanaVoiceGuide(pose.name, pose.defaultMinutes);
+      return buildAsanaVoiceGuide(pose.id, pose.name, pose.defaultMinutes);
     case 'pranayama':
       return buildPranayamaVoiceGuide(pose.name, pose.defaultMinutes);
     case 'dhyana':
       return buildMeditationVoiceGuide(pose.name, pose.defaultMinutes);
     default:
-      return buildAsanaVoiceGuide(pose.name, pose.defaultMinutes);
+      return buildAsanaVoiceGuide(pose.id, pose.name, pose.defaultMinutes);
   }
 }
 
@@ -509,4 +571,23 @@ export const ALL_VOICE_KEYS: string[] = [
   'voice-start-balasana',
   'voice-start-savasana',
   'voice-start-mindfulness',
+  'voice-nose-breath',
+  'voice-nose-breath-2',
+  'voice-tadasana-1',
+  'voice-tadasana-2',
+  'voice-tadasana-3',
+  'voice-catcow-1',
+  'voice-catcow-2',
+  'voice-catcow-3',
+  'voice-vrksasana-1',
+  'voice-vrksasana-2',
+  'voice-vrksasana-3',
+  'voice-uttanasana-1',
+  'voice-uttanasana-2',
+  'voice-uttanasana-3',
+  'voice-balasana-1',
+  'voice-balasana-2',
+  'voice-balasana-3',
+  'voice-savasana-1',
+  'voice-savasana-2',
 ];
