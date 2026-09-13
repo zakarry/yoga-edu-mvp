@@ -1024,6 +1024,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   }, [voiceEngine]);
 
   const handleResumePractice = useCallback(() => {
+    unlockAudioContext();
     setTimerRunning(true);
     setPracticePaused(false);
     voiceEngine.resume();

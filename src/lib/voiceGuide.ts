@@ -221,14 +221,23 @@ class AudioFileEngine implements VoiceGuideEngine {
   readonly available = true;
   private currentSource: AudioBufferSourceNode | null = null;
   private fallbackAudio: HTMLAudioElement | null = null;
+  private pendingSpeak: string | null = null;
+  private isResuming = false;
 
   unlock(): void {
     const ctx = getAudioContext();
     if (!ctx) return;
     if (ctx.state === 'suspended') {
+      this.isResuming = true;
       ctx.resume().then(() => {
+        this.isResuming = false;
         lastDiagnostic.contextState = ctx.state;
-      }).catch(() => {});
+        if (this.pendingSpeak) {
+          const key = this.pendingSpeak;
+          this.pendingSpeak = null;
+          this.speakByKey(key);
+        }
+      }).catch(() => { this.isResuming = false; });
     }
   }
 
@@ -236,8 +245,11 @@ class AudioFileEngine implements VoiceGuideEngine {
     this.stop();
     const key = getVoiceKey(text);
     if (!key) return;
-    lastDiagnostic.lastCue = key;
+    this.speakByKey(key);
+  }
 
+  private speakByKey(key: string): void {
+    lastDiagnostic.lastCue = key;
     const ctx = getAudioContext();
     if (!ctx) {
       this.playFallback(key);
@@ -245,7 +257,23 @@ class AudioFileEngine implements VoiceGuideEngine {
     }
 
     if (ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
+      if (this.isResuming) {
+        this.pendingSpeak = key;
+        return;
+      }
+      this.isResuming = true;
+      ctx.resume().then(() => {
+        this.isResuming = false;
+        lastDiagnostic.contextState = ctx.state;
+        if (this.pendingSpeak) {
+          const pending = this.pendingSpeak;
+          this.pendingSpeak = null;
+          this.speakByKey(pending);
+        } else {
+          this.speakByKey(key);
+        }
+      }).catch(() => { this.isResuming = false; });
+      return;
     }
 
     const buffer = audioBufferCache.get(key);
@@ -287,6 +315,7 @@ class AudioFileEngine implements VoiceGuideEngine {
   }
 
   stop(): void {
+    this.pendingSpeak = null;
     if (this.currentSource) {
       try { this.currentSource.stop(); } catch { /* already stopped */ }
       this.currentSource = null;
@@ -306,7 +335,19 @@ class AudioFileEngine implements VoiceGuideEngine {
 
   resume(): void {
     const ctx = getAudioContext();
-    if (ctx) ctx.resume().catch(() => {});
+    if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      this.isResuming = true;
+      ctx.resume().then(() => {
+        this.isResuming = false;
+        lastDiagnostic.contextState = ctx.state;
+        if (this.pendingSpeak) {
+          const key = this.pendingSpeak;
+          this.pendingSpeak = null;
+          this.speakByKey(key);
+        }
+      }).catch(() => { this.isResuming = false; });
+    }
     if (this.fallbackAudio) this.fallbackAudio.play().catch(() => {});
   }
 
