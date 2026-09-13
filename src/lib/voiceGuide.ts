@@ -133,7 +133,7 @@ const audioCache: Map<string, HTMLAudioElement> = new Map();
 
 function getAudioForKey(key: string): HTMLAudioElement | null {
   if (audioCache.has(key)) return audioCache.get(key)!;
-  const audio = new Audio(`/voice/${key}.wav`);
+  const audio = new Audio(`/voice/${key}.mp3`);
   audio.preload = 'auto';
   audioCache.set(key, audio);
   return audio;
