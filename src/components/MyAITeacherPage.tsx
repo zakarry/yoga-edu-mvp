@@ -1538,12 +1538,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       {step === 'step6' && (safetyBlocked || practiceEntryBlocked) && (
         <section className="panel ai-teacher-step-panel">
           <div className="ai-teacher-practice-gate-block">
-            {safetyBlocked ? (
+            {(safetyBlocked || todayCheckResult === 'pain') ? (
               <p>今日は痛みがあるとのことなので、AI先生から個別のポーズ提案は行いません。無理に実践せず、必要に応じて医療専門家や信頼できる指導者に相談してください。</p>
             ) : (
               <p>以前教えてもらった身体の不安があります。今日の状態を確認してから始めましょう。</p>
             )}
-            {safetyBlocked ? (
+            {(safetyBlocked || todayCheckResult === 'pain') ? (
               <div className="ai-teacher-today-check-options">
                 <button className="secondary-button" onClick={() => { setTodayCheckResult(null); setStep('step5'); }}>一般的な呼吸・瞑想について見る</button>
                 <button className="ghost-button" onClick={() => { setTodayCheckResult(null); setStep('home'); }}>今日は実践しない</button>
