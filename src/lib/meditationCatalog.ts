@@ -1,4 +1,5 @@
 import type { KnowledgeLink } from './poseCatalog';
+import susokukanNarration from './susokukanNarration.json';
 
 export type MeditationCategory = 'concentration' | 'mindfulness' | 'other';
 export type MeditationStatus = 'active' | 'draft' | 'review_required';
@@ -47,18 +48,9 @@ export const MEDITATION_CATALOG: MeditationCatalogEntry[] = [
     durationSec: 300,
     description: '呼吸を数えることに意識を集中する5分間の集中瞑想。',
     timeline: [
-      { atSec: 0, type: 'voice', text: '楽な姿勢で座り、背筋を伸ばして、肩の力を抜きます。', audioKey: 'voice-susokukan-1' },
-      { atSec: 8, type: 'voice', text: '目は閉じるか、うつむき加減にします。', audioKey: 'voice-susokukan-2' },
-      { atSec: 14, type: 'voice', text: 'ここからは、余計なことを考えるのをやめます。', audioKey: 'voice-susokukan-3' },
-      { atSec: 20, type: 'voice', text: '鼻から吸って、鼻からはいて。', audioKey: 'voice-susokukan-4' },
-      { atSec: 26, type: 'voice', text: '余計なことを考えないために、自分の息を数えます。', audioKey: 'voice-susokukan-5' },
-      { atSec: 32, type: 'voice', text: '吸って吐いて、ひとーつ。', audioKey: 'voice-susokukan-6' },
-      { atSec: 38, type: 'voice', text: '吸って吐いて、ふたーつ。', audioKey: 'voice-susokukan-7' },
-      { atSec: 44, type: 'voice', text: '自分の呼吸を数えることだけに集中していきます。', audioKey: 'voice-susokukan-8' },
-      { atSec: 50, type: 'silence', durationSec: 230, text: '呼吸を数えながら、静寂の時間を過ごします' },
-      { atSec: 280, type: 'voice', text: 'まもなく、5分間の時間が終わります。', audioKey: 'voice-susokukan-end-1' },
-      { atSec: 285, type: 'voice', text: '息を数えるのをやめて、ゆっくりと手先や足先を動かし、ご自身の身体に意識を戻していきます。', audioKey: 'voice-susokukan-end-2' },
-      { atSec: 295, type: 'voice', text: '準備ができたら、ゆっくりと目を開けてください。', audioKey: 'voice-susokukan-end-3' },
+      // Captions are measured against one complete 50-second narration file.
+      ...susokukanNarration.map(cue => ({ ...cue, type: 'voice' as const })),
+      { atSec: 50, type: 'silence', durationSec: 250, text: '呼吸を数えながら、静寂の時間を過ごします' },
       { atSec: 300, type: 'complete', text: 'お疲れさまでした' },
     ],
     visual: { type: 'minimal' },
