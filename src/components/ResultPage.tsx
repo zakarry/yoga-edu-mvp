@@ -89,6 +89,15 @@ export function BreathworkExperience({
     timersRef.current = [];
   }, []);
 
+  const playCue = useCallback((cue: { text: string; audioKey?: string }) => {
+    if (cue.audioKey) {
+      voiceEngine.speakByKey(cue.audioKey, cue.text);
+    } else {
+      voiceEngine.speak(cue.text);
+    }
+    setSubtitle(cue.text);
+  }, [voiceEngine]);
+
   useEffect(() => {
     setRunId(1);
   }, []);
@@ -101,23 +110,30 @@ export function BreathworkExperience({
     setIsCompleted(false);
     setCurrentRound(1);
     setSubtitle('');
-    voiceEngine.stop();
+    voiceEngine.unlock();
 
     const vg = entry.voiceGuide;
     const phaseCues = vg.phaseCues ?? {};
+    const phaseAudioKeys = vg.phaseAudioKeys ?? {};
     const repeatCues = vg.repeatCues ?? [];
 
+    // Schedule intro cues
     vg.intro.forEach((cue) => {
-      const t = window.setTimeout(() => {
-        voiceEngine.speak(cue.text);
-        setSubtitle(cue.text);
-      }, cue.at * 1000);
+      const t = window.setTimeout(() => playCue(cue), cue.at * 1000);
       timersRef.current.push(t);
     });
 
-    const introTotalSec = vg.intro.length > 0
-      ? Math.max(...vg.intro.map((c) => c.at)) + 3
-      : 0;
+    // Calculate intro duration: use measured audio duration if available, otherwise estimate
+    let introTotalSec: number;
+    if (vg.intro.length > 0) {
+      const lastCue = vg.intro[vg.intro.length - 1];
+      const lastDuration = lastCue.audioKey
+        ? voiceEngine.getAudioDuration(lastCue.audioKey) ?? 4
+        : 4;
+      introTotalSec = lastCue.at + lastDuration + 1;
+    } else {
+      introTotalSec = 0;
+    }
 
     const roundDuration = totalDuration;
 
@@ -127,9 +143,14 @@ export function BreathworkExperience({
       phases.forEach((phase, phaseIdx) => {
         const phaseStart = roundStart + phases.slice(0, phaseIdx).reduce((s, p) => s + p.seconds, 0);
         const cueText = phaseCues[phase.label] ?? phaseCues[phase.key] ?? '';
+        const cueAudioKey = phaseAudioKeys[phase.label] ?? phaseAudioKeys[phase.key];
         if (cueText) {
           const t = window.setTimeout(() => {
-            voiceEngine.speak(cueText);
+            if (cueAudioKey) {
+              voiceEngine.speakByKey(cueAudioKey, cueText);
+            } else {
+              voiceEngine.speak(cueText);
+            }
             setSubtitle(cueText);
           }, phaseStart * 1000);
           timersRef.current.push(t);
@@ -172,10 +193,7 @@ export function BreathworkExperience({
 
       if (round > 0 && repeatCues.length > 0) {
         repeatCues.forEach((cue) => {
-          const t = window.setTimeout(() => {
-            voiceEngine.speak(cue.text);
-            setSubtitle(cue.text);
-          }, (roundStart + cue.at) * 1000);
+          const t = window.setTimeout(() => playCue(cue), (roundStart + cue.at) * 1000);
           timersRef.current.push(t);
         });
       }
@@ -189,10 +207,7 @@ export function BreathworkExperience({
     const lastRoundEnd = introTotalSec + totalRounds * roundDuration;
 
     vg.completion.forEach((cue) => {
-      const t = window.setTimeout(() => {
-        voiceEngine.speak(cue.text);
-        setSubtitle(cue.text);
-      }, (lastRoundEnd + cue.at) * 1000);
+      const t = window.setTimeout(() => playCue(cue), (lastRoundEnd + cue.at) * 1000);
       timersRef.current.push(t);
     });
 
@@ -200,12 +215,11 @@ export function BreathworkExperience({
       setIsRunning(false);
       setIsCompleted(true);
       setActiveLayer(undefined);
-    }, (lastRoundEnd + 3) * 1000);
+    }, (lastRoundEnd + 5) * 1000);
     timersRef.current.push(endT);
 
     return () => {
       clearTimers();
-      voiceEngine.stop();
     };
   }, [runId]);
 

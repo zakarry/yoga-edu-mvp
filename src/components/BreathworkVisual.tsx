@@ -21,23 +21,6 @@ const PHASE_LABELS: Record<BreathPhase, string> = {
 
 const LAYER_LABELS = ['お腹', '胸', '鎖骨周辺'];
 
-const REFERENCE_IMAGES: Record<string, string> = {
-  'abdominal-breathing': '/pose-abdominal-breathing.webp',
-  'thoracic-breathing': '/pose-savasana.webp',
-  'complete-yoga-breathing': '/pose-savasana.webp',
-};
-
-function ReferenceFigure({ breathwork }: { breathwork: BreathworkCatalogEntry }) {
-  const src = REFERENCE_IMAGES[breathwork.id];
-  if (!src) return null;
-  return (
-    <div className="bw-reference-figure">
-      <img src={src} alt={`${breathwork.nameJa}のお手本`} className="bw-reference-image" loading="lazy" />
-      <span className="bw-reference-caption">お手本</span>
-    </div>
-  );
-}
-
 export function BreathworkVisual({
   breathwork,
   phase,
@@ -69,7 +52,6 @@ export function BreathworkVisual({
     const focus = visual.bodyFocus ?? 'belly';
     return (
       <div className="bw-body-stage">
-        <ReferenceFigure breathwork={breathwork} />
         <div className={`bw-body-figure ${isRunning ? 'is-breathing' : ''} ${isCompleted ? 'is-done' : ''}`}>
           <div className={`bw-body-region bw-body-${focus}`} />
           <div className="bw-body-silhouette" />
@@ -86,7 +68,6 @@ export function BreathworkVisual({
     const layers = visual.layers ?? ['belly', 'chest', 'clavicle'];
     return (
       <div className="bw-layered-stage">
-        <ReferenceFigure breathwork={breathwork} />
         <div className={`bw-layered-figure ${isRunning ? 'is-breathing' : ''} ${isCompleted ? 'is-done' : ''}`}>
           {layers.map((layer, i) => (
             <div

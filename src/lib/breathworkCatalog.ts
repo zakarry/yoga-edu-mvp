@@ -45,6 +45,7 @@ export interface BreathworkSafety {
 export interface BreathworkVoiceGuide {
   intro: VoiceCueDef[];
   phaseCues?: Record<string, string>;
+  phaseAudioKeys?: Record<string, string>;
   repeatCues?: VoiceCueDef[];
   completion: VoiceCueDef[];
 }
@@ -121,13 +122,20 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     },
     voiceGuide: {
       intro: [
-        { at: 0, text: 'Box Breathingを始めます。4秒吸って、4秒止めて、4秒吐いて、4秒止めます。' },
-        { at: 5, text: '無理のない範囲で行いましょう。' },
+        { at: 0, text: 'Box Breathingを始めます。4秒吸って、4秒止めて、4秒吐いて、4秒止めます。', audioKey: 'voice-box-intro' },
+        { at: 5, text: '無理のない範囲で行いましょう。', audioKey: 'voice-box-intro-2' },
       ],
       phaseCues: {
         '吸う': '鼻からゆっくり吸います。',
         '止める': '息を止めます。',
         '吐く': '鼻からゆっくり吐きます。',
+      },
+      phaseAudioKeys: {
+        '吸う': 'voice-box-inhale',
+        '止める': 'voice-box-hold',
+        '吐く': 'voice-box-exhale',
+        'hold-in': 'voice-box-hold',
+        'hold-out': 'voice-box-hold2',
       },
       repeatCues: [
         { at: 0, text: '鼻からゆっくり吸います。' },
@@ -195,14 +203,18 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     },
     voiceGuide: {
       intro: [
-        { at: 0, text: '腹式呼吸を始めます。肩の力を抜いて、楽な姿勢をとりましょう。' },
-        { at: 6, text: '苦しくなければ、鼻からゆっくり吸います。' },
-        { at: 12, text: 'お腹がやさしく広がる感覚を感じます。' },
-        { at: 18, text: '鼻からゆっくり吐いて、お腹がやさしく戻ります。' },
+        { at: 0, text: '腹式呼吸を始めます。肩の力を抜いて、楽な姿勢をとりましょう。', audioKey: 'voice-abdominal-intro-1' },
+        { at: 6, text: '苦しくなければ、鼻からゆっくり吸います。', audioKey: 'voice-abdominal-intro-2' },
+        { at: 12, text: 'お腹がやさしく広がる感覚を感じます。', audioKey: 'voice-abdominal-intro-3' },
+        { at: 18, text: '鼻からゆっくり吐いて、お腹がやさしく戻ります。', audioKey: 'voice-abdominal-intro-4' },
       ],
       phaseCues: {
         '吸う': '鼻からゆっくり吸います。',
         '吐く': '鼻からゆっくり吐いて、力を抜きます。',
+      },
+      phaseAudioKeys: {
+        '吸う': 'voice-abdominal-r1',
+        '吐く': 'voice-abdominal-r2',
       },
       repeatCues: [
         { at: 0, text: 'もう一度、鼻からゆっくり吸います。' },
@@ -268,14 +280,18 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     },
     voiceGuide: {
       intro: [
-        { at: 0, text: '胸式呼吸を始めます。肩の力を抜いて、楽な姿勢をとりましょう。' },
-        { at: 6, text: '苦しくなければ、鼻からゆっくり吸います。' },
-        { at: 12, text: '胸郭が前後左右にやさしく広がる感覚を感じます。' },
-        { at: 18, text: '鼻からゆっくり吐いて、胸郭が自然に戻るのを感じます。' },
+        { at: 0, text: '胸式呼吸を始めます。肩の力を抜いて、楽な姿勢をとりましょう。', audioKey: 'voice-thoracic-intro-1' },
+        { at: 6, text: '苦しくなければ、鼻からゆっくり吸います。', audioKey: 'voice-thoracic-intro-2' },
+        { at: 12, text: '胸郭が前後左右にやさしく広がる感覚を感じます。', audioKey: 'voice-thoracic-intro-3' },
+        { at: 18, text: '鼻からゆっくり吐いて、胸郭が自然に戻るのを感じます。', audioKey: 'voice-thoracic-intro-4' },
       ],
       phaseCues: {
         '吸う': '鼻からゆっくり吸います。',
         '吐く': '鼻からゆっくり吐いて、力を抜きます。',
+      },
+      phaseAudioKeys: {
+        '吸う': 'voice-thoracic-r1',
+        '吐く': 'voice-thoracic-r2',
       },
       repeatCues: [
         { at: 0, text: 'もう一度、鼻からゆっくり吸います。' },
@@ -342,11 +358,11 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     },
     voiceGuide: {
       intro: [
-        { at: 0, text: '完全なヨガ呼吸を始めます。' },
-        { at: 5, text: '肩の力を抜きましょう。' },
-        { at: 15, text: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。' },
-        { at: 25, text: 'まずお腹を膨らませ、次に胸郭を広げ、最後に鎖骨周りも少し広げます。' },
-        { at: 40, text: 'ゆっくり吐いて、上から順に戻します。' },
+        { at: 0, text: '完全なヨガ呼吸を始めます。', audioKey: 'voice-start-complete-breathing' },
+        { at: 5, text: '肩の力を抜きましょう。', audioKey: 'voice-relax-shoulders' },
+        { at: 15, text: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。', audioKey: 'voice-nose-breath' },
+        { at: 25, text: 'まずお腹を膨らませ、次に胸郭を広げ、最後に鎖骨周りも少し広げます。', audioKey: 'voice-complete-breathing-3' },
+        { at: 40, text: 'ゆっくり吐いて、上から順に戻します。', audioKey: 'voice-complete-breathing-4' },
       ],
       repeatCues: [
         { at: 0, text: 'お腹から胸、鎖骨の順に吸います。' },

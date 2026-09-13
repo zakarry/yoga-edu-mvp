@@ -11,6 +11,7 @@ export type PoseStatus = 'active' | 'draft' | 'review_required';
 export interface VoiceCueDef {
   at: number;
   text: string;
+  audioKey?: string;
 }
 
 export interface VoiceGuideDef {

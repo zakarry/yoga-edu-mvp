@@ -17,10 +17,12 @@ export interface VoiceGuideEngine {
   readonly type: EngineType;
   readonly available: boolean;
   speak(text: string): void;
+  speakByKey(key: string, fallbackText?: string): void;
   stop(): void;
   pause(): void;
   resume(): void;
   unlock(): void;
+  getAudioDuration(key: string): number | null;
   getStatus(): { status: VoiceStatus; voiceName: string | null; error: string | null };
 }
 
@@ -300,10 +302,12 @@ class BrowserTTSEngine implements VoiceGuideEngine {
   readonly type: EngineType = 'browser-tts';
   get available() { return isTTSAvailable(); }
   speak(text: string) { speak(text); }
+  speakByKey(_key: string, fallbackText?: string) { if (fallbackText) speak(fallbackText); }
   stop() { stopSpeech(); }
   pause() { pauseSpeech(); }
   resume() { resumeSpeech(); }
   unlock() {}
+  getAudioDuration(_key: string): number | null { return null; }
   getStatus() { return getVoiceStatus(); }
 }
 
@@ -342,7 +346,7 @@ class AudioFileEngine implements VoiceGuideEngine {
     this.speakByKey(key, text);
   }
 
-  private speakByKey(key: string, fallbackText?: string): void {
+  speakByKey(key: string, fallbackText?: string): void {
     lastDiagnostic.lastCue = key;
     const ctx = getAudioContext();
     if (!ctx) {
@@ -448,6 +452,12 @@ class AudioFileEngine implements VoiceGuideEngine {
       }).catch(() => { this.isResuming = false; });
     }
     if (this.fallbackAudio) this.fallbackAudio.play().catch(() => {});
+  }
+
+  getAudioDuration(key: string): number | null {
+    const buffer = audioBufferCache.get(key);
+    if (buffer) return buffer.duration;
+    return null;
   }
 
   getStatus() {
