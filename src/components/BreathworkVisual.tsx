@@ -9,6 +9,7 @@ export interface BreathworkVisualProps {
   isRunning: boolean;
   isCompleted: boolean;
   activeLayer?: number;
+  phaseDurationSeconds?: number;
 }
 
 const PHASE_LABELS: Record<BreathPhase, string> = {
@@ -21,6 +22,13 @@ const PHASE_LABELS: Record<BreathPhase, string> = {
 
 const LAYER_LABELS = ['お腹', '胸', '鎖骨周辺'];
 
+function BodyOutline() {
+  return <svg className="bw-body-outline" viewBox="0 0 180 240" aria-hidden="true">
+    <circle cx="90" cy="23" r="19" />
+    <path d="M78 43 L78 51 Q55 54 43 68 L28 142 Q26 152 33 155 Q40 157 44 145 L59 98 L61 160 L53 218 Q52 235 65 235 Q74 235 77 219 L90 174 L103 219 Q106 235 115 235 Q128 235 127 218 L119 160 L121 98 L136 145 Q140 157 147 155 Q154 152 152 142 L137 68 Q125 54 102 51 L102 43" />
+  </svg>;
+}
+
 export function BreathworkVisual({
   breathwork,
   phase,
@@ -28,8 +36,15 @@ export function BreathworkVisual({
   isRunning,
   isCompleted,
   activeLayer,
+  phaseDurationSeconds,
 }: BreathworkVisualProps) {
   const { visual } = breathwork;
+  const phaseSeconds = phaseDurationSeconds ?? (phase === 'inhale' ? breathwork.pattern?.inhaleSec : breathwork.pattern?.exhaleSec) ?? 1;
+  const progress = Math.min(1, Math.max(0, 1 - remainingSeconds / phaseSeconds));
+  const expansion = !isRunning || isCompleted || phase === 'idle' ? 0 : phase === 'inhale' ? progress : phase === 'hold-in' ? 1 : phase === 'exhale' ? 1 - progress : 0;
+  const circleStyle = { animation: 'none', transform: `scale(${0.85 + expansion * 0.15})`, transition: 'transform 100ms linear' };
+  const regionStyle = { animation: 'none', transform: `translateX(-50%) scale(${0.85 + expansion * 0.23})` };
+  const count = phase === 'idle' ? '' : `${Math.ceil(remainingSeconds)}`;
 
   if (visual.type === 'phase_animation') {
     return (
@@ -38,10 +53,11 @@ export function BreathworkVisual({
         <div
           className={`breathing-circle ${isRunning ? 'is-running' : ''} ${isCompleted ? 'is-completed' : ''}`}
           aria-live="polite"
+          style={circleStyle}
         >
           <div className="breathing-circle-content">
             <strong>{isCompleted ? '完了' : PHASE_LABELS[phase]}</strong>
-            <span>{isCompleted ? '1回終了' : `${remainingSeconds}`}</span>
+            <span>{isCompleted ? '1回終了' : count}</span>
           </div>
         </div>
       </div>
@@ -53,12 +69,12 @@ export function BreathworkVisual({
     return (
       <div className="bw-body-stage">
         <div className={`bw-body-figure ${isRunning ? 'is-breathing' : ''} ${isCompleted ? 'is-done' : ''}`}>
-          <div className={`bw-body-region bw-body-${focus}`} />
-          <div className="bw-body-silhouette" />
+          <div className={`bw-body-region bw-body-${focus}`} style={regionStyle} />
+          <BodyOutline />
         </div>
         <div className="bw-body-label">
           <strong>{isCompleted ? '完了' : isRunning ? PHASE_LABELS[phase] : '準備'}</strong>
-          <span>{isCompleted ? '' : isRunning ? `${remainingSeconds}秒` : ''}</span>
+          <span>{isCompleted ? '' : isRunning && phase !== 'idle' ? `${count}秒` : ''}</span>
         </div>
       </div>
     );
@@ -77,7 +93,7 @@ export function BreathworkVisual({
               } ${activeLayer !== undefined && activeLayer > i ? 'is-filled' : ''}`}
             />
           ))}
-          <div className="bw-layered-silhouette" />
+          <BodyOutline />
         </div>
         <div className="bw-layered-steps">
           {layers.map((layer, i) => (
@@ -94,7 +110,7 @@ export function BreathworkVisual({
         </div>
         <div className="bw-layered-timer">
           <strong>{isCompleted ? '完了' : isRunning ? PHASE_LABELS[phase] : '準備'}</strong>
-          <span>{isCompleted ? '' : isRunning ? `${remainingSeconds}秒` : ''}</span>
+          <span>{isCompleted ? '' : isRunning && phase !== 'idle' ? `${count}秒` : ''}</span>
         </div>
       </div>
     );
@@ -107,10 +123,11 @@ export function BreathworkVisual({
         <div
           className={`breathing-circle ${isRunning ? 'is-running' : ''} ${isCompleted ? 'is-completed' : ''}`}
           aria-live="polite"
+          style={circleStyle}
         >
           <div className="breathing-circle-content">
             <strong>{isCompleted ? '完了' : isRunning ? PHASE_LABELS[phase] : '準備'}</strong>
-            <span>{isCompleted ? '' : isRunning ? `${remainingSeconds}` : ''}</span>
+            <span>{isCompleted ? '' : isRunning ? count : ''}</span>
           </div>
         </div>
       </div>
