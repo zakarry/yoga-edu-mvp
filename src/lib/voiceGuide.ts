@@ -122,10 +122,10 @@ const PHRASE_MAP: Record<string, string> = {
   '猫と牛を始めます。': 'voice-start-catcow',
   '瞑想を始めます。': 'voice-start-meditation',
   '腹式呼吸を始めます。': 'voice-start-abdominal',
-  '立木のポーズを始めます。': 'voice-start-vrksasana',
+  '立ち木のポーズを始めます。': 'voice-start-vrksasana',
   '前屈のポーズを始めます。': 'voice-start-uttanasana',
   '子供のポーズを始めます。': 'voice-start-balasana',
-  '死体のポーズを始めます。': 'voice-start-savasana',
+  '休息のポーズを始めます。': 'voice-start-savasana',
   'マインドフルネスを始めます。': 'voice-start-mindfulness',
 };
 
