@@ -25,7 +25,7 @@ import { resolveConcretePoses, getDefaultPlanPoses, getPoseKnowledgeLink, getPos
 import { loadLocalMemory, summarizeMemory, getMemory } from '../services/aiTeacherMemoryService';
 import { emptyTodayContext, type TodayContext, type RequestedMode } from '../types/aiTeacherLayers';
 import { getPlanGate, gateVerdictAllowsGeneration, gateStateMessage, getPracticeEntryGate, practiceEntryAllows, computeTodayContextSignature, isPlanStale, type PlanGateVerdict, type PracticeEntryVerdict } from '../services/planGate';
-import { isTTSAvailable, buildVoiceGuide, getVoiceStatus, getVoiceGuideEngine, getEngineType, preloadVoicePhrases, REMAINING_CUES, BOX_BREATHING_PHASE_CUES, type VoiceGuideSequence, type VoiceStatus, type EngineType } from '../lib/voiceGuide';
+import { isTTSAvailable, buildVoiceGuide, getVoiceStatus, getVoiceGuideEngine, getEngineType, preloadVoicePhrases, preloadVoiceKeys, ALL_VOICE_KEYS, REMAINING_CUES, BOX_BREATHING_PHASE_CUES, type VoiceGuideSequence, type VoiceStatus, type EngineType } from '../lib/voiceGuide';
 
 interface MyAITeacherPageProps {
   onBackHome: () => void;
@@ -549,6 +549,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     window.speechSynthesis.addEventListener('voiceschanged', handler);
     return () => window.speechSynthesis.removeEventListener('voiceschanged', handler);
   }, [refreshVoiceDiag]);
+
+  useEffect(() => {
+    preloadVoiceKeys(ALL_VOICE_KEYS);
+  }, []);
 
   useEffect(() => {
     const p = loadPersona();
@@ -1929,7 +1933,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   >
                     {voiceGuideOn ? 'ON' : 'OFF'}
                   </button>
-                  {ttsAvailable && (
+                  {voiceEngine.available && (
                     <button
                       className="ghost-button ai-teacher-voice-test-btn"
                       onClick={handleTestVoice}
@@ -1937,11 +1941,11 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                       音声をテスト
                     </button>
                   )}
-                  {!ttsAvailable && voiceGuideOn && (
+                  {!voiceEngine.available && voiceGuideOn && (
                     <span className="ai-teacher-voice-unavailable">この端末では音声ガイドを利用できません。字幕で案内します。</span>
                   )}
                 </div>
-                {ttsAvailable && (
+                {voiceEngine.available && (
                   <div className="ai-teacher-voice-status">
                     <span className="ai-teacher-voice-status-dot" data-status={voiceStatus} />
                     <span className="ai-teacher-voice-status-text">

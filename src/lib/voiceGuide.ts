@@ -117,23 +117,43 @@ const PHRASE_MAP: Record<string, string> = {
   'あと少しです。': 'voice-almost-done',
   'お疲れさまでした。': 'voice-good-job',
   '次のポーズへ進みます。': 'voice-next-pose',
+  'Box Breathingを始めます。': 'voice-start-box-breathing',
+  '山のポーズを始めます。': 'voice-start-tadasana',
+  '猫と牛を始めます。': 'voice-start-catcow',
+  '瞑想を始めます。': 'voice-start-meditation',
+  '腹式呼吸を始めます。': 'voice-start-abdominal',
+  '立木のポーズを始めます。': 'voice-start-vrksasana',
+  '前屈のポーズを始めます。': 'voice-start-uttanasana',
+  '子供のポーズを始めます。': 'voice-start-balasana',
+  '死体のポーズを始めます。': 'voice-start-savasana',
+  'マインドフルネスを始めます。': 'voice-start-mindfulness',
 };
 
 const audioCache: Map<string, HTMLAudioElement> = new Map();
 
-function getAudioForPhrase(text: string): HTMLAudioElement | null {
-  const fileBase = PHRASE_MAP[text];
-  if (!fileBase) return null;
-  if (audioCache.has(fileBase)) return audioCache.get(fileBase)!;
-  const audio = new Audio(`/voice/${fileBase}.wav`);
+function getAudioForKey(key: string): HTMLAudioElement | null {
+  if (audioCache.has(key)) return audioCache.get(key)!;
+  const audio = new Audio(`/voice/${key}.wav`);
   audio.preload = 'auto';
-  audioCache.set(fileBase, audio);
+  audioCache.set(key, audio);
   return audio;
+}
+
+function getAudioForPhrase(text: string): HTMLAudioElement | null {
+  const key = PHRASE_MAP[text];
+  if (!key) return null;
+  return getAudioForKey(key);
 }
 
 export function preloadVoicePhrases(phrases: string[]): void {
   for (const p of phrases) {
     getAudioForPhrase(p);
+  }
+}
+
+export function preloadVoiceKeys(keys: string[]): void {
+  for (const k of keys) {
+    getAudioForKey(k);
   }
 }
 
@@ -182,7 +202,7 @@ class AudioFileEngine implements VoiceGuideEngine {
     if (this.current) this.current.play().catch(() => {});
   }
   getStatus() {
-    return { status: 'available' as VoiceStatus, voiceName: 'Audio File', error: null };
+    return { status: 'available' as VoiceStatus, voiceName: 'Audio Guide', error: null };
   }
 }
 
@@ -219,24 +239,26 @@ export function buildAsanaVoiceGuide(poseName: string, totalMinutes: number): Vo
   if (totalSeconds > 90) {
     cues.push({ text: '残り時間も、ゆっくり呼吸を続けます。', atSeconds: 90 });
   }
-  cues.push({ text: 'あと30秒です。自然な呼吸を続けましょう。', atSeconds: Math.max(0, totalSeconds - 30) });
-  cues.push({ text: 'お疲れさまでした。次のポーズへ進みます。', atSeconds: totalSeconds });
+  cues.push({ text: 'あと30秒です。', atSeconds: Math.max(0, totalSeconds - 30) });
+  cues.push({ text: 'あと15秒です。', atSeconds: Math.max(0, totalSeconds - 15) });
+  cues.push({ text: 'あと少しです。', atSeconds: Math.max(0, totalSeconds - 5) });
+  cues.push({ text: 'お疲れさまでした。', atSeconds: totalSeconds });
+  cues.push({ text: '次のポーズへ進みます。', atSeconds: totalSeconds + 1 });
   return { cues, totalSeconds };
 }
 
 export function buildPranayamaVoiceGuide(poseName: string, totalMinutes: number): VoiceGuideSequence {
   const totalSeconds = totalMinutes * 60;
   const cues: VoiceCue[] = [
-    { text: `${poseName}を始めます。楽な姿勢になりましょう。`, atSeconds: 0 },
-    { text: '鼻からゆっくり呼吸します。', atSeconds: 5 },
-    { text: '呼吸のリズムを感じましょう。', atSeconds: 15 },
-    { text: '肩や顎の力を抜いて。', atSeconds: 30 },
+    { text: `${poseName}を始めます。`, atSeconds: 0 },
+    { text: '自然に呼吸しましょう。', atSeconds: 5 },
+    { text: '肩の力を抜きましょう。', atSeconds: 15 },
   ];
-  if (totalSeconds > 60) {
-    cues.push({ text: 'このリズムを保ちましょう。', atSeconds: 60 });
-  }
-  cues.push({ text: 'あと30秒です。自然な呼吸に戻しましょう。', atSeconds: Math.max(0, totalSeconds - 30) });
-  cues.push({ text: 'お疲れさまでした。次へ進みます。', atSeconds: totalSeconds });
+  cues.push({ text: 'あと30秒です。', atSeconds: Math.max(0, totalSeconds - 30) });
+  cues.push({ text: 'あと15秒です。', atSeconds: Math.max(0, totalSeconds - 15) });
+  cues.push({ text: 'あと少しです。', atSeconds: Math.max(0, totalSeconds - 5) });
+  cues.push({ text: 'お疲れさまでした。', atSeconds: totalSeconds });
+  cues.push({ text: '次のポーズへ進みます。', atSeconds: totalSeconds + 1 });
   return { cues, totalSeconds };
 }
 
@@ -244,16 +266,14 @@ export function buildMeditationVoiceGuide(poseName: string, totalMinutes: number
   const totalSeconds = totalMinutes * 60;
   const cues: VoiceCue[] = [
     { text: `${poseName}を始めます。`, atSeconds: 0 },
-    { text: '楽な姿勢をとります。目を閉じても構いません。', atSeconds: 3 },
-    { text: '呼吸に注意を向けましょう。', atSeconds: 10 },
-    { text: '呼吸がそれたら、やさしく戻しましょう。', atSeconds: 25 },
-    { text: '今この瞬間にいましょう。', atSeconds: 45 },
+    { text: '自然に呼吸しましょう。', atSeconds: 5 },
+    { text: '肩の力を抜きましょう。', atSeconds: 15 },
   ];
-  if (totalSeconds > 60) {
-    cues.push({ text: '体の感覚を感じましょう。', atSeconds: 60 });
-  }
-  cues.push({ text: 'ゆっくり意識を戻しましょう。', atSeconds: Math.max(0, totalSeconds - 15) });
+  cues.push({ text: 'あと30秒です。', atSeconds: Math.max(0, totalSeconds - 30) });
+  cues.push({ text: 'あと15秒です。', atSeconds: Math.max(0, totalSeconds - 15) });
+  cues.push({ text: 'あと少しです。', atSeconds: Math.max(0, totalSeconds - 5) });
   cues.push({ text: 'お疲れさまでした。', atSeconds: totalSeconds });
+  cues.push({ text: '次のポーズへ進みます。', atSeconds: totalSeconds + 1 });
   return { cues, totalSeconds };
 }
 
@@ -306,4 +326,28 @@ export const REMAINING_CUES: Array<{ atRemaining: number; text: string }> = [
   { atRemaining: 30, text: 'あと30秒です。' },
   { atRemaining: 15, text: 'あと15秒です。' },
   { atRemaining: 5, text: 'あと少しです。' },
+];
+
+export const ALL_VOICE_KEYS: string[] = [
+  'voice-test',
+  'voice-inhale',
+  'voice-hold',
+  'voice-exhale',
+  'voice-breathe-natural',
+  'voice-relax-shoulders',
+  'voice-30s',
+  'voice-15s',
+  'voice-almost-done',
+  'voice-good-job',
+  'voice-next-pose',
+  'voice-start-box-breathing',
+  'voice-start-tadasana',
+  'voice-start-catcow',
+  'voice-start-meditation',
+  'voice-start-abdominal',
+  'voice-start-vrksasana',
+  'voice-start-uttanasana',
+  'voice-start-balasana',
+  'voice-start-savasana',
+  'voice-start-mindfulness',
 ];
