@@ -9096,3 +9096,27 @@ html, body {
   margin-bottom: 8px;
   display: inline-block;
 }
+
+/* --- breathwork reference figure --- */
+.bw-reference-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.bw-reference-image {
+  width: 100%;
+  max-width: 200px;
+  border-radius: 16px;
+  border: 1px solid rgba(108, 138, 118, 0.15);
+  object-fit: contain;
+}
+
+.bw-reference-caption {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}

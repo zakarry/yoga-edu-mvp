@@ -98,7 +98,7 @@ const CAMERA_TOGGLE_LABEL: Record<LangCode, { on: string; off: string }> = {
 };
 
 const CAMERA_DISCLAIMER: Record<LangCode, string> = {
-  ja: '※AI先生はカメラ映像から姿勢の診断・採点は行いません。自分の動きを確認するための鏡のような機能です。',
+  ja: '※AI先生はカメラ映像から姿勢の診断・採点は行いません。姿勢を自分で確認するための鏡のような機能です。',
   en: '※AI Teacher does not diagnose or score your posture from camera. It is like a mirror to check your own movement.',
   zh: '※AI老师不会通过摄像头诊断或评分您的姿势。它只是确认自己动作的镜子功能。',
   ko: '※AI 선생님은 카메라 영상에서 자세를 진단하거나 채점하지 않습니다. 자신의 움직임을 확인하기 위한 거울 같은 기능입니다.',
@@ -1219,7 +1219,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           <h2>あなたのAI先生</h2>
           <p>AI先生が、今日の状態に合わせてヨガ・呼吸・瞑想を一緒にガイドします。</p>
           <p className="ai-teacher-brand-note">Yoga Knowledgeを基礎に、アーサナ・呼吸法・瞑想を流れとして分かりやすくガイドするAI先生です。使うほど、あなたの好みや継続傾向を覚えていきます。</p>
-          <p className="ai-teacher-camera-hint-home">お手本画像を見ながら、カメラを鏡として自分の動きも確認できます。</p>
+          <p className="ai-teacher-camera-hint-home">お手本や呼吸ガイドを見ながら、カメラを鏡として自分の姿勢も確認できます。</p>
           {persona && (
             <div className="ai-teacher-hero-teacher">
               <span className="ai-teacher-hero-avatar">{persona.avatar}</span>
@@ -1801,7 +1801,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       {step === 'step6' && !safetyBlocked && !practiceEntryBlocked && (
         <section className="panel ai-teacher-step-panel">
           <h3>STEP 6 — 実践AI先生</h3>
-          <p className="ai-teacher-step-intro">お手本画像を見てから、順番に実践します。全部終わったら記録しましょう。</p>
+          <p className="ai-teacher-step-intro">お手本や呼吸ガイドを見てから、順番に実践します。全部終わったら記録しましょう。</p>
           {planIsStale && program && (
             <div className="ai-teacher-practice-gate-block">
               <p>今日の状態が変わりました。今日のヨガを再生成してから実践してください。</p>
@@ -1814,7 +1814,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           {/* Camera disclaimer */}
           <div className="ai-teacher-camera-disclaimer">
             <p>
-              ※カメラは自分の動きを確認するための鏡機能です。AI先生は姿勢の診断・採点・安全判定は行いません。
+              ※カメラは姿勢を自分で確認するための鏡機能です。AI先生は姿勢の診断・採点・安全判定は行いません。
             </p>
           </div>
 
@@ -2412,7 +2412,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                       </div>
                     </div>
                   </div>
-                  <p className="practice-timer-body">お手本画像を見ながら、ゆっくり実践してください。</p>
+                  <p className="practice-timer-body">{concretePoses[currentPoseIdx]?.type === 'asana' ? 'お手本画像を見ながら、ゆっくり実践してください。' : '呼吸ガイドを見ながら、音声に合わせて実践しましょう。'}</p>
                 </div>
               )}
 
@@ -2487,7 +2487,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               {currentPoseIdx < concretePoses.length - 1 ? (
                 <div className="pose-next-section">
                   <h4>おつかれさまでした</h4>
-                  <p>{concretePoses[currentPoseIdx].name} 完了！次のポーズのお手本画像を見ましょう。</p>
+                  <p>{concretePoses[currentPoseIdx].name} 完了！{concretePoses[currentPoseIdx]?.type === 'asana' ? '次のポーズのお手本画像を見ましょう。' : '次の呼吸ガイドを見ましょう。'}</p>
                   <div className="pose-next-preview">
                     <img src={concretePoses[currentPoseIdx + 1].image} alt="" className="pose-next-thumb" />
                     <div>
