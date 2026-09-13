@@ -1,8 +1,8 @@
 import narration from './susokukanNarration.json';
 
-export const SUSOKUKAN_INTRO_SEC = 50;
+export const SUSOKUKAN_INTRO_SEC = 60;
 export const SUSOKUKAN_TOTAL_SEC = 300;
-export const SUSOKUKAN_AUDIO = '/voice/susokukan-intro-full-v1.wav';
+export const SUSOKUKAN_AUDIO = '/voice/susokukan-intro-full-v2.wav';
 export type SusokukanState = {
   status: 'idle' | 'loading' | 'playing' | 'paused' | 'completed' | 'error';
   elapsed: number;
