@@ -5260,6 +5260,38 @@ h1 {
   font-size: 12px;
   color: var(--muted);
 }
+.ai-teacher-voice-test-btn {
+  font-size: 13px;
+  padding: 4px 10px;
+}
+.ai-teacher-voice-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 4px 0 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.ai-teacher-voice-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+}
+.ai-teacher-voice-status-dot[data-status="playing"] { background: var(--green-strong); }
+.ai-teacher-voice-status-dot[data-status="available"] { background: var(--green-strong); }
+.ai-teacher-voice-status-dot[data-status="stopped"] { background: var(--muted); }
+.ai-teacher-voice-status-dot[data-status="unavailable"] { background: var(--school); }
+.ai-teacher-voice-status-name {
+  color: var(--navy);
+  font-weight: 600;
+}
+.ai-teacher-voice-status-error {
+  color: var(--school);
+  width: 100%;
+}
 
 /* Sticky camera during practice */
 .practice-sticky-camera {

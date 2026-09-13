@@ -8,20 +8,73 @@ export interface VoiceGuideSequence {
   totalSeconds: number;
 }
 
+export type VoiceStatus = 'available' | 'playing' | 'stopped' | 'unavailable';
+
 let currentUtterance: SpeechSynthesisUtterance | null = null;
+let cachedJaVoice: SpeechSynthesisVoice | null = null;
+let voicesReady = false;
+let lastError: string | null = null;
 
 export function isTTSAvailable(): boolean {
   return typeof window !== 'undefined' && 'speechSynthesis' in window;
 }
 
+function pickJapaneseVoice(): SpeechSynthesisVoice | null {
+  if (!isTTSAvailable()) return null;
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length === 0) return null;
+  const ja = voices.find((v) => v.lang === 'ja-JP')
+    ?? voices.find((v) => v.lang.startsWith('ja'))
+    ?? null;
+  return ja;
+}
+
+function ensureVoice(): SpeechSynthesisVoice | null {
+  if (cachedJaVoice) return cachedJaVoice;
+  const v = pickJapaneseVoice();
+  if (v) {
+    cachedJaVoice = v;
+    return v;
+  }
+  if (!voicesReady && isTTSAvailable()) {
+    window.speechSynthesis.addEventListener('voiceschanged', () => {
+      voicesReady = true;
+      cachedJaVoice = pickJapaneseVoice();
+    }, { once: true });
+  }
+  return null;
+}
+
+if (isTTSAvailable()) {
+  ensureVoice();
+}
+
+export function getVoiceStatus(): { status: VoiceStatus; voiceName: string | null; error: string | null } {
+  if (!isTTSAvailable()) return { status: 'unavailable', voiceName: null, error: null };
+  const v = ensureVoice();
+  let status: VoiceStatus = 'stopped';
+  if (window.speechSynthesis.speaking) status = 'playing';
+  if (lastError) status = 'stopped';
+  return { status, voiceName: v?.name ?? null, error: lastError };
+}
+
 export function speak(text: string): void {
   if (!isTTSAvailable()) return;
   window.speechSynthesis.cancel();
+  window.speechSynthesis.resume();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'ja-JP';
   u.rate = 0.9;
   u.pitch = 1.0;
   u.volume = 1.0;
+  const v = ensureVoice();
+  if (v) u.voice = v;
+  u.onstart = () => { lastError = null; };
+  u.onend = () => { if (currentUtterance === u) currentUtterance = null; };
+  u.onerror = (e) => {
+    lastError = (e as SpeechSynthesisErrorEvent).error || 'unknown';
+    if (currentUtterance === u) currentUtterance = null;
+  };
   currentUtterance = u;
   window.speechSynthesis.speak(u);
 }
@@ -85,7 +138,7 @@ export function buildMeditationVoiceGuide(poseName: string, totalMinutes: number
     { text: '楽な姿勢をとります。目を閉じても構いません。', atSeconds: 3 },
     { text: '呼吸に注意を向けましょう。', atSeconds: 10 },
     { text: '呼吸がそれたら、やさしく戻しましょう。', atSeconds: 25 },
-  { text: '今この瞬間にいましょう。', atSeconds: 45 },
+    { text: '今この瞬間にいましょう。', atSeconds: 45 },
   ];
   if (totalSeconds > 60) {
     cues.push({ text: '体の感覚を感じましょう。', atSeconds: 60 });

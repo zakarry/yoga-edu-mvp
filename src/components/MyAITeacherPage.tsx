@@ -25,7 +25,7 @@ import { resolveConcretePoses, getDefaultPlanPoses, getPoseKnowledgeLink, getPos
 import { loadLocalMemory, summarizeMemory, getMemory } from '../services/aiTeacherMemoryService';
 import { emptyTodayContext, type TodayContext, type RequestedMode } from '../types/aiTeacherLayers';
 import { getPlanGate, gateVerdictAllowsGeneration, gateStateMessage, getPracticeEntryGate, practiceEntryAllows, computeTodayContextSignature, isPlanStale, type PlanGateVerdict, type PracticeEntryVerdict } from '../services/planGate';
-import { isTTSAvailable, speak, pauseSpeech, resumeSpeech, stopSpeech, buildVoiceGuide, type VoiceGuideSequence } from '../lib/voiceGuide';
+import { isTTSAvailable, speak, pauseSpeech, resumeSpeech, stopSpeech, buildVoiceGuide, getVoiceStatus, type VoiceGuideSequence, type VoiceStatus } from '../lib/voiceGuide';
 
 interface MyAITeacherPageProps {
   onBackHome: () => void;
@@ -507,6 +507,22 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const voiceTimerRef = useRef<number | null>(null);
   const practiceStartTsRef = useRef<number>(0);
   const ttsAvailable = isTTSAvailable();
+  const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>('stopped');
+  const [voiceName, setVoiceName] = useState<string | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+
+  const refreshVoiceStatus = useCallback(() => {
+    const s = getVoiceStatus();
+    setVoiceStatus(s.status);
+    setVoiceName(s.voiceName);
+    setVoiceError(s.error);
+  }, []);
+
+  const handleTestVoice = useCallback(() => {
+    if (!ttsAvailable) return;
+    speak('AI先生の音声ガイドです。');
+    setTimeout(refreshVoiceStatus, 100);
+  }, [ttsAvailable, refreshVoiceStatus]);
 
   useEffect(() => {
     const p = loadPersona();
@@ -1845,10 +1861,28 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   >
                     {voiceGuideOn ? 'ON' : 'OFF'}
                   </button>
+                  {ttsAvailable && (
+                    <button
+                      className="ghost-button ai-teacher-voice-test-btn"
+                      onClick={handleTestVoice}
+                    >
+                      音声をテスト
+                    </button>
+                  )}
                   {!ttsAvailable && voiceGuideOn && (
                     <span className="ai-teacher-voice-unavailable">この端末では音声ガイドを利用できません。字幕で案内します。</span>
                   )}
                 </div>
+                {ttsAvailable && (
+                  <div className="ai-teacher-voice-status">
+                    <span className="ai-teacher-voice-status-dot" data-status={voiceStatus} />
+                    <span className="ai-teacher-voice-status-text">
+                      {voiceStatus === 'playing' ? '再生中' : voiceStatus === 'stopped' ? '停止中' : voiceStatus === 'available' ? '利用可能' : '利用不可'}
+                    </span>
+                    {voiceName && <span className="ai-teacher-voice-status-name">音声: {voiceName}</span>}
+                    {voiceError && <span className="ai-teacher-voice-status-error">音声ガイドを再生できませんでした。字幕を見ながら実践できます。</span>}
+                  </div>
+                )}
 
                 {/* Camera mirror — available before and during practice */}
                 <div className="ai-teacher-camera-section ai-teacher-camera-section--guide">
