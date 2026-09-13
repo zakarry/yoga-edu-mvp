@@ -196,6 +196,15 @@ export function isLiffEnvironment(): boolean {
   return false;
 }
 
+export function isMobileDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent;
+  if (/Android/i.test(ua)) return true;
+  if (/iPhone|iPad|iPod/i.test(ua)) return true;
+  if (/Mobile/i.test(ua)) return true;
+  return false;
+}
+
 class BrowserTTSEngine implements VoiceGuideEngine {
   readonly type: EngineType = 'browser-tts';
   get available() { return isTTSAvailable(); }
@@ -313,7 +322,7 @@ let activeEngine: VoiceGuideEngine | null = null;
 
 export function getVoiceGuideEngine(): VoiceGuideEngine {
   if (activeEngine) return activeEngine;
-  if (isLiffEnvironment()) {
+  if (isLiffEnvironment() || isMobileDevice()) {
     activeEngine = new AudioFileEngine();
   } else if (isTTSAvailable()) {
     activeEngine = new BrowserTTSEngine();
