@@ -5,6 +5,8 @@ interface MapViewProps {
   items: SearchItem[];
   selectedType?: SearchItem['type'] | 'all';
   onSelectItem?: (item: SearchItem) => void;
+  title?: string;
+  subtitle?: string;
 }
 
 declare global {
@@ -56,7 +58,7 @@ function isValidCoord(lat: unknown, lng: unknown): boolean {
   return typeof lat === 'number' && typeof lng === 'number' && Number.isFinite(lat) && Number.isFinite(lng);
 }
 
-export function MapView({ items, selectedType = 'all', onSelectItem }: MapViewProps) {
+export function MapView({ items, selectedType = 'all', onSelectItem, title, subtitle }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const googleMapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -186,7 +188,7 @@ export function MapView({ items, selectedType = 'all', onSelectItem }: MapViewPr
     return (
       <section className="panel map-panel">
         <div className="section-inline-header tight">
-          <h3>地図から探す</h3>
+          <h3>{title ?? '地図から探す'}</h3>
           <span>APIキー未設定</span>
         </div>
         <div className="dummy-map">
@@ -212,7 +214,7 @@ export function MapView({ items, selectedType = 'all', onSelectItem }: MapViewPr
     return (
       <section className="panel map-panel">
         <div className="section-inline-header tight">
-          <h3>地図から探す</h3>
+          <h3>{title ?? '地図から探す'}</h3>
           <span>表示エラー</span>
         </div>
         <div className="dummy-map">
@@ -231,9 +233,10 @@ export function MapView({ items, selectedType = 'all', onSelectItem }: MapViewPr
   return (
     <section className="panel map-panel">
       <div className="section-inline-header tight">
-        <h3>地図から探す</h3>
+        <h3>{title ?? '地図から探す'}</h3>
         <span>{visibleItems.length}件を表示中</span>
       </div>
+      {subtitle && <p className="map-subtitle">{subtitle}</p>}
       <div ref={mapRef} className="real-map" />
     </section>
   );

@@ -137,7 +137,6 @@ export function BreathworkExperience({
         const ok = await playBreathworkAudio(cue, signal, () => setSubtitle(cue.text));
         if (!ok && !signal.aborted) {
           setAudioFailed(true);
-          // Failed media still gets a readable subtitle slot, then progresses.
           await waitForBreathwork(Math.max(1200, cue.text.length * 110), signal);
         }
       };
@@ -160,8 +159,6 @@ export function BreathworkExperience({
             const phase = phases[index];
             const cues = getBreathworkPhaseSequence(entry, phase.key, round);
             const speechSeconds = cues.reduce((sum, cue) => sum + (durations.get(cue.audioKey ?? '') ?? cue.text.length * 0.11 + 1), 0) + Math.max(0, cues.length - 1) * 0.4;
-            // Body cues have room to finish within the displayed phase; Box
-            // retains its four-second rhythm with its short recorded cues.
             const seconds = entry.id === 'box-breathing' ? phase.seconds : Math.max(phase.seconds, Math.ceil(speechSeconds));
             setPreparing(false);
             setCurrentRound(round + 1);
@@ -202,13 +199,11 @@ export function BreathworkExperience({
     const phaseAudioKeys = vg.phaseAudioKeys ?? {};
     const repeatCues = vg.repeatCues ?? [];
 
-    // Schedule intro cues
     vg.intro.forEach((cue) => {
       const t = window.setTimeout(() => playCue(cue), cue.at * 1000);
       timersRef.current.push(t);
     });
 
-    // Calculate intro duration: use measured audio duration if available, otherwise estimate
     let introTotalSec: number;
     if (vg.intro.length > 0) {
       const lastCue = vg.intro[vg.intro.length - 1];
@@ -274,10 +269,6 @@ export function BreathworkExperience({
           setPhaseIndex(phaseIdx);
           setPhaseDuration(phase.seconds);
           setRemainingSeconds(phase.seconds);
-          // Complete breathing keeps its audio timeline. A caption belongs to
-          // the phase in which it was spoken; clear it at the next boundary.
-          // Repeat cues scheduled at this boundary run afterwards and supply
-          // their own caption without cancelling or restarting the audio.
           if (entry.id === 'complete-yoga-breathing') setSubtitle('');
           if (entry.visual.type === 'layered_breathing') {
             setActiveLayer(phase.key === 'inhale' ? 0 : (entry.visual.layers?.length ?? 3) - 1);
@@ -422,6 +413,7 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
 
   return (
     <div className="page-shell result-page-shell">
+      {/* 1. 診断タイプ + 自然文の説明 */}
       <section className="hero-panel result-hero result-type-panel">
         <div className="result-hero-main">
           <TopBackLink onBackHome={onBackHome} />
@@ -438,41 +430,23 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
 
         <div className="result-hero-aside">
           <div className="result-focus-card">
-            <span className="result-focus-label">すぐ試す</span>
-            <strong>おすすめヨガポーズ</strong>
-            <p>インド政府制定「共通ヨガ・プロトコル」を参考に、診断内容に合いやすい1つを選んでいます。まずは自宅で気軽に試せます。</p>
-          </div>
-
-          <div className="result-order-card">
-            <span className="result-focus-label">表示順</span>
-            <ol className="result-order-list">
-              <li><span>1</span><div>診断タイプ</div></li>
-              <li><span>2</span><div>おすすめポーズ / 呼吸法</div></li>
-              <li><span>3</span><div>おすすめスクール</div></li>
-              <li><span>4</span><div>おすすめ先生</div></li>
-              <li><span>5</span><div>おすすめイベント</div></li>
-              <li><span>6</span><div>おすすめヨガクラブ</div></li>
-              <li><span>7</span><div>プロYoga検定</div></li>
-              <li><span>8</span><div>国際対応</div></li>
-              <li><span>9</span><div>地図から探す</div></li>
-            </ol>
+            <span className="result-focus-label">まずはこれをやってみましょう</span>
+            <strong>{pose.title}</strong>
+            <p>{pose.description}</p>
           </div>
 
           <div className="hero-actions result-hero-actions">
-            <button className="secondary-button" onClick={onOpenSearch}>この条件で探す</button>
-            <button className="ghost-button" onClick={onOpenMyPage}>マイページを見る</button>
-            <button className="primary-button" onClick={onRestart}>もう一度診断する</button>
-          </div>
-          <div className="hero-actions result-ai-teacher-cta">
             <button className="gold-button" onClick={onOpenAITeacher}>今日の実践へ — My AI Teacherと始める</button>
+            <button className="secondary-button" onClick={onOpenMyPage}>マイページを見る</button>
           </div>
         </div>
       </section>
 
+      {/* 2. まずはこれをやってみましょう（おすすめポーズ + CTA） */}
       <section className="panel result-section yoga-pose-panel">
         <div className="section-inline-header tight">
           <div className="result-section-heading">
-            <span className="result-step-badge gold">STEP 2</span>
+            <span className="result-step-badge gold">まずはこれをやってみましょう</span>
             <h3>あなたにおすすめのヨガポーズ</h3>
             <p className="result-section-copy">
               インド政府制定「共通ヨガ・プロトコル」を参考に、診断内容から今のあなたが始めやすい1つを選んでいます。痛みが出るほど無理をせず、呼吸が苦しくない範囲で試してください。
@@ -491,6 +465,10 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
             <strong>{pose.practice}</strong>
             <p>まずはこの目安から始めて、無理がなければ少しずつ慣れていきましょう。</p>
           </div>
+          <div className="result-cta-row">
+            <button className="secondary-button" onClick={onOpenAITeacher}>AI先生と実践する</button>
+            <button className="ghost-button" onClick={onOpenSearch}>お手本を見る</button>
+          </div>
         </article>
 
         <p className="yoga-pose-note">
@@ -498,6 +476,7 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
         </p>
       </section>
 
+      {/* おすすめ呼吸法（CTA付き） */}
       {result.shouldShowBoxBreathing && (
         <section className="panel result-section breathing-panel">
           <div className="section-inline-header tight">
@@ -519,11 +498,15 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
             <BoxBreathingExperience />
 
             <p className="breathing-repeat">これを3回繰り返してみましょう。苦しくなる前に止めて大丈夫です。</p>
+            <div className="result-cta-row">
+              <button className="secondary-button" onClick={onOpenAITeacher}>AI先生と実践する</button>
+              <button className="ghost-button" onClick={onOpenSearch}>呼吸ガイドを見る</button>
+            </div>
           </article>
         </section>
       )}
 
-
+      {/* スコア */}
       {scoreSummary.length > 0 && (
         <section className="panel result-section result-score-panel">
           <div className="section-inline-header tight">
@@ -566,6 +549,7 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
         </section>
       )}
 
+      {/* 3. おすすめスクール */}
       <CardList
         title="おすすめスクール"
         items={result.recommendedSchools}
@@ -575,6 +559,7 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
         description="まずここを確認すればOKです。あなたに合う学びの入口として、スクールを最優先で大きく表示しています。"
       />
 
+      {/* 4. おすすめ先生 */}
       <CardList
         title="おすすめ先生"
         items={result.recommendedTeachers}
@@ -583,6 +568,7 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
         description="スクール候補の次に、相性の良い先生を確認できます。"
       />
 
+      {/* 5. おすすめイベント */}
       <CardList
         title="おすすめイベント"
         items={result.recommendedEvents}
@@ -591,6 +577,7 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
         description="体験参加や短期参加から始めたい方に向くイベントです。"
       />
 
+      {/* 6. ヨガクラブ */}
       <CardList
         title="おすすめヨガクラブ"
         items={result.recommendedClubs}
@@ -599,6 +586,7 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
         description="地域で継続しやすい交流先やコミュニティ候補です。"
       />
 
+      {/* 7. プロYoga検定 */}
       <section className="panel result-section pro-yoga-guide-panel">
         <div className="section-inline-header tight">
           <div className="result-section-heading">
@@ -614,11 +602,12 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
         </div>
       </section>
 
+      {/* 国際対応 */}
       {result.shouldShowInternationalSupport && (
         <section className="panel result-section international-support-panel">
           <div className="section-inline-header tight">
             <div className="result-section-heading">
-              <span className="result-step-badge">STEP 8</span>
+              <span className="result-step-badge">国際対応</span>
               <h3>国際対応</h3>
               <p className="result-section-copy">{result.internationalSupportSummary}</p>
             </div>
@@ -634,13 +623,14 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
         </section>
       )}
 
+      {/* 8. 今の状態を見直してみる */}
       <section className="panel result-section rediscovery-panel">
         <div className="section-inline-header tight rediscovery-header">
           <div className="result-section-heading">
             <span className="result-step-badge">再診断</span>
             <h3>今の状態を見直してみる</h3>
             <p className="result-section-copy">
-              定期的に自分の状態を見直すことで、より自分に合ったヨガが見つかります
+              体調・気分・生活リズムが変わると、合うヨガも変わります。目的や状態が変わった時に、もう一度診断してみましょう。
             </p>
           </div>
         </div>
@@ -658,7 +648,13 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
         </article>
       </section>
 
-      <MapView items={result.allRecommendedItems} onSelectItem={onDetail} />
+      {/* 9. 近くで探す（地図） */}
+      <MapView
+        items={result.allRecommendedItems}
+        onSelectItem={onDetail}
+        title="近くで探す"
+        subtitle="おすすめのスクール・先生・イベントを、地図から探せます。"
+      />
     </div>
   );
 }

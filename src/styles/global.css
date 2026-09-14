@@ -840,6 +840,26 @@ p { color: var(--muted); line-height: 1.75; }
   color: var(--muted);
 }
 
+.result-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.result-cta-row .secondary-button,
+.result-cta-row .ghost-button {
+  min-height: 48px;
+  padding: 12px 20px;
+}
+
+.map-subtitle {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
 .result-page-shell {
   gap: 36px;
 }
@@ -4013,6 +4033,15 @@ h1 {
   .result-score-actions > * {
     width: 100%;
     min-width: 0;
+  }
+
+  .result-cta-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .result-cta-row > * {
+    width: 100%;
   }
 
   .result-page-shell .dummy-map {
