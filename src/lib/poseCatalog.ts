@@ -454,6 +454,55 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     status: 'active',
   },
   {
+    id: 'setu-bandhasana',
+    type: 'asana',
+    nameJa: 'セツ・バンダーサナ（橋のポーズ）',
+    nameSanskrit: 'Setu Bandhasana',
+    nameEn: 'Bridge Pose',
+    aliases: ['橋のポーズ', '橋'],
+    image: '/pose-setu-bandhasana.webp',
+    defaultDurationMin: 1,
+    beginnerInstructions: [
+      '仰向けに寝る。膝を立て、足は腰幅程度に開き、足裏を床に置く',
+      '息を吐きながらお尻をゆっくり持ち上げる。無理のない高さで止まり、肩と足で体を支える',
+    ],
+    breathingInstructions: [
+      '持ち上げるときに吐き、戻すときに吸う。自然な呼吸を続ける',
+    ],
+    generalCautions: [
+      '首を無理に回さない。腰が痛いときは無理に持ち上げない。膝の下に毛布を入れてもよい',
+    ],
+    voiceGuide: {
+      intro: '橋のポーズを始めます。',
+      firstRound: [
+        { at: 5, text: '仰向けに寝て、膝を立てましょう。足裏は腰幅程度に開きます。' },
+        { at: 15, text: '息を吐きながら、お将をゆっくり持ち上げます。無理のない高さで止まりましょう。' },
+        { at: 25, text: '肩と足裏で体を支え、呼吸を続けましょう。' },
+      ],
+      secondRound: [
+        { at: 0, text: 'もう一度、息を吐きながらお将を持ちげます。' },
+        { at: 10, text: '無理のない高さで、リラックスして呼吸を続けましょう。' },
+      ],
+      breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+      breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
+      completion: 'お疲れさまでした。',
+    },
+    planner: {
+      beginnerFriendly: true,
+      gentleAllowed: true,
+      intensity: 'low',
+      advancedBalance: false,
+      deepRange: false,
+      highLoad: false,
+      transitionComplexity: 'low',
+    },
+    knowledge: {
+      verified: false,
+      professionalYogaRelated: null,
+    },
+    status: 'active',
+  },
+  {
     id: 'bhujangasana',
     type: 'asana',
     nameJa: 'ブジャンガーサナ（コブラのポーズ）',

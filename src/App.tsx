@@ -735,10 +735,10 @@ function buildRecommendedYogaPose(input: StudentDiagnosisInput): YogaPoseRecomme
   if (wantsBackCare) {
     if (beginner) {
       return {
-        poseId: null,
+        poseId: 'setu-bandhasana',
         category: '仰臥位・伏臥位',
         title: 'セツ・バンダーサナ（橋のポーズ）',
-        description: '仰向けでひざを立て、お尻を小さく持ち上げます。背中と胸まわりをやさしく広げ、腰まわりのこわばりをゆるめる助けになるとされています。',
+        description: '仰向けでひざを立て、お将を小さく持ち上げます。無理のない範囲で背中と胸まわりをやさしく広げます。',
         practice: '10秒 × 3回',
       };
     }
