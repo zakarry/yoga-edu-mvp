@@ -40,7 +40,11 @@ function TimelineMeditationExperience({ entry }: MeditationExperienceProps) {
     (event: MeditationTimelineEvent) => {
       if (event.type === 'voice') {
         if (event.text) {
-          voiceEngine.speak(event.text);
+          if (event.audioKey) {
+            voiceEngine.speakByKey(event.audioKey, event.text);
+          } else {
+            voiceEngine.speak(event.text);
+          }
           setCurrentSubtitle(event.text);
         }
         setInSilence(false);
@@ -189,7 +193,7 @@ function TimelineMeditationExperience({ entry }: MeditationExperienceProps) {
 
         <div className="meditation-info">
           <strong className="meditation-name">{entry.nameJa}</strong>
-          <span className="meditation-timer">{isRunning || isCompleted ? displayTime : '5:00'}</span>
+          <span className="meditation-timer">{isRunning || isCompleted ? displayTime : `${Math.floor(totalSec / 60)}:${(totalSec % 60).toString().padStart(2, '0')}`}</span>
           <span className="meditation-state">
             {isCompleted
               ? 'お疲れさまでした'

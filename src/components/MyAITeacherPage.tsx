@@ -1829,13 +1829,13 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     <div className="meditation-select-card-header">
                       <strong className="meditation-select-card-title">{m.nameJa}</strong>
                       <span className="meditation-select-card-category">
-                        {m.category === 'concentration' ? '集中瞑想' : m.category === 'mindfulness' ? 'マインドフルネス' : 'その他'}
+                        {m.category === 'concentration' ? '集中瞑想' : m.category === 'mindfulness' ? 'マインドフルネス' : m.category === 'yoga_nidra' ? 'Yoga Nidra' : 'その他'}
                       </span>
                     </div>
                     <p className="meditation-select-card-desc">{m.description}</p>
                     {m.tradition && <span className="meditation-tradition">{m.tradition}</span>}
                     <div className="meditation-select-card-meta">
-                      <span className="meditation-select-card-duration">目安：{Math.round(m.durationSec / 60)}分</span>
+                      <span className="meditation-select-card-duration">目安：{Math.floor(m.durationSec / 60)}分{m.durationSec % 60 > 0 ? `${m.durationSec % 60}秒` : ''}</span>
                       <button
                         className="meditation-select-card-btn"
                         onClick={() => {
