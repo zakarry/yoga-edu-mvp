@@ -23,11 +23,17 @@ export interface VoiceGuideEngine {
   resume(): void;
   unlock(): void;
   getAudioDuration(key: string): number | null;
+  setOnCueEnd(cb: (() => void) | null): void;
   getStatus(): { status: VoiceStatus; voiceName: string | null; error: string | null };
 }
 
 let currentUtterance: SpeechSynthesisUtterance | null = null;
 let cachedJaVoice: SpeechSynthesisVoice | null = null;
+let cueEndCallback: (() => void) | null = null;
+
+export function setCueEndCallback(cb: (() => void) | null): void {
+  cueEndCallback = cb;
+}
 let voicesReady = false;
 let lastError: string | null = null;
 
@@ -85,7 +91,7 @@ export function speak(text: string): void {
   const v = ensureVoice();
   if (v) u.voice = v;
   u.onstart = () => { lastError = null; };
-  u.onend = () => { if (currentUtterance === u) currentUtterance = null; };
+  u.onend = () => { if (currentUtterance === u) currentUtterance = null; if (cueEndCallback) cueEndCallback(); };
   u.onerror = (e) => {
     lastError = (e as SpeechSynthesisErrorEvent).error || 'unknown';
     if (currentUtterance === u) currentUtterance = null;
@@ -308,6 +314,7 @@ class BrowserTTSEngine implements VoiceGuideEngine {
   resume() { resumeSpeech(); }
   unlock() {}
   getAudioDuration(_key: string): number | null { return null; }
+  setOnCueEnd(cb: (() => void) | null): void { setCueEndCallback(cb); }
   getStatus() { return getVoiceStatus(); }
 }
 
@@ -393,6 +400,7 @@ class AudioFileEngine implements VoiceGuideEngine {
     source.connect(ctx.destination);
     source.onended = () => {
       if (this.currentSource === source) this.currentSource = null;
+      if (cueEndCallback) cueEndCallback();
     };
     source.start();
     this.currentSource = source;
@@ -409,6 +417,10 @@ class AudioFileEngine implements VoiceGuideEngine {
     const audio = getAudioElementForKey(key);
     if (!audio) return;
     audio.currentTime = 0;
+    audio.onended = () => {
+      if (this.fallbackAudio === audio) this.fallbackAudio = null;
+      if (cueEndCallback) cueEndCallback();
+    };
     audio.play().catch(() => {
       lastDiagnostic.lastPlayResult = 'failed';
       lastDiagnostic.lastError = 'fallback-play-failed';
@@ -459,6 +471,8 @@ class AudioFileEngine implements VoiceGuideEngine {
     if (buffer) return buffer.duration;
     return null;
   }
+
+  setOnCueEnd(cb: (() => void) | null): void { setCueEndCallback(cb); }
 
   getStatus() {
     const ctx = getAudioContext();

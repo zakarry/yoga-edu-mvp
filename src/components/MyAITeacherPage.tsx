@@ -1835,7 +1835,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     <p className="meditation-select-card-desc">{m.description}</p>
                     {m.tradition && <span className="meditation-tradition">{m.tradition}</span>}
                     <div className="meditation-select-card-meta">
-                      <span className="meditation-select-card-duration">目安：{Math.floor(m.durationSec / 60)}分{m.durationSec % 60 > 0 ? `${m.durationSec % 60}秒` : ''}</span>
+                      <span className="meditation-select-card-duration">目安：{m.category === 'yoga_nidra' ? (m.durationSec >= 600 ? '約10分' : '約3分30秒') : `${Math.floor(m.durationSec / 60)}分${m.durationSec % 60 > 0 ? `${m.durationSec % 60}秒` : ''}`}</span>
                       <button
                         className="meditation-select-card-btn"
                         onClick={() => {
