@@ -450,6 +450,83 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     status: 'active',
   },
   {
+    id: 'anuloma-viloma',
+    nameJa: 'アヌローマ・ヴィローマ（ナーディー・ショーダナ）',
+    nameSanskrit: 'Anuloma Viloma / Nadi Shodhana',
+    nameEn: 'Alternate Nostril Breathing',
+    aliases: ['ナーディー・ショーダナ', '片鼻呼吸', 'アヌローマ・ヴィローマ'],
+    category: 'pranayama',
+    defaultDurationMin: 3,
+    pattern: {
+      inhaleSec: 4,
+      holdAfterInhaleSec: 0,
+      exhaleSec: 6,
+      holdAfterExhaleSec: 0,
+      rounds: 6,
+    },
+    visual: {
+      type: 'body_breathing',
+      bodyFocus: 'chest',
+    },
+    instructions: {
+      intro: [
+        '楽な姿勢で座り、肩の力を抜きます',
+        '右手の親指で右の鼻を閉じ、左の鼻からゆっくり吸います',
+        '親指を離し、薬指で左の鼻を閉じ、右の鼻からゆっくり吐きます',
+        '右の鼻から吸い、左の鼻から吐く。これを交互に繰り返します',
+      ],
+      firstRound: [
+        '肩の力を抜きましょう',
+        '右の鼻を閉じて、左の鼻からゆっくり吸います',
+        '左の鼻を閉じて、右の鼻からゆっくり吐きます',
+        '無理のない範囲で続けましょう',
+      ],
+      repeatRound: [
+        'もう一度、左の鼻から吸います',
+        '右の鼻からゆっくり吐きます',
+      ],
+      completion: [
+        'お疲れさまでした',
+        '自然な呼吸に戻しましょう',
+      ],
+    },
+    breathing: {
+      recommendNasalBreathing: true,
+      nasalCue: '左右の鼻を交互に使い、鼻からゆっくり吸って、鼻から吐きます。',
+    },
+    safety: {
+      beginnerFriendly: true,
+      gentleAllowed: true,
+    },
+    knowledge: {
+      knowledgeMasterId: 'YK-0285',
+      zukanSlug: 'yk-0285',
+      verified: true,
+      professionalYogaRelated: null,
+    },
+    voiceGuide: {
+      intro: [
+        { at: 0, text: 'アヌローマ・ヴィローマ（ナーディー・ショーダナ）を始めます。楽な姿勢で座り、肩の力を抜きましょう。' },
+        { at: 6, text: '右手の親指で右の鼻を閉じ、左の鼻からゆっくり吸います。' },
+        { at: 14, text: '親指を離し、薬指で左の鼻を閉じ、右の鼻からゆっくり吐きます。' },
+        { at: 22, text: '右から吸い、左から吐く。これを交互に繰り返します。' },
+      ],
+      phaseCues: {
+        '吸う': 'ゆっくり鼻から吸います。',
+        '吐く': 'ゆっくり鼻から吐きます。',
+      },
+      repeatCues: [
+        { at: 0, text: 'もう一度、左の鼻からゆっくり吸います。' },
+        { at: 6, text: '右の鼻からゆっくり吐きます。' },
+      ],
+      completion: [
+        { at: 0, text: '最後の呼吸です。' },
+        { at: 3, text: '自然な呼吸に戻しましょう。' },
+      ],
+    },
+    status: 'active',
+  },
+  {
     id: 'test-breathwork',
     nameJa: 'テスト呼吸法',
     nameSanskrit: 'TestPranayama',

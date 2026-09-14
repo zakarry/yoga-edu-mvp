@@ -593,6 +593,106 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     },
     status: 'draft',
   },
+  {
+    id: 'trikonasana',
+    type: 'asana',
+    nameJa: '三角のポーズ',
+    nameSanskrit: 'Trikonasana',
+    nameEn: 'Triangle Pose',
+    aliases: ['トリコーナーサナ'],
+    defaultDurationMin: 1,
+    beginnerInstructions: [
+      '足を大きく開き、右足を外に向ける',
+      '息を吐きながら右手を右足の方向に伸ばし、無理のない位置で止める。左手は上に伸ばす',
+    ],
+    breathingInstructions: [
+      '鼻から自然な呼吸を続ける。無理な深さを求めない',
+    ],
+    generalCautions: [
+      '腰を丸めない。膝を少し曲げてもよい。めまいがあるときはゆっくり戻る',
+    ],
+    voiceGuide: {
+      intro: '三角のポーズを始めます。',
+      firstRound: [
+        { at: 5, text: '足を大きく開き、右足を外に向けます。' },
+        { at: 15, text: '息を吐きながら、右手を右足の方向に伸ばします。' },
+        { at: 25, text: '無理のない位置で止まり、左手は上に伸ばします。' },
+      ],
+      secondRound: [
+        { at: 0, text: 'もう一度、反対側も行いましょう。' },
+        { at: 10, text: '無理のない範囲で、自然な呼吸を続けます。' },
+      ],
+      breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+      breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
+      completion: 'お疲れさまでした。',
+    },
+    planner: {
+      beginnerFriendly: true,
+      gentleAllowed: false,
+      intensity: 'medium',
+      advancedBalance: false,
+      deepRange: true,
+      highLoad: false,
+      transitionComplexity: 'medium',
+    },
+    knowledge: {
+      knowledgeMasterId: 'YK-0267',
+      zukanSlug: 'yk-0267',
+      verified: true,
+      professionalYogaRelated: null,
+    },
+    status: 'active',
+  },
+  {
+    id: 'vajrasana',
+    type: 'asana',
+    nameJa: '金剛座（正座）',
+    nameSanskrit: 'Vajrasana',
+    nameEn: 'Thunderbolt Pose',
+    aliases: ['ヴァジュラーサナ', '正座のポーズ'],
+    defaultDurationMin: 2,
+    beginnerInstructions: [
+      '床にひざまずき、両膝をそろえてかかとに座る',
+      '背すじを自然に伸ばし、手を膝の上におく。肩の力を抜いて自然な呼吸を続ける',
+    ],
+    breathingInstructions: [
+      '鼻からゆっくり呼吸。お腹まわりが静かに動くのを感じる',
+    ],
+    generalCautions: [
+      '膝が痛いときは折り畳んだ毛布を膝のうしろに入れる。足首が痛いときは膝の下に毛布を敷く',
+    ],
+    voiceGuide: {
+      intro: '金剛座（正座）を始めます。',
+      firstRound: [
+        { at: 5, text: 'かかとの上にお尻をゆっくり下ろします。' },
+        { at: 15, text: '背すじを無理なく伸ばし、肩の力を抜きます。' },
+        { at: 25, text: '自然な呼吸を続けましょう。' },
+      ],
+      secondRound: [
+        { at: 0, text: 'もう一度、背すじを整えましょう。' },
+        { at: 10, text: 'お腹まわりの呼吸を感じながら、静かに座ります。' },
+      ],
+      breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+      breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
+      completion: 'お疲れさまでした。',
+    },
+    planner: {
+      beginnerFriendly: true,
+      gentleAllowed: true,
+      intensity: 'low',
+      advancedBalance: false,
+      deepRange: false,
+      highLoad: false,
+      transitionComplexity: 'low',
+    },
+    knowledge: {
+      knowledgeMasterId: 'YK-0311',
+      zukanSlug: 'yk-0311',
+      verified: true,
+      professionalYogaRelated: null,
+    },
+    status: 'active',
+  },
 ];
 
 const CATALOG_BY_ID: Record<string, PoseCatalogEntry> = {};

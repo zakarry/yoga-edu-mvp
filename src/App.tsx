@@ -801,7 +801,7 @@ function buildRecommendedYogaPose(input: StudentDiagnosisInput): YogaPoseRecomme
   if (wantsExercise) {
     if (!beginner) {
       return {
-        poseId: null,
+        poseId: 'trikonasana',
         type: 'asana',
         category: '立位',
         title: 'トリコナーサナ（三角のポーズ）',
@@ -833,7 +833,7 @@ function buildRecommendedYogaPose(input: StudentDiagnosisInput): YogaPoseRecomme
 
   if (wantsDigestiveSupport) {
     return {
-      poseId: null,
+      poseId: 'vajrasana',
       type: 'asana',
       category: '座位',
       title: 'ヴァジュラーサナ（正座のポーズ）',
@@ -854,7 +854,7 @@ function buildRecommendedYogaPose(input: StudentDiagnosisInput): YogaPoseRecomme
   }
 
   return {
-    poseId: null,
+    poseId: 'anuloma-viloma',
     type: 'pranayama',
     category: '呼吸・瞑想',
     title: 'ナディ・ショーダナ（片鼻呼吸）',
