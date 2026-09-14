@@ -744,10 +744,10 @@ function buildRecommendedYogaPose(input: StudentDiagnosisInput): YogaPoseRecomme
     }
 
     return {
-      poseId: null,
+      poseId: 'bhujangasana',
       category: '仰臥位・伏臥位',
       title: 'ブジャンガーサナ（コブラのポーズ）',
-      description: 'うつ伏せから胸をやさしく持ち上げるポーズです。背中を無理なく動かし、腰まわりの緊張をゆるめるのに役立つとされています。',
+      description: 'うつ伏せから上体をやさしく起こすポーズです。無理のない範囲で胸を開きます。',
       practice: '10秒 × 3回',
     };
   }

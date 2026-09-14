@@ -454,6 +454,55 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     status: 'active',
   },
   {
+    id: 'bhujangasana',
+    type: 'asana',
+    nameJa: 'ブジャンガーサナ（コブラのポーズ）',
+    nameSanskrit: 'Bhujangasana',
+    nameEn: 'Cobra Pose',
+    aliases: ['コブラのポーズ', 'コブラ'],
+    image: '/pose-bhujangasana.webp',
+    defaultDurationMin: 1,
+    beginnerInstructions: [
+      'うつ伏せに寝る。足はそろえて伸ばし、手のひらを胸の横に置く',
+      '息を吸いながら手で床を軽く押し、胸をやさしく持ち上げる。ひじは少し曲げたままでよい。無理のない高さで止まる',
+    ],
+    breathingInstructions: [
+      '持ち上げるときに鼻から吸い、戻すときに鼻から吐く。自然な呼吸を続ける',
+    ],
+    generalCautions: [
+      '腰に痛みがあるときは無理をしない。ひじを伸ばしきらず、少し曲げたまま行う。手首が痛いときは拳を作る',
+    ],
+    voiceGuide: {
+      intro: 'コブラのポーズを始めます。',
+      firstRound: [
+        { at: 5, text: 'うつ伏せで楽な姿勢をとります。手のひらを胸の横に置きましょう。' },
+        { at: 15, text: '息を吸いながら、胸をやさしく持ち上げます。ひじは少し曲げたままで大丈夫です。' },
+        { at: 25, text: '無理のない高さで止まり、肩の力を抜きましょう。' },
+      ],
+      secondRound: [
+        { at: 0, text: 'もう一度、息を吸いながら胸をやさしく持ち上げます。' },
+        { at: 10, text: '首を無理に反らさず、目線は自然な角度に保ちましょう。' },
+      ],
+      breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+      breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
+      completion: 'お疲れさまでした。',
+    },
+    planner: {
+      beginnerFriendly: true,
+      gentleAllowed: true,
+      intensity: 'low',
+      advancedBalance: false,
+      deepRange: false,
+      highLoad: false,
+      transitionComplexity: 'low',
+    },
+    knowledge: {
+      verified: false,
+      professionalYogaRelated: null,
+    },
+    status: 'active',
+  },
+  {
     id: 'test-pose',
     type: 'asana',
     nameJa: 'テストポーズ',
