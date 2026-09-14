@@ -375,6 +375,81 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     status: 'active',
   },
   {
+    id: 'brahmari',
+    nameJa: 'ブラマリ（ハチの呼吸）',
+    nameSanskrit: 'Bhramari Pranayama',
+    nameEn: 'Bhramari (Bee Breath)',
+    aliases: ['ハチの呼吸', 'ブラマリ'],
+    category: 'pranayama',
+    defaultDurationMin: 2,
+    pattern: {
+      inhaleSec: 4,
+      holdAfterInhaleSec: 0,
+      exhaleSec: 8,
+      holdAfterExhaleSec: 0,
+      rounds: 3,
+    },
+    visual: {
+      type: 'body_breathing',
+      bodyFocus: 'chest',
+    },
+    instructions: {
+      intro: [
+        '楽な姿勢で座り、肩の力を抜きます',
+        '鼻からゆっくり息を吸います',
+        '息を吐きながら、無理のない範囲で小さくハミングするようにやさしく音を響かせます',
+        '苦しくない範囲で繰り返しましょう',
+      ],
+      firstRound: [
+        '肩の力を抜きましょう',
+        '鼻からゆっくり吸います',
+        '吐きながら、やさしくハミングします',
+        '音の振動を頭や顔まわりで感じましょう',
+      ],
+      repeatRound: [
+        'もう一度、鼻からゆっくり吸います',
+        '吐きながら、やさしく音を響かせます',
+      ],
+      completion: [
+        'お疲れさまでした',
+        '自然な呼吸に戻しましょう',
+      ],
+    },
+    breathing: {
+      recommendNasalBreathing: true,
+      nasalCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+    },
+    safety: {
+      beginnerFriendly: true,
+      gentleAllowed: true,
+    },
+    knowledge: {
+      verified: false,
+      professionalYogaRelated: null,
+    },
+    voiceGuide: {
+      intro: [
+        { at: 0, text: 'ブラマリ（ハチの呼吸）を始めます。楽な姿勢で座り、肩の力を抜きましょう。' },
+        { at: 6, text: '鼻からゆっくり息を吸います。' },
+        { at: 12, text: '息を吐きながら、無理のない範囲で小さくハミングするようにやさしく音を響かせます。' },
+        { at: 20, text: '苦しくない範囲で繰り返しましょう。' },
+      ],
+      phaseCues: {
+        '吸う': '鼻からゆっくり吸います。',
+        '吐く': 'やさしくハミングしながら吐きます。',
+      },
+      repeatCues: [
+        { at: 0, text: 'もう一度、鼻からゆっくり吸います。' },
+        { at: 6, text: '吐きながら、やさしく音を響かせます。' },
+      ],
+      completion: [
+        { at: 0, text: '最後の呼吸です。' },
+        { at: 3, text: '自然な呼吸に戻しましょう。' },
+      ],
+    },
+    status: 'active',
+  },
+  {
     id: 'test-breathwork',
     nameJa: 'テスト呼吸法',
     nameSanskrit: 'TestPranayama',

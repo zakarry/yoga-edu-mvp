@@ -8,8 +8,11 @@ import { getBreathworkEntry, type BreathworkCatalogEntry, type BreathworkPattern
 import { getVoiceGuideEngine, playBreathworkAudio, prepareBreathworkAudio, unlockBreathworkAudio } from '../lib/voiceGuide';
 import { getBreathworkIntro, getBreathworkPhaseSequence, usesBreathworkSequence, waitForBreathwork } from '../lib/breathworkSequence';
 
+export type RecommendationType = 'asana' | 'pranayama' | 'dhyana';
+
 export interface YogaPoseRecommendation {
   poseId: string | null;
+  type: RecommendationType;
   category: string;
   title: string;
   description: string;
@@ -50,6 +53,7 @@ interface ResultPageProps {
   onOpenProYoga: () => void;
   onOpenAITeacher: (poseId: string | null) => void;
   onOpenPoseGuide: (poseId: string | null) => void;
+  onOpenBreathworkGuide: (entryId: string) => void;
   onDetail: (item: SearchItem) => void;
 }
 
@@ -410,9 +414,22 @@ export function BreathworkExperience({
   );
 }
 
-export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch, onBackHome, onOpenMyPage, onOpenProYoga, onOpenAITeacher, onOpenPoseGuide, onDetail }: ResultPageProps) {
+export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch, onBackHome, onOpenMyPage, onOpenProYoga, onOpenAITeacher, onOpenPoseGuide, onOpenBreathworkGuide, onDetail }: ResultPageProps) {
   const pose = result.recommendedYogaPose;
   const poseAvailable = pose.poseId != null;
+  const isAsana = pose.type === 'asana';
+  const isPranayama = pose.type === 'pranayama';
+  const guideLabel = isAsana ? 'お手本を見る' : isPranayama ? '呼吸ガイドを見る' : '瞑想ガイドを見る';
+  const preparingLabel = isAsana ? 'このポーズのお手本は現在準備中です。' : isPranayama ? 'この呼吸法のガイドは現在準備中です。' : 'この瞑想ガイドは現在準備中です。';
+  const categoryLabel = isAsana ? 'アーサナ' : isPranayama ? '呼吸法' : '瞑想';
+  const handleGuideClick = () => {
+    if (!poseAvailable) return;
+    if (isPranayama) {
+      onOpenBreathworkGuide(pose.poseId!);
+    } else {
+      onOpenPoseGuide(pose.poseId);
+    }
+  };
 
   return (
     <div className="page-shell result-page-shell">
@@ -450,16 +467,16 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
         <div className="section-inline-header tight">
           <div className="result-section-heading">
             <span className="result-step-badge gold">まずはこれをやってみましょう</span>
-            <h3>あなたにおすすめのヨガポーズ</h3>
+            <h3>あなたにおすすめの実践</h3>
             <p className="result-section-copy">
-              インド政府制定「共通ヨガ・プロトコル」を参考に、診断内容から今のあなたが始めやすい1つを選んでいます。痛みが出るほど無理をせず、呼吸が苦しくない範囲で試してください。
+              診断内容から、今のあなたが始めやすいアーサナ・呼吸法・瞑想の中からおすすめを1つ選んでいます。
             </p>
           </div>
         </div>
 
         <article className="yoga-pose-card">
           <div className="yoga-pose-header">
-            <span className="yoga-pose-category">{pose.category}</span>
+            <span className="yoga-pose-category">{categoryLabel}</span>
             <h4>{pose.title}</h4>
           </div>
           <p className="yoga-pose-description">{pose.description}</p>
@@ -470,10 +487,10 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
           </div>
           <div className="result-cta-row">
             <button className="secondary-button" onClick={() => onOpenAITeacher(pose.poseId)} disabled={!poseAvailable}>AI先生と実践する</button>
-            <button className="ghost-button" onClick={() => onOpenPoseGuide(pose.poseId)} disabled={!poseAvailable}>お手本を見る</button>
+            <button className="ghost-button" onClick={handleGuideClick} disabled={!poseAvailable}>{guideLabel}</button>
           </div>
           {!poseAvailable && (
-            <p className="yoga-pose-note">このポーズのお手本は現在準備中です。</p>
+            <p className="yoga-pose-note">{preparingLabel}</p>
           )}
         </article>
 
