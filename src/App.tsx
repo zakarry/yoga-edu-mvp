@@ -1841,93 +1841,96 @@ export default function App() {
         {page === 'search' && (
           <div className="page-shell search-page-shell">
             <PageHeader eyebrow="ヨガを探す" title="先生・スクール・イベント・ヨガクラブを探す" subtitle="Googleマップで候補を地図から見つけて、条件で絞り込めます。" onBackHome={() => moveTo('home')} />
-            <MapView items={filteredItems} selectedType={searchType} onSelectItem={setDetailItem} />
-            <section className="panel search-filter-panel">
-              <div className="filter-row">
-                <div className="tab-row">
-                  {(['all', 'school', 'teacher', 'event', 'club'] as const).map((type) => (
-                    <button key={type} className={searchType === type ? 'tab-button active' : 'tab-button'} onClick={() => { setSearchType(type); setSearchKeyword(''); }}>
-                      {type === 'all' ? 'すべて' : type === 'school' ? 'スクール' : type === 'teacher' ? '先生' : type === 'event' ? 'イベント' : 'ヨガクラブ'}
-                    </button>
-                  ))}
-                </div>
-                <div className="search-row">
-                  <input value={searchKeyword} onChange={(e) => setSearchKeyword(e.target.value)} placeholder="名前・説明・タグで検索" />
-                  <select value={searchArea} onChange={(e) => setSearchArea(e.target.value)}>
-                    <option value="all">全エリア</option>
-                    {AREAS.filter((area) => area !== 'オンライン').map((area) => <option key={area} value={area}>{area}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="search-filter-groups">
-                <section className="search-filter-group">
-                  <div className="search-filter-heading">
-                    <strong>レベル</strong>
-                    <span>経験値に合わせて探す</span>
-                  </div>
-                  <div className="chip-grid compact">
-                    {searchLevelOptions.map((level) => (
-                      <button
-                        key={level}
-                        type="button"
-                        className={searchLevels.includes(level) ? 'select-chip active search-filter-chip' : 'select-chip search-filter-chip'}
-                        onClick={() => setSearchLevels((prev) => toggleFilterValue(prev, level))}
-                      >
-                        {level}
-                      </button>
-                    ))}
-                  </div>
-                </section>
-
-                <section className="search-filter-group">
-                  <div className="search-filter-heading">
-                    <strong>目的</strong>
-                    <span>気になるテーマで絞り込む</span>
-                  </div>
-                  <div className="chip-grid compact">
-                    {searchPurposeOptions.map((purpose) => (
-                      <button
-                        key={purpose}
-                        type="button"
-                        className={searchPurposes.includes(purpose) ? 'select-chip active search-filter-chip' : 'select-chip search-filter-chip'}
-                        onClick={() => setSearchPurposes((prev) => toggleFilterValue(prev, purpose))}
-                      >
-                        {purpose}
-                      </button>
-                    ))}
-                  </div>
-                </section>
-
-                <section className="search-filter-group">
-                  <div className="search-filter-heading">
-                    <strong>特徴</strong>
-                    <span>気になる対応や強みで選ぶ</span>
-                  </div>
-                  <div className="chip-grid compact">
-                    {searchFeatureOptions.map((feature) => (
-                      <button
-                        key={feature}
-                        type="button"
-                        className={searchFeatures.includes(feature) ? 'select-chip active search-filter-chip' : 'select-chip search-filter-chip'}
-                        onClick={() => setSearchFeatures((prev) => toggleFilterValue(prev, feature))}
-                      >
-                        {feature}
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              </div>
-
-              <div className="search-filter-meta">
-                <p><strong>{filteredItems.length}件</strong> 見つかりました</p>
-                {hasAdvancedSearchFilters && (
-                  <button type="button" className="ghost-button search-filter-reset" onClick={clearSearchFilters}>
-                    絞り込みをクリア
-                  </button>
-                )}
+            <section className="panel search-input-panel">
+              <div className="search-row">
+                <input value={searchKeyword} onChange={(e) => setSearchKeyword(e.target.value)} placeholder="名前・説明・タグで検索" />
+                <select value={searchArea} onChange={(e) => setSearchArea(e.target.value)}>
+                  <option value="all">全エリア</option>
+                  {AREAS.filter((area) => area !== 'オンライン').map((area) => <option key={area} value={area}>{area}</option>)}
+                </select>
               </div>
             </section>
+            <MapView items={filteredItems} selectedType={searchType} onSelectItem={setDetailItem} />
+            <section className="panel search-type-panel">
+              <div className="tab-row">
+                {(['all', 'school', 'teacher', 'event', 'club'] as const).map((type) => (
+                  <button key={type} className={searchType === type ? 'tab-button active' : 'tab-button'} onClick={() => { setSearchType(type); setSearchKeyword(''); }}>
+                    {type === 'all' ? 'すべて' : type === 'school' ? 'スクール' : type === 'teacher' ? '先生' : type === 'event' ? 'イベント' : 'ヨガクラブ'}
+                  </button>
+                ))}
+              </div>
+            </section>
+            <section className="panel search-filter-panel">
+              <details className="search-filter-collapse" open>
+                <summary className="search-filter-toggle">絞り込み（レベル・目的・特徴）</summary>
+                <div className="search-filter-groups">
+                  <section className="search-filter-group">
+                    <div className="search-filter-heading">
+                      <strong>レベル</strong>
+                      <span>経験値に合わせて探す</span>
+                    </div>
+                    <div className="chip-grid compact">
+                      {searchLevelOptions.map((level) => (
+                        <button
+                          key={level}
+                          type="button"
+                          className={searchLevels.includes(level) ? 'select-chip active search-filter-chip' : 'select-chip search-filter-chip'}
+                          onClick={() => setSearchLevels((prev) => toggleFilterValue(prev, level))}
+                        >
+                          {level}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="search-filter-group">
+                    <div className="search-filter-heading">
+                      <strong>目的</strong>
+                      <span>気になるテーマで絞り込む</span>
+                    </div>
+                    <div className="chip-grid compact">
+                      {searchPurposeOptions.map((purpose) => (
+                        <button
+                          key={purpose}
+                          type="button"
+                          className={searchPurposes.includes(purpose) ? 'select-chip active search-filter-chip' : 'select-chip search-filter-chip'}
+                          onClick={() => setSearchPurposes((prev) => toggleFilterValue(prev, purpose))}
+                        >
+                          {purpose}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="search-filter-group">
+                    <div className="search-filter-heading">
+                      <strong>特徴</strong>
+                      <span>気になる対応や強みで選ぶ</span>
+                    </div>
+                    <div className="chip-grid compact">
+                      {searchFeatureOptions.map((feature) => (
+                        <button
+                          key={feature}
+                          type="button"
+                          className={searchFeatures.includes(feature) ? 'select-chip active search-filter-chip' : 'select-chip search-filter-chip'}
+                          onClick={() => setSearchFeatures((prev) => toggleFilterValue(prev, feature))}
+                        >
+                          {feature}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                </div>
+              </details>
+            </section>
+            <div className="search-filter-meta">
+              <p><strong>{filteredItems.length}件</strong> 見つかりました</p>
+              {hasAdvancedSearchFilters && (
+                <button type="button" className="ghost-button search-filter-reset" onClick={clearSearchFilters}>
+                  絞り込みをクリア
+                </button>
+              )}
+            </div>
             <CardList title="検索結果一覧" items={filteredItems} onDetail={setDetailItem} onAddTeacher={handleAddTeacher} emptyMessage="条件に合う候補が見つかりませんでした。フィルターを少し減らしてみてください。" />
           </div>
         )}
