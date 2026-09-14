@@ -16,6 +16,7 @@ import { DiagnosisForm } from './components/DiagnosisForm';
 import { CardList } from './components/CardList';
 import { MapView } from './components/MapView';
 import { DiagnosisResult, ResultPage, YogaPoseRecommendation, BoxBreathingExperience, BreathworkExperience } from './components/ResultPage';
+import { resolveYogaKnowledge } from './lib/knowledgeResolver';
 import { FieldConfig, FormSectionConfig, RegisterForm } from './components/RegisterForm';
 import { ProYogaPage } from './components/ProYogaPage';
 import { ProDrillPage } from './ProDrillPage';
@@ -721,6 +722,16 @@ function hasAny(values: string[], targets: string[]) {
 }
 
 function buildRecommendedYogaPose(input: StudentDiagnosisInput): YogaPoseRecommendation {
+  const raw = buildRecommendedYogaPoseRaw(input);
+  const resolution = resolveYogaKnowledge({
+    nameJa: raw.title,
+    catalogId: raw.poseId,
+    typeHint: raw.type,
+  });
+  return { ...raw, resolution };
+}
+
+function buildRecommendedYogaPoseRaw(input: StudentDiagnosisInput): YogaPoseRecommendation {
   const beginner = ['未経験', '少しある'].includes(input.yogaExperience);
   const wantsStressCare = hasAny(input.goals, ['リラックス', 'ストレス軽減', '睡眠改善', '瞑想・呼吸法'])
     || hasAny(input.bodyConditions, ['睡眠の悩み', '自律神経の乱れ', '疲れやすい']);

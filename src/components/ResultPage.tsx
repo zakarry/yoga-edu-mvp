@@ -7,6 +7,7 @@ import { BreathworkVisual, buildPhasesFromPattern, type BreathPhase } from './Br
 import { getBreathworkEntry, type BreathworkCatalogEntry, type BreathworkPattern } from '../lib/breathworkCatalog';
 import { getVoiceGuideEngine, playBreathworkAudio, prepareBreathworkAudio, unlockBreathworkAudio } from '../lib/voiceGuide';
 import { getBreathworkIntro, getBreathworkPhaseSequence, usesBreathworkSequence, waitForBreathwork } from '../lib/breathworkSequence';
+import { resolveYogaKnowledge, type KnowledgeResolution } from '../lib/knowledgeResolver';
 
 export type RecommendationType = 'asana' | 'pranayama' | 'dhyana';
 
@@ -17,6 +18,7 @@ export interface YogaPoseRecommendation {
   title: string;
   description: string;
   practice: string;
+  resolution?: KnowledgeResolution;
 }
 
 export interface DiagnosisResult {
@@ -416,7 +418,13 @@ export function BreathworkExperience({
 
 export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch, onBackHome, onOpenMyPage, onOpenProYoga, onOpenAITeacher, onOpenPoseGuide, onOpenBreathworkGuide, onDetail }: ResultPageProps) {
   const pose = result.recommendedYogaPose;
-  const poseAvailable = pose.poseId != null;
+  const resolution = pose.resolution ?? resolveYogaKnowledge({
+    nameJa: pose.title,
+    catalogId: pose.poseId,
+    typeHint: pose.type,
+  });
+  const poseAvailable = pose.poseId != null && resolution.catalogId != null && resolution.catalogId !== undefined;
+  const hasKnowledge = resolution.status === 'exact' || resolution.status === 'high_confidence';
   const isAsana = pose.type === 'asana';
   const isPranayama = pose.type === 'pranayama';
   const guideLabel = isAsana ? 'お手本を見る' : isPranayama ? '呼吸ガイドを見る' : '瞑想ガイドを見る';
@@ -425,9 +433,9 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
   const handleGuideClick = () => {
     if (!poseAvailable) return;
     if (isPranayama) {
-      onOpenBreathworkGuide(pose.poseId!);
+      onOpenBreathworkGuide(resolution.catalogId!);
     } else {
-      onOpenPoseGuide(pose.poseId);
+      onOpenPoseGuide(resolution.catalogId ?? null);
     }
   };
 
@@ -456,7 +464,10 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
           </div>
 
           <div className="hero-actions result-hero-actions">
-            <button className="gold-button" onClick={() => onOpenAITeacher(pose.poseId)} disabled={!poseAvailable}>今日の実践へ — My AI Teacherと始める</button>
+            <button className="gold-button" onClick={() => onOpenAITeacher(resolution.catalogId ?? pose.poseId ?? null)} disabled={!poseAvailable}>今日の実践へ — My AI Teacherと始める</button>
+            {hasKnowledge && !poseAvailable && (
+              <button className="secondary-button" onClick={() => onOpenAITeacher(null)}>詳しく知る</button>
+            )}
             <button className="secondary-button" onClick={onOpenMyPage}>マイページを見る</button>
           </div>
         </div>
@@ -486,11 +497,15 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
             <p>まずはこの目安から始めて、無理がなければ少しずつ慣れていきましょう。</p>
           </div>
           <div className="result-cta-row">
-            <button className="secondary-button" onClick={() => onOpenAITeacher(pose.poseId)} disabled={!poseAvailable}>AI先生と実践する</button>
-            <button className="ghost-button" onClick={handleGuideClick} disabled={!poseAvailable}>{guideLabel}</button>
+            <button className="secondary-button" onClick={() => onOpenAITeacher(resolution.catalogId ?? pose.poseId ?? null)} disabled={!poseAvailable}>AI先生と実践する</button>
+            {hasKnowledge && !poseAvailable ? (
+              <button className="ghost-button" onClick={() => onOpenAITeacher(null)}>詳しく知る</button>
+            ) : (
+              <button className="ghost-button" onClick={handleGuideClick} disabled={!poseAvailable}>{guideLabel}</button>
+            )}
           </div>
           {!poseAvailable && (
-            <p className="yoga-pose-note">{preparingLabel}</p>
+            <p className="yoga-pose-note">{hasKnowledge ? '実践ガイド準備中' : preparingLabel}</p>
           )}
         </article>
 
