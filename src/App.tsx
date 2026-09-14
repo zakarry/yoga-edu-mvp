@@ -735,6 +735,7 @@ function buildRecommendedYogaPose(input: StudentDiagnosisInput): YogaPoseRecomme
   if (wantsBackCare) {
     if (beginner) {
       return {
+        poseId: null,
         category: '仰臥位・伏臥位',
         title: 'セツ・バンダーサナ（橋のポーズ）',
         description: '仰向けでひざを立て、お尻を小さく持ち上げます。背中と胸まわりをやさしく広げ、腰まわりのこわばりをゆるめる助けになるとされています。',
@@ -743,6 +744,7 @@ function buildRecommendedYogaPose(input: StudentDiagnosisInput): YogaPoseRecomme
     }
 
     return {
+      poseId: null,
       category: '仰臥位・伏臥位',
       title: 'ブジャンガーサナ（コブラのポーズ）',
       description: 'うつ伏せから胸をやさしく持ち上げるポーズです。背中を無理なく動かし、腰まわりの緊張をゆるめるのに役立つとされています。',
@@ -753,6 +755,7 @@ function buildRecommendedYogaPose(input: StudentDiagnosisInput): YogaPoseRecomme
   if (wantsStressCare || wantsBreathFocus) {
     if (input.goals.includes('瞑想・呼吸法') || input.preferredStyles.includes('瞑想重視')) {
       return {
+        poseId: 'mindfulness-1min',
         category: '呼吸・瞑想',
         title: '瞑想（1分）',
         description: '楽に座って目を閉じ、呼吸の出入りを静かに見守ります。気持ちを落ち着け、自分の状態を整える時間として役立つとされています。',
@@ -761,6 +764,7 @@ function buildRecommendedYogaPose(input: StudentDiagnosisInput): YogaPoseRecomme
     }
 
     return {
+      poseId: null,
       category: '呼吸・瞑想',
       title: 'ブラマリ（ハチの呼吸）',
       description: '息を吐くときに小さくハミングする呼吸法です。顔や肩の力みをやわらげ、気分を静めたいときに役立つとされています。',
@@ -771,6 +775,7 @@ function buildRecommendedYogaPose(input: StudentDiagnosisInput): YogaPoseRecomme
   if (wantsShoulderPosture) {
     if (!beginner && wantsBalance) {
       return {
+        poseId: 'vrksasana',
         category: '立位',
         title: 'ヴリクシャーサナ（木のポーズ）',
         description: '片足に少しずつ体重をのせて立つポーズです。姿勢を整えながら、肩や体幹をやさしく意識する助けになるとされています。',
@@ -779,6 +784,7 @@ function buildRecommendedYogaPose(input: StudentDiagnosisInput): YogaPoseRecomme
     }
 
     return {
+      poseId: 'tadasana',
       category: '立位',
       title: 'タダーサナ（山のポーズ）',
       description: '足裏で床を感じながらまっすぐ立つ基本のポーズです。胸をひらきやすくなり、姿勢を見直したいときに役立つとされています。',
@@ -789,6 +795,7 @@ function buildRecommendedYogaPose(input: StudentDiagnosisInput): YogaPoseRecomme
   if (wantsExercise) {
     if (!beginner) {
       return {
+        poseId: null,
         category: '立位',
         title: 'トリコナーサナ（三角のポーズ）',
         description: '足幅を広げて体の横を気持ちよく伸ばすポーズです。全身を大きく使い、運動不足をやさしくほぐす助けになるとされています。',
@@ -797,6 +804,7 @@ function buildRecommendedYogaPose(input: StudentDiagnosisInput): YogaPoseRecomme
     }
 
     return {
+      poseId: 'tadasana',
       category: '立位',
       title: 'タダーサナ（山のポーズ）',
       description: 'まっすぐ立って呼吸を整える基本のポーズです。体を起こしやすくし、最初の一歩として取り入れやすいとされています。',
@@ -806,6 +814,7 @@ function buildRecommendedYogaPose(input: StudentDiagnosisInput): YogaPoseRecomme
 
   if (wantsFlexibility) {
     return {
+      poseId: null,
       category: '座位',
       title: 'バッダ・コナーサナ（合せきのポーズ）',
       description: '足裏を合わせて座り、股関節まわりをゆっくりゆるめます。体の硬さが気になるときに、やさしくほぐす助けになるとされています。',
@@ -815,6 +824,7 @@ function buildRecommendedYogaPose(input: StudentDiagnosisInput): YogaPoseRecomme
 
   if (wantsDigestiveSupport) {
     return {
+      poseId: null,
       category: '座位',
       title: 'ヴァジュラーサナ（正座のポーズ）',
       description: '無理のない正座で背すじを整えて座ります。体を落ち着けながら、お腹まわりを静かに整える時間として役立つとされています。',
@@ -824,6 +834,7 @@ function buildRecommendedYogaPose(input: StudentDiagnosisInput): YogaPoseRecomme
 
   if (beginner) {
     return {
+      poseId: 'tadasana',
       category: '立位',
       title: 'タダーサナ（山のポーズ）',
       description: '足を腰幅に開いて立ち、肩の力を抜いて呼吸します。はじめてでも取り入れやすく、姿勢を整える基本として役立つとされています。',
@@ -832,6 +843,7 @@ function buildRecommendedYogaPose(input: StudentDiagnosisInput): YogaPoseRecomme
   }
 
   return {
+    poseId: null,
     category: '呼吸・瞑想',
     title: 'ナディ・ショーダナ（片鼻呼吸）',
     description: '左右の鼻を交互に使い、ゆっくり呼吸のリズムを整える方法です。気持ちを切り替えたいときや、呼吸を落ち着けたいときに役立つとされています。',
@@ -1079,6 +1091,7 @@ export default function App() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [mapFilterType, setMapFilterType] = useState<FilterType>('all');
   const [aiTeacherMinutes, setAiTeacherMinutes] = useState<number | undefined>(undefined);
+  const [aiTeacherInitialPoseId, setAiTeacherInitialPoseId] = useState<string | null>(null);
   const [testMode, setTestMode] = useState<string | null>(null);
   const [entryTarget, setEntryTarget] = useState<string | null>(null);
   const [entrySection, setEntrySection] = useState<string | null>(null);
@@ -1810,7 +1823,8 @@ export default function App() {
             onBackHome={() => moveTo('home')}
             onOpenMyPage={() => moveTo('my-page')}
             onOpenProYoga={() => moveTo('pro-yoga')}
-            onOpenAITeacher={() => moveTo('ai-teacher')}
+            onOpenAITeacher={(poseId) => { setAiTeacherInitialPoseId(poseId); moveTo('ai-teacher'); }}
+            onOpenPoseGuide={(poseId) => { setAiTeacherInitialPoseId(poseId); moveTo('ai-teacher'); }}
             onDetail={setDetailItem}
           />
         )}
@@ -2004,6 +2018,7 @@ export default function App() {
             onOpenProYoga={() => moveTo('pro-yoga')}
             latestDiagnosis={null}
             initialMinutes={aiTeacherMinutes}
+            initialPoseId={aiTeacherInitialPoseId}
             entryTarget={entryTarget}
           />
         )}

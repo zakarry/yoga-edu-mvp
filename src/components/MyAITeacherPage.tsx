@@ -39,6 +39,7 @@ interface MyAITeacherPageProps {
   onOpenProYoga: () => void;
   latestDiagnosis: DiagnosisRecord | null;
   initialMinutes?: number;
+  initialPoseId?: string | null;
   entryTarget?: string | null;
 }
 
@@ -378,7 +379,7 @@ function resolvePosesFromProgram(prog: TodayProgram | null): ConcretePose[] {
   return poses;
 }
 
-export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onOpenProYoga, latestDiagnosis, initialMinutes, entryTarget }: MyAITeacherPageProps) {
+export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onOpenProYoga, latestDiagnosis, initialMinutes, initialPoseId, entryTarget }: MyAITeacherPageProps) {
   const auth = useAuth();
   const [step, setStep] = useState<StepId>('home');
   const [persona, setPersona] = useState<AITeacherPersona | null>(null);
@@ -1183,6 +1184,25 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   ];
 
   const isEventDemo = entryTarget === 'event-demo';
+
+  const initialPoseApplied = useRef(false);
+  useEffect(() => {
+    if (!initialPoseId || initialPoseApplied.current) return;
+    const pose = getPoseById(initialPoseId);
+    if (!pose) return;
+    initialPoseApplied.current = true;
+    const type = pose.type === 'pranayama' ? 'pranayama' : pose.type === 'dhyana' ? 'dhyana' : 'asana';
+    setConcretePosesOverride([pose]);
+    setPracticeType(type);
+    setSelectedGuide(null);
+    setPracticePhase('guide');
+    setPosePhase('guide');
+    setCurrentPoseIdx(0);
+    setStep('step6');
+    setTimeout(() => {
+      poseGuideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  }, [initialPoseId]);
 
   const handleEventDemoStart = useCallback(() => {
     if (safetyBlocked || !practiceEntryAllows(practiceEntryVerdict)) return;

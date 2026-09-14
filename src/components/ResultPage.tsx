@@ -9,6 +9,7 @@ import { getVoiceGuideEngine, playBreathworkAudio, prepareBreathworkAudio, unloc
 import { getBreathworkIntro, getBreathworkPhaseSequence, usesBreathworkSequence, waitForBreathwork } from '../lib/breathworkSequence';
 
 export interface YogaPoseRecommendation {
+  poseId: string | null;
   category: string;
   title: string;
   description: string;
@@ -47,7 +48,8 @@ interface ResultPageProps {
   onBackHome: () => void;
   onOpenMyPage: () => void;
   onOpenProYoga: () => void;
-  onOpenAITeacher: () => void;
+  onOpenAITeacher: (poseId: string | null) => void;
+  onOpenPoseGuide: (poseId: string | null) => void;
   onDetail: (item: SearchItem) => void;
 }
 
@@ -408,8 +410,9 @@ export function BreathworkExperience({
   );
 }
 
-export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch, onBackHome, onOpenMyPage, onOpenProYoga, onOpenAITeacher, onDetail }: ResultPageProps) {
+export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch, onBackHome, onOpenMyPage, onOpenProYoga, onOpenAITeacher, onOpenPoseGuide, onDetail }: ResultPageProps) {
   const pose = result.recommendedYogaPose;
+  const poseAvailable = pose.poseId != null;
 
   return (
     <div className="page-shell result-page-shell">
@@ -436,7 +439,7 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
           </div>
 
           <div className="hero-actions result-hero-actions">
-            <button className="gold-button" onClick={onOpenAITeacher}>今日の実践へ — My AI Teacherと始める</button>
+            <button className="gold-button" onClick={() => onOpenAITeacher(pose.poseId)} disabled={!poseAvailable}>今日の実践へ — My AI Teacherと始める</button>
             <button className="secondary-button" onClick={onOpenMyPage}>マイページを見る</button>
           </div>
         </div>
@@ -466,9 +469,12 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
             <p>まずはこの目安から始めて、無理がなければ少しずつ慣れていきましょう。</p>
           </div>
           <div className="result-cta-row">
-            <button className="secondary-button" onClick={onOpenAITeacher}>AI先生と実践する</button>
-            <button className="ghost-button" onClick={onOpenSearch}>お手本を見る</button>
+            <button className="secondary-button" onClick={() => onOpenAITeacher(pose.poseId)} disabled={!poseAvailable}>AI先生と実践する</button>
+            <button className="ghost-button" onClick={() => onOpenPoseGuide(pose.poseId)} disabled={!poseAvailable}>お手本を見る</button>
           </div>
+          {!poseAvailable && (
+            <p className="yoga-pose-note">このポーズのお手本は現在準備中です。</p>
+          )}
         </article>
 
         <p className="yoga-pose-note">
@@ -499,8 +505,8 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
 
             <p className="breathing-repeat">これを3回繰り返してみましょう。苦しくなる前に止めて大丈夫です。</p>
             <div className="result-cta-row">
-              <button className="secondary-button" onClick={onOpenAITeacher}>AI先生と実践する</button>
-              <button className="ghost-button" onClick={onOpenSearch}>呼吸ガイドを見る</button>
+              <button className="secondary-button" onClick={() => onOpenAITeacher(null)}>AI先生と実践する</button>
+              <button className="ghost-button" onClick={() => onOpenPoseGuide(null)}>呼吸ガイドを見る</button>
             </div>
           </article>
         </section>
@@ -577,20 +583,28 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
         description="体験参加や短期参加から始めたい方に向くイベントです。"
       />
 
-      {/* 6. ヨガクラブ */}
+      {/* 6. 近くで探す（地図） */}
+      <MapView
+        items={result.allRecommendedItems}
+        onSelectItem={onDetail}
+        title="近くで探す"
+        subtitle="おすすめのスクール・先生・イベントを、地図で確認できます。"
+      />
+
+      {/* 7. ヨガクラブ */}
       <CardList
         title="おすすめヨガクラブ"
         items={result.recommendedClubs}
         onDetail={onDetail}
-        stepLabel="STEP 6"
+        stepLabel="STEP 7"
         description="地域で継続しやすい交流先やコミュニティ候補です。"
       />
 
-      {/* 7. プロYoga検定 */}
+      {/* 8. プロYoga検定 */}
       <section className="panel result-section pro-yoga-guide-panel">
         <div className="section-inline-header tight">
           <div className="result-section-heading">
-            <span className="result-step-badge">STEP 7</span>
+            <span className="result-step-badge">STEP 8</span>
             <h3>プロYoga検定導線</h3>
             <p className="result-section-copy">本格的に学びたい方や資格に関心がある方は、次にこちらを確認してください。</p>
           </div>
@@ -647,14 +661,6 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
           </p>
         </article>
       </section>
-
-      {/* 9. 近くで探す（地図） */}
-      <MapView
-        items={result.allRecommendedItems}
-        onSelectItem={onDetail}
-        title="近くで探す"
-        subtitle="おすすめのスクール・先生・イベントを、地図から探せます。"
-      />
     </div>
   );
 }
