@@ -1,7 +1,7 @@
 import type { TeacherContext } from './teacherContextService';
 import { getKnowledgeRanking, type KnowledgeExplanation, type RankedCandidate } from './teacherKnowledgeService';
 import { sanitizeKnowledgePayload, MAX_KNOWLEDGE_ITEMS } from './knowledgeGuardService';
-import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, isClarificationIntent, isPrescriptionRequest, isContextualFollowup, type ConversationIntent } from './safetyAndIntent';
+import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, isClarificationIntent, isPrescriptionRequest, isContextualFollowup, isGeneralInfoRequest, isRedFlag, type ConversationIntent } from './safetyAndIntent';
 import { fetchLLMExplanation } from './llmExplanationService';
 import type { AITeacherLLMRequest, LLMKnowledgeItem, LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
 
@@ -15,7 +15,7 @@ export interface ConversationContext {
   lastKnowledgeTitle?: string;
   lastSafetyMessage?: string;
   lastTeacherText?: string;
-  lastAssistantMode?: 'safety_restriction' | 'general_explanation' | 'knowledge_lookup' | 'conversational_clarification' | 'contextual_followup' | 'practice_request' | 'casual';
+  lastAssistantMode?: 'safety_restriction' | 'general_explanation' | 'knowledge_lookup' | 'conversational_clarification' | 'contextual_followup' | 'practice_request' | 'casual' | 'safety_general_info' | 'safety_red_flag';
   lastTopic?: string;
   lastOfferedAction?: string;
   safetyContextActive?: boolean;
@@ -200,6 +200,38 @@ function buildSafetySensitiveResponse(
     text,
     isSafety: true,
     updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'safety_restriction', safetyContextActive: true, lastTopic: bodyPart, lastOfferedAction: 'safety_referral' },
+  };
+}
+
+function buildSafetyGeneralInfoResponse(
+  userMessage: string,
+  context: TeacherContext,
+  prevContext?: ConversationContext,
+): TeacherResponse {
+  const name = context.persona?.name ?? 'AI先生';
+  const bodyPart = /腰|肩|膝|首|背中|股関節|脚|腕|手/.test(userMessage)
+    ? (userMessage.match(/(腰|肩|膝|首|背中|股関節|脚|腕|手)/)?.[0] ?? '')
+    : '';
+  const topic = bodyPart ? `${bodyPart}まわり` : 'からだの気になる部分';
+  const text = `${name}です。一般論として、${topic}に不安がある人向けのヨガでは、強く反ったり深くねじったりするより、呼吸に合わせて背骨をゆっくり動かすものや、無理のない範囲で股関節まわりを動かすものが選ばれることがあります。たとえば、猫と牛のポーズのようなやさしい背骨の動き、休息のポーズ（チャイルドポーズ）、呼吸法などです。ただし、痛みが強い場合や動かすと悪化する場合は無理に実践せず、専門家に相談してください。ここでは一般的な説明として紹介しており、「あなたにおすすめ」という意味ではありません。`;
+  return {
+    text,
+    isSafety: false,
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'safety_general_info', lastTopic: topic, lastOfferedAction: 'general_pose_explanation' },
+  };
+}
+
+function buildSafetyRedFlagResponse(
+  userMessage: string,
+  context: TeacherContext,
+  prevContext?: ConversationContext,
+): TeacherResponse {
+  const name = context.persona?.name ?? 'AI先生';
+  const text = `${name}です。それは大変ですね。強い痛みや激しい症状がある場合は、ヨガを続けずにすぐに医療機関を受診してください。オンラインや電話相談も活用できます。無理に動かさず、まずは専門家の診察を優先してください。`;
+  return {
+    text,
+    isSafety: true,
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'safety_red_flag', safetyContextActive: true, lastOfferedAction: 'red_flag_referral' },
   };
 }
 
@@ -550,9 +582,23 @@ export async function generateTeacherResponse(
     return buildClarificationResponse(userMessage, context, prevContext);
   }
 
+  if (intent === 'safety_red_flag') {
+    return buildSafetyRedFlagResponse(userMessage, context, prevContext);
+  }
+
+  if (intent === 'safety_general_information') {
+    return buildSafetyGeneralInfoResponse(userMessage, context, prevContext);
+  }
+
   if (safetyHit || intent === 'safety_sensitive') {
+    if (isRedFlag(userMessage)) {
+      return buildSafetyRedFlagResponse(userMessage, context, prevContext);
+    }
     if (isPrescriptionRequest(userMessage) || intent === 'safety_prescription_request') {
       return buildSafetyPrescriptionResponse(userMessage, context, prevContext);
+    }
+    if (isGeneralInfoRequest(userMessage)) {
+      return buildSafetyGeneralInfoResponse(userMessage, context, prevContext);
     }
     return buildSafetySensitiveResponse(userMessage, context, prevContext);
   }

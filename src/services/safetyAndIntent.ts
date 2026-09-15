@@ -3,6 +3,7 @@ export const SAFETY_KEYWORDS = [
   '高血圧', '低血圧', '診断', '治療', '薬', 'めまい', 'しびれ', '手術',
   '効く', 'に効く', '合うポーズ', '合う呼吸',
   '喘息', '偏頭痛', 'ヘルニア', '関節炎', '糖尿病',
+  '安全', '腰に安全', '膝に安全',
 ];
 
 const SAFETY_SENSITIVE_KEYWORDS = [
@@ -69,6 +70,8 @@ export type ConversationIntent =
   | 'casual_conversation'
   | 'safety_sensitive'
   | 'safety_prescription_request'
+  | 'safety_general_information'
+  | 'safety_red_flag'
   | 'conversational_clarification'
   | 'contextual_followup';
 
@@ -111,9 +114,39 @@ const PRESCRIPTION_REQUEST_PATTERNS = [
   '合うポーズ', '合う呼吸',
   '安全なポーズ', '安全な呼吸',
   'これなら安全', 'これなら大丈夫',
-  '腰痛に', '腰痛向け',
+  '腰痛に効く', '腰痛向け',
   '痛みに効く', '痛みに合う',
+  '私の', '今の私', '私に', '私には',
+  'このポーズは私', 'このポーズは今',
 ];
+
+const RED_FLAG_PATTERNS = [
+  '激しく痛い', '激痛', '強い痛み', 'すごく痛い',
+  '動けない', '歩けない', '立てない',
+  'しびれが', 'めまいが', '息苦しい',
+  '手術', '骨折', '脱臼',
+  '血', '腫れ', '熱がある',
+  '麻痺', '感覚がない', '動かない',
+];
+
+const GENERAL_INFO_PATTERNS = [
+  'について教えて', 'について説明', '一般的に教えて',
+  '一般的に説明', '一般論として教えて',
+  '向いているヨガ', '向いているポーズ',
+  '人はどんな', 'ひとはどんな',
+  '腰痛いひと', '腰痛い人', '腰痛の人',
+  '腰が気になる人', '肩こりの人',
+  '膝が気になる人',
+  'について知りたい', 'について知りたい',
+];
+
+export function isRedFlag(text: string): boolean {
+  return RED_FLAG_PATTERNS.some((pat) => text.includes(pat));
+}
+
+export function isGeneralInfoRequest(text: string): boolean {
+  return GENERAL_INFO_PATTERNS.some((pat) => text.includes(pat));
+}
 
 export function isClarificationIntent(text: string): boolean {
   return CLARIFICATION_PATTERNS.some((pat) => text.includes(pat));
@@ -132,12 +165,16 @@ export function classifyIntent(text: string): ConversationIntent {
 
   for (const kw of SAFETY_SENSITIVE_KEYWORDS) {
     if (normalized.includes(kw)) {
+      if (isRedFlag(normalized)) return 'safety_red_flag';
       if (isPrescriptionRequest(normalized)) return 'safety_prescription_request';
+      if (isGeneralInfoRequest(normalized)) return 'safety_general_information';
       return 'safety_sensitive';
     }
   }
 
+  if (isRedFlag(normalized)) return 'safety_red_flag';
   if (isPrescriptionRequest(normalized)) return 'safety_prescription_request';
+  if (isGeneralInfoRequest(normalized)) return 'safety_general_information';
 
   for (const pat of PREFERENCE_PATTERNS) {
     if (normalized.includes(pat)) return 'preference';
