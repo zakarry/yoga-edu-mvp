@@ -69,7 +69,8 @@ export type ConversationIntent =
   | 'casual_conversation'
   | 'safety_sensitive'
   | 'safety_prescription_request'
-  | 'conversational_clarification';
+  | 'conversational_clarification'
+  | 'contextual_followup';
 
 const GREETINGS = ['こんにちは', 'こんばんは', 'おはよう', 'ありがとう', 'よろしく'];
 
@@ -79,12 +80,28 @@ const CLARIFICATION_PATTERNS = [
   'なぜ', 'なぜですか', 'なんで',
   'それって何', 'それってなに',
   'さっきの意味', 'さっきの意味は',
-  'どういう意味', '意味がわからない',
+  '意味がわからない',
   '話さないって', '話さないってどういう',
   '言わないって', '言わないってどういう',
   'しないって', 'しないってどういう',
   'できないって', 'できないってどういう',
 ];
+
+const CONTEXTUAL_FOLLOWUP_PATTERNS = [
+  '一般的な話して', '一般的な話', '一般論として',
+  'それ教えて', 'それについて', 'それって安全',
+  '詳しく', 'もっと詳しく',
+  '続けて', 'さっきの話', 'さっきの',
+  'それについて教えて', 'それについて話して',
+  '一般的な説明して', '一般論話して',
+  'もっと話して', 'もう少し聞かせて',
+  '深掘り', 'もう少し詳しく',
+  'それで？', 'それから',
+];
+
+export function isContextualFollowup(text: string): boolean {
+  return CONTEXTUAL_FOLLOWUP_PATTERNS.some((pat) => text.includes(pat));
+}
 
 const PRESCRIPTION_REQUEST_PATTERNS = [
   '効くポーズ', '効く呼吸', '効くアーサナ',
@@ -108,6 +125,8 @@ export function isPrescriptionRequest(text: string): boolean {
 
 export function classifyIntent(text: string): ConversationIntent {
   const normalized = normalizeForSafety(text.trim());
+
+  if (isContextualFollowup(normalized)) return 'contextual_followup';
 
   if (isClarificationIntent(normalized)) return 'conversational_clarification';
 

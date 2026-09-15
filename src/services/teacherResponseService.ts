@@ -1,7 +1,7 @@
 import type { TeacherContext } from './teacherContextService';
 import { getKnowledgeRanking, type KnowledgeExplanation, type RankedCandidate } from './teacherKnowledgeService';
 import { sanitizeKnowledgePayload, MAX_KNOWLEDGE_ITEMS } from './knowledgeGuardService';
-import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, isClarificationIntent, isPrescriptionRequest, type ConversationIntent } from './safetyAndIntent';
+import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, isClarificationIntent, isPrescriptionRequest, isContextualFollowup, type ConversationIntent } from './safetyAndIntent';
 import { fetchLLMExplanation } from './llmExplanationService';
 import type { AITeacherLLMRequest, LLMKnowledgeItem, LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
 
@@ -15,6 +15,10 @@ export interface ConversationContext {
   lastKnowledgeTitle?: string;
   lastSafetyMessage?: string;
   lastTeacherText?: string;
+  lastAssistantMode?: 'safety_restriction' | 'general_explanation' | 'knowledge_lookup' | 'conversational_clarification' | 'contextual_followup' | 'practice_request' | 'casual';
+  lastTopic?: string;
+  lastOfferedAction?: string;
+  safetyContextActive?: boolean;
 }
 
 export interface TeacherResponse {
@@ -195,7 +199,7 @@ function buildSafetySensitiveResponse(
   return {
     text,
     isSafety: true,
-    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined },
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'safety_restriction', safetyContextActive: true, lastTopic: bodyPart, lastOfferedAction: 'safety_referral' },
   };
 }
 
@@ -209,7 +213,7 @@ function buildSafetyPrescriptionResponse(
   return {
     text,
     isSafety: true,
-    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined },
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'general_explanation', safetyContextActive: true, lastOfferedAction: 'general_explanation_offer' },
   };
 }
 
@@ -227,7 +231,7 @@ function buildClarificationResponse(
     const text = `${name}です。「効くポーズ」という表現を避けているのは、痛みや症状に対して治療効果を断定しないためです。ただし、ポーズの一般的な目的や特徴、どのような動きなのか、どこを意識しやすいか、といった説明はできます。痛みがある場合にあなた向けに特定のポーズを処方しない、という意味です。一般的なヨガの知識やポーズの特徴については、お答えできます。`;
     return {
       text,
-      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text },
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'conversational_clarification' },
     };
   }
 
@@ -235,14 +239,87 @@ function buildClarificationResponse(
     const text = `${name}です。先ほどの説明についてですね。${lastTeacher}もう一度、別の角度からお話しすると、ヨガの実践は個人の状態に合わせて行うものです。一般的な知識やポーズの特徴は説明できますが、あなたの痛みや症状に合わせた個別の提案はできない、という方針です。他に知りたいことがあれば、お気軽に聞いてください。`;
     return {
       text,
-      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text },
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'conversational_clarification' },
     };
   }
 
   const text = `${name}です。もう少し詳しくお話ししますね。ヨガの知識やポーズの一般的な特徴については説明できます。具体的な痛みへの対応は、医療専門家やヨガの先生にご相談ください。`;
   return {
     text,
-    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text },
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'conversational_clarification' },
+  };
+}
+
+function buildContextualFollowupResponse(
+  userMessage: string,
+  context: TeacherContext,
+  prevContext?: ConversationContext,
+): TeacherResponse {
+  const name = context.persona?.name ?? 'AI先生';
+  const isSafetyActive = prevContext?.safetyContextActive ?? false;
+  const lastTopic = prevContext?.lastTopic ?? '';
+  const lastOffered = prevContext?.lastOfferedAction ?? '';
+  const wantsDetail = /詳しく|もっと詳しく|深掘り|もう少し詳しく/.test(userMessage);
+  const wantsGeneral = /一般的な話して|一般的な話|一般論として|一般的な説明して|一般論話して/.test(userMessage);
+  const wantsSafetyCheck = /それって安全|安全/.test(userMessage);
+  const wantsContinue = /続けて|さっきの話|さっきの|もっと話して|もう少し聞かせて/.test(userMessage);
+
+  if (wantsSafetyCheck) {
+    const text = `${name}です。個別に「これなら安全」と保証することはできません。一般論として、ヨガのポーズはそれぞれ目的と動きがあり、無理なく行うことが基本です。痛みがある場合は、医療専門家やヨガの先生に直接ご相談いただくのが確実です。`;
+    return {
+      text,
+      isSafety: isSafetyActive,
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'contextual_followup', lastOfferedAction: 'safety_explanation' },
+    };
+  }
+
+  if (isSafetyActive) {
+    if (wantsDetail || wantsContinue) {
+      const text = `${name}です。先ほどの一般説明をもう少し深掘りしますね。ヨガでは、背骨をゆっくり動かすこと、呼吸に合わせて姿勢を整えること、股関節まわりを無理なく動かすことなどがよく行われます。たとえば猫と牛のポーズは、背骨を丸めたり反らしたりする動きを呼吸に合わせて行います。チャイルドポーズは、身体を休ませる目的で使われることがあります。ただし、今あなたは痛みがあると教えてくれているので、これらを「あなたにおすすめ」とは言いません。ここでは一般的な説明として紹介しています。`;
+      return {
+        text,
+        isSafety: true,
+        updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'contextual_followup', lastOfferedAction: 'general_pose_explanation' },
+      };
+    }
+
+    if (wantsGeneral) {
+      const text = `${name}です。一般論として、腰まわりに関連するヨガでは、背骨をゆっくり動かす動き、股関節まわりを無理なく動かすもの、呼吸に合わせて姿勢を整えるものなどがあります。たとえば猫と牛のポーズは、背骨を丸めたり反らしたりする動きを呼吸に合わせて行うポーズです。チャイルドポーズは、身体を休ませる目的で使われることがあります。ただし、今あなたは腰に痛みがあると教えてくれているので、これらを「あなたにおすすめ」とは言いません。ここでは一般的な説明として紹介しています。`;
+      return {
+        text,
+        isSafety: true,
+        updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'contextual_followup', lastOfferedAction: 'general_pose_explanation' },
+      };
+    }
+
+    const text = `${name}です。一般的なポーズの特徴や呼吸法の説明はできます。具体的にどのポーズや呼吸法について知りたいですか？一般的な説明としてご紹介します。`;
+    return {
+      text,
+      isSafety: true,
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'contextual_followup', lastOfferedAction: 'general_explanation_offer' },
+    };
+  }
+
+  if (wantsDetail && lastTopic) {
+    const text = `${name}です。「${lastTopic}」についてもう少し詳しくお話ししますね。ヨガの各ポーズには、それぞれ目的と意識するポイントがあります。どの部分について詳しく知りたいですか？`;
+    return {
+      text,
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'contextual_followup' },
+    };
+  }
+
+  if (wantsContinue && lastOffered) {
+    const text = `${name}です。先ほどの${lastOffered}について続けますね。もう少し具体的に、どの部分について知りたいですか？`;
+    return {
+      text,
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'contextual_followup' },
+    };
+  }
+
+  const text = `${name}です。もう少し具体的に、どの部分について知りたいですか？ポーズの特徴や呼吸法の説明など、一般的な内容でしたらお話しできます。`;
+  return {
+    text,
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'contextual_followup' },
   };
 }
 
@@ -365,11 +442,11 @@ function buildGeneralKnowledgeFallback(
   prevContext?: ConversationContext,
 ): TeacherResponse {
   const name = context.persona?.name ?? 'AI先生';
-  const text = `${name}です。その言葉については、今のKnowledgeから直接的な説明が見つかりませんでした。別の言葉で言い換えていただけると、お調べできるかもしれません。`;
+  const text = `${name}です。もう少し具体的に、どの部分について知りたいですか？ポーズの特徴や呼吸法の説明、ヨガの考え方など、一般的な内容でしたらお話しできます。`;
   return {
     text,
     knowledgeUsed: false,
-    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text },
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'general_explanation' },
   };
 }
 
@@ -464,6 +541,10 @@ export async function generateTeacherResponse(
   const safetyHit = detectSafetyKeyword(userMessage);
   const intent = classifyIntent(userMessage);
   const name = context.persona?.name ?? 'AI先生';
+
+  if (intent === 'contextual_followup') {
+    return buildContextualFollowupResponse(userMessage, context, prevContext);
+  }
 
   if (intent === 'conversational_clarification') {
     return buildClarificationResponse(userMessage, context, prevContext);
