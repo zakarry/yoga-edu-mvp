@@ -5,6 +5,108 @@ export const SAFETY_KEYWORDS = [
   '喘息', '偏頭痛', 'ヘルニア', '関節炎', '糖尿病',
 ];
 
+const SAFETY_SENSITIVE_KEYWORDS = [
+  '痛い', '強い痛み', '痛み', 'しびれ', 'めまい', '息苦しい',
+  '医師', '運動制限', '制限', '手術', '怪我', '怪我を',
+  '妊娠', '既往症', '病気', '診断', '治療', '薬',
+  '高血圧', '低血圧', 'ヘルニア', '関節炎', '糖尿病', '喘息',
+];
+
+const HIRAGANA_TO_KANJI: Array<[RegExp, string]> = [
+  [/いたい/g, '痛い'],
+  [/いたみ/g, '痛み'],
+  [/いたむ/g, '痛む'],
+  [/しびれ/g, 'しびれ'],
+  [/痺れ/g, 'しびれ'],
+  [/めまい/g, 'めまい'],
+  [/息苦しい/g, '息苦しい'],
+  [/きず/g, '怪我'],
+  [/けが/g, '怪我'],
+];
+
+function normalizeForSafety(text: string): string {
+  let result = text;
+  for (const [pattern, replacement] of HIRAGANA_TO_KANJI) {
+    result = result.replace(pattern, replacement);
+  }
+  return result;
+}
+
+const USER_STATE_PATTERNS = [
+  'からだが固い', '体が固い', 'からだが硬い', '体が硬い',
+  '固いです', '硬いです', '固い気がする', '硬い気がする',
+  '柔軟性がない', '柔軟性が気になる', '柔軟性が足りない',
+  '股関節が固い', '股関節が硬い', '肩が固い', '肩が硬い',
+  '脚が固い', '脚が硬い', '腰が固い', '腰が硬い',
+  '運動不足', '久しぶり', '久しぶり', '体を動かしてない',
+  '体を動かしていない', '運動してない', '運動していない',
+  '疲れやすい', '疲れが溜ま', '疲れがたま',
+  '肩こりがひどい', '腰が重い', 'だるい',
+  'ストレスが溜ま', 'ストレスがたま',
+];
+
+const CASUAL_PATTERNS = [
+  'こんにちは', 'こんばんは', 'おはよう', 'おはようございます',
+  'ありがとう', 'ありがとうございます', 'よろしく', 'よろしくお願いします',
+  'はじめまして', 'こんちわ', 'やあ',
+];
+
+const PREFERENCE_PATTERNS = [
+  '詳しく教えて', '詳しく説明', 'もっと詳しく',
+  '短くして', '短めで', '簡潔に',
+  '褒めて', 'ほめて', 'もっと褒めて',
+  '褒めすぎ', 'ほめすぎ',
+  'もっと励まして', '励ましは控えて',
+  'クイズを増やして', 'クイズを減らして',
+  '声のトーン', 'ゆっくり話して', '早く話して',
+];
+
+export type ConversationIntent =
+  | 'knowledge_question'
+  | 'user_state'
+  | 'preference'
+  | 'practice_request'
+  | 'casual_conversation'
+  | 'safety_sensitive';
+
+const GREETINGS = ['こんにちは', 'こんばんは', 'おはよう', 'ありがとう', 'よろしく'];
+
+export function classifyIntent(text: string): ConversationIntent {
+  const normalized = normalizeForSafety(text.trim());
+
+  for (const kw of SAFETY_SENSITIVE_KEYWORDS) {
+    if (normalized.includes(kw)) return 'safety_sensitive';
+  }
+
+  for (const pat of PREFERENCE_PATTERNS) {
+    if (normalized.includes(pat)) return 'preference';
+  }
+
+  for (const pat of USER_STATE_PATTERNS) {
+    if (normalized.includes(pat)) return 'user_state';
+  }
+
+  if (isExplanationIntent(normalized)) return 'knowledge_question';
+
+  if (isPracticeRequest(normalized)) return 'practice_request';
+
+  if (GREETINGS.some((g) => normalized === g || normalized.startsWith(g))) {
+    return 'casual_conversation';
+  }
+
+  if (normalized.length <= 30 && !normalized.includes('。')) {
+    const looksLikeKeyword = !normalized.includes('です') && !normalized.includes('ます')
+      && !normalized.includes('たい') && !normalized.includes('のですが');
+    if (looksLikeKeyword && !isPracticeRequest(normalized)) {
+      return 'knowledge_question';
+    }
+  }
+
+  if (normalized.length <= 15) return 'casual_conversation';
+
+  return 'casual_conversation';
+}
+
 export const PRACTICE_REQUEST_KEYWORDS = [
   '合う', 'おすすめ', 'やれば', 'やったほうが', 'すべき',
   '今日何を', '今日やる', 'プラン', 'メニュー',
@@ -17,8 +119,9 @@ export const EXPLANATION_PATTERNS = [
 ];
 
 export function detectSafetyKeyword(text: string): string | null {
+  const normalized = normalizeForSafety(text);
   for (const kw of SAFETY_KEYWORDS) {
-    if (text.includes(kw)) return kw;
+    if (normalized.includes(kw)) return kw;
   }
   return null;
 }

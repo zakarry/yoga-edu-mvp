@@ -1,7 +1,7 @@
 import type { TeacherContext } from './teacherContextService';
 import { getKnowledgeRanking, type KnowledgeExplanation, type RankedCandidate } from './teacherKnowledgeService';
 import { sanitizeKnowledgePayload, MAX_KNOWLEDGE_ITEMS } from './knowledgeGuardService';
-import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword } from './safetyAndIntent';
+import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, type ConversationIntent } from './safetyAndIntent';
 import { fetchLLMExplanation } from './llmExplanationService';
 import type { AITeacherLLMRequest, LLMKnowledgeItem, LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
 
@@ -69,6 +69,118 @@ function parseStyle(text: string): string | null {
   return null;
 }
 
+function buildUserStateResponse(
+  userMessage: string,
+  context: TeacherContext,
+  prevContext?: ConversationContext,
+): TeacherResponse {
+  const name = context.persona?.name ?? 'AI先生';
+  const isStiffness = /固い|硬い|柔軟性/.test(userMessage);
+  const isTired = /疲れ|だるい|疲労/.test(userMessage);
+  const isStress = /ストレス/.test(userMessage);
+  const isSedentary = /運動不足|久しぶり|久しぶり|動かしてない|動かしていない|運動してない|運動していない/.test(userMessage);
+
+  let empathy: string;
+  let suggestion: string;
+  let followUp: string;
+
+  if (isStiffness) {
+    empathy = '教えてくれてありがとうございます。からだが硬いと感じているんですね。';
+    suggestion = '無理に深く伸ばす必要はありません。今日は呼吸に合わせながら、ゆっくり動く練習にしてみますか？';
+    followUp = '特に硬さを感じるところはありますか？肩まわり、股関節、脚の裏など、気になるところがあれば教えてください。';
+  } else if (isTired) {
+    empathy = '教えてくれてありがとうございます。疲れを感じているんですね。';
+    suggestion = '今日は無理をせず、やさしいストレッチと深呼吸で体を休める時間にしましょうか。';
+    followUp = '特にお疲れを感じるところがあれば教えてください。';
+  } else if (isStress) {
+    empathy = '教えてくれてありがとうございます。ストレスを感じているんですね。';
+    suggestion = '呼吸を整えることから始めてみましょう。ゆっくり吸って、ゆっくり吐くだけでも、気持ちが落ち着きやすくなります。';
+    followUp = 'よろしければ、数分の呼吸法をご案内します。';
+  } else if (isSedentary) {
+    empathy = '教えてくれてありがとうございます。久しぶりに体を動かすのは、はじめの一歩が大事ですね。';
+    suggestion = '無理のない範囲で、ゆっくり体を動かすところから始めましょう。';
+    followUp = '今日は5分程度のやさしいストレッチからいかがですか？';
+  } else {
+    empathy = '教えてくれてありがとうございます。今の自分の状態を伝えてくれるのは、とても助かります。';
+    suggestion = '今日は無理のない範囲で、呼吸に合わせてゆっくり動くことから始めてみましょうか。';
+    followUp = '他に気になることがあれば、いつでも教えてください。';
+  }
+
+  return {
+    text: `${name}です。${empathy} ${suggestion}\n${followUp}`,
+    updatedContext: { ...prevContext, lastUserMessage: userMessage },
+  };
+}
+
+function buildCasualResponse(
+  userMessage: string,
+  context: TeacherContext,
+  prevContext?: ConversationContext,
+): TeacherResponse {
+  const name = context.persona?.name ?? 'AI先生';
+  const greeting = userMessage.trim();
+
+  if (greeting.includes('ありがとう')) {
+    return {
+      text: `${name}です。こちらこそ、いつもありがとうございます。何か気になることがあれば、いつでも聞いてくださいね。`,
+      updatedContext: { ...prevContext, lastUserMessage: userMessage },
+    };
+  }
+
+  if (greeting.includes('はじめまして')) {
+    return {
+      text: `${name}です。はじめまして。ヨガの実践や知識について、何でも聞いてください。`,
+      updatedContext: { ...prevContext, lastUserMessage: userMessage },
+    };
+  }
+
+  return {
+    text: `${name}です。こんにちは。今日の実践を始めましょうか？それとも、何か知りたいことがありますか？`,
+    updatedContext: { ...prevContext, lastUserMessage: userMessage },
+  };
+}
+
+function buildPreferenceResponse(
+  userMessage: string,
+  context: TeacherContext,
+  prevContext?: ConversationContext,
+): TeacherResponse {
+  const name = context.persona?.name ?? 'AI先生';
+
+  if (/詳しく|もっと詳しく/.test(userMessage)) {
+    return {
+      text: `${name}です。わかりました。今後の説明はもう少し詳しくしますね。`,
+      updatedContext: { ...prevContext, lastUserMessage: userMessage },
+    };
+  }
+
+  if (/短く|短め|簡潔/.test(userMessage)) {
+    return {
+      text: `${name}です。わかりました。今後の説明は短く簡潔にしますね。`,
+      updatedContext: { ...prevContext, lastUserMessage: userMessage },
+    };
+  }
+
+  if (/褒めて|ほめて|もっと褒めて/.test(userMessage)) {
+    return {
+      text: `${name}です。わかりました。これからはもう少し励ましの言葉を増やしますね。`,
+      updatedContext: { ...prevContext, lastUserMessage: userMessage },
+    };
+  }
+
+  if (/褒めすぎ|ほめすぎ|励ましは控えて/.test(userMessage)) {
+    return {
+      text: `${name}です。わかりました。励ましは控えめにしますね。`,
+      updatedContext: { ...prevContext, lastUserMessage: userMessage },
+    };
+  }
+
+  return {
+    text: `${name}です。ご要望を覚えておきます。他にも調整したいことがあれば教えてください。`,
+    updatedContext: { ...prevContext, lastUserMessage: userMessage },
+  };
+}
+
 export async function generateTeacherResponse(
   context: TeacherContext,
   userMessage: string,
@@ -76,16 +188,32 @@ export async function generateTeacherResponse(
 ): Promise<TeacherResponse> {
   const safetyHit = detectSafetyKeyword(userMessage);
   if (safetyHit) {
+    const name = context.persona?.name ?? 'AI先生';
+    const painWord = /腰|肩|膝|首|背中|股関節|脚|腕|手/.test(userMessage) ? userMessage.match(/(腰|肩|膝|首|背中|股関節|脚|腕|手)/)?.[0] : null;
+    const bodyPart = painWord ? `${painWord}に痛みがある` : '痛みや不調がある';
     return {
-      text: 'ありがとうございます。ただし、痛みや怪我、妊娠や既往症などについては、私から個別の判断や実践提案を行うことはできません。まずは医療専門家やヨガの先生にご相談ください。一般的なリラックス法として、深い呼吸を数回行うことならできます。よろしければご案内しますか？',
+      text: `${name}です。${bodyPart}のですね。今日は通常のヨガ実践を無理に進めないようにしましょう。AI先生は痛みの原因を診断したり、痛みに対する個別のポーズ処方はできません。今は無理に動かさず、必要に応じて専門家へ相談してください。`,
       isSafety: true,
       updatedContext: { ...prevContext, lastUserMessage: undefined, lastTeacherSuggestion: undefined },
     };
   }
 
-  // Knowledge explanation route (after safety, before rule-based)
-  // Attempt Knowledge lookup for any non-practice input — bare keywords or explanation phrases
-  if (!isPracticeRequest(userMessage) && isLikelyKnowledgeQuery(userMessage)) {
+  const intent = classifyIntent(userMessage);
+
+  if (intent === 'user_state') {
+    return buildUserStateResponse(userMessage, context, prevContext);
+  }
+
+  if (intent === 'casual_conversation') {
+    return buildCasualResponse(userMessage, context, prevContext);
+  }
+
+  if (intent === 'preference') {
+    return buildPreferenceResponse(userMessage, context, prevContext);
+  }
+
+  // Knowledge explanation route — only for knowledge_question intent
+  if (intent === 'knowledge_question' && !isPracticeRequest(userMessage) && isLikelyKnowledgeQuery(userMessage)) {
     const keyword = isExplanationIntent(userMessage)
       ? (extractExplanationKeyword(userMessage) || userMessage)
       : userMessage.replace(/[「」？?。、，,]/g, '').trim();
@@ -194,6 +322,17 @@ export async function generateTeacherResponse(
       };
     }
   }
+
+  if (intent === 'safety_sensitive') {
+    const name = context.persona?.name ?? 'AI先生';
+    return {
+      text: `${name}です。痛みや不調があるのですね。今日は無理に実践を進めないようにしましょう。必要に応じて医療専門家やヨガの先生にご相談ください。`,
+      isSafety: true,
+      updatedContext: { ...prevContext, lastUserMessage: undefined, lastTeacherSuggestion: undefined },
+    };
+  }
+
+  // Fallback: treat as practice request if intent was practice_request
 
   const name = context.persona?.name ?? 'AI先生';
   const minutes = parseMinutes(userMessage);
