@@ -99,7 +99,7 @@ const CONTEXTUAL_FOLLOWUP_PATTERNS = [
   '一般的な説明して', '一般論話して',
   'もっと話して', 'もう少し聞かせて',
   '深掘り', 'もう少し詳しく',
-  'それで？', 'それから',
+  'それで？', 'それから', 'で？',
 ];
 
 export function isContextualFollowup(text: string): boolean {

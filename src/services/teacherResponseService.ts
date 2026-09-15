@@ -213,7 +213,13 @@ function buildSafetyGeneralInfoResponse(
     ? (userMessage.match(/(腰|肩|膝|首|背中|股関節|脚|腕|手)/)?.[0] ?? '')
     : '';
   const topic = bodyPart ? `${bodyPart}まわり` : 'からだの気になる部分';
-  const text = `${name}です。一般論として、${topic}に不安がある人向けのヨガでは、強く反ったり深くねじったりするより、呼吸に合わせて背骨をゆっくり動かすものや、無理のない範囲で股関節まわりを動かすものが選ばれることがあります。たとえば、猫と牛のポーズのようなやさしい背骨の動き、休息のポーズ（チャイルドポーズ）、呼吸法などです。ただし、痛みが強い場合や動かすと悪化する場合は無理に実践せず、専門家に相談してください。ここでは一般的な説明として紹介しており、「あなたにおすすめ」という意味ではありません。`;
+  const text = `${name}です。一般論として、${topic}に不安がある人向けのヨガでは、強く反ったり深くねじったりするより、呼吸に合わせて背骨をゆっくり動かすものや、無理のない範囲で股関節まわりを動かすものが選ばれることがあります。
+例として：
+- 猫と牛のポーズ（背骨を丸めたり反らしたりするやさしい動き）
+- チャイルドポーズ（休息のポーズ）
+- やさしい呼吸法
+などがあります。
+ただし、これは一般的な説明であり、今の痛みに対してあなた向けに処方しているわけではありません。痛みが強い場合や動かすと悪化する場合は無理に実践せず、専門家に相談してください。`;
   return {
     text,
     isSafety: false,
@@ -241,11 +247,13 @@ function buildSafetyPrescriptionResponse(
   prevContext?: ConversationContext,
 ): TeacherResponse {
   const name = context.persona?.name ?? 'AI先生';
-  const text = `${name}です。痛みや症状に対して、あなた向けに特定のポーズや呼吸法を処方することはできません。「このポーズなら安全」「これで腰痛が改善する」といった個別の治療提案は控えます。ただし、ポーズの一般的な特徴や、どんな動きをするものか、呼吸法がどのようなものかといった一般的な説明はできます。知りたいポーズや呼吸法があれば、一般的な説明としてお話しできます。`;
+  const text = `${name}です。痛みや症状に対して、あなた向けに特定のポーズや呼吸法を処方することはできません。「このポーズなら安全」「これで腰痛が改善する」といった個別の治療提案は控えます。
+ただし、一般論としては、呼吸に合わせて背骨をゆっくり動かすもの、股関節まわりを無理なく動かすもの、呼吸に合わせて身体をゆるめるものなどがあります。例として、猫と牛のポーズ、チャイルドポーズ、やさしい呼吸法などがあります。
+これらは一般的な説明であり、あなた向けの処方ではありません。痛みが強い場合は専門家に相談してください。`;
   return {
     text,
     isSafety: true,
-    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'general_explanation', safetyContextActive: true, lastOfferedAction: 'general_explanation_offer' },
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'general_explanation', safetyContextActive: true, lastOfferedAction: 'general_pose_explanation' },
   };
 }
 
@@ -290,11 +298,11 @@ function buildContextualFollowupResponse(
   const name = context.persona?.name ?? 'AI先生';
   const isSafetyActive = prevContext?.safetyContextActive ?? false;
   const lastTopic = prevContext?.lastTopic ?? '';
-  const lastOffered = prevContext?.lastOfferedAction ?? '';
   const wantsDetail = /詳しく|もっと詳しく|深掘り|もう少し詳しく/.test(userMessage);
   const wantsGeneral = /一般的な話して|一般的な話|一般論として|一般的な説明して|一般論話して/.test(userMessage);
   const wantsSafetyCheck = /それって安全|安全/.test(userMessage);
   const wantsContinue = /続けて|さっきの話|さっきの|もっと話して|もう少し聞かせて/.test(userMessage);
+  const wantsSoWhat = /で？|それで？/.test(userMessage);
 
   if (wantsSafetyCheck) {
     const text = `${name}です。個別に「これなら安全」と保証することはできません。一般論として、ヨガのポーズはそれぞれ目的と動きがあり、無理なく行うことが基本です。痛みがある場合は、医療専門家やヨガの先生に直接ご相談いただくのが確実です。`;
@@ -306,8 +314,22 @@ function buildContextualFollowupResponse(
   }
 
   if (isSafetyActive) {
+    if (wantsSoWhat) {
+      const text = `${name}です。つまり、一般論としては「強く伸ばすこと」よりも、呼吸に合わせてやさしく動くことが中心になります。たとえば、猫と牛のポーズでは背骨を呼吸に合わせてゆっくり丸めたり反らしたりします。チャイルドポーズでは、身体を休ませる目的で使われます。やさしい呼吸法では、鼻から吸って口からゆっくり吐くような呼吸を整えます。これらは一般的な説明であり、あなた向けの処方ではありません。`;
+      return {
+        text,
+        isSafety: true,
+        updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'contextual_followup', lastOfferedAction: 'general_pose_explanation' },
+      };
+    }
+
     if (wantsDetail || wantsContinue) {
-      const text = `${name}です。先ほどの一般説明をもう少し深掘りしますね。ヨガでは、背骨をゆっくり動かすこと、呼吸に合わせて姿勢を整えること、股関節まわりを無理なく動かすことなどがよく行われます。たとえば猫と牛のポーズは、背骨を丸めたり反らしたりする動きを呼吸に合わせて行います。チャイルドポーズは、身体を休ませる目的で使われることがあります。ただし、今あなたは痛みがあると教えてくれているので、これらを「あなたにおすすめ」とは言いません。ここでは一般的な説明として紹介しています。`;
+      const text = `${name}です。先ほどの一般説明をもう少し深掘りしますね。ヨガでは、背骨をゆっくり動かすこと、呼吸に合わせて姿勢を整えること、股関節まわりを無理なく動かすことなどがよく行われます。
+例として：
+- 猫と牛のポーズ：背骨を丸めたり反らしたりする動きを呼吸に合わせて行う
+- チャイルドポーズ：身体を休ませる目的で使われる
+- やさしい呼吸法：鼻から吸ってゆっくり吐く
+ただし、今あなたは痛みがあると教えてくれているので、これらを「あなたにおすすめ」とは言いません。ここでは一般的な説明として紹介しています。`;
       return {
         text,
         isSafety: true,
@@ -316,7 +338,12 @@ function buildContextualFollowupResponse(
     }
 
     if (wantsGeneral) {
-      const text = `${name}です。一般論として、腰まわりに関連するヨガでは、背骨をゆっくり動かす動き、股関節まわりを無理なく動かすもの、呼吸に合わせて姿勢を整えるものなどがあります。たとえば猫と牛のポーズは、背骨を丸めたり反らしたりする動きを呼吸に合わせて行うポーズです。チャイルドポーズは、身体を休ませる目的で使われることがあります。ただし、今あなたは腰に痛みがあると教えてくれているので、これらを「あなたにおすすめ」とは言いません。ここでは一般的な説明として紹介しています。`;
+      const text = `${name}です。一般論として、${lastTopic || '腰まわり'}に不安がある人向けのヨガでは、背骨をゆっくり動かす動き、股関節まわりを無理なく動かすもの、呼吸に合わせて姿勢を整えるものなどがあります。
+例として：
+- 猫と牛のポーズ：背骨を丸めたり反らしたりする動きを呼吸に合わせて行う
+- チャイルドポーズ：身体を休ませる目的で使われる
+- やさしい呼吸法
+ただし、今あなたは痛みがあると教えてくれているので、これらを「あなたにおすすめ」とは言いません。ここでは一般的な説明として紹介しています。`;
       return {
         text,
         isSafety: true,
@@ -324,31 +351,31 @@ function buildContextualFollowupResponse(
       };
     }
 
-    const text = `${name}です。一般的なポーズの特徴や呼吸法の説明はできます。具体的にどのポーズや呼吸法について知りたいですか？一般的な説明としてご紹介します。`;
+    const text = `${name}です。一般論として、ヨガでは呼吸に合わせて背骨をゆっくり動かすもの、股関節まわりを無理なく動かすもの、呼吸法などがあります。例として、猫と牛のポーズ、チャイルドポーズ、やさしい呼吸法などがあります。これらは一般的な説明であり、あなた向けの処方ではありません。`;
     return {
       text,
       isSafety: true,
-      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'contextual_followup', lastOfferedAction: 'general_explanation_offer' },
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'contextual_followup', lastOfferedAction: 'general_pose_explanation' },
     };
   }
 
-  if (wantsDetail && lastTopic) {
-    const text = `${name}です。「${lastTopic}」についてもう少し詳しくお話ししますね。ヨガの各ポーズには、それぞれ目的と意識するポイントがあります。どの部分について詳しく知りたいですか？`;
+  if (wantsSoWhat || wantsDetail || wantsContinue) {
+    const text = `${name}です。つまり、一般論としては「強く伸ばすこと」よりも、呼吸に合わせてやさしく動くことが中心になります。たとえば、猫と牛のポーズでは背骨を呼吸に合わせてゆっくり丸めたり反らしたりします。チャイルドポーズでは、身体を休ませる目的で使われます。やさしい呼吸法では、鼻から吸ってゆっくり吐くような呼吸を整えます。これらは一般的な説明です。`;
     return {
       text,
       updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'contextual_followup' },
     };
   }
 
-  if (wantsContinue && lastOffered) {
-    const text = `${name}です。先ほどの${lastOffered}について続けますね。もう少し具体的に、どの部分について知りたいですか？`;
+  if (wantsGeneral) {
+    const text = `${name}です。一般論として、ヨガでは呼吸に合わせて背骨をゆっくり動かすもの、股関節まわりを無理なく動かすもの、呼吸法などがあります。例として、猫と牛のポーズ、チャイルドポーズ、やさしい呼吸法などがあります。これらは一般的な説明です。`;
     return {
       text,
       updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'contextual_followup' },
     };
   }
 
-  const text = `${name}です。もう少し具体的に、どの部分について知りたいですか？ポーズの特徴や呼吸法の説明など、一般的な内容でしたらお話しできます。`;
+  const text = `${name}です。一般論として、ヨガでは呼吸に合わせて背骨をゆっくり動かすもの、股関節まわりを無理なく動かすもの、呼吸法などがあります。例として、猫と牛のポーズ、チャイルドポーズ、やさしい呼吸法などがあります。これらは一般的な説明です。`;
   return {
     text,
     updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'contextual_followup' },
@@ -474,7 +501,7 @@ function buildGeneralKnowledgeFallback(
   prevContext?: ConversationContext,
 ): TeacherResponse {
   const name = context.persona?.name ?? 'AI先生';
-  const text = `${name}です。もう少し具体的に、どの部分について知りたいですか？ポーズの特徴や呼吸法の説明、ヨガの考え方など、一般的な内容でしたらお話しできます。`;
+  const text = `${name}です。一般論として、ヨガでは呼吸に合わせて背骨をゆっくり動かすもの、股関節まわりを無理なく動かすもの、呼吸法、瞑想などがあります。例として、猫と牛のポーズ、チャイルドポーズ、山のポーズ（ターダーサナ）、やさしい呼吸法などがあります。これらは一般的な説明です。具体的に知りたいポーズや呼吸法があれば、お気軽に聞いてください。`;
   return {
     text,
     knowledgeUsed: false,
