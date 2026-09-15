@@ -1,7 +1,7 @@
 import type { TeacherContext } from './teacherContextService';
 import { getKnowledgeRanking, type KnowledgeExplanation, type RankedCandidate } from './teacherKnowledgeService';
 import { sanitizeKnowledgePayload, MAX_KNOWLEDGE_ITEMS } from './knowledgeGuardService';
-import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, type ConversationIntent } from './safetyAndIntent';
+import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, isClarificationIntent, isPrescriptionRequest, type ConversationIntent } from './safetyAndIntent';
 import { fetchLLMExplanation } from './llmExplanationService';
 import type { AITeacherLLMRequest, LLMKnowledgeItem, LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
 
@@ -13,6 +13,8 @@ export interface ConversationContext {
   lastTeacherSuggestion?: string;
   lastKnowledgeMasterId?: string;
   lastKnowledgeTitle?: string;
+  lastSafetyMessage?: string;
+  lastTeacherText?: string;
 }
 
 export interface TeacherResponse {
@@ -181,159 +183,201 @@ function buildPreferenceResponse(
   };
 }
 
-export async function generateTeacherResponse(
-  context: TeacherContext,
+function buildSafetySensitiveResponse(
   userMessage: string,
+  context: TeacherContext,
   prevContext?: ConversationContext,
-): Promise<TeacherResponse> {
-  const safetyHit = detectSafetyKeyword(userMessage);
-  if (safetyHit) {
-    const name = context.persona?.name ?? 'AI先生';
-    const painWord = /腰|肩|膝|首|背中|股関節|脚|腕|手/.test(userMessage) ? userMessage.match(/(腰|肩|膝|首|背中|股関節|脚|腕|手)/)?.[0] : null;
-    const bodyPart = painWord ? `${painWord}に痛みがある` : '痛みや不調がある';
+): TeacherResponse {
+  const name = context.persona?.name ?? 'AI先生';
+  const painWord = /腰|肩|膝|首|背中|股関節|脚|腕|手/.test(userMessage) ? userMessage.match(/(腰|肩|膝|首|背中|股関節|脚|腕|手)/)?.[0] : null;
+  const bodyPart = painWord ? `${painWord}に痛みがある` : '痛みや不調がある';
+  const text = `${name}です。${bodyPart}のですね。今日は通常のヨガ実践を無理に進めないようにしましょう。AI先生は痛みの原因を診断したり、痛みに対する個別のポーズ処方はできません。今は無理に動かさず、必要に応じて専門家へ相談してください。`;
+  return {
+    text,
+    isSafety: true,
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined },
+  };
+}
+
+function buildSafetyPrescriptionResponse(
+  userMessage: string,
+  context: TeacherContext,
+  prevContext?: ConversationContext,
+): TeacherResponse {
+  const name = context.persona?.name ?? 'AI先生';
+  const text = `${name}です。痛みや症状に対して、あなた向けに特定のポーズや呼吸法を処方することはできません。「このポーズなら安全」「これで腰痛が改善する」といった個別の治療提案は控えます。ただし、ポーズの一般的な特徴や、どんな動きをするものか、呼吸法がどのようなものかといった一般的な説明はできます。知りたいポーズや呼吸法があれば、一般的な説明としてお話しできます。`;
+  return {
+    text,
+    isSafety: true,
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined },
+  };
+}
+
+function buildClarificationResponse(
+  userMessage: string,
+  context: TeacherContext,
+  prevContext?: ConversationContext,
+): TeacherResponse {
+  const name = context.persona?.name ?? 'AI先生';
+  const lastTeacher = prevContext?.lastTeacherText ?? prevContext?.lastSafetyMessage ?? '';
+  const isAboutSafetyPolicy = /効用話さない|効く.*話さない|処方.*しない|提案.*しない|個別.*できない|安全.*できない|処方できない|ポーズ.*効用.*話さ/.test(userMessage)
+    || (prevContext?.lastSafetyMessage && /どういうこと|なぜ|それって|どういう意味|さっき/.test(userMessage));
+
+  if (isAboutSafetyPolicy || (prevContext?.lastSafetyMessage && /どういうこと|なぜ|それって|どういう意味|さっき|どういう/.test(userMessage))) {
+    const text = `${name}です。「効くポーズ」という表現を避けているのは、痛みや症状に対して治療効果を断定しないためです。ただし、ポーズの一般的な目的や特徴、どのような動きなのか、どこを意識しやすいか、といった説明はできます。痛みがある場合にあなた向けに特定のポーズを処方しない、という意味です。一般的なヨガの知識やポーズの特徴については、お答えできます。`;
     return {
-      text: `${name}です。${bodyPart}のですね。今日は通常のヨガ実践を無理に進めないようにしましょう。AI先生は痛みの原因を診断したり、痛みに対する個別のポーズ処方はできません。今は無理に動かさず、必要に応じて専門家へ相談してください。`,
-      isSafety: true,
-      updatedContext: { ...prevContext, lastUserMessage: undefined, lastTeacherSuggestion: undefined },
+      text,
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text },
     };
   }
 
-  const intent = classifyIntent(userMessage);
-
-  if (intent === 'user_state') {
-    return buildUserStateResponse(userMessage, context, prevContext);
+  if (lastTeacher) {
+    const text = `${name}です。先ほどの説明についてですね。${lastTeacher}もう一度、別の角度からお話しすると、ヨガの実践は個人の状態に合わせて行うものです。一般的な知識やポーズの特徴は説明できますが、あなたの痛みや症状に合わせた個別の提案はできない、という方針です。他に知りたいことがあれば、お気軽に聞いてください。`;
+    return {
+      text,
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text },
+    };
   }
 
-  if (intent === 'casual_conversation') {
-    return buildCasualResponse(userMessage, context, prevContext);
-  }
+  const text = `${name}です。もう少し詳しくお話ししますね。ヨガの知識やポーズの一般的な特徴については説明できます。具体的な痛みへの対応は、医療専門家やヨガの先生にご相談ください。`;
+  return {
+    text,
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text },
+  };
+}
 
-  if (intent === 'preference') {
-    return buildPreferenceResponse(userMessage, context, prevContext);
-  }
+async function tryKnowledgeLookup(
+  userMessage: string,
+  context: TeacherContext,
+  prevContext: ConversationContext | undefined,
+): Promise<TeacherResponse | null> {
+  if (isPracticeRequest(userMessage) || !isLikelyKnowledgeQuery(userMessage)) return null;
 
-  // Knowledge explanation route — only for knowledge_question intent
-  if (intent === 'knowledge_question' && !isPracticeRequest(userMessage) && isLikelyKnowledgeQuery(userMessage)) {
-    const keyword = isExplanationIntent(userMessage)
-      ? (extractExplanationKeyword(userMessage) || userMessage)
-      : userMessage.replace(/[「」？?。、，,]/g, '').trim();
-    const ranked = await getKnowledgeRanking(keyword);
-    const top = ranked[0];
-    const sameStrength = top
-      ? ranked.filter((candidate) => candidate.score === top.score && candidate.matchType === top.matchType)
-      : [];
+  const keyword = isExplanationIntent(userMessage)
+    ? (extractExplanationKeyword(userMessage) || userMessage)
+    : userMessage.replace(/[「」？?。、，,]/g, '').trim();
+  const ranked = await getKnowledgeRanking(keyword);
+  const top = ranked[0];
+  const sameStrength = top
+    ? ranked.filter((candidate) => candidate.score === top.score && candidate.matchType === top.matchType)
+    : [];
 
-    if (top && top.score >= 75 && !(top.matchType === 'title_prefix' && sameStrength.length > 1)) {
-      const candidates: KnowledgeExplanation[] = ranked
-        .filter((c: RankedCandidate) => c.score >= 75)
-        .slice(0, MAX_KNOWLEDGE_ITEMS)
-        .map((c: RankedCandidate) => c.entry);
+  if (top && top.score >= 75 && !(top.matchType === 'title_prefix' && sameStrength.length > 1)) {
+    const candidates: KnowledgeExplanation[] = ranked
+      .filter((c: RankedCandidate) => c.score >= 75)
+      .slice(0, MAX_KNOWLEDGE_ITEMS)
+      .map((c: RankedCandidate) => c.entry);
 
-      const knowledgeItems: LLMKnowledgeItem[] = candidates.map(sanitizeKnowledgePayload);
-      const masterIds = candidates.map((c: KnowledgeExplanation) => c.masterId);
-      const primaryEntry = top.entry;
-      const name = context.persona?.name ?? 'AI先生';
+    const knowledgeItems: LLMKnowledgeItem[] = candidates.map(sanitizeKnowledgePayload);
+    const primaryEntry = top.entry;
+    const name = context.persona?.name ?? 'AI先生';
 
-      const persona: LLMPersona = {
-        name: context.persona?.name ?? '',
-        personality: context.persona?.personality ?? '',
-        specialty: context.persona?.specialty ?? '',
-        teachingLanguage: context.persona?.teachingLanguage ?? 'ja',
-      };
+    const persona: LLMPersona = {
+      name: context.persona?.name ?? '',
+      personality: context.persona?.personality ?? '',
+      specialty: context.persona?.specialty ?? '',
+      teachingLanguage: context.persona?.teachingLanguage ?? 'ja',
+    };
 
-      const sessionContext: LLMSessionContext = {
-        requestedMinutes: prevContext?.requestedMinutes ?? null,
-        requestedType: prevContext?.requestedType ?? null,
-        requestedStyle: prevContext?.requestedStyle ?? null,
-        explanationPreference: context.preferences.explanation,
-        cuePreference: context.preferences.cue,
-        praisePreference: context.preferences.praise,
-        practiceSummary: {
-          totalSessions: context.practiceSummary.totalSessions,
-          favoriteTypes: context.practiceSummary.favoriteTypes,
-          preferredStyle: null,
-        },
-      };
+    const sessionContext: LLMSessionContext = {
+      requestedMinutes: prevContext?.requestedMinutes ?? null,
+      requestedType: prevContext?.requestedType ?? null,
+      requestedStyle: prevContext?.requestedStyle ?? null,
+      explanationPreference: context.preferences.explanation,
+      cuePreference: context.preferences.cue,
+      praisePreference: context.preferences.praise,
+      practiceSummary: {
+        totalSessions: context.practiceSummary.totalSessions,
+        favoriteTypes: context.practiceSummary.favoriteTypes,
+        preferredStyle: null,
+      },
+    };
 
-      const llmPayload: AITeacherLLMRequest = {
-        userMessage,
-        persona,
-        sessionContext,
-        knowledge: knowledgeItems,
-      };
+    const llmPayload: AITeacherLLMRequest = {
+      userMessage,
+      persona,
+      sessionContext,
+      knowledge: knowledgeItems,
+    };
 
-      const llmResult = await fetchLLMExplanation(llmPayload, context.userId ?? null);
+    const llmResult = await fetchLLMExplanation(llmPayload, context.userId ?? null);
 
-      if (llmResult.text && !llmResult.fallback) {
-        return {
-          text: `${llmResult.text}\n\nこの説明はYoga Knowledgeを参考にしています。`,
-          knowledgeUsed: true,
-          knowledgeMasterId: primaryEntry.masterId,
-          knowledgeTitle: primaryEntry.title,
-          updatedContext: {
-            ...prevContext,
-            lastUserMessage: userMessage,
-            lastKnowledgeMasterId: primaryEntry.masterId,
-            lastKnowledgeTitle: primaryEntry.title,
-          },
-        };
-      }
-
-      const fallbackText = formatExplanation(primaryEntry, context.preferences.explanation, name);
+    if (llmResult.text && !llmResult.fallback) {
+      const text = `${llmResult.text}\n\nこの説明はYoga Knowledgeを参考にしています。`;
       return {
-        text: fallbackText,
+        text,
         knowledgeUsed: true,
         knowledgeMasterId: primaryEntry.masterId,
         knowledgeTitle: primaryEntry.title,
         updatedContext: {
           ...prevContext,
           lastUserMessage: userMessage,
+          lastTeacherText: text,
           lastKnowledgeMasterId: primaryEntry.masterId,
           lastKnowledgeTitle: primaryEntry.title,
         },
       };
     }
 
-    if (top && top.matchType === 'title_prefix' && sameStrength.length > 1) {
-      const name = context.persona?.name ?? 'AI先生';
-      const choices = sameStrength.slice(0, 4).map((candidate) => `「${candidate.entry.title}」`).join('、');
-      return {
-        text: `${name}です。${choices}のどの内容を知りたいですか？`,
-        knowledgeUsed: false,
-        updatedContext: { ...prevContext, lastUserMessage: userMessage },
-      };
-    }
-
-    if (top && top.score >= 40) {
-      const name = context.persona?.name ?? 'AI先生';
-      return {
-        text: `${name}です。「${top.entry.title}」についてですか？`,
-        knowledgeUsed: false,
-        updatedContext: { ...prevContext, lastUserMessage: userMessage },
-      };
-    }
-
-    if (isLikelyKnowledgeQuery(userMessage)) {
-      const name = context.persona?.name ?? 'AI先生';
-      return {
-        text: `${name}です。その言葉については、今のKnowledgeから直接的な説明が見つかりませんでした。別の言葉で言い換えていただけると、お調べできるかもしれません。`,
-        knowledgeUsed: false,
-        updatedContext: { ...prevContext, lastUserMessage: userMessage },
-      };
-    }
-  }
-
-  if (intent === 'safety_sensitive') {
-    const name = context.persona?.name ?? 'AI先生';
+    const fallbackText = formatExplanation(primaryEntry, context.preferences.explanation, name);
     return {
-      text: `${name}です。痛みや不調があるのですね。今日は無理に実践を進めないようにしましょう。必要に応じて医療専門家やヨガの先生にご相談ください。`,
-      isSafety: true,
-      updatedContext: { ...prevContext, lastUserMessage: undefined, lastTeacherSuggestion: undefined },
+      text: fallbackText,
+      knowledgeUsed: true,
+      knowledgeMasterId: primaryEntry.masterId,
+      knowledgeTitle: primaryEntry.title,
+      updatedContext: {
+        ...prevContext,
+        lastUserMessage: userMessage,
+        lastTeacherText: fallbackText,
+        lastKnowledgeMasterId: primaryEntry.masterId,
+        lastKnowledgeTitle: primaryEntry.title,
+      },
     };
   }
 
-  // Fallback: treat as practice request if intent was practice_request
+  if (top && top.matchType === 'title_prefix' && sameStrength.length > 1) {
+    const name = context.persona?.name ?? 'AI先生';
+    const choices = sameStrength.slice(0, 4).map((candidate) => `「${candidate.entry.title}」`).join('、');
+    const text = `${name}です。${choices}のどの内容を知りたいですか？`;
+    return {
+      text,
+      knowledgeUsed: false,
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text },
+    };
+  }
 
+  if (top && top.score >= 40) {
+    const name = context.persona?.name ?? 'AI先生';
+    const text = `${name}です。「${top.entry.title}」についてですか？`;
+    return {
+      text,
+      knowledgeUsed: false,
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text },
+    };
+  }
+
+  return null;
+}
+
+function buildGeneralKnowledgeFallback(
+  userMessage: string,
+  context: TeacherContext,
+  prevContext?: ConversationContext,
+): TeacherResponse {
+  const name = context.persona?.name ?? 'AI先生';
+  const text = `${name}です。その言葉については、今のKnowledgeから直接的な説明が見つかりませんでした。別の言葉で言い換えていただけると、お調べできるかもしれません。`;
+  return {
+    text,
+    knowledgeUsed: false,
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text },
+  };
+}
+
+function buildPracticeRequestResponse(
+  userMessage: string,
+  context: TeacherContext,
+  prevContext?: ConversationContext,
+): TeacherResponse {
   const name = context.persona?.name ?? 'AI先生';
   const minutes = parseMinutes(userMessage);
   const type = parseType(userMessage);
@@ -404,10 +448,64 @@ export async function generateTeacherResponse(
 
   const text = `${name}です。${parts.join(' ')}`;
   merged.lastTeacherSuggestion = text;
+  merged.lastTeacherText = text;
 
   return {
     text,
     updatedContext: merged,
+  };
+}
+
+export async function generateTeacherResponse(
+  context: TeacherContext,
+  userMessage: string,
+  prevContext?: ConversationContext,
+): Promise<TeacherResponse> {
+  const safetyHit = detectSafetyKeyword(userMessage);
+  const intent = classifyIntent(userMessage);
+  const name = context.persona?.name ?? 'AI先生';
+
+  if (intent === 'conversational_clarification') {
+    return buildClarificationResponse(userMessage, context, prevContext);
+  }
+
+  if (safetyHit || intent === 'safety_sensitive') {
+    if (isPrescriptionRequest(userMessage) || intent === 'safety_prescription_request') {
+      return buildSafetyPrescriptionResponse(userMessage, context, prevContext);
+    }
+    return buildSafetySensitiveResponse(userMessage, context, prevContext);
+  }
+
+  if (intent === 'safety_prescription_request') {
+    return buildSafetyPrescriptionResponse(userMessage, context, prevContext);
+  }
+
+  if (intent === 'user_state') {
+    return buildUserStateResponse(userMessage, context, prevContext);
+  }
+
+  if (intent === 'casual_conversation') {
+    return buildCasualResponse(userMessage, context, prevContext);
+  }
+
+  if (intent === 'preference') {
+    return buildPreferenceResponse(userMessage, context, prevContext);
+  }
+
+  if (intent === 'knowledge_question') {
+    const knowledgeResult = await tryKnowledgeLookup(userMessage, context, prevContext);
+    if (knowledgeResult) return knowledgeResult;
+    return buildGeneralKnowledgeFallback(userMessage, context, prevContext);
+  }
+
+  if (intent === 'practice_request') {
+    return buildPracticeRequestResponse(userMessage, context, prevContext);
+  }
+
+  const text = `${name}です。うまく応答を作れませんでした。もう一度送っていただけますか？`;
+  return {
+    text,
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text },
   };
 }
 

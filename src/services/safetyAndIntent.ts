@@ -67,16 +67,58 @@ export type ConversationIntent =
   | 'preference'
   | 'practice_request'
   | 'casual_conversation'
-  | 'safety_sensitive';
+  | 'safety_sensitive'
+  | 'safety_prescription_request'
+  | 'conversational_clarification';
 
 const GREETINGS = ['こんにちは', 'こんばんは', 'おはよう', 'ありがとう', 'よろしく'];
+
+const CLARIFICATION_PATTERNS = [
+  'どういうこと', 'どういう意味', 'どういう意味ですか',
+  'どういうことですか', 'どういうこと？',
+  'なぜ', 'なぜですか', 'なんで',
+  'それって何', 'それってなに',
+  'さっきの意味', 'さっきの意味は',
+  'どういう意味', '意味がわからない',
+  '話さないって', '話さないってどういう',
+  '言わないって', '言わないってどういう',
+  'しないって', 'しないってどういう',
+  'できないって', 'できないってどういう',
+];
+
+const PRESCRIPTION_REQUEST_PATTERNS = [
+  '効くポーズ', '効く呼吸', '効くアーサナ',
+  '効くポーズある', '効く呼吸ある',
+  '治る', '治します', '改善',
+  'おすすめのポーズ', 'おすすめの呼吸',
+  '合うポーズ', '合う呼吸',
+  '安全なポーズ', '安全な呼吸',
+  'これなら安全', 'これなら大丈夫',
+  '腰痛に', '腰痛向け',
+  '痛みに効く', '痛みに合う',
+];
+
+export function isClarificationIntent(text: string): boolean {
+  return CLARIFICATION_PATTERNS.some((pat) => text.includes(pat));
+}
+
+export function isPrescriptionRequest(text: string): boolean {
+  return PRESCRIPTION_REQUEST_PATTERNS.some((pat) => text.includes(pat));
+}
 
 export function classifyIntent(text: string): ConversationIntent {
   const normalized = normalizeForSafety(text.trim());
 
+  if (isClarificationIntent(normalized)) return 'conversational_clarification';
+
   for (const kw of SAFETY_SENSITIVE_KEYWORDS) {
-    if (normalized.includes(kw)) return 'safety_sensitive';
+    if (normalized.includes(kw)) {
+      if (isPrescriptionRequest(normalized)) return 'safety_prescription_request';
+      return 'safety_sensitive';
+    }
   }
+
+  if (isPrescriptionRequest(normalized)) return 'safety_prescription_request';
 
   for (const pat of PREFERENCE_PATTERNS) {
     if (normalized.includes(pat)) return 'preference';
