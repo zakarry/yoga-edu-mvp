@@ -1,7 +1,8 @@
 import type { TeacherContext } from './teacherContextService';
 import { getKnowledgeRanking, type KnowledgeExplanation, type RankedCandidate } from './teacherKnowledgeService';
 import { sanitizeKnowledgePayload, MAX_KNOWLEDGE_ITEMS } from './knowledgeGuardService';
-import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, isClarificationIntent, isPrescriptionRequest, isContextualFollowup, isGeneralInfoRequest, isRedFlag, type ConversationIntent } from './safetyAndIntent';
+import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, isClarificationIntent, isPrescriptionRequest, isContextualFollowup, isGeneralInfoRequest, isRedFlag, classifyQuestionType, extractPoseId, type ConversationIntent, type QuestionType } from './safetyAndIntent';
+import { getCatalogEntry, getCatalogEntryByName, type PoseCatalogEntry } from '../lib/poseCatalog';
 import { fetchLLMExplanation } from './llmExplanationService';
 import type { AITeacherLLMRequest, LLMKnowledgeItem, LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
 
@@ -19,6 +20,8 @@ export interface ConversationContext {
   lastTopic?: string;
   lastOfferedAction?: string;
   safetyContextActive?: boolean;
+  lastPoseId?: string;
+  lastQuestionType?: QuestionType;
 }
 
 export interface TeacherResponse {
@@ -495,6 +498,85 @@ async function tryKnowledgeLookup(
   return null;
 }
 
+function buildPoseSpecificResponse(
+  pose: PoseCatalogEntry,
+  questionType: QuestionType,
+  context: TeacherContext,
+  prevContext?: ConversationContext,
+): TeacherResponse {
+  const name = context.persona?.name ?? 'AI先生';
+  const poseName = pose.nameJa;
+  let body = '';
+
+  if (questionType === 'how_to') {
+    const steps = pose.beginnerInstructions.map((s, i) => `${i + 1}. ${s}`).join('\n');
+    body = `${poseName}は、以下のように行います。\n${steps}\n無理のない範囲で行ってください。`;
+  } else if (questionType === 'breathing') {
+    const breath = pose.breathingInstructions.length > 0
+      ? pose.breathingInstructions.join('\n')
+      : '鼻から自然な呼吸を続けます。呼吸を止めないようにします。';
+    const cue = pose.voiceGuide.breathingCue ?? '';
+    body = `${poseName}の呼吸は、${breath}${cue ? `\n${cue}` : ''}`;
+  } else if (questionType === 'precautions') {
+    const cautions = pose.generalCautions.length > 0
+      ? pose.generalCautions.map((c) => `- ${c}`).join('\n')
+      : '- 無理のない範囲で行う';
+    body = `${poseName}の注意点は、\n${cautions}\n痛みがある場合は無理に続けず、専門家に相談してください。`;
+  } else if (questionType === 'teaching_points') {
+    const cautions = pose.generalCautions.length > 0
+      ? pose.generalCautions.map((c) => `- ${c}`).join('\n')
+      : '';
+    const tips = pose.beginnerInstructions.map((s) => `- ${s}`).join('\n');
+    body = `${poseName}を教えるときは、形を完成させることより、楽に呼吸できることを優先します。\n例えば：\n${tips}\n${cautions ? `\n注意点：\n${cautions}` : ''}\n「ここまでできれば正解」と決めず、その人が無理なくできる姿勢を選べるようにします。`;
+  } else if (questionType === 'beginner_adaptation') {
+    const tips = pose.beginnerInstructions.map((s) => `- ${s}`).join('\n');
+    const cautions = pose.generalCautions.length > 0
+      ? pose.generalCautions.map((c) => `- ${c}`).join('\n')
+      : '';
+    body = `${poseName}の初心者向け配慮：\n${tips}\n${cautions ? `\n${cautions}` : ''}\n無理のない範囲で、自分のペースで行って大丈夫です。`;
+  } else if (questionType === 'duration') {
+    body = `${poseName}は、目安として${pose.defaultDurationMin}分程度行うことが多いです。長さは自分のペースに合わせて調整してください。`;
+  } else if (questionType === 'purpose') {
+    const intro = pose.voiceGuide.intro ?? '';
+    body = `${poseName}は、${intro}このポーズを通じて、からだの感覚に気づき、呼吸に合わせて動くことを目的とします。`;
+  } else if (questionType === 'body_awareness') {
+    const tips = pose.beginnerInstructions.map((s) => `- ${s}`).join('\n');
+    body = `${poseName}で意識するポイント：\n${tips}\n呼吸が止まっていないか、無理をしていないかを感じながら行います。`;
+  } else if (questionType === 'definition') {
+    const intro = pose.voiceGuide.intro ?? '';
+    const tips = pose.beginnerInstructions.join('。');
+    body = `${poseName}（${pose.nameSanskrit ?? pose.nameEn ?? ''}）は、${intro}${tips}。`;
+  } else if (questionType === 'comparison') {
+    body = `${poseName}は、${pose.beginnerInstructions.join('。')}。他のポーズと比べる場合は、それぞれの目的と動きの違いに注目するとよいです。`;
+  } else {
+    const tips = pose.beginnerInstructions.map((s) => `- ${s}`).join('\n');
+    const breath = pose.breathingInstructions.length > 0 ? `\n呼吸：${pose.breathingInstructions.join('。')}` : '';
+    const cautions = pose.generalCautions.length > 0 ? `\n注意：${pose.generalCautions.join('。')}` : '';
+    body = `${poseName}についてお話しします。\n${tips}${breath}${cautions}`;
+  }
+
+  const text = `${name}です。${body}`;
+  return {
+    text,
+    knowledgeUsed: false,
+    updatedContext: { ...prevContext, lastTeacherText: text, lastAssistantMode: 'knowledge_lookup', lastPoseId: pose.id, lastTopic: poseName, lastQuestionType: questionType },
+  };
+}
+
+function buildTopicFollowupResponse(
+  userMessage: string,
+  context: TeacherContext,
+  prevContext?: ConversationContext,
+): TeacherResponse | null {
+  const lastPoseId = prevContext?.lastPoseId;
+  if (!lastPoseId) return null;
+  const pose = getCatalogEntry(lastPoseId);
+  if (!pose) return null;
+  const questionType = classifyQuestionType(userMessage);
+  if (questionType === 'general') return null;
+  return buildPoseSpecificResponse(pose, questionType, context, prevContext);
+}
+
 function buildGeneralKnowledgeFallback(
   userMessage: string,
   context: TeacherContext,
@@ -602,6 +684,8 @@ export async function generateTeacherResponse(
   const name = context.persona?.name ?? 'AI先生';
 
   if (intent === 'contextual_followup') {
+    const followup = buildTopicFollowupResponse(userMessage, context, prevContext);
+    if (followup) return followup;
     return buildContextualFollowupResponse(userMessage, context, prevContext);
   }
 
@@ -647,12 +731,24 @@ export async function generateTeacherResponse(
   }
 
   if (intent === 'knowledge_question') {
+    const poseId = extractPoseId(userMessage);
+    if (poseId) {
+      const pose = getCatalogEntry(poseId);
+      if (pose) {
+        const questionType = classifyQuestionType(userMessage);
+        return buildPoseSpecificResponse(pose, questionType, context, prevContext);
+      }
+    }
+    const followup = buildTopicFollowupResponse(userMessage, context, prevContext);
+    if (followup) return followup;
     const knowledgeResult = await tryKnowledgeLookup(userMessage, context, prevContext);
     if (knowledgeResult) return knowledgeResult;
     return buildGeneralKnowledgeFallback(userMessage, context, prevContext);
   }
 
   if (intent === 'practice_request') {
+    const followup = buildTopicFollowupResponse(userMessage, context, prevContext);
+    if (followup) return followup;
     return buildPracticeRequestResponse(userMessage, context, prevContext);
   }
 

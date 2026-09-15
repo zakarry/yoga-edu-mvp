@@ -263,3 +263,61 @@ export function extractExplanationKeyword(text: string): string {
     .replace(/簡単に|詳しく|わかりやすく/g, '')
     .trim();
 }
+
+export type QuestionType =
+  | 'how_to'
+  | 'teaching_points'
+  | 'precautions'
+  | 'breathing'
+  | 'purpose'
+  | 'benefits_general'
+  | 'beginner_adaptation'
+  | 'body_awareness'
+  | 'definition'
+  | 'comparison'
+  | 'duration'
+  | 'general';
+
+const QUESTION_TYPE_PATTERNS: Array<[QuestionType, RegExp]> = [
+  ['how_to', /やり方|方法|手順|どうやる|やりかた|どうする|入れ方|入り方|入りかた/],
+  ['teaching_points', /教える時|教えるとき|指導.*注意|教える.*気を付|教える.*気をつけ|指導上|教えるとき/],
+  ['precautions', /注意点|気を付ける|気をつける|注意.*は|気を付け|気をつけ|禁忌|避けるべき|気をつけたほうが/],
+  ['breathing', /呼吸.*は|呼吸.*どう|呼吸法|呼吸.*教え|息.*吐く|息.*吸う|呼吸.*について|^呼吸は？?$|^呼吸$/],
+  ['purpose', /目的|なぜ.*やる|何のため|ねらい|意味.*は/],
+  ['benefits_general', /効果|メリット|良いこと|利点|得られる|意味がある|役に立つ/],
+  ['beginner_adaptation', /初心者|ビギナー|はじめて|初めて|初心者向け|初心者には/],
+  ['body_awareness', /どこを意識|意識する|感じる|意識.*ポイント|気をつける.*部分|効く.*部分/],
+  ['definition', /とは|って何|とは何|どんな.*ポーズ|とは？|とは\?/],
+  ['comparison', /違い|比べ|比較|どっち|どちら|との違い/],
+  ['duration', /何分|どれくらい|時間|何秒|どのくらい/],
+];
+
+export function classifyQuestionType(text: string): QuestionType {
+  const normalized = normalizeForSafety(text);
+  for (const [type, pattern] of QUESTION_TYPE_PATTERNS) {
+    if (pattern.test(normalized)) return type;
+  }
+  return 'general';
+}
+
+const POSE_NAME_PATTERNS: Array<[string, RegExp]> = [
+  ['tadasana', /山のポーズ|ターダーサナ|tadasana|山のポース/i],
+  ['vrksasana', /立ち木|ヴルクシャーサナ|vrksasana|木のポーズ|立ち木のポーズ/i],
+  ['uttanasana', /前屈|ウッターナーサナ|uttanasana|やさしい前屈/i],
+  ['balasana', /チャイルドポーズ|バーラーサナ|balasana|チャイルド|休息のポーズ|チャイルドのポーズ/i],
+  ['catcow', /猫と牛|キャットカウ|猫牛|cat.?cow|マジャリア|ビティラ/i],
+  ['paschimottanasana', /座って前屈|パスチモッターナーサナ|paschimottanasana|座.*前屈/i],
+  ['savasana', /休息のポーズ|サバーサナ|savasana|死体のポーズ|シャバーサナ/i],
+  ['setu-bandhasana', /橋のポーズ|セツバンダーサナ|setu.?bandha/i],
+  ['bhujangasana', /コブラ|ブジャンガーサナ|bhujangasana/i],
+  ['trikonasana', /三角のポーズ|トリコーナーサナ|trikonasana/i],
+  ['vajrasana', /金剛座|正座|ヴァジュラーサナ|vajrasana/i],
+];
+
+export function extractPoseId(text: string): string | null {
+  const normalized = normalizeForSafety(text);
+  for (const [id, pattern] of POSE_NAME_PATTERNS) {
+    if (pattern.test(normalized)) return id;
+  }
+  return null;
+}
