@@ -348,6 +348,8 @@ class AudioFileEngine implements VoiceGuideEngine {
   private fallbackAudio: HTMLAudioElement | null = null;
   private pendingSpeak: { key: string; text?: string } | null = null;
   private isResuming = false;
+  private activeRequestId = 0;
+  private usingTTS = false;
 
   unlock(): void {
     const ctx = getAudioContext();
@@ -370,7 +372,7 @@ class AudioFileEngine implements VoiceGuideEngine {
     this.stop();
     const key = getVoiceKey(text);
     if (!key) {
-      if (isTTSAvailable()) { speak(text); }
+      if (isTTSAvailable()) { this.usingTTS = true; speak(text); }
       return;
     }
     this.speakByKey(key, text);
@@ -378,10 +380,11 @@ class AudioFileEngine implements VoiceGuideEngine {
 
   speakByKey(key: string, fallbackText?: string): void {
     this.stop();
+    const requestId = ++this.activeRequestId;
     lastDiagnostic.lastCue = key;
     const ctx = getAudioContext();
     if (!ctx) {
-      this.playFallback(key, fallbackText);
+      this.playFallback(key, fallbackText, requestId);
       return;
     }
 
@@ -408,15 +411,16 @@ class AudioFileEngine implements VoiceGuideEngine {
     const buffer = audioBufferCache.get(key);
     if (!buffer) {
       fetchAndDecode(key).then((buf) => {
-        if (buf) this.playBuffer(buf);
-        else this.playFallback(key, fallbackText);
+        if (requestId !== this.activeRequestId) return;
+        if (buf) this.playBuffer(buf, requestId);
+        else this.playFallback(key, fallbackText, requestId);
       });
       return;
     }
-    this.playBuffer(buffer);
+    this.playBuffer(buffer, requestId);
   }
 
-  private playBuffer(buffer: AudioBuffer): void {
+  private playBuffer(buffer: AudioBuffer, requestId: number): void {
     const ctx = getAudioContext();
     if (!ctx) return;
     const source = ctx.createBufferSource();
@@ -424,7 +428,7 @@ class AudioFileEngine implements VoiceGuideEngine {
     source.connect(ctx.destination);
     source.onended = () => {
       if (this.currentSource === source) this.currentSource = null;
-      if (cueEndCallback) cueEndCallback();
+      if (requestId === this.activeRequestId && cueEndCallback) cueEndCallback();
     };
     source.start();
     this.currentSource = source;
@@ -432,8 +436,9 @@ class AudioFileEngine implements VoiceGuideEngine {
     lastDiagnostic.contextState = ctx.state;
   }
 
-  private playFallback(key: string, fallbackText?: string): void {
+  private playFallback(key: string, fallbackText?: string, requestId: number = 0): void {
     if (fallbackText && isTTSAvailable()) {
+      this.usingTTS = true;
       speak(fallbackText);
       lastDiagnostic.lastPlayResult = 'tts-fallback';
       return;
@@ -443,7 +448,7 @@ class AudioFileEngine implements VoiceGuideEngine {
     audio.currentTime = 0;
     audio.onended = () => {
       if (this.fallbackAudio === audio) this.fallbackAudio = null;
-      if (cueEndCallback) cueEndCallback();
+      if (requestId === this.activeRequestId && cueEndCallback) cueEndCallback();
     };
     audio.play().catch(() => {
       lastDiagnostic.lastPlayResult = 'failed';
@@ -454,7 +459,9 @@ class AudioFileEngine implements VoiceGuideEngine {
   }
 
   stop(): void {
+    this.activeRequestId++;
     this.pendingSpeak = null;
+    this.usingTTS = false;
     if (this.currentSource) {
       try { this.currentSource.stop(); } catch { /* already stopped */ }
       this.currentSource = null;
@@ -464,12 +471,14 @@ class AudioFileEngine implements VoiceGuideEngine {
       this.fallbackAudio.currentTime = 0;
       this.fallbackAudio = null;
     }
+    if (isTTSAvailable()) stopSpeech();
   }
 
   pause(): void {
     const ctx = getAudioContext();
     if (ctx) ctx.suspend().catch(() => {});
     if (this.fallbackAudio) this.fallbackAudio.pause();
+    if (this.usingTTS && isTTSAvailable()) pauseSpeech();
   }
 
   resume(): void {
@@ -488,6 +497,7 @@ class AudioFileEngine implements VoiceGuideEngine {
       }).catch(() => { this.isResuming = false; });
     }
     if (this.fallbackAudio) this.fallbackAudio.play().catch(() => {});
+    if (this.usingTTS && isTTSAvailable()) resumeSpeech();
   }
 
   getAudioDuration(key: string): number | null {

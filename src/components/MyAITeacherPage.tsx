@@ -995,7 +995,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
   const fireCue = useCallback((text: string, audioKey?: string) => {
     if (!voiceGuideOn) return;
-    const dedupKey = audioKey ?? text;
+    const sessionId = practiceSessionId ?? 'no-session';
+    const dedupKey = `${sessionId}:${audioKey ?? text}`;
     if (firedCuesRef.current.has(dedupKey)) return;
     firedCuesRef.current.add(dedupKey);
     if (audioKey) {
@@ -1004,7 +1005,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       voiceEngine.speak(text);
     }
     setCurrentSubtitle(text);
-  }, [voiceGuideOn, voiceEngine]);
+  }, [voiceGuideOn, voiceEngine, practiceSessionId]);
 
   useEffect(() => {
     if (!timerRunning || practicePaused || !voiceGuideOn) return;
@@ -1022,15 +1023,16 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     } else {
       const remaining = simpleTimerRemaining;
       for (const cue of REMAINING_CUES) {
-        if (remaining === cue.atRemaining) {
+        if (remaining <= cue.atRemaining && remaining > cue.atRemaining - 2) {
           fireCue(cue.text);
-          break;
         }
       }
       for (const cue of seq.cues) {
-        if (remaining === seq.totalSeconds - cue.atSeconds && cue.atSeconds > 0) {
-          fireCue(cue.text, cue.audioKey);
-          break;
+        if (cue.atSeconds > 0) {
+          const cueRemaining = seq.totalSeconds - cue.atSeconds;
+          if (remaining <= cueRemaining && remaining > cueRemaining - 2) {
+            fireCue(cue.text, cue.audioKey);
+          }
         }
       }
       if (remaining === 0 && seq.cues.length > 0) {
@@ -1039,6 +1041,30 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       }
     }
   }, [timerRunning, practicePaused, voiceGuideOn, simpleTimerRemaining, timerPhaseIdx, selectedGuide, fireCue]);
+
+  // Track previous remaining to detect timer skips (e.g. background tab)
+  const prevRemainingRef = useRef(0);
+  useEffect(() => {
+    if (!timerRunning || practicePaused || selectedGuide?.hasTimer) return;
+    const prev = prevRemainingRef.current;
+    prevRemainingRef.current = simpleTimerRemaining;
+    if (prev > simpleTimerRemaining + 1) {
+      const seq = voiceGuideRef.current;
+      if (seq) {
+        for (let t = prev; t > simpleTimerRemaining; t--) {
+          for (const cue of REMAINING_CUES) {
+            if (t === cue.atRemaining) fireCue(cue.text);
+          }
+          for (const cue of seq.cues) {
+            if (cue.atSeconds > 0) {
+              const cueRemaining = seq.totalSeconds - cue.atSeconds;
+              if (t === cueRemaining) fireCue(cue.text, cue.audioKey);
+            }
+          }
+        }
+      }
+    }
+  }, [simpleTimerRemaining, timerRunning, practicePaused, selectedGuide, fireCue]);
 
   const handleAbortPractice = useCallback(() => {
     setTimerRunning(false);
@@ -1124,13 +1150,15 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     voiceGuideRef.current = seq;
     firedCuesRef.current = new Set();
     lastBoxPhaseRef.current = '';
+    prevRemainingRef.current = 0;
     const allTexts = seq.cues.map((c) => c.text).concat(REMAINING_CUES.map((c) => c.text));
     preloadVoicePhrases(allTexts);
     const allKeys = seq.cues.map((c) => c.audioKey).filter((k): k is string => !!k);
     if (allKeys.length > 0) preloadVoiceKeys(allKeys);
     if (seq.cues.length > 0) {
       const firstCue = seq.cues[0];
-      const dedupKey = firstCue.audioKey ?? firstCue.text;
+      const sessionId = practiceSessionId ?? 'no-session';
+      const dedupKey = `${sessionId}:${firstCue.audioKey ?? firstCue.text}`;
       firedCuesRef.current.add(dedupKey);
       if (firstCue.audioKey) {
         voiceEngine.speakByKey(firstCue.audioKey, firstCue.text);
@@ -1139,7 +1167,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       }
       setCurrentSubtitle(firstCue.text);
     }
-  }, [voiceGuideOn, voiceEngine]);
+  }, [voiceGuideOn, voiceEngine, practiceSessionId]);
 
   const handlePausePractice = useCallback(() => {
     setTimerRunning(false);
