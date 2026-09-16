@@ -1,7 +1,7 @@
 import type { TeacherContext } from './teacherContextService';
-import { getKnowledgeRanking, type KnowledgeExplanation, type RankedCandidate } from './teacherKnowledgeService';
+import { getKnowledgeRanking, rankKnowledgeCandidates, getSafeExplanationCandidates, type KnowledgeExplanation, type RankedCandidate } from './teacherKnowledgeService';
 import { sanitizeKnowledgePayload, MAX_KNOWLEDGE_ITEMS } from './knowledgeGuardService';
-import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, isClarificationIntent, isPrescriptionRequest, isContextualFollowup, isGeneralInfoRequest, isRedFlag, classifyQuestionType, extractPoseId, extractBreathworkId, extractMeditationId, extractSequenceId, detectPracticeDomain, resolveEntity, normalizeInput, type ConversationIntent, type QuestionType, type PracticeDomain } from './safetyAndIntent';
+import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, isClarificationIntent, isPrescriptionRequest, isContextualFollowup, isGeneralInfoRequest, isRedFlag, classifyQuestionType, extractPoseId, extractBreathworkId, extractMeditationId, extractSequenceId, detectPracticeDomain, resolveEntity, normalizeInput, classifyKnowledgeDomain, type ConversationIntent, type QuestionType, type PracticeDomain, type KnowledgeDomain } from './safetyAndIntent';
 import { getCatalogEntry, getCatalogEntryByName, type PoseCatalogEntry } from '../lib/poseCatalog';
 import { getBreathworkEntry, type BreathworkCatalogEntry } from '../lib/breathworkCatalog';
 import { getMeditationEntry, type MeditationCatalogEntry } from '../lib/meditationCatalog';
@@ -78,6 +78,7 @@ function formatExplanation(
 }
 
 
+const BREATHWORK_SOURCE_LABEL = '呼吸マネージャー検定 第5版';
 
 function parseMinutes(text: string): number | null {
   const m = text.match(/(\d+)\s*分/);
@@ -408,6 +409,70 @@ function buildContextualFollowupResponse(
   };
 }
 
+async function tryBreathworkKnowledgeLookup(
+  userMessage: string,
+  context: TeacherContext,
+  prevContext: ConversationContext | undefined,
+): Promise<TeacherResponse | null> {
+  if (isPracticeRequest(userMessage)) return null;
+  const domain = classifyKnowledgeDomain(userMessage);
+  if (domain !== 'breathwork') return null;
+
+  const keyword = extractExplanationKeyword(userMessage) || userMessage.replace(/[「」？?。、，,]/g, '').trim();
+  const allCandidates = await getSafeExplanationCandidates();
+  if (allCandidates.length === 0) return null;
+
+  const breathworkCandidates = allCandidates.filter((c) =>
+    c.category === 'breathwork' || c.category === 'pranayama' || c.category === 'physiology'
+  );
+
+  const ranked = rankKnowledgeCandidates(keyword, breathworkCandidates.length > 0 ? breathworkCandidates : allCandidates);
+
+  if (ranked.length === 0) {
+    const name = context.persona?.name ?? 'AI先生';
+    const text = `${name}です。呼吸に関するご質問ですね。呼吸Knowledge内に直接対応する項目が見つかりませんでした。関連する話題として、腹式呼吸、胸式呼吸、完全なヨガ呼吸、プラーナーヤーマなどについて聞いてみてください。`;
+    return {
+      text,
+      knowledgeUsed: false,
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'knowledge_lookup' },
+    };
+  }
+
+  const top = ranked[0];
+  if (top.score >= 40) {
+    const entry = top.entry;
+    const name = context.persona?.name ?? 'AI先生';
+    const explanationPref = context.preferences.explanation;
+    let body: string;
+    if (explanationPref === 'short') {
+      const sentences = entry.publicContent.split(/。/).filter((s) => s.trim().length > 0);
+      body = sentences.slice(0, 2).join('。') + '。';
+    } else if (explanationPref === 'detailed') {
+      body = entry.publicContent;
+    } else {
+      const sentences = entry.publicContent.split(/。/).filter((s) => s.trim().length > 0);
+      body = sentences.slice(0, Math.min(5, sentences.length)).join('。') + '。';
+    }
+    const text = `${name}です。${body}\n\n出典：${BREATHWORK_SOURCE_LABEL} / ${entry.title}`;
+    return {
+      text,
+      knowledgeUsed: true,
+      knowledgeMasterId: entry.masterId,
+      knowledgeTitle: entry.title,
+      updatedContext: {
+        ...prevContext,
+        lastUserMessage: userMessage,
+        lastTeacherText: text,
+        lastKnowledgeMasterId: entry.masterId,
+        lastKnowledgeTitle: entry.title,
+        lastAssistantMode: 'knowledge_lookup',
+      },
+    };
+  }
+
+  return null;
+}
+
 async function tryKnowledgeLookup(
   userMessage: string,
   context: TeacherContext,
@@ -465,7 +530,10 @@ async function tryKnowledgeLookup(
     const llmResult = await fetchLLMExplanation(llmPayload, context.userId ?? null);
 
     if (llmResult.text && !llmResult.fallback) {
-      const text = `${llmResult.text}\n\nこの説明はYoga Knowledgeを参考にしています。`;
+      const sourceLabel = (primaryEntry.category === 'breathwork' || primaryEntry.category === 'pranayama')
+        ? `出典：${BREATHWORK_SOURCE_LABEL} / ${primaryEntry.title}`
+        : 'この説明はYoga Knowledgeを参考にしています。';
+      const text = `${llmResult.text}\n\n${sourceLabel}`;
       return {
         text,
         knowledgeUsed: true,
@@ -482,8 +550,12 @@ async function tryKnowledgeLookup(
     }
 
     const fallbackText = formatExplanation(primaryEntry, context.preferences.explanation, name);
+    const sourceLabel = (primaryEntry.category === 'breathwork' || primaryEntry.category === 'pranayama')
+      ? `出典：${BREATHWORK_SOURCE_LABEL} / ${primaryEntry.title}`
+      : 'この説明はYoga Knowledgeを参考にしています。';
+    const textWithSource = fallbackText.replace('この説明はYoga Knowledgeを参考にしています。', sourceLabel);
     return {
-      text: fallbackText,
+      text: textWithSource,
       knowledgeUsed: true,
       knowledgeMasterId: primaryEntry.masterId,
       knowledgeTitle: primaryEntry.title,
@@ -985,7 +1057,7 @@ function buildGeneralKnowledgeFallback(
   if (activeTopic) {
     text = `${name}です。「${activeTopic}」について知りたいことか、別のポーズや呼吸法、瞑想について知りたいことか、もう少し教えていただけますか？例えば「やり方は？」「注意点は？」「初心者には？」のように聞いてもらえると、お答えしやすいです。`;
   } else {
-    text = `${name}です。もう少し具体的に教えていただけますか？例えば「チャイルドポーズのやり方は？」「腹式呼吸って何？」「数息観って何？」のように聞いてもらえると、お答えしやすいです。`;
+    text = `${name}です。知りたいことについてもう少し具体的に教えていただけますか？例えば「腹式呼吸とは？」「プラーナーヤーマとは？」「山のポーズのやり方は？」のように聞いてもらえると、お答えしやすいです。`;
   }
   return {
     text,
@@ -1168,6 +1240,9 @@ async function generateTeacherResponseInner(
       if (pose) return buildPoseSpecificResponse(pose, resolution.questionType, context, prevContext);
     }
 
+    const breathworkResult = await tryBreathworkKnowledgeLookup(userMessage, context, prevContext);
+    if (breathworkResult) return breathworkResult;
+
     const knowledgeResult = await tryKnowledgeLookup(userMessage, context, prevContext);
     if (knowledgeResult) return knowledgeResult;
     return buildGeneralKnowledgeFallback(userMessage, context, prevContext);
@@ -1200,7 +1275,7 @@ async function generateTeacherResponseInner(
     return buildPracticeRequestResponse(userMessage, context, prevContext);
   }
 
-  const text = `${name}です。うまく応答を作れませんでした。もう一度送っていただけますか？`;
+  const text = `${name}です。お聞きになりたいことをもう一度教えていただけますか？`;
   return {
     text,
     updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text },

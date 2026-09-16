@@ -427,6 +427,36 @@ export function extractMeditationId(text: string): string | null {
 
 export type PracticeDomain = 'asana' | 'pranayama' | 'dhyana' | 'sequence';
 
+export type KnowledgeDomain = 'yoga_general' | 'asana' | 'breathwork' | 'meditation' | 'safety_sensitive' | 'user_state' | 'casual';
+
+const BREATHWORK_DOMAIN_PATTERNS: RegExp[] = [
+  /プラーナーヤーマ|プラナヤマ|pranayama|prāṇāyāma/i,
+  /腹式呼吸|ふくしきこきゅう|アブドミナル|abdominal.*breath/i,
+  /胸式呼吸|胸郭呼吸|きょうしきこきゅう|そらしつく|thoracic.*breath/i,
+  /完全なヨガ呼吸|完全呼吸|ディルガ|dirgha/i,
+  /鎖骨呼吸|さこつこきゅう|clavicular/i,
+  /呼吸筋|こきゅうきん|respiratory.*muscle/i,
+  /横隔膜|おうかくまく|diaphragm/i,
+  /肺|はい|lung/i,
+  /呼吸の仕組み|呼吸の仕組|こきゅうのしくみ|respiratory.*system/i,
+  /呼吸器系|こきゅうきけい/i,
+  /ナーディー|nadi|アヌローマ|anuloma|片鼻呼吸/i,
+  /ボックス.*呼吸|box.*breath/i,
+  /ブラマリ|bhramari|蜂の呼吸/i,
+  /ウジャーイー|ujayi|ujjayi/i,
+  /バストリカー|bhastrika|フイゴ呼吸/i,
+  /シータリー|シートカーリー|sitali|sitkari/i,
+  /スーリヤ.*ベーダナ|チャンドラ.*ベーダナ|surya.*bheda|chandra.*bheda/i,
+];
+
+export function classifyKnowledgeDomain(text: string): KnowledgeDomain {
+  const normalized = normalizeInput(text);
+  for (const pattern of BREATHWORK_DOMAIN_PATTERNS) {
+    if (pattern.test(normalized)) return 'breathwork';
+  }
+  return 'yoga_general';
+}
+
 const SEQUENCE_NAME_PATTERNS: Array<[string, RegExp]> = [
   ['surya-namaskar-ayush', /太陽礼拝|スーリヤ・ナマスカーラ|スーリヤナマスカラ|surya.?namaskar|surya.?namaskara|たいようれいはい/i],
 ];
