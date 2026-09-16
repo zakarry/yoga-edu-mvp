@@ -3,6 +3,7 @@ import { getCatalogEntry } from './poseCatalog';
 export interface VoiceCue {
   text: string;
   atSeconds: number;
+  audioKey?: string;
 }
 
 export interface VoiceGuideSequence {
@@ -171,7 +172,7 @@ const PHRASE_MAP: Record<string, string> = {
   '膝を少し曲げても大丈夫です。': 'voice-paschimottanasana-1',
   '股関節からゆっくり前に倒します。': 'voice-paschimottanasana-2',
   '無理のない位置で止まりましょう。': 'voice-paschimottanasana-3',
-  '座って前屈を始めます。': 'voice-start-paschimottanasana',
+  '座って前屈を始めます。': 'voice-start-paschi-v2',
   'テストポーズを始めます。': 'voice-start-test-pose',
   '足裏で床を感じ、立ちます。': 'voice-test-pose-1',
   '肩の力を抜きます。': 'voice-test-pose-2',
@@ -241,6 +242,14 @@ const PHRASE_MAP: Record<string, string> = {
   '吸いながら、右脚を両手の間へ踏み込み、左膝を床につきます。': 'voice-surya-09-right',
   '吸いながら、左脚を両手の間へ踏み込み、右膝を床につきます。': 'voice-surya-09-left',
   '右側が終わりました。次は左側です。': 'voice-surya-transition',
+  '苦しくなければ、鼻からゆっくり吸います。そして、鼻からゆっくり、はきます。': 'voice-nose-breath-v2',
+  'やさしい前屈を始めます。': 'voice-start-uttanasana-v2',
+  'チャイルドポーズを始めます。': 'voice-start-balasana-v2',
+  '猫と牛のポーズを始めます。': 'voice-start-catcow-v2',
+  '橋のポーズを始めます。': 'voice-start-setu',
+  'コブラのポーズを始めます。': 'voice-start-bhujanga',
+  '三角のポーズを始めます。': 'voice-start-trikona',
+  '金剛座（正座）を始めます。': 'voice-start-vajra',
 };
 
 function getVoiceKey(text: string): string | null {
@@ -500,7 +509,9 @@ let activeEngine: VoiceGuideEngine | null = null;
 
 export function getVoiceGuideEngine(): VoiceGuideEngine {
   if (activeEngine) return activeEngine;
-  if (isLiffEnvironment() || isMobileDevice()) {
+  // Always prefer AudioFileEngine for consistent audio across PC and mobile.
+  // BrowserTTS is only used as a last resort when no AudioContext is available.
+  if (typeof window !== 'undefined' && ((window as any).AudioContext ?? (window as any).webkitAudioContext)) {
     activeEngine = new AudioFileEngine();
   } else if (isTTSAvailable()) {
     activeEngine = new BrowserTTSEngine();
@@ -607,16 +618,16 @@ export function buildAsanaVoiceGuide(poseId: string, poseName: string, totalMinu
   const entry = getCatalogEntry(poseId);
   const vg = entry?.voiceGuide;
   const cues: VoiceCue[] = [
-    { text: vg?.intro ?? `${poseName}を始めます。`, atSeconds: 0 },
+    { text: vg?.intro ?? `${poseName}を始めます。`, atSeconds: 0, audioKey: vg?.introAudioKey },
   ];
   const firstRound = vg?.firstRound ?? [];
   for (const cue of firstRound) {
     if (cue.at < totalSeconds - 35) {
-      cues.push({ text: cue.text, atSeconds: cue.at });
+      cues.push({ text: cue.text, atSeconds: cue.at, audioKey: cue.audioKey });
     }
   }
   if (vg?.breathingCue) {
-    cues.push({ text: vg.breathingCue, atSeconds: Math.min(10, Math.max(0, totalSeconds - 30)) });
+    cues.push({ text: vg.breathingCue, atSeconds: Math.min(10, Math.max(0, totalSeconds - 30)), audioKey: vg.breathingCueAudioKey });
   }
   const secondRound = vg?.secondRound ?? [];
   const reviewStart = Math.max(35, Math.floor(totalSeconds * 0.45));
@@ -624,7 +635,7 @@ export function buildAsanaVoiceGuide(poseId: string, poseName: string, totalMinu
     const rc = secondRound[i];
     const at = reviewStart + rc.at;
     if (at < totalSeconds - 35) {
-      cues.push({ text: rc.text, atSeconds: at });
+      cues.push({ text: rc.text, atSeconds: at, audioKey: rc.audioKey });
     }
   }
   if (vg?.breathingReminderCue) {
@@ -646,12 +657,12 @@ export function buildPranayamaVoiceGuide(poseId: string, poseName: string, total
   const entry = getCatalogEntry(poseId);
   const vg = entry?.voiceGuide;
   const cues: VoiceCue[] = [
-    { text: vg?.intro ?? `${poseName}を始めます。`, atSeconds: 0 },
+    { text: vg?.intro ?? `${poseName}を始めます。`, atSeconds: 0, audioKey: vg?.introAudioKey },
   ];
   const firstRound = vg?.firstRound ?? [];
   for (const cue of firstRound) {
     if (cue.at < totalSeconds - 35) {
-      cues.push({ text: cue.text, atSeconds: cue.at });
+      cues.push({ text: cue.text, atSeconds: cue.at, audioKey: cue.audioKey });
     }
   }
   if (firstRound.length === 0) {
@@ -670,12 +681,12 @@ export function buildMeditationVoiceGuide(poseId: string, poseName: string, tota
   const entry = getCatalogEntry(poseId);
   const vg = entry?.voiceGuide;
   const cues: VoiceCue[] = [
-    { text: vg?.intro ?? `${poseName}を始めます。`, atSeconds: 0 },
+    { text: vg?.intro ?? `${poseName}を始めます。`, atSeconds: 0, audioKey: vg?.introAudioKey },
   ];
   const firstRound = vg?.firstRound ?? [];
   for (const cue of firstRound) {
     if (cue.at < totalSeconds - 35) {
-      cues.push({ text: cue.text, atSeconds: cue.at });
+      cues.push({ text: cue.text, atSeconds: cue.at, audioKey: cue.audioKey });
     }
   }
   if (firstRound.length === 0) {
@@ -879,4 +890,20 @@ export const ALL_VOICE_KEYS: string[] = [
   'voice-thoracic-r4',
   'voice-thoracic-end-2',
   'voice-complete-end-2',
+  'voice-nose-breath-v2',
+  'voice-start-uttanasana-v2',
+  'voice-start-balasana-v2',
+  'voice-start-catcow-v2',
+  'voice-start-setu',
+  'voice-start-bhujanga',
+  'voice-start-trikona',
+  'voice-start-vajra',
+  'voice-start-paschi-v2',
+  'voice-setu-1', 'voice-setu-2', 'voice-setu-3', 'voice-setu-r1', 'voice-setu-r2',
+  'voice-bhujanga-1', 'voice-bhujanga-2', 'voice-bhujanga-3', 'voice-bhujanga-r1', 'voice-bhujanga-r2',
+  'voice-trikona-1', 'voice-trikona-2', 'voice-trikona-3', 'voice-trikona-r1', 'voice-trikona-r2',
+  'voice-vajra-1', 'voice-vajra-2', 'voice-vajra-3', 'voice-vajra-r1', 'voice-vajra-r2',
+  'voice-catcow-1-v2', 'voice-catcow-2-v2', 'voice-catcow-3-v2', 'voice-catcow-r1-v2', 'voice-catcow-r2-v2',
+  'voice-paschi-1-v2', 'voice-paschi-2-v2', 'voice-paschi-3-v2',
+  'voice-uttanasana-2-v2', 'voice-balasana-1-v2',
 ];

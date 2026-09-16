@@ -12,13 +12,16 @@ export interface VoiceCueDef {
   at: number;
   text: string;
   audioKey?: string;
+  audioText?: string;
 }
 
 export interface VoiceGuideDef {
   intro: string;
+  introAudioKey?: string;
   firstRound: VoiceCueDef[];
   secondRound?: VoiceCueDef[];
   breathingCue?: string;
+  breathingCueAudioKey?: string;
   breathingReminderCue?: string;
   completion?: string;
 }
@@ -83,6 +86,7 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     ],
     voiceGuide: {
       intro: '山のポーズを始めます。',
+      introAudioKey: 'voice-start-tadasana',
       firstRound: [
         { at: 5, text: '足裏で床を感じ、自然に立ちます。' },
         { at: 15, text: '背骨を無理なく伸ばし、肩の力を抜きます。' },
@@ -93,6 +97,7 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
         { at: 10, text: '肩の力を抜いて、自然な呼吸を続けます。' },
       ],
       breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+      breathingCueAudioKey: 'voice-nose-breath-v2',
       breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
       completion: 'お疲れさまでした。',
     },
@@ -133,6 +138,7 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     ],
     voiceGuide: {
       intro: '立ち木のポーズを始めます。',
+      introAudioKey: 'voice-start-vrksasana',
       firstRound: [
         { at: 5, text: '軸足にゆっくり体重を乗せます。' },
         { at: 15, text: '視線を一点に置くと、バランスを取りやすくなります。' },
@@ -143,6 +149,7 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
         { at: 10, text: '視線を一点に置いて、無理のない範囲で続けます。' },
       ],
       breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+      breathingCueAudioKey: 'voice-nose-breath-v2',
       breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
       completion: 'お疲れさまでした。',
     },
@@ -172,7 +179,7 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     image: '/pose-uttanasana-stage3.webp',
     stageImages: ['/pose-uttanasana-stage1.webp', '/pose-uttanasana-stage2.webp', '/pose-uttanasana-stage3.webp'],
     stages: [
-      { image: '/pose-uttanasana-stage1.webp', label: '段階1：まっすぐ立つ', description: '足を腰幅に開き、背すじを伸ばして立つ。ここからゆっくり始める' },
+      { image: '/pose-tadasana.webp', label: '段階1：まっすぐ立つ', description: '足を腰幅に開き、背すじを伸ばして立つ。腕は自然に下へ。ここからゆっくり始める' },
       { image: '/pose-uttanasana-stage2.webp', label: '段階2：股関節から前に倒す', description: '息を吐きながら股関節からゆっくり前に倒す。膝は少し曲げてもよい' },
       { image: '/pose-uttanasana-stage3.webp', label: '段階3：無理のない位置で止まる', description: '手は床またはすねにおく。床に手をつける必要はない。無理な深さを求めない' },
     ],
@@ -189,9 +196,10 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     ],
     voiceGuide: {
       intro: 'やさしい前屈を始めます。',
+      introAudioKey: 'voice-start-uttanasana-v2',
       firstRound: [
         { at: 5, text: '膝は無理に伸ばしきらなくて大丈夫です。' },
-        { at: 15, text: '股関節からゆっくり前へ倒します。' },
+        { at: 15, text: '股関節からゆっくり前へ倒します。', audioKey: 'voice-uttanasana-2-v2' },
         { at: 25, text: '床に手をつける必要はありません。無理のない位置で止まりましょう。' },
       ],
       secondRound: [
@@ -199,6 +207,7 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
         { at: 10, text: '床に手をつける必要はありません。' },
       ],
       breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+      breathingCueAudioKey: 'voice-nose-breath-v2',
       breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
       completion: 'お疲れさまでした。',
     },
@@ -237,8 +246,9 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     ],
     voiceGuide: {
       intro: 'チャイルドポーズを始めます。',
+      introAudioKey: 'voice-start-balasana-v2',
       firstRound: [
-        { at: 5, text: 'お尻をかかとの方向へゆっくり下ろします。' },
+        { at: 5, text: 'お尻をかかとの方向へゆっくり下ろします。', audioKey: 'voice-balasana-1-v2' },
         { at: 15, text: '背中を広げるように、楽に呼吸しましょう。' },
         { at: 25, text: '苦しくない位置で休みます。' },
       ],
@@ -246,6 +256,7 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
         { at: 0, text: 'お尻をかかとに預けて、リラックスしましょう。' },
       ],
       breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+      breathingCueAudioKey: 'voice-nose-breath-v2',
       breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
       completion: 'お疲れさまでした。',
     },
@@ -289,16 +300,18 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     ],
     voiceGuide: {
       intro: '猫と牛のポーズを始めます。',
+      introAudioKey: 'voice-start-catcow-v2',
       firstRound: [
-        { at: 5, text: '吸いながら胸を開き、背中をやさしく反らします。' },
-        { at: 15, text: '吐きながら背中を丸め、おへそを見るようにします。' },
-        { at: 25, text: '首は無理に反らさず、呼吸に合わせてゆっくり動きましょう。' },
+        { at: 5, text: '吸いながら胸を開き、背中をやさしく反らします。', audioKey: 'voice-catcow-1-v2' },
+        { at: 15, text: '吐きながら背中を丸め、おへそを見るようにします。', audioKey: 'voice-catcow-2-v2' },
+        { at: 25, text: '首は無理に反らさず、呼吸に合わせてゆっくり動きましょう。', audioKey: 'voice-catcow-3-v2' },
       ],
       secondRound: [
-        { at: 0, text: 'もう一度、吸いながら胸を開きます。' },
-        { at: 10, text: '吐きながら背中を丸めましょう。' },
+        { at: 0, text: 'もう一度、吸いながら胸を開きます。', audioKey: 'voice-catcow-r1-v2' },
+        { at: 10, text: '吐きながら背中を丸めましょう。', audioKey: 'voice-catcow-r2-v2' },
       ],
       breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+      breathingCueAudioKey: 'voice-nose-breath-v2',
       breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
       completion: 'お疲れさまでした。',
     },
@@ -337,12 +350,14 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     ],
     voiceGuide: {
       intro: '座って前屈を始めます。',
+      introAudioKey: 'voice-start-paschi-v2',
       firstRound: [
-        { at: 5, text: '膝を少し曲げても大丈夫です。' },
-        { at: 15, text: '股関節からゆっくり前に倒します。' },
-        { at: 25, text: '無理のない位置で止まりましょう。' },
+        { at: 5, text: '膝を少し曲げても大丈夫です。', audioKey: 'voice-paschi-1-v2' },
+        { at: 15, text: '股関節からゆっくり前に倒します。', audioKey: 'voice-paschi-2-v2' },
+        { at: 25, text: '無理のない位置で止まりましょう。', audioKey: 'voice-paschi-3-v2' },
       ],
       breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+      breathingCueAudioKey: 'voice-nose-breath-v2',
       breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
       completion: 'お疲れさまでした。',
     },
@@ -383,6 +398,7 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     ],
     voiceGuide: {
       intro: '休息のポーズを始めます。',
+      introAudioKey: 'voice-start-savasana',
       firstRound: [
         { at: 5, text: '全身の力を抜いて、楽な姿勢をとります。' },
         { at: 15, text: '呼吸をコントロールしようとせず、自然に任せましょう。' },
@@ -391,6 +407,7 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
         { at: 0, text: '全身の力を抜いて、楽な姿勢をとりましょう。' },
       ],
       breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+      breathingCueAudioKey: 'voice-nose-breath-v2',
       breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
       completion: 'お疲れさまでした。',
     },
@@ -474,16 +491,19 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     ],
     voiceGuide: {
       intro: '橋のポーズを始めます。',
+      introAudioKey: 'voice-start-setu',
       firstRound: [
-        { at: 5, text: '仰向けに寝て、膝を立てましょう。足裏は腰幅程度に開きます。' },
-        { at: 15, text: '息を吐きながら、お将をゆっくり持ち上げます。無理のない高さで止まりましょう。' },
-        { at: 25, text: '肩と足裏で体を支え、呼吸を続けましょう。' },
+        { at: 5, text: '仰向けに寝て、膝を立てましょう。', audioKey: 'voice-setu-1' },
+        { at: 10, text: '足裏は腰幅程度に開きます。', audioKey: 'voice-setu-2' },
+        { at: 18, text: '息を吐きながら、お尻をゆっくり持ち上げます。無理のない高さで止まりましょう。', audioKey: 'voice-setu-3' },
+        { at: 28, text: '肩と足裏で体を支え、呼吸を続けましょう。' },
       ],
       secondRound: [
-        { at: 0, text: 'もう一度、息を吐きながらお将を持ちげます。' },
-        { at: 10, text: '無理のない高さで、リラックスして呼吸を続けましょう。' },
+        { at: 0, text: 'もう一度、息を吐きながらお尻を持ち上げます。', audioKey: 'voice-setu-r1' },
+        { at: 10, text: '無理のない高さで、リラックスして呼吸を続けましょう。', audioKey: 'voice-setu-r2' },
       ],
       breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+      breathingCueAudioKey: 'voice-nose-breath-v2',
       breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
       completion: 'お疲れさまでした。',
     },
@@ -523,16 +543,18 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     ],
     voiceGuide: {
       intro: 'コブラのポーズを始めます。',
+      introAudioKey: 'voice-start-bhujanga',
       firstRound: [
-        { at: 5, text: 'うつ伏せで楽な姿勢をとります。手のひらを胸の横に置きましょう。' },
-        { at: 15, text: '息を吸いながら、胸をやさしく持ち上げます。ひじは少し曲げたままで大丈夫です。' },
-        { at: 25, text: '無理のない高さで止まり、肩の力を抜きましょう。' },
+        { at: 5, text: 'うつ伏せで楽な姿勢をとります。手のひらを胸の横に置きましょう。', audioKey: 'voice-bhujanga-1' },
+        { at: 15, text: '息を吸いながら、胸をやさしく持ち上げます。ひじは少し曲げたままで大丈夫です。', audioKey: 'voice-bhujanga-2' },
+        { at: 25, text: '無理のない高さで止まり、肩の力を抜きましょう。', audioKey: 'voice-bhujanga-3' },
       ],
       secondRound: [
-        { at: 0, text: 'もう一度、息を吸いながら胸をやさしく持ち上げます。' },
-        { at: 10, text: '首を無理に反らさず、目線は自然な角度に保ちましょう。' },
+        { at: 0, text: 'もう一度、息を吸いながら胸をやさしく持ち上げます。', audioKey: 'voice-bhujanga-r1' },
+        { at: 10, text: '首を無理に反らさず、目線は自然な角度に保ちましょう。', audioKey: 'voice-bhujanga-r2' },
       ],
       breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+      breathingCueAudioKey: 'voice-nose-breath-v2',
       breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
       completion: 'お疲れさまでした。',
     },
@@ -576,6 +598,7 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
         { at: 15, text: '肩の力を抜きます。' },
       ],
       breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+      breathingCueAudioKey: 'voice-nose-breath-v2',
       completion: 'お疲れさまでした。',
     },
     planner: {
@@ -613,16 +636,18 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     ],
     voiceGuide: {
       intro: '三角のポーズを始めます。',
+      introAudioKey: 'voice-start-trikona',
       firstRound: [
-        { at: 5, text: '足を大きく開き、右足を外に向けます。' },
-        { at: 15, text: '息を吐きながら、右手を右足の方向に伸ばします。' },
-        { at: 25, text: '無理のない位置で止まり、左手は上に伸ばします。' },
+        { at: 5, text: '足を大きく開き、右足を外に向けます。', audioKey: 'voice-trikona-1' },
+        { at: 15, text: '息を吐きながら、上体を右へ倒します。', audioKey: 'voice-trikona-2' },
+        { at: 25, text: '無理のない位置で止まり、左手は上に伸ばします。', audioKey: 'voice-trikona-3' },
       ],
       secondRound: [
-        { at: 0, text: 'もう一度、反対側も行いましょう。' },
-        { at: 10, text: '無理のない範囲で、自然な呼吸を続けます。' },
+        { at: 0, text: 'もう一度、反対側も行いましょう。', audioKey: 'voice-trikona-r1' },
+        { at: 10, text: '無理のない範囲で、自然な呼吸を続けます。', audioKey: 'voice-trikona-r2' },
       ],
       breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+      breathingCueAudioKey: 'voice-nose-breath-v2',
       breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
       completion: 'お疲れさまでした。',
     },
@@ -663,16 +688,18 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     ],
     voiceGuide: {
       intro: '金剛座（正座）を始めます。',
+      introAudioKey: 'voice-start-vajra',
       firstRound: [
-        { at: 5, text: 'かかとの上にお尻をゆっくり下ろします。' },
-        { at: 15, text: '背すじを無理なく伸ばし、肩の力を抜きます。' },
-        { at: 25, text: '自然な呼吸を続けましょう。' },
+        { at: 5, text: 'かかとの上にお尻をゆっくり下ろします。', audioKey: 'voice-vajra-1' },
+        { at: 15, text: '背すじを無理なく伸ばし、肩の力を抜きます。', audioKey: 'voice-vajra-2' },
+        { at: 25, text: '自然な呼吸を続けましょう。', audioKey: 'voice-vajra-3' },
       ],
       secondRound: [
-        { at: 0, text: 'もう一度、背すじを整えましょう。' },
-        { at: 10, text: 'お腹まわりの呼吸を感じながら、静かに座ります。' },
+        { at: 0, text: 'もう一度、背すじを整えましょう。', audioKey: 'voice-vajra-r1' },
+        { at: 10, text: 'お腹まわりの呼吸を感じながら、静かに座ります。', audioKey: 'voice-vajra-r2' },
       ],
       breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
+      breathingCueAudioKey: 'voice-nose-breath-v2',
       breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
       completion: 'お疲れさまでした。',
     },

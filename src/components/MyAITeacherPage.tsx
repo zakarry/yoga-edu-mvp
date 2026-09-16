@@ -940,11 +940,16 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     return () => window.clearInterval(tick);
   }, [timerRunning, selectedGuide, practicePhase, practiceDuration]);
 
-  const fireCue = useCallback((text: string) => {
+  const fireCue = useCallback((text: string, audioKey?: string) => {
     if (!voiceGuideOn) return;
-    if (firedCuesRef.current.has(text)) return;
-    firedCuesRef.current.add(text);
-    voiceEngine.speak(text);
+    const dedupKey = audioKey ?? text;
+    if (firedCuesRef.current.has(dedupKey)) return;
+    firedCuesRef.current.add(dedupKey);
+    if (audioKey) {
+      voiceEngine.speakByKey(audioKey, text);
+    } else {
+      voiceEngine.speak(text);
+    }
     setCurrentSubtitle(text);
   }, [voiceGuideOn, voiceEngine]);
 
@@ -971,13 +976,13 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       }
       for (const cue of seq.cues) {
         if (remaining === seq.totalSeconds - cue.atSeconds && cue.atSeconds > 0) {
-          fireCue(cue.text);
+          fireCue(cue.text, cue.audioKey);
           break;
         }
       }
       if (remaining === 0 && seq.cues.length > 0) {
         const lastCue = seq.cues[seq.cues.length - 1];
-        fireCue(lastCue.text);
+        fireCue(lastCue.text, lastCue.audioKey);
       }
     }
   }, [timerRunning, practicePaused, voiceGuideOn, simpleTimerRemaining, timerPhaseIdx, selectedGuide, fireCue]);
@@ -1062,10 +1067,17 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     lastBoxPhaseRef.current = '';
     const allTexts = seq.cues.map((c) => c.text).concat(REMAINING_CUES.map((c) => c.text));
     preloadVoicePhrases(allTexts);
+    const allKeys = seq.cues.map((c) => c.audioKey).filter((k): k is string => !!k);
+    if (allKeys.length > 0) preloadVoiceKeys(allKeys);
     if (seq.cues.length > 0) {
       const firstCue = seq.cues[0];
-      firedCuesRef.current.add(firstCue.text);
-      voiceEngine.speak(firstCue.text);
+      const dedupKey = firstCue.audioKey ?? firstCue.text;
+      firedCuesRef.current.add(dedupKey);
+      if (firstCue.audioKey) {
+        voiceEngine.speakByKey(firstCue.audioKey, firstCue.text);
+      } else {
+        voiceEngine.speak(firstCue.text);
+      }
       setCurrentSubtitle(firstCue.text);
     }
   }, [voiceGuideOn, voiceEngine]);
