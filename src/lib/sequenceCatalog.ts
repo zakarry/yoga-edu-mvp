@@ -58,7 +58,7 @@ export const SEQUENCE_CATALOG: SequenceCatalogEntry[] = [
         nameSanskrit: 'Pranamasana',
         instruction: ['マットの端に立ち、両手を胸の前で合掌する。'],
         breathing: 'normal',
-        voiceGuide: ['プラナーマーサナ。自然な呼吸で、両手を胸の前で合掌します。'],
+        voiceGuide: ['プラナーマーサナ。自然な呼吸で合掌します。'],
         image: '/surya-namaskar/01-pranamasana.webp',
       },
       {
@@ -67,7 +67,7 @@ export const SEQUENCE_CATALOG: SequenceCatalogEntry[] = [
         nameSanskrit: 'Hastottanasana',
         instruction: ['合掌した手を頭上へ上げ、無理のない範囲で上体を後方へ伸ばす。'],
         breathing: 'inhale',
-        voiceGuide: ['ハストーッターナーサナ。鼻からゆっくり吸いながら、両腕を頭上へ伸ばします。'],
+        voiceGuide: ['ハストーッターナーサナ。吸いながら、両腕を頭上へ伸ばします。'],
         image: '/surya-namaskar/02-hastottanasana.webp',
       },
       {
@@ -76,7 +76,7 @@ export const SEQUENCE_CATALOG: SequenceCatalogEntry[] = [
         nameSanskrit: 'Padahastasana',
         instruction: ['上体を前へ倒す。初心者は無理に膝を伸ばし切らなくてよい。'],
         breathing: 'exhale',
-        voiceGuide: ['パーダハスターサナ。息を吐きながら、上体を前へ倒します。'],
+        voiceGuide: ['パーダハスターサナ。吐きながら、上体を前へ倒します。'],
         image: '/surya-namaskar/03-padahastasana.webp',
       },
       {
@@ -85,7 +85,7 @@ export const SEQUENCE_CATALOG: SequenceCatalogEntry[] = [
         nameSanskrit: 'Ashva Sanchalanasana',
         instruction: ['片脚を後方へ引き、後ろの膝を床へ下ろす。'],
         breathing: 'inhale',
-        voiceGuide: ['アシュヴァ・サンチャラナーサナ。吸いながら、片脚を後方へ引き、後ろの膝を床へ下ろします。'],
+        voiceGuide: ['アシュヴァ・サンチャラナーサナ。吸いながら、片脚を後方へ引きます。'],
         image: '/surya-namaskar/04-ashva-sanchalanasana.webp',
       },
       {
@@ -94,7 +94,7 @@ export const SEQUENCE_CATALOG: SequenceCatalogEntry[] = [
         nameSanskrit: 'Parvatasana',
         instruction: ['腰と尾骨を上げ、身体を逆V字にする。'],
         breathing: 'exhale',
-        voiceGuide: ['パルヴァターサナ。吐きながら、腰を上げ、逆V字になります。'],
+        voiceGuide: ['パルヴァターサナ。吐きながら、腰を上げて逆V字になります。'],
         image: '/surya-namaskar/05-parvatasana.webp',
       },
       {
@@ -112,7 +112,7 @@ export const SEQUENCE_CATALOG: SequenceCatalogEntry[] = [
         nameSanskrit: 'Bhujangasana',
         instruction: ['頭と上体をゆっくり起こし、無理のない範囲で背骨を後方へ伸ばす。'],
         breathing: 'inhale',
-        voiceGuide: ['ブジャンガーサナ。吸いながら、上体をゆっくり起こし、背骨を伸ばします。'],
+        voiceGuide: ['ブジャンガーサナ。吸いながら、上体をゆっくり起こします。'],
         image: '/surya-namaskar/07-bhujangasana.webp',
       },
       {
@@ -157,7 +157,7 @@ export const SEQUENCE_CATALOG: SequenceCatalogEntry[] = [
         nameSanskrit: 'Pranamasana',
         instruction: ['合掌し、開始姿勢へ戻る。'],
         breathing: 'normal',
-        voiceGuide: ['プラナーマーサナ。自然な呼吸で、合掌し、開始姿勢へ戻ります。'],
+        voiceGuide: ['プラナーマーサナ。自然な呼吸で、開始姿勢へ戻ります。'],
         image: '/surya-namaskar/12-pranamasana.webp',
       },
     ],
