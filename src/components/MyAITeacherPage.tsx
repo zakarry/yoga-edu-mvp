@@ -481,7 +481,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [formTeachingLang, setFormTeachingLang] = useState<LangCode>('ja');
   const [demoMsgIdx, setDemoMsgIdx] = useState(0);
   const [chatTyping, setChatTyping] = useState(false);
-  const [returnFromChat, setReturnFromChat] = useState(false);
+  const [practiceEntrySource, setPracticeEntrySource] = useState<StepId | null>(null);
   const [selectedGuide, setSelectedGuide] = useState<PracticeGuide | null>(null);
   const [practicePhase, setPracticePhase] = useState<'guide' | 'active' | 'done'>('guide');
   const [timerRunning, setTimerRunning] = useState(false);
@@ -869,7 +869,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
   const handlePracticeAction = useCallback((action: TeacherResponseAction) => {
     if (!action.targetId) return;
-    setReturnFromChat(true);
+    setPracticeEntrySource('step5');
+    // handlePracticeAction body continues below
     if (action.type === 'start_pose') {
       const pose = getPoseById(action.targetId);
       if (pose) {
@@ -910,6 +911,11 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       setStep('step2');
     }
   }, []);
+
+  const getPracticeReturnStep = useCallback((): StepId => {
+    if (practiceEntrySource && practiceEntrySource !== 'step6') return practiceEntrySource;
+    return 'home';
+  }, [practiceEntrySource]);
 
   useEffect(() => {
     if (!timerRunning || !selectedGuide?.hasTimer) return;
@@ -1054,10 +1060,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPracticePaused(false);
     voiceEngine.stop();
     setCurrentSubtitle('');
-    if (returnFromChat) {
-      setStep('step5');
-    }
-  }, [voiceEngine, returnFromChat]);
+    const ret = getPracticeReturnStep();
+    setStep(ret);
+    setPracticeEntrySource(null);
+  }, [voiceEngine, getPracticeReturnStep]);
 
   const handlePracticeBack = useCallback(() => {
     if (practiceActive && practicePhase === 'active') {
@@ -1088,10 +1094,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPoseElapsedTotal(0);
     setSessionStartedAt(null);
     setPracticeSessionId(null);
-    if (returnFromChat) {
-      setStep('step5');
-    }
-  }, [voiceEngine, selectedBreathworkId, selectedMeditationId, returnFromChat]);
+    const ret = getPracticeReturnStep();
+    setStep(ret);
+    setPracticeEntrySource(null);
+  }, [voiceEngine, selectedBreathworkId, selectedMeditationId, getPracticeReturnStep]);
 
   useEffect(() => {
     if (step !== 'step6') return;
@@ -1102,7 +1108,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         history.pushState({ step6: true }, '');
       } else {
         confirmPracticeExit();
-        setStep(returnFromChat ? 'step5' : 'home');
+        setStep(getPracticeReturnStep());
       }
     };
     window.addEventListener('popstate', onPop);
@@ -1259,6 +1265,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     if (!pose) return;
     initialPoseApplied.current = true;
     const type = pose.type === 'pranayama' ? 'pranayama' : pose.type === 'dhyana' ? 'dhyana' : 'asana';
+    setPracticeEntrySource('home');
     setConcretePosesOverride([pose]);
     setPracticeType(type);
     setSelectedGuide(null);
@@ -1273,6 +1280,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
   const handleEventDemoStart = useCallback(() => {
     if (safetyBlocked || !practiceEntryAllows(practiceEntryVerdict)) return;
+    setPracticeEntrySource('home');
     setConcretePosesOverride(getDefaultPlanPoses());
     setPracticeType('asana');
     setSelectedGuide(null);
@@ -1469,6 +1477,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 disabled={safetyBlocked || practiceEntryBlocked}
                 onClick={() => {
                   if (safetyBlocked || practiceEntryBlocked) return;
+                  setPracticeEntrySource('home');
                   setPracticeType('sequence');
                   setSelectedGuide(null);
                   setSelectedMeditationId(null);
@@ -1494,9 +1503,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               };
               return (
                 <article key={pt} className="ai-teacher-pillar-card"
-                  onClick={() => { if (canStartDirectPractice()) { if (pt === 'dhyana') { setSelectedMeditationId(null); setStep('step6'); setPracticeType('dhyana'); setPracticePhase('guide'); setPosePhase('list'); setConcretePosesOverride(getDefaultPosesByType(pt)); setSelectedGuide(null); } else { setConcretePosesOverride(getDefaultPosesByType(pt)); setPracticeType(pt); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); } } }}
+                  onClick={() => { if (canStartDirectPractice()) { setPracticeEntrySource('home'); if (pt === 'dhyana') { setSelectedMeditationId(null); setStep('step6'); setPracticeType('dhyana'); setPracticePhase('guide'); setPosePhase('list'); setConcretePosesOverride(getDefaultPosesByType(pt)); setSelectedGuide(null); } else { setConcretePosesOverride(getDefaultPosesByType(pt)); setPracticeType(pt); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); } } }}
                   role="button" tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter' && canStartDirectPractice()) { if (pt === 'dhyana') { setSelectedMeditationId(null); setStep('step6'); setPracticeType('dhyana'); setPracticePhase('guide'); setPosePhase('list'); setConcretePosesOverride(getDefaultPosesByType(pt)); setSelectedGuide(null); } else { setConcretePosesOverride(getDefaultPosesByType(pt)); setPracticeType(pt); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); } } }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && canStartDirectPractice()) { setPracticeEntrySource('home'); if (pt === 'dhyana') { setSelectedMeditationId(null); setStep('step6'); setPracticeType('dhyana'); setPracticePhase('guide'); setPosePhase('list'); setConcretePosesOverride(getDefaultPosesByType(pt)); setSelectedGuide(null); } else { setConcretePosesOverride(getDefaultPosesByType(pt)); setPracticeType(pt); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); } } }}
                   style={(safetyBlocked || practiceEntryBlocked) ? { pointerEvents: 'none', opacity: 0.5 } : undefined}
                 >
                   <span className="ai-teacher-pillar-label">{labels[pt]}</span>
@@ -1526,7 +1535,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             {planGateVerdict === 'BLOCK_SAFETY' && (
               <span className="ai-teacher-safety-gate-text">安全のため実践を制限しています</span>
             )}
-            <button className="secondary-button" onClick={() => { if (!safetyBlocked && !practiceEntryBlocked) { setConcretePosesOverride(getDefaultPlanPoses()); setPracticeType('asana'); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); } }} disabled={safetyBlocked || practiceEntryBlocked || (memoryConcerns.length > 0 && (planIsStale || !program))}>
+            <button className="secondary-button" onClick={() => { if (!safetyBlocked && !practiceEntryBlocked) { setPracticeEntrySource('home'); setConcretePosesOverride(getDefaultPlanPoses()); setPracticeType('asana'); setSelectedGuide(null); setPracticePhase('guide'); setPosePhase('list'); setStep('step6'); } }} disabled={safetyBlocked || practiceEntryBlocked || (memoryConcerns.length > 0 && (planIsStale || !program))}>
               デモをすぐ始める
             </button>
             {!persona && (
@@ -1561,6 +1570,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               {nextSuggestion.suggestedType && (
                 <button className="secondary-button" disabled={safetyBlocked || practiceEntryBlocked || (memoryConcerns.length > 0 && (planIsStale || !program))} onClick={() => {
                   if (safetyBlocked || practiceEntryBlocked || (memoryConcerns.length > 0 && (planIsStale || !program))) return;
+                  setPracticeEntrySource('home');
                   setPracticeType(nextSuggestion.suggestedType as 'asana' | 'pranayama' | 'dhyana');
                   if (nextSuggestion.suggestedDuration) setPracticeDuration(nextSuggestion.suggestedDuration);
                   setSelectedGuide(null); setPracticePhase('guide');
@@ -1624,6 +1634,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   <span className="ai-teacher-duration">約{item.durationMin}分</span>
                   <button className="secondary-button" disabled={safetyBlocked || practiceEntryBlocked || (memoryConcerns.length > 0 && (planIsStale || !program))} onClick={() => {
                     if (safetyBlocked || practiceEntryBlocked || (memoryConcerns.length > 0 && (planIsStale || !program))) return;
+                    setPracticeEntrySource('step2');
                     const practiceId = item.practiceId ?? '';
                     if (item.type === 'pranayama' && practiceId) {
                       unlockBreathworkAudio();
@@ -2792,6 +2803,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               {nextSuggestion.suggestedType && (
                 <button className="secondary-button" disabled={safetyBlocked || practiceEntryBlocked || (memoryConcerns.length > 0 && (planIsStale || !program))} onClick={() => {
                   if (safetyBlocked || practiceEntryBlocked || (memoryConcerns.length > 0 && (planIsStale || !program))) return;
+                  setPracticeEntrySource('step7');
                   setPracticeType(nextSuggestion.suggestedType as 'asana' | 'pranayama' | 'dhyana');
                   if (nextSuggestion.suggestedDuration) setPracticeDuration(nextSuggestion.suggestedDuration);
                   setSelectedGuide(null); setPracticePhase('guide');
@@ -2806,8 +2818,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           )}
           <div className="ai-teacher-step7-cta">
             <button className="primary-button" onClick={onOpenMyPage}>myYOGAカルテで実践履歴を見る</button>
-            {returnFromChat && (
-              <button className="secondary-button" onClick={() => { setReturnFromChat(false); setStep('step5'); }}>AI先生に戻る</button>
+            {practiceEntrySource === 'step5' && (
+              <button className="secondary-button" onClick={() => { setPracticeEntrySource(null); setStep('step5'); }}>AI先生に戻る</button>
             )}
           </div>
           <p className="ai-teacher-safety-note">気分は感じ方のメモであり、医療診断ではありません。</p>
