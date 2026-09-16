@@ -481,7 +481,7 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     defaultDurationMin: 1,
     beginnerInstructions: [
       '仰向けに寝る。膝を立て、足は腰幅程度に開き、足裏を床に置く',
-      '息を吐きながらお尻をゆっくり持ち上げる。無理のない高さで止まり、肩と足で体を支える',
+      '息を吐きながら腰をゆっくり持ち上げる。無理のない高さで止まり、肩と足で体を支える',
     ],
     breathingInstructions: [
       '持ち上げるときに吐き、戻すときに吸う。自然な呼吸を続ける',
@@ -495,11 +495,11 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
       firstRound: [
         { at: 5, text: '仰向けに寝て、膝を立てましょう。', audioKey: 'voice-setu-1' },
         { at: 10, text: '足裏は腰幅程度に開きます。', audioKey: 'voice-setu-2' },
-        { at: 18, text: '息を吐きながら、お尻をゆっくり持ち上げます。無理のない高さで止まりましょう。', audioKey: 'voice-setu-3' },
+        { at: 18, text: '息を吐きながら、腰をゆっくり持ち上げます。無理のない高さで止まりましょう。', audioKey: 'voice-setu-3' },
         { at: 28, text: '肩と足裏で体を支え、呼吸を続けましょう。' },
       ],
       secondRound: [
-        { at: 0, text: 'もう一度、息を吐きながらお尻を持ち上げます。', audioKey: 'voice-setu-r1' },
+        { at: 0, text: 'もう一度、息を吐きながら腰を持ち上げます。', audioKey: 'voice-setu-r1' },
         { at: 10, text: '無理のない高さで、リラックスして呼吸を続けましょう。', audioKey: 'voice-setu-r2' },
       ],
       breathingCue: '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。',
