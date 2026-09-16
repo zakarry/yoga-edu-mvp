@@ -498,6 +498,111 @@ async function tryKnowledgeLookup(
   return null;
 }
 
+function buildPoseAnswer(
+  pose: PoseCatalogEntry,
+  questionType: QuestionType,
+  isFollowup: boolean,
+): string {
+  const poseName = pose.nameJa;
+  const breath = pose.breathingInstructions;
+  const cautions = pose.generalCautions;
+  const instructions = pose.beginnerInstructions;
+  const cue = pose.voiceGuide.breathingCue;
+  const intro = pose.voiceGuide.intro;
+
+  switch (questionType) {
+    case 'how_to': {
+      const steps = instructions.map((s, i) => `${i + 1}. ${s}`).join('\n');
+      const breathLine = breath.length > 0 ? `\n呼吸は${breath[0]}` : '';
+      return `${poseName}は、以下のように行います。\n${steps}${breathLine}\n無理のない範囲で行ってください。`;
+    }
+
+    case 'teaching_points': {
+      const points: string[] = [];
+      if (cautions.length > 0) {
+        for (const c of cautions) points.push(`- ${c}`);
+      }
+      points.push('- 呼吸を止めさせない');
+      points.push('- 痛みがある場合は無理に続けさせない');
+      if (pose.planner.beginnerFriendly) points.push('- 必要ならクッションやブランケットを使う');
+      return `教えるときは、形を完成させることより、楽に呼吸できることを優先します。\n\n指導では例えば：\n${points.join('\n')}\n\n「この形が正解」と固定せず、本人が無理なくできる姿勢を選べるようにします。`;
+    }
+
+    case 'precautions': {
+      const items: string[] = [];
+      if (cautions.length > 0) {
+        for (const c of cautions) items.push(`- ${c}`);
+      }
+      items.push('- 痛みを我慢しない');
+      items.push('- 呼吸を止めない');
+      items.push('- 無理に可動域を広げない');
+      items.push('- 違和感が強い場合は中止する');
+      return `注意点は以下の通りです。\n${items.join('\n')}`;
+    }
+
+    case 'breathing': {
+      const breathText = breath.length > 0 ? breath.join('。') : '苦しくなければ鼻からゆっくり吸って、鼻からゆっくり吐きます。';
+      const cueText = cue ? `\n${cue}` : '';
+      return `呼吸については、${breathText}。${cueText}\n吸うときと吐くときの身体の変化を感じてみましょう。`;
+    }
+
+    case 'beginner_adaptation': {
+      const tips: string[] = [];
+      tips.push('- 深く入りすぎなくてよい');
+      tips.push('- 時間は短めから始める');
+      if (pose.defaultDurationMin <= 2) tips.push(`- 目安は${pose.defaultDurationMin}分程度から`);
+      tips.push('- 呼吸を優先し、形にこだわらない');
+      if (cautions.length > 0) tips.push(`- ${cautions[0]}`);
+      return `初心者なら、以下のように調整します。\n${tips.join('\n')}\n自分のペースで無理なく進めて大丈夫です。`;
+    }
+
+    case 'body_awareness': {
+      const sensations: string[] = [];
+      if (pose.type === 'asana') {
+        if (/背|背骨|脊柱/.test(instructions.join(''))) sensations.push('背中がやさしく動く感覚');
+        if (/肩|首/.test(instructions.join(''))) sensations.push('肩や首の力が抜けている感覚');
+        if (/股関節|足|脚|膝/.test(instructions.join(''))) sensations.push('脚や股関節まわりの伸び具合');
+        if (sensations.length === 0) sensations.push('からだの重みと床の感触');
+      }
+      sensations.push('呼吸が無理なく続いているか');
+      return `意識するポイントは、\n${sensations.map((s) => `- ${s}`).join('\n')}\n正誤判定ではなく、自分の感覚に耳を傾けてみましょう。`;
+    }
+
+    case 'purpose':
+    case 'benefits_general': {
+      const features: string[] = [];
+      if (pose.planner.intensity === 'low') features.push('からだを休ませる目的で使われることがあります');
+      if (pose.planner.gentleAllowed) features.push('やさしい動きで呼吸を感じやすい');
+      if (pose.planner.advancedBalance) features.push('バランスを練習する');
+      if (pose.planner.deepRange) features.push('無理のない範囲で可動域を広げる');
+      if (features.length === 0) features.push('呼吸に合わせてからだを動かす');
+      return `${poseName}は、${features.join('、')}といった特徴があります。一般的な目的として紹介しており、治療効果を断定するものではありません。`;
+    }
+
+    case 'definition': {
+      const sanskrit = pose.nameSanskrit ?? pose.nameEn ?? '';
+      const desc = instructions.join('。');
+      const breathShort = breath.length > 0 ? `呼吸は${breath[0]}。` : '';
+      return `${poseName}${sanskrit ? `（${sanskrit}）` : ''}は、${desc}。${breathShort}`;
+    }
+
+    case 'duration': {
+      return `目安として${pose.defaultDurationMin}分程度行うことが多いです。個人差があるので、自分のペースに合わせて調整してください。`;
+    }
+
+    case 'comparison': {
+      return `${poseName}は、${instructions.join('。')}。他のポーズと比べる場合は、姿勢・動き・呼吸・特徴の違いに注目するとよいです。優劣はありません。`;
+    }
+
+    default: {
+      const steps = instructions.map((s, i) => `${i + 1}. ${s}`).join('\n');
+      const breathLine = breath.length > 0 ? `\n呼吸：${breath.join('。')}` : '';
+      const cautionLine = cautions.length > 0 ? `\n注意：${cautions.join('。')}` : '';
+      return `${poseName}についてお話しします。\n${steps}${breathLine}${cautionLine}`;
+    }
+  }
+}
+
 function buildPoseSpecificResponse(
   pose: PoseCatalogEntry,
   questionType: QuestionType,
@@ -505,61 +610,13 @@ function buildPoseSpecificResponse(
   prevContext?: ConversationContext,
 ): TeacherResponse {
   const name = context.persona?.name ?? 'AI先生';
-  const poseName = pose.nameJa;
-  let body = '';
-
-  if (questionType === 'how_to') {
-    const steps = pose.beginnerInstructions.map((s, i) => `${i + 1}. ${s}`).join('\n');
-    body = `${poseName}は、以下のように行います。\n${steps}\n無理のない範囲で行ってください。`;
-  } else if (questionType === 'breathing') {
-    const breath = pose.breathingInstructions.length > 0
-      ? pose.breathingInstructions.join('\n')
-      : '鼻から自然な呼吸を続けます。呼吸を止めないようにします。';
-    const cue = pose.voiceGuide.breathingCue ?? '';
-    body = `${poseName}の呼吸は、${breath}${cue ? `\n${cue}` : ''}`;
-  } else if (questionType === 'precautions') {
-    const cautions = pose.generalCautions.length > 0
-      ? pose.generalCautions.map((c) => `- ${c}`).join('\n')
-      : '- 無理のない範囲で行う';
-    body = `${poseName}の注意点は、\n${cautions}\n痛みがある場合は無理に続けず、専門家に相談してください。`;
-  } else if (questionType === 'teaching_points') {
-    const cautions = pose.generalCautions.length > 0
-      ? pose.generalCautions.map((c) => `- ${c}`).join('\n')
-      : '';
-    const tips = pose.beginnerInstructions.map((s) => `- ${s}`).join('\n');
-    body = `${poseName}を教えるときは、形を完成させることより、楽に呼吸できることを優先します。\n例えば：\n${tips}\n${cautions ? `\n注意点：\n${cautions}` : ''}\n「ここまでできれば正解」と決めず、その人が無理なくできる姿勢を選べるようにします。`;
-  } else if (questionType === 'beginner_adaptation') {
-    const tips = pose.beginnerInstructions.map((s) => `- ${s}`).join('\n');
-    const cautions = pose.generalCautions.length > 0
-      ? pose.generalCautions.map((c) => `- ${c}`).join('\n')
-      : '';
-    body = `${poseName}の初心者向け配慮：\n${tips}\n${cautions ? `\n${cautions}` : ''}\n無理のない範囲で、自分のペースで行って大丈夫です。`;
-  } else if (questionType === 'duration') {
-    body = `${poseName}は、目安として${pose.defaultDurationMin}分程度行うことが多いです。長さは自分のペースに合わせて調整してください。`;
-  } else if (questionType === 'purpose') {
-    const intro = pose.voiceGuide.intro ?? '';
-    body = `${poseName}は、${intro}このポーズを通じて、からだの感覚に気づき、呼吸に合わせて動くことを目的とします。`;
-  } else if (questionType === 'body_awareness') {
-    const tips = pose.beginnerInstructions.map((s) => `- ${s}`).join('\n');
-    body = `${poseName}で意識するポイント：\n${tips}\n呼吸が止まっていないか、無理をしていないかを感じながら行います。`;
-  } else if (questionType === 'definition') {
-    const intro = pose.voiceGuide.intro ?? '';
-    const tips = pose.beginnerInstructions.join('。');
-    body = `${poseName}（${pose.nameSanskrit ?? pose.nameEn ?? ''}）は、${intro}${tips}。`;
-  } else if (questionType === 'comparison') {
-    body = `${poseName}は、${pose.beginnerInstructions.join('。')}。他のポーズと比べる場合は、それぞれの目的と動きの違いに注目するとよいです。`;
-  } else {
-    const tips = pose.beginnerInstructions.map((s) => `- ${s}`).join('\n');
-    const breath = pose.breathingInstructions.length > 0 ? `\n呼吸：${pose.breathingInstructions.join('。')}` : '';
-    const cautions = pose.generalCautions.length > 0 ? `\n注意：${pose.generalCautions.join('。')}` : '';
-    body = `${poseName}についてお話しします。\n${tips}${breath}${cautions}`;
-  }
-
-  const text = `${name}です。${body}`;
+  const isFollowup = prevContext?.lastPoseId === pose.id;
+  const body = buildPoseAnswer(pose, questionType, isFollowup);
+  const text = isFollowup ? body : `${name}です。${body}`;
   return {
     text,
     knowledgeUsed: false,
-    updatedContext: { ...prevContext, lastTeacherText: text, lastAssistantMode: 'knowledge_lookup', lastPoseId: pose.id, lastTopic: poseName, lastQuestionType: questionType },
+    updatedContext: { ...prevContext, lastTeacherText: text, lastAssistantMode: 'knowledge_lookup', lastPoseId: pose.id, lastTopic: pose.nameJa, lastQuestionType: questionType },
   };
 }
 
