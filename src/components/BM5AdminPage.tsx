@@ -84,6 +84,7 @@ interface TestResult {
   related_corrections: CorrectionEntry[];
   pass: boolean;
   reason: string;
+  error: string | null;
 }
 
 export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
@@ -146,23 +147,26 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
     let entryTitle = '';
     let entryAnswer = '';
     let entryFound = false;
+    let errorMsg: string | null = null;
 
     if (refIds.length > 0 && supabase) {
-      const { data: kData } = await supabase
+      const { data: kData, error: kErr } = await supabase
         .from('breath_manager_v5.bm5_knowledge')
         .select('knowledge_id, title, answer_short, answer_detail')
         .in('knowledge_id', refIds);
+      if (kErr) errorMsg = `Knowledge: ${kErr.message}`;
       if (kData && kData.length > 0) {
         entryFound = true;
         entryTitle = kData[0].title;
         entryAnswer = kData[0].answer_short || kData[0].answer_detail || '';
       }
 
-      if (!entryFound) {
-        const { data: cData } = await supabase
+      if (!entryFound && !errorMsg) {
+        const { data: cData, error: cErr } = await supabase
           .from('breath_manager_v5.bm5_catalog')
           .select('catalog_id, name')
           .in('catalog_id', refIds);
+        if (cErr) errorMsg = `Catalog: ${cErr.message}`;
         if (cData && cData.length > 0) {
           entryFound = true;
           entryTitle = cData[0].name;
@@ -173,44 +177,49 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
 
     let passagesFound: PassageEntry[] = [];
     if (passageIds.length > 0 && supabase) {
-      const { data: pData } = await supabase
+      const { data: pData, error: pErr } = await supabase
         .from('breath_manager_v5.bm5_passages')
         .select('passage_id, source_id, section_label, content, page_label')
         .in('passage_id', passageIds);
+      if (pErr) errorMsg = errorMsg ? `${errorMsg}; Passages: ${pErr.message}` : `Passages: ${pErr.message}`;
       if (pData) passagesFound = pData as PassageEntry[];
     }
 
     let safetyEntries: SafetyEntry[] = [];
     if (safetyIds.length > 0 && supabase) {
-      const { data: sData } = await supabase
+      const { data: sData, error: sErr } = await supabase
         .from('breath_manager_v5.bm5_safety')
         .select('safety_id, title, description, urgency')
         .in('safety_id', safetyIds);
+      if (sErr) errorMsg = errorMsg ? `${errorMsg}; Safety: ${sErr.message}` : `Safety: ${sErr.message}`;
       if (sData) safetyEntries = sData as SafetyEntry[];
     }
 
     let relatedIssues: IssueEntry[] = [];
     let relatedCorrections: CorrectionEntry[] = [];
     if (entryFound && supabase) {
-      const { data: kData } = await supabase
+      const { data: kData, error: kErr } = await supabase
         .from('breath_manager_v5.bm5_knowledge')
         .select('issue_ids, editorial_correction_ids')
         .in('knowledge_id', refIds);
+      if (kErr) errorMsg = errorMsg ? `${errorMsg}; Issues: ${kErr.message}` : `Issues: ${kErr.message}`;
       if (kData && kData.length > 0) {
         const issueIds = (kData[0] as { issue_ids?: string[] }).issue_ids || [];
         const corrIds = (kData[0] as { editorial_correction_ids?: string[] }).editorial_correction_ids || [];
         if (issueIds.length > 0) {
-          const { data: iData } = await supabase
+          const { data: iData, error: iErr } = await supabase
             .from('breath_manager_v5.bm5_issues')
             .select('issue_id, title, description, status, related_entry_ids')
             .in('issue_id', issueIds);
+          if (iErr) errorMsg = errorMsg ? `${errorMsg}; Issues query: ${iErr.message}` : `Issues query: ${iErr.message}`;
           if (iData) relatedIssues = iData as IssueEntry[];
         }
         if (corrIds.length > 0) {
-          const { data: cData } = await supabase
+          const { data: cData, error: cErr } = await supabase
             .from('breath_manager_v5.bm5_editorial_corrections')
             .select('correction_id, issue_id, description, rule_text, applied')
             .in('correction_id', corrIds);
+          if (cErr) errorMsg = errorMsg ? `${errorMsg}; Corrections: ${cErr.message}` : `Corrections: ${cErr.message}`;
           if (cData) relatedCorrections = cData as CorrectionEntry[];
         }
       }
@@ -240,6 +249,7 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
       related_corrections: relatedCorrections,
       pass,
       reason,
+      error: errorMsg,
     };
   };
 
@@ -440,6 +450,11 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
               <div style={{ fontSize: 13, color: r.pass ? '#2e7d32' : '#c62828' }}>
                 <strong>判定理由:</strong> {r.reason}
               </div>
+              {r.error && (
+                <div style={{ fontSize: 12, color: '#d32f2f', marginTop: 4, padding: 8, background: '#ffebee', borderRadius: 4 }}>
+                  <strong>エラー:</strong> {r.error}
+                </div>
+              )}
             </div>
           ))}
         </div>

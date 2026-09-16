@@ -2285,7 +2285,9 @@ export default function App() {
           <div className="footer-legal-links">
             <button type="button" className="footer-link" onClick={() => moveTo('terms')}>利用規約</button>
             <button type="button" className="footer-link" onClick={() => moveTo('privacy')}>プライバシーポリシー</button>
-            <button type="button" className="footer-link" onClick={() => moveTo('bm5-admin')} style={{ fontSize: 11, opacity: 0.5 }}>BM5</button>
+            {auth.profile?.is_admin && (
+              <button type="button" className="footer-link" onClick={() => moveTo('bm5-admin')} style={{ fontSize: 11, opacity: 0.5 }}>BM5</button>
+            )}
           </div>
         </div>
       </footer>
