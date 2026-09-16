@@ -1,7 +1,7 @@
 import type { TeacherContext } from './teacherContextService';
 import { getKnowledgeRanking, type KnowledgeExplanation, type RankedCandidate } from './teacherKnowledgeService';
 import { sanitizeKnowledgePayload, MAX_KNOWLEDGE_ITEMS } from './knowledgeGuardService';
-import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, isClarificationIntent, isPrescriptionRequest, isContextualFollowup, isGeneralInfoRequest, isRedFlag, classifyQuestionType, extractPoseId, extractBreathworkId, extractMeditationId, detectPracticeDomain, type ConversationIntent, type QuestionType, type PracticeDomain } from './safetyAndIntent';
+import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, isClarificationIntent, isPrescriptionRequest, isContextualFollowup, isGeneralInfoRequest, isRedFlag, classifyQuestionType, extractPoseId, extractBreathworkId, extractMeditationId, detectPracticeDomain, resolveEntity, normalizeInput, type ConversationIntent, type QuestionType, type PracticeDomain } from './safetyAndIntent';
 import { getCatalogEntry, getCatalogEntryByName, type PoseCatalogEntry } from '../lib/poseCatalog';
 import { getBreathworkEntry, type BreathworkCatalogEntry } from '../lib/breathworkCatalog';
 import { getMeditationEntry, type MeditationCatalogEntry } from '../lib/meditationCatalog';
@@ -752,14 +752,19 @@ function buildBreathworkSpecificResponse(
 function buildMeditationAnswer(
   med: MeditationCatalogEntry,
   questionType: QuestionType,
+  userMessage?: string,
 ): string {
   const name = med.nameJa;
   const durationMin = Math.round(med.durationSec / 60);
   const voiceEvents = med.timeline.filter((e) => e.type === 'voice' && e.text);
+  const isBreathingTechQuestion = userMessage ? /呼吸法でしょ|呼吸法.*よね|呼吸法.*ですよね|呼吸法.*じゃない/.test(normalizeInput(userMessage)) : false;
 
   switch (questionType) {
     case 'definition': {
       const cat = med.category === 'concentration' ? '集中瞑想' : med.category === 'mindfulness' ? 'マインドフルネス瞑想' : med.category === 'yoga_nidra' ? 'Yoga Nidra' : '瞑想';
+      if (med.category === 'concentration' && isBreathingTechQuestion) {
+        return `${name}は、呼吸を無理にコントロールする呼吸法ではなく、自然な呼吸を数えることに意識を向ける${cat}です。${med.description}`;
+      }
       return `${name}は、${med.description}${durationMin}分間の${cat}です。`;
     }
 
@@ -841,10 +846,11 @@ function buildMeditationSpecificResponse(
   questionType: QuestionType,
   context: TeacherContext,
   prevContext?: ConversationContext,
+  userMessage?: string,
 ): TeacherResponse {
   const name = context.persona?.name ?? 'AI先生';
   const isFollowup = prevContext?.lastMeditationId === med.id;
-  const body = buildMeditationAnswer(med, questionType);
+  const body = buildMeditationAnswer(med, questionType, userMessage);
   const text = isFollowup ? body : `${name}です。${body}`;
   return {
     text,
@@ -858,35 +864,25 @@ function buildTopicFollowupResponse(
   context: TeacherContext,
   prevContext?: ConversationContext,
 ): TeacherResponse | null {
-  const questionType = classifyQuestionType(userMessage);
-  if (questionType === 'general') return null;
+  const resolution = resolveEntity(
+    userMessage,
+    prevContext?.lastPracticeDomain,
+    prevContext?.lastPoseId,
+    prevContext?.lastBreathworkId,
+    prevContext?.lastMeditationId,
+  );
 
-  const domain = prevContext?.lastPracticeDomain;
-  if (domain === 'pranayama' && prevContext?.lastBreathworkId) {
-    const bw = getBreathworkEntry(prevContext.lastBreathworkId);
-    if (bw) return buildBreathworkSpecificResponse(bw, questionType, context, prevContext);
+  if (resolution.breathworkId) {
+    const bw = getBreathworkEntry(resolution.breathworkId);
+    if (bw) return buildBreathworkSpecificResponse(bw, resolution.questionType, context, prevContext);
   }
-  if (domain === 'dhyana' && prevContext?.lastMeditationId) {
-    const med = getMeditationEntry(prevContext.lastMeditationId);
-    if (med) return buildMeditationSpecificResponse(med, questionType, context, prevContext);
+  if (resolution.meditationId) {
+    const med = getMeditationEntry(resolution.meditationId);
+    if (med) return buildMeditationSpecificResponse(med, resolution.questionType, context, prevContext, userMessage);
   }
-  if (domain === 'asana' && prevContext?.lastPoseId) {
-    const pose = getCatalogEntry(prevContext.lastPoseId);
-    if (pose) return buildPoseSpecificResponse(pose, questionType, context, prevContext);
-  }
-
-  // Fallback: check any domain ID that exists
-  if (prevContext?.lastPoseId) {
-    const pose = getCatalogEntry(prevContext.lastPoseId);
-    if (pose) return buildPoseSpecificResponse(pose, questionType, context, prevContext);
-  }
-  if (prevContext?.lastBreathworkId) {
-    const bw = getBreathworkEntry(prevContext.lastBreathworkId);
-    if (bw) return buildBreathworkSpecificResponse(bw, questionType, context, prevContext);
-  }
-  if (prevContext?.lastMeditationId) {
-    const med = getMeditationEntry(prevContext.lastMeditationId);
-    if (med) return buildMeditationSpecificResponse(med, questionType, context, prevContext);
+  if (resolution.poseId) {
+    const pose = getCatalogEntry(resolution.poseId);
+    if (pose) return buildPoseSpecificResponse(pose, resolution.questionType, context, prevContext);
   }
   return null;
 }
@@ -897,7 +893,13 @@ function buildGeneralKnowledgeFallback(
   prevContext?: ConversationContext,
 ): TeacherResponse {
   const name = context.persona?.name ?? 'AI先生';
-  const text = `${name}です。一般論として、ヨガでは呼吸に合わせて背骨をゆっくり動かすもの、股関節まわりを無理なく動かすもの、呼吸法、瞑想などがあります。例として、猫と牛のポーズ、チャイルドポーズ、山のポーズ（ターダーサナ）、やさしい呼吸法などがあります。これらは一般的な説明です。具体的に知りたいポーズや呼吸法があれば、お気軽に聞いてください。`;
+  const activeTopic = prevContext?.lastTopic;
+  let text: string;
+  if (activeTopic) {
+    text = `${name}です。「${activeTopic}」について知りたいことか、別のポーズや呼吸法、瞑想について知りたいことか、もう少し教えていただけますか？例えば「やり方は？」「注意点は？」「初心者には？」のように聞いてもらえると、お答えしやすいです。`;
+  } else {
+    text = `${name}です。もう少し具体的に教えていただけますか？例えば「チャイルドポーズのやり方は？」「腹式呼吸って何？」「数息観って何？」のように聞いてもらえると、お答えしやすいです。`;
+  }
   return {
     text,
     knowledgeUsed: false,
@@ -1045,40 +1047,52 @@ export async function generateTeacherResponse(
   }
 
   if (intent === 'knowledge_question') {
-    const bwId = extractBreathworkId(userMessage);
-    if (bwId) {
-      const bw = getBreathworkEntry(bwId);
-      if (bw) {
-        const questionType = classifyQuestionType(userMessage);
-        return buildBreathworkSpecificResponse(bw, questionType, context, prevContext);
-      }
+    const resolution = resolveEntity(
+      userMessage,
+      prevContext?.lastPracticeDomain,
+      prevContext?.lastPoseId,
+      prevContext?.lastBreathworkId,
+      prevContext?.lastMeditationId,
+    );
+
+    if (resolution.breathworkId) {
+      const bw = getBreathworkEntry(resolution.breathworkId);
+      if (bw) return buildBreathworkSpecificResponse(bw, resolution.questionType, context, prevContext);
     }
-    const medId = extractMeditationId(userMessage);
-    if (medId) {
-      const med = getMeditationEntry(medId);
-      if (med) {
-        const questionType = classifyQuestionType(userMessage);
-        return buildMeditationSpecificResponse(med, questionType, context, prevContext);
-      }
+    if (resolution.meditationId) {
+      const med = getMeditationEntry(resolution.meditationId);
+      if (med) return buildMeditationSpecificResponse(med, resolution.questionType, context, prevContext, userMessage);
     }
-    const poseId = extractPoseId(userMessage);
-    if (poseId) {
-      const pose = getCatalogEntry(poseId);
-      if (pose) {
-        const questionType = classifyQuestionType(userMessage);
-        return buildPoseSpecificResponse(pose, questionType, context, prevContext);
-      }
+    if (resolution.poseId) {
+      const pose = getCatalogEntry(resolution.poseId);
+      if (pose) return buildPoseSpecificResponse(pose, resolution.questionType, context, prevContext);
     }
-    const followup = buildTopicFollowupResponse(userMessage, context, prevContext);
-    if (followup) return followup;
+
     const knowledgeResult = await tryKnowledgeLookup(userMessage, context, prevContext);
     if (knowledgeResult) return knowledgeResult;
     return buildGeneralKnowledgeFallback(userMessage, context, prevContext);
   }
 
   if (intent === 'practice_request') {
-    const followup = buildTopicFollowupResponse(userMessage, context, prevContext);
-    if (followup) return followup;
+    const resolution = resolveEntity(
+      userMessage,
+      prevContext?.lastPracticeDomain,
+      prevContext?.lastPoseId,
+      prevContext?.lastBreathworkId,
+      prevContext?.lastMeditationId,
+    );
+    if (resolution.breathworkId) {
+      const bw = getBreathworkEntry(resolution.breathworkId);
+      if (bw) return buildBreathworkSpecificResponse(bw, resolution.questionType, context, prevContext);
+    }
+    if (resolution.meditationId) {
+      const med = getMeditationEntry(resolution.meditationId);
+      if (med) return buildMeditationSpecificResponse(med, resolution.questionType, context, prevContext, userMessage);
+    }
+    if (resolution.poseId) {
+      const pose = getCatalogEntry(resolution.poseId);
+      if (pose) return buildPoseSpecificResponse(pose, resolution.questionType, context, prevContext);
+    }
     return buildPracticeRequestResponse(userMessage, context, prevContext);
   }
 

@@ -33,6 +33,43 @@ function normalizeForSafety(text: string): string {
   return result;
 }
 
+const KATAKANA_HIRAGANA: Record<string, string> = {
+  'ア':'あ','イ':'い','ウ':'う','エ':'え','オ':'お',
+  'カ':'か','キ':'き','ク':'く','ケ':'け','コ':'こ',
+  'サ':'さ','シ':'し','ス':'す','セ':'せ','ソ':'そ',
+  'タ':'た','チ':'ち','ツ':'つ','テ':'て','ト':'と',
+  'ナ':'な','ニ':'に','ヌ':'ぬ','ネ':'ね','ノ':'の',
+  'ハ':'は','ヒ':'ひ','フ':'ふ','ヘ':'へ','ホ':'ほ',
+  'マ':'ま','ミ':'み','ム':'む','メ':'め','モ':'も',
+  'ヤ':'や','ユ':'ゆ','ヨ':'よ','ワ':'わ','ヲ':'を','ン':'ん',
+  'ガ':'が','ギ':'ぎ','グ':'ぐ','ゲ':'げ','ゴ':'ご',
+  'ザ':'ざ','ジ':'じ','ズ':'ず','ゼ':'ぜ','ゾ':'ぞ',
+  'ダ':'だ','ヂ':'ぢ','ヅ':'づ','デ':'で','ド':'ど',
+  'バ':'ば','ビ':'び','ブ':'ぶ','ベ':'べ','ボ':'ぼ',
+  'パ':'ぱ','ピ':'ぴ','プ':'ぷ','ペ':'ぺ','ポ':'ぽ',
+  'ャ':'ゃ','ュ':'ゅ','ョ':'ょ','ッ':'っ','ー':'',
+  'ァ':'ぁ','ィ':'ぃ','ゥ':'ぅ','ェ':'ぇ','ォ':'ぉ',
+  'ヴ':'う','ヶ':'け','ヵ':'か',
+};
+
+export function normalizeInput(text: string): string {
+  let result = text.trim();
+  result = result.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+  result = result.replace(/　/g, ' ');
+  result = result.replace(/\s+/g, ' ');
+  result = result.replace(/[ーー−‐–]/g, '');
+  result = result.replace(/[！？｡｢｣､ｎ]/g, (ch) => ({'！':'!','？':'?','｡':'。','｢':'「','｣':'」','､':'、','ｎ':'n'} as Record<string,string>)[ch] ?? ch);
+  let katakanaToHira = '';
+  for (const ch of result) {
+    katakanaToHira += KATAKANA_HIRAGANA[ch] ?? ch;
+  }
+  result = katakanaToHira;
+  for (const [pattern, replacement] of HIRAGANA_TO_KANJI) {
+    result = result.replace(pattern, replacement);
+  }
+  return result.trim();
+}
+
 const USER_STATE_PATTERNS = [
   'からだが固い', '体が固い', 'からだが硬い', '体が硬い',
   '固いです', '硬いです', '固い気がする', '硬い気がする',
@@ -321,42 +358,69 @@ const POSE_NAME_PATTERNS: Array<[string, RegExp]> = [
 ];
 
 export function extractPoseId(text: string): string | null {
-  const normalized = normalizeForSafety(text);
+  const normalized = normalizeInput(text);
   for (const [id, pattern] of POSE_NAME_PATTERNS) {
     if (pattern.test(normalized)) return id;
   }
   return null;
 }
 
+const BREATHWORK_ALIASES: Record<string, string[]> = {
+  'box-breathing': ['box breathing', 'boxbreathing', 'ボックスブリージング', 'ボックス呼吸', '箱の呼吸', 'ほっくすふりーひんく', 'ほっくす'],
+  'abdominal-breathing': ['腹式呼吸', 'アブドミナル', '腹部呼吸', 'お腹の呼吸', 'ふくしきこきゅう', 'はらしきこきゅう'],
+  'thoracic-breathing': ['胸式呼吸', 'ソラシック', '胸部呼吸', '胸の呼吸', 'きょうしきこきゅう', 'そらしつく'],
+  'complete-yoga-breathing': ['完全なヨガ呼吸', '完全呼吸', 'ディルガ', 'dirgha', 'かんぜんこきゅう', 'かんぜんなよかこきゅう'],
+  'brahmari': ['ブラマリ', 'ハチの呼吸', 'bhramari', '蜂の呼吸', 'ふらまり', 'はちのこきゅう'],
+  'anuloma-viloma': ['アヌローマ', 'ナーディー', '片鼻呼吸', 'anuloma', 'nadi shodhana', 'あぬろーま', 'なーでー', 'かたはなこきゅう'],
+};
+
 const BREATHWORK_NAME_PATTERNS: Array<[string, RegExp]> = [
-  ['box-breathing', /box.?breathing|ボックスブリージング|ボックス呼吸|箱の呼吸/i],
-  ['abdominal-breathing', /腹式呼吸|アブドミナル|腹部呼吸|お腹の呼吸/i],
-  ['thoracic-breathing', /胸式呼吸|ソラシック|胸部呼吸|胸の呼吸/i],
-  ['complete-yoga-breathing', /完全なヨガ呼吸|完全呼吸|ディルガ|dirgha/i],
-  ['brahmari', /ブラマリ|ハチの呼吸|bhramari|蜂の呼吸/i],
-  ['anuloma-viloma', /アヌローマ|ナーディー|片鼻呼吸|anuloma|nadi.?shodhana/i],
+  ['box-breathing', /box.?breathing|ほっくすふりーひんく|ほっくす呼吸|箱の呼吸/i],
+  ['abdominal-breathing', /腹式呼吸|アフトミナル|腹部呼吸|お腹の呼吸|ふくしきこきゅう|はらしきこきゅう/i],
+  ['thoracic-breathing', /胸式呼吸|そらしつく|胸部呼吸|胸の呼吸|きょうしきこきゅう/i],
+  ['complete-yoga-breathing', /完全なヨガ呼吸|完全呼吸|ているか|dirgha|かんぜんこきゅう/i],
+  ['brahmari', /ふらまり|はちの呼吸|bhramari|蜂の呼吸|ふらまりこきゅう/i],
+  ['anuloma-viloma', /あぬろーま|なーでー|片鼻呼吸|anuloma|nadi.?shodhana|かたはなこきゅう/i],
 ];
 
 export function extractBreathworkId(text: string): string | null {
-  const normalized = normalizeForSafety(text);
+  const normalized = normalizeInput(text);
   for (const [id, pattern] of BREATHWORK_NAME_PATTERNS) {
     if (pattern.test(normalized)) return id;
+  }
+  const lower = normalized.toLowerCase();
+  for (const [id, aliases] of Object.entries(BREATHWORK_ALIASES)) {
+    for (const alias of aliases) {
+      if (normalized.includes(normalizeInput(alias)) || lower.includes(alias.toLowerCase())) return id;
+    }
   }
   return null;
 }
 
+const MEDITATION_ALIASES: Record<string, string[]> = {
+  'susokukan-5min': ['数息観', 'すうそくかん', 'すそくかん', 'スウソクカン', 'スウソク観', 'すうそく観', 'すそく観', 'susokukan', '呼吸を数える瞑想', 'すうそくかん'],
+  'mindfulness-5min': ['マインドフルネス', 'マインドフルネス瞑想', 'mindfulness', 'まいんとふるねす', 'まいんとふるねすめいそう', '今ここの瞑想'],
+  'yoga-nidra-3m30s': ['ヨガニードラ3分', 'ヨガニードラ3分30秒', 'yoga nidra 3', 'よがにーどら3分', 'ニードラ3分'],
+  'yoga-nidra-10min': ['ヨガニードラ10分', 'yoga nidra 10', 'よがにーどら10分', 'ニードラ10分'],
+};
+
 const MEDITATION_NAME_PATTERNS: Array<[string, RegExp]> = [
-  ['susokukan-5min', /数息観|すそくかん|susokukan|呼吸を数える.*瞑想/i],
-  ['mindfulness-5min', /マインドフルネス|mindfulness|今ここ.*瞑想/i],
-  ['yoga-nidra-3m30s', /ヨガニードラ.*3分|yoga.?nidra.*3\.?5|ニードラ.*3分/i],
-  ['yoga-nidra-10min', /ヨガニードラ.*10分|yoga.?nidra.*10|ニードラ.*10分/i],
-  ['yoga-nidra-3m30s', /^ヨガニードラ$|^yoga.?nidra$/i],
+  ['susokukan-5min', /数息観|すうそくかん|すそくかん|すうそく観|すそく観|susokukan|呼吸を数える.*瞑想/i],
+  ['mindfulness-5min', /まいんとふるねす|mindfulness|今ここ.*瞑想|まいんとふるねすめいそう/i],
+  ['yoga-nidra-3m30s', /よがにーとら.*3分|yoga.?nidra.*3\.?5|にーとら.*3分/i],
+  ['yoga-nidra-10min', /よがにーとら.*10分|yoga.?nidra.*10|にーとら.*10分/i],
+  ['yoga-nidra-3m30s', /^よがにーとら$|^yoga.?nidra$/i],
 ];
 
 export function extractMeditationId(text: string): string | null {
-  const normalized = normalizeForSafety(text);
+  const normalized = normalizeInput(text);
   for (const [id, pattern] of MEDITATION_NAME_PATTERNS) {
     if (pattern.test(normalized)) return id;
+  }
+  for (const [id, aliases] of Object.entries(MEDITATION_ALIASES)) {
+    for (const alias of aliases) {
+      if (normalized.includes(normalizeInput(alias))) return id;
+    }
   }
   return null;
 }
@@ -368,4 +432,75 @@ export function detectPracticeDomain(text: string): PracticeDomain | null {
   if (extractMeditationId(text)) return 'dhyana';
   if (extractPoseId(text)) return 'asana';
   return null;
+}
+
+const YES_NO_FOLLOWUP_PATTERNS: Array<[RegExp, QuestionType]> = [
+  [/呼吸法でしょ|呼吸法.*よね|呼吸法.*ですよね|呼吸法.*じゃない/, 'definition'],
+  [/鼻から吸う/, 'breathing'],
+  [/鼻から.*吸う|吸うの/, 'breathing'],
+  [/吐くの|はくの/, 'breathing'],
+  [/止めるの|とめるの/, 'breathing_pattern'],
+  [/目を閉じる|目をとじる/, 'focus_point'],
+  [/数えるの|かぞえるの/, 'focus_point'],
+  [/一から戻る|一から.*もとる|いちからもとる/, 'distraction_handling'],
+];
+
+export function classifyAsYesNoFollowup(text: string): QuestionType | null {
+  const normalized = normalizeInput(text);
+  if (normalized.length > 25) return null;
+  for (const [pattern, qt] of YES_NO_FOLLOWUP_PATTERNS) {
+    if (pattern.test(normalized)) return qt;
+  }
+  return null;
+}
+
+export interface EntityResolution {
+  domain: PracticeDomain | null;
+  poseId: string | null;
+  breathworkId: string | null;
+  meditationId: string | null;
+  questionType: QuestionType;
+  isYesNoFollowup: boolean;
+  usedActiveTopic: boolean;
+}
+
+export function resolveEntity(
+  text: string,
+  activeDomain?: PracticeDomain | null,
+  activePoseId?: string | null,
+  activeBreathworkId?: string | null,
+  activeMeditationId?: string | null,
+): EntityResolution {
+  const bwId = extractBreathworkId(text);
+  const medId = extractMeditationId(text);
+  const poseId = extractPoseId(text);
+  const yn = classifyAsYesNoFollowup(text);
+  const qt = classifyQuestionType(text);
+
+  let usedActiveTopic = false;
+
+  if (bwId) {
+    const effectiveQt = (yn === 'definition') ? yn : (qt === 'general' ? (yn ?? (/では/.test(normalizeInput(text)) ? 'definition' : 'definition')) : qt);
+    return { domain: 'pranayama', poseId: null, breathworkId: bwId, meditationId: null, questionType: effectiveQt, isYesNoFollowup: yn !== null, usedActiveTopic: false }; }
+  if (medId) {
+    const effectiveQt = (yn === 'definition') ? yn : (qt === 'general' ? (yn ?? (/では/.test(normalizeInput(text)) ? 'definition' : 'definition')) : qt);
+    return { domain: 'dhyana', poseId: null, breathworkId: null, meditationId: medId, questionType: effectiveQt, isYesNoFollowup: yn !== null, usedActiveTopic: false }; }
+  if (poseId) {
+    const effectiveQt = (yn === 'definition') ? yn : (qt === 'general' ? (yn ?? (/では/.test(normalizeInput(text)) ? 'definition' : 'definition')) : qt);
+    return { domain: 'asana', poseId, breathworkId: null, meditationId: null, questionType: effectiveQt, isYesNoFollowup: yn !== null, usedActiveTopic: false }; }
+
+  if (yn !== null && activeDomain) {
+    usedActiveTopic = true;
+    return { domain: activeDomain, poseId: activePoseId ?? null, breathworkId: activeBreathworkId ?? null, meditationId: activeMeditationId ?? null, questionType: yn, isYesNoFollowup: true, usedActiveTopic: true };
+  }
+
+  if (qt !== 'general' && activeDomain) {
+    const hasEntity = activePoseId || activeBreathworkId || activeMeditationId;
+    if (hasEntity) {
+      usedActiveTopic = true;
+      return { domain: activeDomain, poseId: activePoseId ?? null, breathworkId: activeBreathworkId ?? null, meditationId: activeMeditationId ?? null, questionType: qt, isYesNoFollowup: false, usedActiveTopic: true };
+    }
+  }
+
+  return { domain: null, poseId: null, breathworkId: null, meditationId: null, questionType: qt, isYesNoFollowup: false, usedActiveTopic: false };
 }
