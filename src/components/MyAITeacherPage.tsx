@@ -28,6 +28,8 @@ import { getPlanGate, gateVerdictAllowsGeneration, gateStateMessage, getPractice
 import { isTTSAvailable, buildVoiceGuide, getVoiceStatus, getVoiceGuideEngine, getEngineType, preloadVoicePhrases, preloadVoiceKeys, unlockAudioContext, unlockBreathworkAudio, getAudioDiagnostic, ALL_VOICE_KEYS, REMAINING_CUES, BOX_BREATHING_PHASE_CUES, type VoiceGuideSequence, type VoiceStatus, type EngineType } from '../lib/voiceGuide';
 import { getActiveMeditations, getMeditationEntry, type MeditationCatalogEntry } from '../lib/meditationCatalog';
 import { getBreathworkEntry } from '../lib/breathworkCatalog';
+import { getActiveSequences, getSequenceEntry } from '../lib/sequenceCatalog';
+import { SuryaNamaskarExperience } from './SuryaNamaskarExperience';
 import { MeditationExperience } from './MeditationExperience';
 import { BreathworkExperience } from './ResultPage';
 import { BreathworkVisual } from './BreathworkVisual';
@@ -1381,6 +1383,41 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           <div className="section-inline-header tight">
             <h3>今日の実践を選ぶ</h3>
           </div>
+
+          {/* Featured sequence card — visible to all users */}
+          {getActiveSequences().filter((s) => s.category === 'surya_namaskar').map((seq) => (
+            <div key={seq.id} className="ai-teacher-featured-sequence-card">
+              <div className="ai-teacher-featured-sequence-header">
+                <span className="ai-teacher-featured-sequence-flag">🇮🇳</span>
+                <div className="ai-teacher-featured-sequence-titles">
+                  <strong className="ai-teacher-featured-sequence-name">{seq.nameJa}</strong>
+                  <span className="ai-teacher-featured-sequence-en">{seq.nameEn}</span>
+                </div>
+              </div>
+              <div className="ai-teacher-featured-sequence-meta">
+                <span className="sn-badge sn-badge-level">経験者向け</span>
+                <span className="sn-badge sn-badge-steps">12ステップ</span>
+              </div>
+              <p className="ai-teacher-featured-sequence-desc">呼吸と動きをつなぐ代表的シークエンス</p>
+              <button
+                className="primary-button ai-teacher-featured-sequence-btn"
+                disabled={safetyBlocked || practiceEntryBlocked}
+                onClick={() => {
+                  if (safetyBlocked || practiceEntryBlocked) return;
+                  setPracticeType('sequence');
+                  setSelectedGuide(null);
+                  setSelectedMeditationId(null);
+                  setSelectedBreathworkId(null);
+                  setDirectPractice(null);
+                  setPracticePhase('guide');
+                  setStep('step6');
+                }}
+              >
+                {safetyBlocked ? '安全確認が必要です' : practiceEntryBlocked ? '今日の状態を確認してください' : '実践する'}
+              </button>
+            </div>
+          ))}
+
           <div className="ai-teacher-pillar-grid">
             {(['asana', 'pranayama', 'dhyana'] as const).map((pt) => {
               const labels = { asana: 'Asana', pranayama: 'Pranayama', dhyana: 'Dhyana' };
@@ -1516,7 +1553,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 return (
                 <div key={idx} className="ai-teacher-program-item">
                   <span className={`type-pill ${item.type}`}>
-                    {item.type === 'asana' ? 'アーサナ' : item.type === 'pranayama' ? '呼吸法' : '瞑想'}
+                    {item.type === 'asana' ? 'アーサナ' : item.type === 'pranayama' ? '呼吸法' : item.type === 'sequence' ? 'シークエンス' : '瞑想'}
                   </span>
                   <strong>{item.name}</strong>
                   <span className="ai-teacher-duration">約{item.durationMin}分</span>
@@ -1926,6 +1963,48 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             );
           })()}
 
+          {/* Sequence active — Surya Namaskar etc. */}
+          {practiceType === 'sequence' && practicePhase === 'guide' && (() => {
+            return (
+              <div className="sequence-active-section">
+                <button className="ghost-button practice-back-btn" onClick={handlePracticeBack}>← 戻る</button>
+                <div className="sequence-beginner-intro">
+                  <p>12ステップを連続して行うシークエンスです。初めての場合は、動きを確認しながらゆっくり進めましょう。</p>
+                </div>
+                <SuryaNamaskarExperience
+                  sequenceId="surya-namaskar-ayush"
+                  onComplete={(_roundsCompleted, durationSec) => {
+                    setPracticeDuration(Math.max(1, Math.round(durationSec / 60)));
+                    setPracticePhase('done');
+                    setPracticeActive(false);
+                  }}
+                />
+                <div className="practice-active-actions" style={{ marginTop: 24 }}>
+                  <button
+                    className="secondary-button"
+                    onClick={() => {
+                      setPracticePhase('done');
+                      setPracticeActive(false);
+                    }}
+                  >
+                    完了して記録する
+                  </button>
+                  <button
+                    className="ghost-button"
+                    onClick={() => {
+                      setPracticePhase('guide');
+                      setPracticeActive(false);
+                      setPracticeType(null);
+                      setStep('home');
+                    }}
+                  >
+                    中止する
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Meditation active — when a meditation is selected */}
           {practiceType === 'dhyana' && selectedMeditationId && practicePhase === 'active' && (() => {
             const entry = getMeditationEntry(selectedMeditationId);
@@ -1961,7 +2040,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           })()}
 
           {/* Phase: List — show all concrete poses */}
-          {posePhase === 'list' && practiceType !== 'dhyana' && (
+          {posePhase === 'list' && practiceType !== 'dhyana' && practiceType !== 'sequence' && (
             <div className="today-plan-inline-display">
               <div className="today-plan-inline-header">
                 <h4>今日のプログラム</h4>

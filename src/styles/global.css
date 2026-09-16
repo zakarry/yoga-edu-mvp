@@ -4905,6 +4905,79 @@ h1 {
   gap: 16px;
   margin-top: 14px;
 }
+
+/* Featured sequence card — visible to all users */
+.ai-teacher-featured-sequence-card {
+  display: grid;
+  gap: 10px;
+  padding: 22px;
+  border-radius: 20px;
+  border: 1px solid rgba(108,138,118,.18);
+  background: linear-gradient(135deg, #f7faf8 0%, #eef5f0 100%);
+  margin-top: 14px;
+  margin-bottom: 6px;
+}
+.ai-teacher-featured-sequence-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.ai-teacher-featured-sequence-flag {
+  font-size: 28px;
+  line-height: 1;
+}
+.ai-teacher-featured-sequence-titles {
+  display: grid;
+  gap: 2px;
+}
+.ai-teacher-featured-sequence-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.ai-teacher-featured-sequence-en {
+  font-size: 12px;
+  color: var(--muted);
+}
+.ai-teacher-featured-sequence-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ai-teacher-featured-sequence-desc {
+  font-size: 14px;
+  color: var(--text-secondary, #555);
+  line-height: 1.6;
+  margin: 0;
+}
+.ai-teacher-featured-sequence-btn {
+  width: fit-content;
+  padding: 10px 24px;
+  font-size: 15px;
+}
+.ai-teacher-featured-sequence-btn:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+/* Sequence beginner intro */
+.sequence-beginner-intro {
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(108,138,118,.08);
+  border: 1px solid rgba(108,138,118,.14);
+  margin-bottom: 8px;
+}
+.sequence-beginner-intro p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary, #555);
+  line-height: 1.6;
+}
+.sequence-active-section {
+  display: grid;
+  gap: 16px;
+}
 .ai-teacher-pillar-card {
   display: grid;
   gap: 10px;
