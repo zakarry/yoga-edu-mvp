@@ -269,6 +269,7 @@ export type QuestionType =
   | 'teaching_points'
   | 'precautions'
   | 'breathing'
+  | 'breathing_pattern'
   | 'purpose'
   | 'benefits_general'
   | 'beginner_adaptation'
@@ -276,18 +277,23 @@ export type QuestionType =
   | 'definition'
   | 'comparison'
   | 'duration'
+  | 'focus_point'
+  | 'distraction_handling'
   | 'general';
 
 const QUESTION_TYPE_PATTERNS: Array<[QuestionType, RegExp]> = [
   ['how_to', /やり方|方法|手順|どうやる|やりかた|どうする|入れ方|入り方|入りかた/],
   ['teaching_points', /教える時|教えるとき|指導.*注意|教える.*気を付|教える.*気をつけ|指導上|教えるとき/],
   ['precautions', /注意点|気を付ける|気をつける|注意.*は|気を付け|気をつけ|禁忌|避けるべき|気をつけたほうが/],
+  ['breathing_pattern', /呼吸の順番|順序|パターン|吸う.*止める.*吐く|息を止める/],
   ['breathing', /呼吸.*は|呼吸.*どう|呼吸法|呼吸.*教え|息.*吐く|息.*吸う|呼吸.*について|^呼吸は？?$|^呼吸$/],
+  ['distraction_handling', /雑念|気が散る|散漫|集中.*切れる|気がそれる|考えが浮かぶ/],
+  ['focus_point', /どこに意識|何に集中|焦点|意識.*向ける|集中する.*は|注目する/],
   ['purpose', /目的|なぜ.*やる|何のため|ねらい|意味.*は/],
   ['benefits_general', /効果|メリット|良いこと|利点|得られる|意味がある|役に立つ/],
   ['beginner_adaptation', /初心者|ビギナー|はじめて|初めて|初心者向け|初心者には/],
   ['body_awareness', /どこを意識|意識する|感じる|意識.*ポイント|気をつける.*部分|効く.*部分/],
-  ['definition', /とは|って何|とは何|どんな.*ポーズ|とは？|とは\?/],
+  ['definition', /とは|って何|とは何|どんな.*ポーズ|どんな.*呼吸|どんな.*瞑想|とは？|とは\?/],
   ['comparison', /違い|比べ|比較|どっち|どちら|との違い/],
   ['duration', /何分|どれくらい|時間|何秒|どのくらい/],
 ];
@@ -319,5 +325,47 @@ export function extractPoseId(text: string): string | null {
   for (const [id, pattern] of POSE_NAME_PATTERNS) {
     if (pattern.test(normalized)) return id;
   }
+  return null;
+}
+
+const BREATHWORK_NAME_PATTERNS: Array<[string, RegExp]> = [
+  ['box-breathing', /box.?breathing|ボックスブリージング|ボックス呼吸|箱の呼吸/i],
+  ['abdominal-breathing', /腹式呼吸|アブドミナル|腹部呼吸|お腹の呼吸/i],
+  ['thoracic-breathing', /胸式呼吸|ソラシック|胸部呼吸|胸の呼吸/i],
+  ['complete-yoga-breathing', /完全なヨガ呼吸|完全呼吸|ディルガ|dirgha/i],
+  ['brahmari', /ブラマリ|ハチの呼吸|bhramari|蜂の呼吸/i],
+  ['anuloma-viloma', /アヌローマ|ナーディー|片鼻呼吸|anuloma|nadi.?shodhana/i],
+];
+
+export function extractBreathworkId(text: string): string | null {
+  const normalized = normalizeForSafety(text);
+  for (const [id, pattern] of BREATHWORK_NAME_PATTERNS) {
+    if (pattern.test(normalized)) return id;
+  }
+  return null;
+}
+
+const MEDITATION_NAME_PATTERNS: Array<[string, RegExp]> = [
+  ['susokukan-5min', /数息観|すそくかん|susokukan|呼吸を数える.*瞑想/i],
+  ['mindfulness-5min', /マインドフルネス|mindfulness|今ここ.*瞑想/i],
+  ['yoga-nidra-3m30s', /ヨガニードラ.*3分|yoga.?nidra.*3\.?5|ニードラ.*3分/i],
+  ['yoga-nidra-10min', /ヨガニードラ.*10分|yoga.?nidra.*10|ニードラ.*10分/i],
+  ['yoga-nidra-3m30s', /^ヨガニードラ$|^yoga.?nidra$/i],
+];
+
+export function extractMeditationId(text: string): string | null {
+  const normalized = normalizeForSafety(text);
+  for (const [id, pattern] of MEDITATION_NAME_PATTERNS) {
+    if (pattern.test(normalized)) return id;
+  }
+  return null;
+}
+
+export type PracticeDomain = 'asana' | 'pranayama' | 'dhyana';
+
+export function detectPracticeDomain(text: string): PracticeDomain | null {
+  if (extractBreathworkId(text)) return 'pranayama';
+  if (extractMeditationId(text)) return 'dhyana';
+  if (extractPoseId(text)) return 'asana';
   return null;
 }

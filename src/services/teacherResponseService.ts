@@ -1,8 +1,10 @@
 import type { TeacherContext } from './teacherContextService';
 import { getKnowledgeRanking, type KnowledgeExplanation, type RankedCandidate } from './teacherKnowledgeService';
 import { sanitizeKnowledgePayload, MAX_KNOWLEDGE_ITEMS } from './knowledgeGuardService';
-import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, isClarificationIntent, isPrescriptionRequest, isContextualFollowup, isGeneralInfoRequest, isRedFlag, classifyQuestionType, extractPoseId, type ConversationIntent, type QuestionType } from './safetyAndIntent';
+import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, isClarificationIntent, isPrescriptionRequest, isContextualFollowup, isGeneralInfoRequest, isRedFlag, classifyQuestionType, extractPoseId, extractBreathworkId, extractMeditationId, detectPracticeDomain, type ConversationIntent, type QuestionType, type PracticeDomain } from './safetyAndIntent';
 import { getCatalogEntry, getCatalogEntryByName, type PoseCatalogEntry } from '../lib/poseCatalog';
+import { getBreathworkEntry, type BreathworkCatalogEntry } from '../lib/breathworkCatalog';
+import { getMeditationEntry, type MeditationCatalogEntry } from '../lib/meditationCatalog';
 import { fetchLLMExplanation } from './llmExplanationService';
 import type { AITeacherLLMRequest, LLMKnowledgeItem, LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
 
@@ -21,6 +23,9 @@ export interface ConversationContext {
   lastOfferedAction?: string;
   safetyContextActive?: boolean;
   lastPoseId?: string;
+  lastBreathworkId?: string;
+  lastMeditationId?: string;
+  lastPracticeDomain?: PracticeDomain;
   lastQuestionType?: QuestionType;
 }
 
@@ -620,18 +625,270 @@ function buildPoseSpecificResponse(
   };
 }
 
+function buildBreathworkAnswer(
+  bw: BreathworkCatalogEntry,
+  questionType: QuestionType,
+): string {
+  const name = bw.nameJa;
+  const instr = bw.instructions;
+  const nasal = bw.breathing.nasalCue ?? '苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。';
+  const pattern = bw.pattern;
+
+  switch (questionType) {
+    case 'definition': {
+      const sanskrit = bw.nameSanskrit ?? bw.nameEn ?? '';
+      let patternDesc = '';
+      if (pattern) {
+        const phases: string[] = [];
+        if (pattern.inhaleSec) phases.push(`${pattern.inhaleSec}秒吸う`);
+        if (pattern.holdAfterInhaleSec) phases.push(`${pattern.holdAfterInhaleSec}秒止める`);
+        if (pattern.exhaleSec) phases.push(`${pattern.exhaleSec}秒吐く`);
+        if (pattern.holdAfterExhaleSec) phases.push(`${pattern.holdAfterExhaleSec}秒止める`);
+        patternDesc = phases.join(' → ') + 'を繰り返す呼吸法です。';
+      }
+      return `${name}${sanskrit ? `（${sanskrit}）` : ''}は、${patternDesc || instr.intro.join('。')}目安として${bw.defaultDurationMin}分程度行います。`;
+    }
+
+    case 'how_to': {
+      const steps = instr.intro.map((s, i) => `${i + 1}. ${s}`).join('\n');
+      return `${name}は、以下のように行います。\n${steps}\n${nasal}\n無理に大きく吸おうとせず、楽に続けられる範囲で繰り返します。`;
+    }
+
+    case 'teaching_points': {
+      const points: string[] = [
+        '- 無理に大きく吸わせない',
+        '- 肩や首に力を入れさせない',
+        '- 呼吸を止めさせない',
+        '- 「正しい呼吸」を押しつけない',
+        '- 苦しくなったら自然呼吸へ戻す',
+      ];
+      return `教えるときは、以下に気を付けます。\n${points.join('\n')}\n形より、楽に呼吸できることを優先します。`;
+    }
+
+    case 'precautions': {
+      const items: string[] = [
+        '- 息を止める時間を無理に延ばさない',
+        '- 苦しくなったらすぐ自然な呼吸へ戻る',
+        '- めまいや息苦しさがある場合は中止する',
+      ];
+      return `注意点は以下の通りです。\n${items.join('\n')}`;
+    }
+
+    case 'beginner_adaptation': {
+      const tips: string[] = [
+        '- 短い時間から始める',
+        `- 目安は${bw.defaultDurationMin}分程度から`,
+        '- 秒数を守ることより、苦しくならないことを優先する',
+        '- 楽な姿勢で行う',
+      ];
+      return `初心者なら、以下のように調整します。\n${tips.join('\n')}\n自分のペースで無理なく進めて大丈夫です。`;
+    }
+
+    case 'breathing_pattern': {
+      if (pattern) {
+        const phases: string[] = [];
+        if (pattern.inhaleSec) phases.push('吸う');
+        if (pattern.holdAfterInhaleSec) phases.push('止める');
+        if (pattern.exhaleSec) phases.push('吐く');
+        if (pattern.holdAfterExhaleSec) phases.push('止める');
+        return `${name}の呼吸の順番は、${phases.join(' → ')}です。`;
+      }
+      return `${name}では、${nasal}`;
+    }
+
+    case 'breathing': {
+      return `${name}では、${nasal}無理のない範囲で続けます。`;
+    }
+
+    case 'body_awareness': {
+      const focus = bw.visual.bodyFocus;
+      if (focus === 'belly') return 'お腹がやさしく広がり、吐くと自然に戻る感覚を意識します。';
+      if (focus === 'chest') return '胸郭が前後左右にやさしく広がり、吐くと戻る感覚を意識します。';
+      if (bw.visual.layers) return '呼吸が下から上へ広がっていく感覚を段階的に感じます。';
+      return '呼吸の動きと身体の感覚に意識を向けます。';
+    }
+
+    case 'purpose':
+    case 'benefits_general': {
+      const features: string[] = [];
+      if (bw.safety.beginnerFriendly) features.push('初心者にも取り組みやすい');
+      if (bw.safety.gentleAllowed) features.push('やさしい呼吸でリラックスしやすい');
+      features.push('呼吸に意識を向ける練習になる');
+      return `${name}は、${features.join('、')}といった特徴があります。一般的な実践として紹介しており、治療効果を断定するものではありません。`;
+    }
+
+    case 'duration': {
+      return `目安として${bw.defaultDurationMin}分程度行うことが多いです。個人差があるので、自分のペースに合わせて調整してください。`;
+    }
+
+    case 'comparison': {
+      return `${name}は、${instr.intro.join('。')}。他の呼吸法と比べる場合は、呼吸パターンと特徴の違いに注目するとよいです。優劣はありません。`;
+    }
+
+    default: {
+      const steps = instr.intro.map((s, i) => `${i + 1}. ${s}`).join('\n');
+      return `${name}についてお話しします。\n${steps}\n${nasal}`;
+    }
+  }
+}
+
+function buildBreathworkSpecificResponse(
+  bw: BreathworkCatalogEntry,
+  questionType: QuestionType,
+  context: TeacherContext,
+  prevContext?: ConversationContext,
+): TeacherResponse {
+  const name = context.persona?.name ?? 'AI先生';
+  const isFollowup = prevContext?.lastBreathworkId === bw.id;
+  const body = buildBreathworkAnswer(bw, questionType);
+  const text = isFollowup ? body : `${name}です。${body}`;
+  return {
+    text,
+    knowledgeUsed: false,
+    updatedContext: { ...prevContext, lastTeacherText: text, lastAssistantMode: 'knowledge_lookup', lastBreathworkId: bw.id, lastPracticeDomain: 'pranayama', lastTopic: bw.nameJa, lastQuestionType: questionType, lastPoseId: undefined, lastMeditationId: undefined },
+  };
+}
+
+function buildMeditationAnswer(
+  med: MeditationCatalogEntry,
+  questionType: QuestionType,
+): string {
+  const name = med.nameJa;
+  const durationMin = Math.round(med.durationSec / 60);
+  const voiceEvents = med.timeline.filter((e) => e.type === 'voice' && e.text);
+
+  switch (questionType) {
+    case 'definition': {
+      const cat = med.category === 'concentration' ? '集中瞑想' : med.category === 'mindfulness' ? 'マインドフルネス瞑想' : med.category === 'yoga_nidra' ? 'Yoga Nidra' : '瞑想';
+      return `${name}は、${med.description}${durationMin}分間の${cat}です。`;
+    }
+
+    case 'how_to': {
+      const steps = voiceEvents.slice(0, 5).map((e, i) => `${i + 1}. ${e.text}`).join('\n');
+      return `${name}は、以下のように行います。\n${steps}\n無理のない範囲で行ってください。`;
+    }
+
+    case 'teaching_points': {
+      const points: string[] = [
+        '- 数えることや集中を強制しない',
+        '- 間違えても責めない',
+        '- 雑念が出ることを失敗扱いしない',
+        '- 静寂を邪魔しない',
+        '- 途中で頻繁に声をかけない',
+      ];
+      return `教えるときは、以下に気を付けます。\n${points.join('\n')}\n本人のペースを尊重します。`;
+    }
+
+    case 'precautions': {
+      const items: string[] = [
+        '- 無理に集中しようとしない',
+        '- 眠くなっても無理に目を開け続けなくてよい',
+        '- 不快感が強い場合は中止する',
+      ];
+      return `注意点は以下の通りです。\n${items.join('\n')}`;
+    }
+
+    case 'beginner_adaptation': {
+      const tips: string[] = [
+        `- ${durationMin}分から始める`,
+        '- 姿勢を完璧にしない',
+        '- 目を閉じにくければ伏し目でもよい',
+        '- 雑念が出ても失敗と考えない',
+      ];
+      return `初心者なら、以下のように調整します。\n${tips.join('\n')}\n自分のペースで無理なく進めて大丈夫です。`;
+    }
+
+    case 'focus_point': {
+      if (med.category === 'concentration') return '呼吸を数えることに意識を集中します。数がそれたら、また一から数え直します。';
+      if (med.category === 'mindfulness') return '今ここにある呼吸や身体感覚に、評価を加えず意識を向けます。';
+      if (med.category === 'yoga_nidra') return '体の各部位への意識移動や、呼吸の観察に焦点を当てます。';
+      return '呼吸や身体感覚に意識を向けます。';
+    }
+
+    case 'distraction_handling': {
+      if (med.category === 'concentration') return '雑念が出たことに気づいたら、それを追いかけず、また一から呼吸を数え直します。雑念をなくそうと頑張るのではなく、気づいたら呼吸へ戻ることを繰り返します。';
+      if (med.category === 'mindfulness') return '浮かんだ考えを無理に消そうとせず、いったん気づいて受け流し、また呼吸の感覚へ戻ります。善い悪いと判断しません。';
+      return '気がそれたら、そっと呼吸や身体感覚へ意識を戻します。';
+    }
+
+    case 'purpose':
+    case 'benefits_general': {
+      const features: string[] = [];
+      if (med.category === 'concentration') features.push('集中力を養う');
+      if (med.category === 'mindfulness') features.push('今ここに気づく練習になる');
+      if (med.category === 'yoga_nidra') features.push('深いリラクゼーションへ導く');
+      features.push('呼吸や身体感覚に意識を向ける');
+      return `${name}は、${features.join('、')}といった特徴があります。一般的な実践として紹介しており、治療効果を断定するものではありません。`;
+    }
+
+    case 'duration': {
+      return `目安として${durationMin}分間行います。個人差があるので、自分のペースに合わせて調整してください。`;
+    }
+
+    case 'comparison': {
+      return `${name}は、${med.description}他の瞑想と比べる場合は、集中の対象や方法の違いに注目するとよいです。優劣はありません。`;
+    }
+
+    default: {
+      const steps = voiceEvents.slice(0, 4).map((e, i) => `${i + 1}. ${e.text}`).join('\n');
+      return `${name}についてお話しします。\n${steps}`;
+    }
+  }
+}
+
+function buildMeditationSpecificResponse(
+  med: MeditationCatalogEntry,
+  questionType: QuestionType,
+  context: TeacherContext,
+  prevContext?: ConversationContext,
+): TeacherResponse {
+  const name = context.persona?.name ?? 'AI先生';
+  const isFollowup = prevContext?.lastMeditationId === med.id;
+  const body = buildMeditationAnswer(med, questionType);
+  const text = isFollowup ? body : `${name}です。${body}`;
+  return {
+    text,
+    knowledgeUsed: false,
+    updatedContext: { ...prevContext, lastTeacherText: text, lastAssistantMode: 'knowledge_lookup', lastMeditationId: med.id, lastPracticeDomain: 'dhyana', lastTopic: med.nameJa, lastQuestionType: questionType, lastPoseId: undefined, lastBreathworkId: undefined },
+  };
+}
+
 function buildTopicFollowupResponse(
   userMessage: string,
   context: TeacherContext,
   prevContext?: ConversationContext,
 ): TeacherResponse | null {
-  const lastPoseId = prevContext?.lastPoseId;
-  if (!lastPoseId) return null;
-  const pose = getCatalogEntry(lastPoseId);
-  if (!pose) return null;
   const questionType = classifyQuestionType(userMessage);
   if (questionType === 'general') return null;
-  return buildPoseSpecificResponse(pose, questionType, context, prevContext);
+
+  const domain = prevContext?.lastPracticeDomain;
+  if (domain === 'pranayama' && prevContext?.lastBreathworkId) {
+    const bw = getBreathworkEntry(prevContext.lastBreathworkId);
+    if (bw) return buildBreathworkSpecificResponse(bw, questionType, context, prevContext);
+  }
+  if (domain === 'dhyana' && prevContext?.lastMeditationId) {
+    const med = getMeditationEntry(prevContext.lastMeditationId);
+    if (med) return buildMeditationSpecificResponse(med, questionType, context, prevContext);
+  }
+  if (domain === 'asana' && prevContext?.lastPoseId) {
+    const pose = getCatalogEntry(prevContext.lastPoseId);
+    if (pose) return buildPoseSpecificResponse(pose, questionType, context, prevContext);
+  }
+
+  // Fallback: check any domain ID that exists
+  if (prevContext?.lastPoseId) {
+    const pose = getCatalogEntry(prevContext.lastPoseId);
+    if (pose) return buildPoseSpecificResponse(pose, questionType, context, prevContext);
+  }
+  if (prevContext?.lastBreathworkId) {
+    const bw = getBreathworkEntry(prevContext.lastBreathworkId);
+    if (bw) return buildBreathworkSpecificResponse(bw, questionType, context, prevContext);
+  }
+  if (prevContext?.lastMeditationId) {
+    const med = getMeditationEntry(prevContext.lastMeditationId);
+    if (med) return buildMeditationSpecificResponse(med, questionType, context, prevContext);
+  }
+  return null;
 }
 
 function buildGeneralKnowledgeFallback(
@@ -788,6 +1045,22 @@ export async function generateTeacherResponse(
   }
 
   if (intent === 'knowledge_question') {
+    const bwId = extractBreathworkId(userMessage);
+    if (bwId) {
+      const bw = getBreathworkEntry(bwId);
+      if (bw) {
+        const questionType = classifyQuestionType(userMessage);
+        return buildBreathworkSpecificResponse(bw, questionType, context, prevContext);
+      }
+    }
+    const medId = extractMeditationId(userMessage);
+    if (medId) {
+      const med = getMeditationEntry(medId);
+      if (med) {
+        const questionType = classifyQuestionType(userMessage);
+        return buildMeditationSpecificResponse(med, questionType, context, prevContext);
+      }
+    }
     const poseId = extractPoseId(userMessage);
     if (poseId) {
       const pose = getCatalogEntry(poseId);
