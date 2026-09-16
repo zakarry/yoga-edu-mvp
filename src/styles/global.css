@@ -9533,6 +9533,21 @@ html, body {
   font-weight: 600;
   color: var(--muted);
 }
+.sn-debug-toggle {
+  display: block;
+  margin: 8px auto 0;
+}
+.sn-debug-panel {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(16, 37, 66, 0.04);
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.sn-debug-panel p {
+  margin: 0;
+}
 
 .sequence-select-grid {
   display: grid;

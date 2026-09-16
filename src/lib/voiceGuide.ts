@@ -227,6 +227,15 @@ const PHRASE_MAP: Record<string, string> = {
   '自分が自然と一体化していく感覚を楽しみましょう。': 'voice-mindfulness-15',
   '何かをしようとせず、ただ、環境の中に身を委ねておきます。': 'voice-mindfulness-16',
   'ゆっくりと手先や足先を動かし、ご自身の身体に意識を戻していきます。': 'voice-mindfulness-end-2',
+  'プラナーマーサナ。胸の前で合掌します。': 'voice-surya-01',
+  '吸いながら、両腕を頭上へ伸ばします。': 'voice-surya-02',
+  '吐きながら、上体を前へ倒します。': 'voice-surya-03',
+  '吸いながら、右脚を後ろへ引きます。': 'voice-surya-04',
+  '吐きながら、腰を持ち上げます。': 'voice-surya-05',
+  'ゆっくり身体を下ろします。': 'voice-surya-06',
+  '吸いながら、胸を起こします。': 'voice-surya-07',
+  '吸いながら、反対側の脚を前へ出します。': 'voice-surya-09',
+  '自然な呼吸に戻り、胸の前で合掌します。': 'voice-surya-12',
 };
 
 function getVoiceKey(text: string): string | null {
