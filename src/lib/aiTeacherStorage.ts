@@ -48,9 +48,10 @@ export function clearPersona(): void {
 
 export interface ProgramItem {
   name: string;
-  type: 'asana' | 'pranayama' | 'dhyana';
+  type: 'asana' | 'pranayama' | 'dhyana' | 'sequence';
   durationMin: number;
   practiceId?: string;
+  sequenceId?: string;
 }
 
 export interface TodayProgram {
@@ -137,7 +138,7 @@ export function saveGrowth(growth: AITeacherGrowth): void {
 
 export interface LocalPracticeLog {
   id: string;
-  practice_type: 'asana' | 'pranayama' | 'dhyana';
+  practice_type: 'asana' | 'pranayama' | 'dhyana' | 'sequence';
   practice_name: string;
   duration_min: number | null;
   mood_before: string | null;
@@ -175,9 +176,9 @@ export function saveLocalPracticeLog(log: Omit<LocalPracticeLog, 'id' | 'created
   return entry;
 }
 
-export function getLocalPracticeSummary(): { asana: number; pranayama: number; dhyana: number; totalSessions: number } {
+export function getLocalPracticeSummary(): { asana: number; pranayama: number; dhyana: number; sequence: number; totalSessions: number } {
   const logs = loadLocalPracticeLogs();
-  const summary = { asana: 0, pranayama: 0, dhyana: 0, totalSessions: 0 };
+  const summary = { asana: 0, pranayama: 0, dhyana: 0, sequence: 0, totalSessions: 0 };
   for (const log of logs) {
     if (log.practice_type in summary) {
       (summary as Record<string, number>)[log.practice_type]++;

@@ -5,7 +5,7 @@ import type { SafetyState, SafetyUrgency, SafetyCategory } from './diagnosisServ
 export interface PracticeLog {
   id: string;
   user_id: string;
-  practice_type: 'asana' | 'pranayama' | 'dhyana';
+  practice_type: 'asana' | 'pranayama' | 'dhyana' | 'sequence';
   practice_name: string;
   duration_min: number | null;
   mood_before: string | null;
@@ -18,10 +18,12 @@ export interface PracticeLog {
   safety_category: SafetyCategory | null;
   created_at: string;
   practice_session_id: string;
+  sequence_id?: string | null;
+  rounds_completed?: number | null;
 }
 
 export interface SavePracticeLogParams {
-  practice_type: 'asana' | 'pranayama' | 'dhyana';
+  practice_type: 'asana' | 'pranayama' | 'dhyana' | 'sequence';
   practice_name: string;
   duration_min?: number | null;
   mood_before?: string | null;
@@ -33,12 +35,15 @@ export interface SavePracticeLogParams {
   requires_human_review?: boolean;
   safety_category?: SafetyCategory | null;
   practice_session_id?: string;
+  sequence_id?: string | null;
+  rounds_completed?: number | null;
 }
 
 export interface PracticeSummary {
   asana: { count: number; totalMinutes: number; latestDate: string | null };
   pranayama: { count: number; totalMinutes: number; latestDate: string | null };
   dhyana: { count: number; totalMinutes: number; latestDate: string | null };
+  sequence: { count: number; totalMinutes: number; latestDate: string | null };
 }
 
 export async function savePracticeLog(
@@ -71,6 +76,8 @@ export async function savePracticeLog(
     requires_human_review: params.requires_human_review ?? false,
     safety_category: params.safety_category ?? null,
     practice_session_id: params.practice_session_id ?? crypto.randomUUID(),
+    sequence_id: params.sequence_id ?? null,
+    rounds_completed: params.rounds_completed ?? null,
   };
 
   const { data, error } = await supabase
@@ -115,11 +122,11 @@ export async function getPracticeSummary(userId: string): Promise<{ data: Practi
     asana: { ...empty },
     pranayama: { ...empty },
     dhyana: { ...empty },
+    sequence: { ...empty },
   };
 
   for (const log of data) {
-    const bucket = summary[log.practice_type];
-    if (!bucket) continue;
+    const bucket = summary[log.practice_type as keyof PracticeSummary] ?? summary.asana;
     bucket.count++;
     if (log.duration_min) bucket.totalMinutes += log.duration_min;
     if (!bucket.latestDate || log.created_at > bucket.latestDate) {

@@ -425,9 +425,22 @@ export function extractMeditationId(text: string): string | null {
   return null;
 }
 
-export type PracticeDomain = 'asana' | 'pranayama' | 'dhyana';
+export type PracticeDomain = 'asana' | 'pranayama' | 'dhyana' | 'sequence';
+
+const SEQUENCE_NAME_PATTERNS: Array<[string, RegExp]> = [
+  ['surya-namaskar-ayush', /太陽礼拝|スーリヤ・ナマスカーラ|スーリヤナマスカラ|surya.?namaskar|surya.?namaskara|たいようれいはい/i],
+];
+
+export function extractSequenceId(text: string): string | null {
+  const normalized = normalizeInput(text);
+  for (const [id, pattern] of SEQUENCE_NAME_PATTERNS) {
+    if (pattern.test(normalized)) return id;
+  }
+  return null;
+}
 
 export function detectPracticeDomain(text: string): PracticeDomain | null {
+  if (extractSequenceId(text)) return 'sequence';
   if (extractBreathworkId(text)) return 'pranayama';
   if (extractMeditationId(text)) return 'dhyana';
   if (extractPoseId(text)) return 'asana';
@@ -459,6 +472,7 @@ export interface EntityResolution {
   poseId: string | null;
   breathworkId: string | null;
   meditationId: string | null;
+  sequenceId: string | null;
   questionType: QuestionType;
   isYesNoFollowup: boolean;
   usedActiveTopic: boolean;
@@ -474,33 +488,38 @@ export function resolveEntity(
   const bwId = extractBreathworkId(text);
   const medId = extractMeditationId(text);
   const poseId = extractPoseId(text);
+  const seqId = extractSequenceId(text);
   const yn = classifyAsYesNoFollowup(text);
   const qt = classifyQuestionType(text);
 
   let usedActiveTopic = false;
 
+  if (seqId) {
+    const effectiveQt = (yn === 'definition') ? yn : (qt === 'general' ? 'definition' : qt);
+    return { domain: 'sequence', poseId: null, breathworkId: null, meditationId: null, sequenceId: seqId, questionType: effectiveQt, isYesNoFollowup: yn !== null, usedActiveTopic: false };
+  }
   if (bwId) {
     const effectiveQt = (yn === 'definition') ? yn : (qt === 'general' ? (yn ?? (/では/.test(normalizeInput(text)) ? 'definition' : 'definition')) : qt);
-    return { domain: 'pranayama', poseId: null, breathworkId: bwId, meditationId: null, questionType: effectiveQt, isYesNoFollowup: yn !== null, usedActiveTopic: false }; }
+    return { domain: 'pranayama', poseId: null, breathworkId: bwId, meditationId: null, sequenceId: null, questionType: effectiveQt, isYesNoFollowup: yn !== null, usedActiveTopic: false }; }
   if (medId) {
     const effectiveQt = (yn === 'definition') ? yn : (qt === 'general' ? (yn ?? (/では/.test(normalizeInput(text)) ? 'definition' : 'definition')) : qt);
-    return { domain: 'dhyana', poseId: null, breathworkId: null, meditationId: medId, questionType: effectiveQt, isYesNoFollowup: yn !== null, usedActiveTopic: false }; }
+    return { domain: 'dhyana', poseId: null, breathworkId: null, meditationId: medId, sequenceId: null, questionType: effectiveQt, isYesNoFollowup: yn !== null, usedActiveTopic: false }; }
   if (poseId) {
     const effectiveQt = (yn === 'definition') ? yn : (qt === 'general' ? (yn ?? (/では/.test(normalizeInput(text)) ? 'definition' : 'definition')) : qt);
-    return { domain: 'asana', poseId, breathworkId: null, meditationId: null, questionType: effectiveQt, isYesNoFollowup: yn !== null, usedActiveTopic: false }; }
+    return { domain: 'asana', poseId, breathworkId: null, meditationId: null, sequenceId: null, questionType: effectiveQt, isYesNoFollowup: yn !== null, usedActiveTopic: false }; }
 
   if (yn !== null && activeDomain) {
     usedActiveTopic = true;
-    return { domain: activeDomain, poseId: activePoseId ?? null, breathworkId: activeBreathworkId ?? null, meditationId: activeMeditationId ?? null, questionType: yn, isYesNoFollowup: true, usedActiveTopic: true };
+    return { domain: activeDomain, poseId: activePoseId ?? null, breathworkId: activeBreathworkId ?? null, meditationId: activeMeditationId ?? null, sequenceId: null, questionType: yn, isYesNoFollowup: true, usedActiveTopic: true };
   }
 
   if (qt !== 'general' && activeDomain) {
     const hasEntity = activePoseId || activeBreathworkId || activeMeditationId;
     if (hasEntity) {
       usedActiveTopic = true;
-      return { domain: activeDomain, poseId: activePoseId ?? null, breathworkId: activeBreathworkId ?? null, meditationId: activeMeditationId ?? null, questionType: qt, isYesNoFollowup: false, usedActiveTopic: true };
+      return { domain: activeDomain, poseId: activePoseId ?? null, breathworkId: activeBreathworkId ?? null, meditationId: activeMeditationId ?? null, sequenceId: null, questionType: qt, isYesNoFollowup: false, usedActiveTopic: true };
     }
   }
 
-  return { domain: null, poseId: null, breathworkId: null, meditationId: null, questionType: qt, isYesNoFollowup: false, usedActiveTopic: false };
+  return { domain: null, poseId: null, breathworkId: null, meditationId: null, sequenceId: null, questionType: qt, isYesNoFollowup: false, usedActiveTopic: false };
 }

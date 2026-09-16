@@ -3,12 +3,14 @@ import { getPoseById } from '../lib/poseLibrary';
 import { getPlannerPoses, type PoseType } from '../lib/poseCatalog';
 import { getMeditationEntry } from '../lib/meditationCatalog';
 import { getBreathworkEntry } from '../lib/breathworkCatalog';
+import { getPlannerSequences } from '../lib/sequenceCatalog';
 
 export interface TodayPlanItem {
-  type: PracticeType;
+  type: PracticeType | 'sequence';
   name: string;
   minutes: number;
   practiceId?: string;
+  sequenceId?: string;
   reason?: string;
   knowledgeMasterId?: string;
   knowledgeTitle?: string;
@@ -249,6 +251,21 @@ export function generateTodayPlan(context: TeacherContext): TodayPlan {
         { type: 'dhyana', name: practiceName(fbMedId), minutes: catalogDurationMin(fbMedId, Math.max(2, Math.round(targetMinutes * 0.3))), practiceId: fbMedId },
       ];
     }
+  }
+
+  const isExperienced = practiceSummary.favoriteTypes.length > 0 || practiceSummary.totalSessions >= 5;
+  const sequences = isExperienced ? getPlannerSequences() : [];
+  const surya = sequences.find((s) => s.id === 'surya-namaskar-ayush');
+
+  if (surya && targetMinutes >= 10 && requestedMode !== 'breath_meditation' && requestedMode !== 'gentle' && !isGentle) {
+    notes.push('経験者向けに太陽礼拝を候補に入れています');
+    items.push({
+      type: 'sequence',
+      name: surya.nameJa,
+      minutes: 10,
+      sequenceId: surya.id,
+      reason: '経験者向けのシークエンス実践です',
+    });
   }
 
   return {

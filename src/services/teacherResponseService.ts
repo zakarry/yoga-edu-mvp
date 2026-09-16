@@ -1,10 +1,11 @@
 import type { TeacherContext } from './teacherContextService';
 import { getKnowledgeRanking, type KnowledgeExplanation, type RankedCandidate } from './teacherKnowledgeService';
 import { sanitizeKnowledgePayload, MAX_KNOWLEDGE_ITEMS } from './knowledgeGuardService';
-import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, isClarificationIntent, isPrescriptionRequest, isContextualFollowup, isGeneralInfoRequest, isRedFlag, classifyQuestionType, extractPoseId, extractBreathworkId, extractMeditationId, detectPracticeDomain, resolveEntity, normalizeInput, type ConversationIntent, type QuestionType, type PracticeDomain } from './safetyAndIntent';
+import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, isClarificationIntent, isPrescriptionRequest, isContextualFollowup, isGeneralInfoRequest, isRedFlag, classifyQuestionType, extractPoseId, extractBreathworkId, extractMeditationId, extractSequenceId, detectPracticeDomain, resolveEntity, normalizeInput, type ConversationIntent, type QuestionType, type PracticeDomain } from './safetyAndIntent';
 import { getCatalogEntry, getCatalogEntryByName, type PoseCatalogEntry } from '../lib/poseCatalog';
 import { getBreathworkEntry, type BreathworkCatalogEntry } from '../lib/breathworkCatalog';
 import { getMeditationEntry, type MeditationCatalogEntry } from '../lib/meditationCatalog';
+import { getSequenceEntry, type SequenceCatalogEntry } from '../lib/sequenceCatalog';
 import { fetchLLMExplanation } from './llmExplanationService';
 import type { AITeacherLLMRequest, LLMKnowledgeItem, LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
 
@@ -25,6 +26,7 @@ export interface ConversationContext {
   lastPoseId?: string;
   lastBreathworkId?: string;
   lastMeditationId?: string;
+  lastSequenceId?: string;
   lastPracticeDomain?: PracticeDomain;
   lastQuestionType?: QuestionType;
 }
@@ -763,6 +765,57 @@ function buildMeditationGeneralDefinition(med: MeditationCatalogEntry, cat: stri
   return `${name}は、${cat}です。${med.description}`;
 }
 
+function buildSequenceSpecificResponse(
+  seq: SequenceCatalogEntry,
+  questionType: QuestionType,
+  context: TeacherContext,
+  prevContext?: ConversationContext,
+): TeacherResponse {
+  const name = context.persona?.name ?? 'AI先生';
+  const updated: ConversationContext = {
+    ...prevContext,
+    lastPracticeDomain: 'sequence',
+    lastSequenceId: seq.id,
+    lastUserMessage: '',
+    lastTeacherText: '',
+  };
+
+  if (questionType === 'definition') {
+    const text = `${name}です。${seq.nameJa}は、12のステップを呼吸とともに流れるようにつなぐ代表的なヨガシークエンスです。インド政府AYUSH省の公式テキストに基づく体系です。各ステップで吸う・吐くを合わせながら、体を動かしていきます。`;
+    updated.lastTeacherText = text;
+    return { text, updatedContext: updated };
+  }
+
+  if (questionType === 'duration') {
+    const text = `${name}です。${seq.nameJa}は12ステップを片側行い、反対側も行うことで1ラウンドになります。時間に決まりはありませんが、AI先生では1ラウンドを目安に案内しています。`;
+    updated.lastTeacherText = text;
+    return { text, updatedContext: updated };
+  }
+
+  if (questionType === 'breathing' || questionType === 'breathing_pattern') {
+    const text = `${name}です。各ステップの呼吸は：ステップ1は自然呼吸、2は吸う、3は吐く、4は吸う、5は吐く、6は保持、7は吸う、8は吐く、9は吸う、10は吐く、11は吸う、12は自然呼吸です。呼吸と動きを同期させることが大切です。`;
+    updated.lastTeacherText = text;
+    return { text, updatedContext: updated };
+  }
+
+  if (questionType === 'how_to') {
+    const stepNames = seq.steps.map((s, i) => `${i + 1}. ${s.nameJa}`).join('、');
+    const text = `${name}です。${seq.nameJa}の12ステップは：${stepNames}。吸う・吐くを合わせながら流れるようにつなぎます。`;
+    updated.lastTeacherText = text;
+    return { text, updatedContext: updated };
+  }
+
+  if (questionType === 'precautions') {
+    const text = `${name}です。急な動きをしない、呼吸を無理に強くしない、不快感がある場合は中止してください。痛みがある場合は無理に進めないでください。`;
+    updated.lastTeacherText = text;
+    return { text, updatedContext: updated };
+  }
+
+  const text = `${name}です。${seq.nameJa}は12ステップを呼吸とともにつなぐシークエンスです。やり方や呼吸について聞いてください。`;
+  updated.lastTeacherText = text;
+  return { text, updatedContext: updated };
+}
+
 function buildMeditationAnswer(
   med: MeditationCatalogEntry,
   questionType: QuestionType,
@@ -1070,6 +1123,10 @@ export async function generateTeacherResponse(
       prevContext?.lastMeditationId,
     );
 
+    if (resolution.sequenceId) {
+      const seq = getSequenceEntry(resolution.sequenceId);
+      if (seq) return buildSequenceSpecificResponse(seq, resolution.questionType, context, prevContext);
+    }
     if (resolution.breathworkId) {
       const bw = getBreathworkEntry(resolution.breathworkId);
       if (bw) return buildBreathworkSpecificResponse(bw, resolution.questionType, context, prevContext);
@@ -1096,6 +1153,10 @@ export async function generateTeacherResponse(
       prevContext?.lastBreathworkId,
       prevContext?.lastMeditationId,
     );
+    if (resolution.sequenceId) {
+      const seq = getSequenceEntry(resolution.sequenceId);
+      if (seq) return buildSequenceSpecificResponse(seq, resolution.questionType, context, prevContext);
+    }
     if (resolution.breathworkId) {
       const bw = getBreathworkEntry(resolution.breathworkId);
       if (bw) return buildBreathworkSpecificResponse(bw, resolution.questionType, context, prevContext);
@@ -1178,4 +1239,4 @@ export function generateNextSuggestion(
   };
 }
 
-type PracticeTypeLike = 'asana' | 'pranayama' | 'dhyana';
+type PracticeTypeLike = 'asana' | 'pranayama' | 'dhyana' | 'sequence';

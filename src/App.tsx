@@ -42,8 +42,10 @@ import { fetchDirectory } from './services/directoryService';
 import { getActiveBreathwork } from './lib/breathworkCatalog';
 import { getActiveMeditations, getMeditationEntry } from './lib/meditationCatalog';
 import { MeditationExperience } from './components/MeditationExperience';
+import { SuryaNamaskarExperience } from './components/SuryaNamaskarExperience';
+import { getActiveSequences } from './lib/sequenceCatalog';
 
-type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map' | 'box-breathing' | 'breathing-meditation' | 'breathwork-practice' | 'meditation' | 'learn';
+type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map' | 'box-breathing' | 'breathing-meditation' | 'breathwork-practice' | 'meditation' | 'learn' | 'surya-namaskar';
 
 type FilterType = SearchItem['type'] | 'all';
 
@@ -2166,6 +2168,38 @@ export default function App() {
                 </section>
               );
             })()}
+          </div>
+        )}
+        {page === 'surya-namaskar' && (
+          <div className="page-shell">
+            <section className="hero-panel compact-hero">
+              <div>
+                <button className="ghost-button" onClick={() => moveTo('home')}>TOPへ戻る</button>
+                <span className="eyebrow">経験者向け実践</span>
+                <h2>インド政府AYUSH省 公認 太陽礼拝</h2>
+                <p>12ステップを呼吸とともに流れるようにつなぐ代表的なヨガシークエンスです。</p>
+              </div>
+            </section>
+            <section className="panel">
+              <div className="sequence-select-grid">
+                {getActiveSequences().map((seq) => (
+                  <div key={seq.id} className="sequence-select-card">
+                    <div className="sequence-select-card-header">
+                      <strong className="sequence-select-card-title">{seq.nameJa}</strong>
+                      <span className="sequence-select-card-level">経験者向け</span>
+                    </div>
+                    <p className="sequence-select-card-desc">{seq.description}</p>
+                    <div className="sequence-select-card-meta">
+                      <span className="sequence-select-card-steps">12ステップ</span>
+                      <span className="sequence-select-card-rounds">左右で1ラウンド</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+            <section className="panel">
+              <SuryaNamaskarExperience sequenceId="surya-namaskar-ayush" />
+            </section>
           </div>
         )}
         {page === 'site-map' && (

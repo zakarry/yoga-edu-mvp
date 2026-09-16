@@ -9228,3 +9228,266 @@ html, body {
   color: var(--muted);
   letter-spacing: 0.04em;
 }
+
+/* --- Surya Namaskar / Sequence --- */
+.surya-namaskar-experience {
+  display: grid;
+  gap: 20px;
+  padding: 24px 0;
+}
+
+.sn-header {
+  text-align: center;
+}
+
+.sn-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0 0 4px;
+}
+
+.sn-subtitle {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+
+.sn-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sn-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.sn-badge-level {
+  background: rgba(108, 138, 118, 0.12);
+  color: var(--green-strong);
+}
+
+.sn-badge-steps {
+  background: rgba(16, 37, 66, 0.08);
+  color: var(--navy);
+}
+
+.sn-badge-side {
+  background: rgba(153, 215, 224, 0.2);
+  color: var(--blue-mid, #2a6d8a);
+}
+
+.sn-badge-round {
+  background: rgba(173, 229, 207, 0.25);
+  color: var(--green-strong);
+}
+
+.sn-progress-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(16, 37, 66, 0.08);
+  overflow: hidden;
+}
+
+.sn-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--green-strong), var(--blue-mid, #2a6d8a));
+  transition: width 0.3s ease;
+}
+
+.sn-step-display {
+  display: grid;
+  gap: 12px;
+  text-align: center;
+  padding: 20px;
+  border-radius: 20px;
+  border: 1px solid rgba(16, 37, 66, 0.08);
+  background: linear-gradient(180deg, #fff 0%, #f7faf8 100%);
+}
+
+.sn-step-counter {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.sn-step-image-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.sn-step-image {
+  width: 100%;
+  max-width: 240px;
+  border-radius: 16px;
+  border: 1px solid rgba(108, 138, 118, 0.15);
+  object-fit: contain;
+}
+
+.sn-step-name-ja {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.sn-step-name-sanskrit {
+  font-size: 14px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.sn-breathing-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: rgba(16, 37, 66, 0.04);
+}
+
+.sn-breathing-label {
+  font-weight: 400;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.sn-step-instruction {
+  font-size: 14px;
+  color: var(--text-secondary, #555);
+  line-height: 1.6;
+}
+
+.sn-detail-toggle {
+  font-size: 13px;
+  padding: 6px 14px;
+}
+
+.sn-detail-panel {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(16, 37, 66, 0.04);
+}
+
+.sn-detail-text {
+  font-size: 14px;
+  color: var(--text-secondary, #555);
+  line-height: 1.6;
+  margin: 0 0 8px;
+}
+
+.sn-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sn-nav-btn {
+  padding: 10px 20px;
+}
+
+.sn-start-btn,
+.sn-next-btn {
+  padding: 12px 28px;
+  font-size: 16px;
+}
+
+.sn-complete-message {
+  text-align: center;
+  padding: 16px;
+}
+
+.sn-safety-note {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(16, 37, 66, 0.03);
+}
+
+.sn-safety-note p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.sn-timer {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.sequence-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.sequence-select-card {
+  display: grid;
+  gap: 10px;
+  padding: 20px;
+  border-radius: 20px;
+  border: 1px solid rgba(16, 37, 66, 0.08);
+  background: linear-gradient(180deg, #fff 0%, #f7faf8 100%);
+  box-shadow: 0 4px 16px rgba(16, 37, 66, 0.04);
+}
+
+.sequence-select-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sequence-select-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.sequence-select-card-level {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(108, 138, 118, 0.12);
+  color: var(--green-strong);
+}
+
+.sequence-select-card-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.sequence-select-card-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+@media (max-width: 640px) {
+  .sequence-select-grid {
+    grid-template-columns: 1fr;
+  }
+  .sn-step-image {
+    max-width: 180px;
+  }
+  .sn-controls {
+    flex-direction: column;
+  }
+}

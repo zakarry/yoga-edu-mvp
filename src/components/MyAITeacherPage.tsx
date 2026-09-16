@@ -390,7 +390,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [cameraOn, setCameraOn] = useState(false);
   const [cameraFacingMode, setCameraFacingMode] = useState<'user' | 'environment'>('user');
   const [practiceActive, setPracticeActive] = useState(false);
-  const [practiceType, setPracticeType] = useState<'asana' | 'pranayama' | 'dhyana' | null>(null);
+  const [practiceType, setPracticeType] = useState<'asana' | 'pranayama' | 'dhyana' | 'sequence' | null>(null);
   const [selectedMeditationId, setSelectedMeditationId] = useState<string | null>(null);
   const [selectedBreathworkId, setSelectedBreathworkId] = useState<string | null>(null);
   const [directPractice, setDirectPractice] = useState<{ id: string; type: 'asana' | 'pranayama' | 'dhyana' } | null>(null);
@@ -774,7 +774,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       mood: contextSnapshot.mood,
     });
     const newProgram: TodayProgram = {
-      items: plan.items.map((i) => ({ name: i.name, type: i.type, durationMin: i.minutes, practiceId: i.practiceId })),
+      items: plan.items.map((i) => ({ name: i.name, type: i.type, durationMin: i.minutes, practiceId: i.practiceId, sequenceId: i.sequenceId })),
       generatedAt: new Date().toISOString(),
       basedOn: (testPlanMode || testPlanCompositeMode) ? 'default' : (ctx.practiceSummary.totalSessions > 0 ? 'history' : 'default'),
       todayContextSignature: snapshotSignature,

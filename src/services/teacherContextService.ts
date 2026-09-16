@@ -7,7 +7,7 @@ import {
 import { getMemory, summarizeMemory, loadLocalMemory, type MemorySummary } from './aiTeacherMemoryService';
 import type { TodayContext } from '../types/aiTeacherLayers';
 
-export type PracticeType = 'asana' | 'pranayama' | 'dhyana';
+export type PracticeType = 'asana' | 'pranayama' | 'dhyana' | 'sequence';
 
 export interface TeacherContext {
   userId?: string;
