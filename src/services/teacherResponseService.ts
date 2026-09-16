@@ -749,6 +749,20 @@ function buildBreathworkSpecificResponse(
   };
 }
 
+function buildMeditationGeneralDefinition(med: MeditationCatalogEntry, cat: string): string {
+  const name = med.nameJa;
+  if (med.category === 'concentration') {
+    return `${name}は、自分の呼吸を一つ、二つと数えながら、呼吸に意識を集中していく${cat}です。一般的には、十まで数えたら一に戻り、途中で雑念に気づいたら、また一から数え直します。`;
+  }
+  if (med.category === 'mindfulness') {
+    return `${name}は、今ここにある呼吸や身体感覚に、評価を加えず意識を向ける${cat}です。浮かんだ考えや感覚を追いかけず、気づいたらまた呼吸や身体の感覚へ戻ることを繰り返します。`;
+  }
+  if (med.category === 'yoga_nidra') {
+    return `${name}は、仰向けで行う導引式のリラクゼーション${cat}です。体の各部位への意識移動、呼吸の観察、イメージなどを通じて、深い休息へ導きます。`;
+  }
+  return `${name}は、${cat}です。${med.description}`;
+}
+
 function buildMeditationAnswer(
   med: MeditationCatalogEntry,
   questionType: QuestionType,
@@ -763,9 +777,10 @@ function buildMeditationAnswer(
     case 'definition': {
       const cat = med.category === 'concentration' ? '集中瞑想' : med.category === 'mindfulness' ? 'マインドフルネス瞑想' : med.category === 'yoga_nidra' ? 'Yoga Nidra' : '瞑想';
       if (med.category === 'concentration' && isBreathingTechQuestion) {
-        return `${name}は、呼吸を無理にコントロールする呼吸法ではなく、自然な呼吸を数えることに意識を向ける${cat}です。${med.description}`;
+        return `${name}は、呼吸を無理にコントロールする呼吸法ではなく、自然な呼吸を数えることに意識を向ける${cat}です。AI先生では、初めてでも実践しやすい${durationMin}分版を用意しています。`;
       }
-      return `${name}は、${med.description}${durationMin}分間の${cat}です。`;
+      const generalDef = buildMeditationGeneralDefinition(med, cat);
+      return `${generalDef} AI先生では、初めてでも実践しやすい${durationMin}分版を用意しています。`;
     }
 
     case 'how_to': {
@@ -827,7 +842,7 @@ function buildMeditationAnswer(
     }
 
     case 'duration': {
-      return `目安として${durationMin}分間行います。個人差があるので、自分のペースに合わせて調整してください。`;
+      return `${name}そのものに必ず${durationMin}分という決まりがあるわけではありません。AI先生では、まず${durationMin}分版を用意しています。自分のペースに合わせて調整してください。`;
     }
 
     case 'comparison': {
