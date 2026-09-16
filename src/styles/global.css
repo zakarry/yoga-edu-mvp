@@ -9548,6 +9548,23 @@ html, body {
 .sn-debug-panel p {
   margin: 0;
 }
+.sn-transition-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  border-radius: 20px;
+  border: 1px solid rgba(108, 138, 118, 0.15);
+  background: linear-gradient(180deg, #f7faf8 0%, #eef5f0 100%);
+}
+.sn-transition-msg {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--navy);
+  text-align: center;
+  margin: 0;
+  line-height: 1.6;
+}
 
 .sequence-select-grid {
   display: grid;

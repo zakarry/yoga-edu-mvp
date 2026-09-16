@@ -25,6 +25,7 @@ const BREATHING_COLOR: Record<string, string> = {
 };
 
 type TempoMode = 'beginner' | 'standard' | 'experienced';
+type Side = 'right' | 'left';
 
 const TEMPO_LABELS: Record<TempoMode, string> = {
   beginner: 'ゆっくり',
@@ -39,10 +40,15 @@ const STEP_DURATIONS: Record<TempoMode, number[]> = {
 };
 
 const POST_VOICE_BUFFER_MS = 700;
+const TRANSITION_DURATION_MS = 2000;
+
 const SURYA_AUDIO_KEYS = [
-  'voice-surya-01', 'voice-surya-02', 'voice-surya-03', 'voice-surya-04',
+  'voice-surya-01', 'voice-surya-02', 'voice-surya-03',
+  'voice-surya-04-right', 'voice-surya-04-left',
   'voice-surya-05', 'voice-surya-06', 'voice-surya-07', 'voice-surya-08',
-  'voice-surya-09', 'voice-surya-10', 'voice-surya-11', 'voice-surya-12',
+  'voice-surya-09-right', 'voice-surya-09-left',
+  'voice-surya-10', 'voice-surya-11', 'voice-surya-12',
+  'voice-surya-transition',
 ];
 
 interface Props {
@@ -50,10 +56,34 @@ interface Props {
   onComplete?: (roundsCompleted: number, durationSec: number) => void;
 }
 
+function getStepAudioKey(step: SequenceStep, side: Side): string | undefined {
+  if (side === 'left' && step.audioKeyLeft) return step.audioKeyLeft;
+  return step.audioKey;
+}
+
+function getStepInstruction(step: SequenceStep, side: Side): string[] {
+  if (side === 'left' && step.instructionLeft) return step.instructionLeft;
+  return step.instruction;
+}
+
+function getStepVoiceGuide(step: SequenceStep, side: Side): string[] {
+  if (side === 'left' && step.voiceGuideLeft) return step.voiceGuideLeft;
+  return step.voiceGuide;
+}
+
+function getStepImage(step: SequenceStep, side: Side): string | undefined {
+  if (side === 'left' && step.imageLeft) return step.imageLeft;
+  return step.image;
+}
+
+function shouldMirrorImage(step: SequenceStep, side: Side): boolean {
+  return side === 'left' && step.mirrorImageLeft === true;
+}
+
 export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
   const entry = getSequenceEntry(sequenceId);
   const [currentStep, setCurrentStep] = useState(0);
-  const [side, setSide] = useState<'right' | 'left'>('right');
+  const [side, setSide] = useState<Side>('right');
   const [round, setRound] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -62,6 +92,8 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
   const [completed, setCompleted] = useState(false);
   const [tempo, setTempo] = useState<TempoMode>('standard');
   const [showDebug, setShowDebug] = useState(false);
+  const [inTransition, setInTransition] = useState(false);
+  const [transitionMsg, setTransitionMsg] = useState('');
 
   const startTimeRef = useRef<number | null>(null);
   const stepTimeoutRef = useRef<number | null>(null);
@@ -95,12 +127,13 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
     }
   }, []);
 
-  const speakStep = useCallback((step: SequenceStep): Promise<void> => {
+  const speakStep = useCallback((step: SequenceStep, currentSide: Side): Promise<void> => {
     return new Promise<void>((resolve) => {
       const engine = engineRef.current ?? getVoiceGuideEngine();
       engineRef.current = engine;
-      const audioKey = step.audioKey;
-      const text = step.voiceGuide[0] ?? step.nameJa;
+      const audioKey = getStepAudioKey(step, currentSide);
+      const voiceGuide = getStepVoiceGuide(step, currentSide);
+      const text = voiceGuide[0] ?? step.nameJa;
       voiceEndedRef.current = false;
 
       const onVoiceEnd = () => {
@@ -128,7 +161,33 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
     });
   }, []);
 
-  const advanceStep = useCallback((stepIdx: number, currentSide: 'right' | 'left', currentRound: number) => {
+  const speakTransition = useCallback((text: string, audioKey: string): Promise<void> => {
+    return new Promise<void>((resolve) => {
+      const engine = engineRef.current ?? getVoiceGuideEngine();
+      engineRef.current = engine;
+      voiceEndedRef.current = false;
+
+      const onVoiceEnd = () => {
+        if (voiceEndedRef.current) return;
+        voiceEndedRef.current = true;
+        engine.setOnCueEnd(null);
+        resolve();
+      };
+
+      engine.setOnCueEnd(onVoiceEnd);
+      engine.speakByKey(audioKey, text);
+
+      window.setTimeout(() => {
+        if (!voiceEndedRef.current) {
+          voiceEndedRef.current = true;
+          engine.setOnCueEnd(null);
+          resolve();
+        }
+      }, 5000);
+    });
+  }, []);
+
+  const advanceStep = useCallback((stepIdx: number, currentSide: Side, currentRound: number) => {
     if (!entry) return;
     const totalSteps = entry.steps.length;
     const nextStep = stepIdx + 1;
@@ -137,8 +196,18 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
       setCurrentStep(nextStep);
     } else {
       if (currentSide === 'right') {
-        setSide('left');
-        setCurrentStep(0);
+        setInTransition(true);
+        setTransitionMsg('右側が終わりました。次は左側です。');
+        clearStepTimeout();
+
+        const run = async () => {
+          await speakTransition('右側が終わりました。次は左側です。', 'voice-surya-transition');
+          if (!isPlayingRef.current || isPausedRef.current) return;
+          setInTransition(false);
+          setSide('left');
+          setCurrentStep(0);
+        };
+        void run();
       } else {
         setCompleted(true);
         setIsPlaying(false);
@@ -146,33 +215,33 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
         onComplete?.(currentRound, totalSec);
       }
     }
-  }, [entry, onComplete]);
+  }, [entry, onComplete, clearStepTimeout, speakTransition]);
 
-  const runStepAuto = useCallback(async (stepIdx: number, currentSide: 'right' | 'left', currentRound: number) => {
-    if (!entry || isPausedRef.current || !isPlayingRef.current) return;
+  const runStepAuto = useCallback(async (stepIdx: number, currentSide: Side, currentRound: number) => {
+    if (!entry || isPausedRef.current || !isPlayingRef.current || inTransition) return;
     const step = entry.steps[stepIdx];
     const durationSec = STEP_DURATIONS[tempo][stepIdx] ?? 6;
 
-    await speakStep(step);
+    await speakStep(step, currentSide);
 
-    if (isPausedRef.current || !isPlayingRef.current) return;
+    if (isPausedRef.current || !isPlayingRef.current || inTransition) return;
 
     const remaining = Math.max(durationSec * 1000 - POST_VOICE_BUFFER_MS, 800);
 
     clearStepTimeout();
     stepTimeoutRef.current = window.setTimeout(() => {
       stepTimeoutRef.current = null;
-      if (!isPausedRef.current && isPlayingRef.current) {
+      if (!isPausedRef.current && isPlayingRef.current && !inTransition) {
         advanceStep(stepIdx, currentSide, currentRound);
       }
     }, remaining);
-  }, [entry, tempo, speakStep, advanceStep, clearStepTimeout]);
+  }, [entry, tempo, speakStep, advanceStep, clearStepTimeout, inTransition]);
 
   useEffect(() => {
-    if (!isPlaying || isPaused || !entry) return;
+    if (!isPlaying || isPaused || !entry || inTransition) return;
     runStepAuto(currentStep, side, round);
     return () => clearStepTimeout();
-  }, [currentStep, isPlaying, isPaused]);
+  }, [currentStep, isPlaying, isPaused, inTransition]);
 
   const handleStart = useCallback(() => {
     if (!entry) return;
@@ -186,6 +255,7 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
     setRound(1);
     setElapsedSec(0);
     setShowDetail(false);
+    setInTransition(false);
     startTimeRef.current = Date.now();
   }, [entry]);
 
@@ -232,6 +302,10 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
   const totalSteps = entry.steps.length;
   const progress = ((currentStep + 1) / totalSteps) * 100;
   const diag = showDebug ? getAudioDiagnostic() : null;
+  const sideNum = side === 'right' ? 1 : 2;
+  const instruction = getStepInstruction(step, side);
+  const stepImage = getStepImage(step, side);
+  const mirror = shouldMirrorImage(step, side);
 
   return (
     <div className="surya-namaskar-experience">
@@ -239,9 +313,8 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
         <h3 className="sn-title">{entry.nameJa}</h3>
         <p className="sn-subtitle">{entry.nameEn}</p>
         <div className="sn-meta-row">
-          <span className="sn-badge sn-badge-steps">12ステップ</span>
           <span className="sn-badge sn-badge-side">
-            {side === 'right' ? '右側' : '左側'}
+            {side === 'right' ? '右側' : '左側'} {sideNum} / 2
           </span>
           {round > 1 && <span className="sn-badge sn-badge-round">{round}ラウンド目</span>}
         </div>
@@ -268,51 +341,62 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
         <div className="sn-progress-fill" style={{ width: `${progress}%` }} />
       </div>
 
-      <div className="sn-step-display">
-        <div className="sn-step-counter">
-          STEP {currentStep + 1} / {totalSteps}
+      {inTransition ? (
+        <div className="sn-transition-display">
+          <p className="sn-transition-msg">{transitionMsg}</p>
         </div>
-
-        {step.image && (
-          <div className="sn-step-image-wrap">
-            <img src={step.image} alt={step.nameJa} className="sn-step-image" />
+      ) : (
+        <div className="sn-step-display">
+          <div className="sn-step-counter">
+            STEP {currentStep + 1} / {totalSteps}
           </div>
-        )}
 
-        <div className="sn-step-name-ja">{step.nameJa}</div>
-        {step.nameSanskrit && (
-          <div className="sn-step-name-sanskrit">{step.nameSanskrit}</div>
-        )}
+          {stepImage && (
+            <div className="sn-step-image-wrap">
+              <img
+                src={stepImage}
+                alt={step.nameJa}
+                className="sn-step-image"
+                style={mirror ? { transform: 'scaleX(-1)' } : undefined}
+              />
+            </div>
+          )}
 
-        <div className="sn-breathing-indicator" style={{ color: BREATHING_COLOR[step.breathing] ?? 'var(--text-secondary)' }}>
-          <span className="sn-breathing-label">呼吸：</span>
-          <span className="sn-breathing-value">{BREATHING_LABEL[step.breathing] ?? step.breathing}</span>
-        </div>
+          <div className="sn-step-name-ja">{step.nameJa}</div>
+          {step.nameSanskrit && (
+            <div className="sn-step-name-sanskrit">{step.nameSanskrit}</div>
+          )}
 
-        <div className="sn-step-instruction">
-          {step.instruction.join(' ')}
-        </div>
+          <div className="sn-breathing-indicator" style={{ color: BREATHING_COLOR[step.breathing] ?? 'var(--text-secondary)' }}>
+            <span className="sn-breathing-label">呼吸：</span>
+            <span className="sn-breathing-value">{BREATHING_LABEL[step.breathing] ?? step.breathing}</span>
+          </div>
 
-        {!showDetail && (
-          <button className="ghost-button sn-detail-toggle" onClick={() => setShowDetail(true)}>
-            詳しく知る
-          </button>
-        )}
-        {showDetail && (
-          <div className="sn-detail-panel">
-            <p className="sn-detail-text">{step.instruction.join(' ')}</p>
-            <button className="ghost-button sn-detail-toggle" onClick={() => setShowDetail(false)}>
-              閉じる
+          <div className="sn-step-instruction">
+            {instruction.join(' ')}
+          </div>
+
+          {!showDetail && (
+            <button className="ghost-button sn-detail-toggle" onClick={() => setShowDetail(true)}>
+              詳しく知る
             </button>
-          </div>
-        )}
-      </div>
+          )}
+          {showDetail && (
+            <div className="sn-detail-panel">
+              <p className="sn-detail-text">{instruction.join(' ')}</p>
+              <button className="ghost-button sn-detail-toggle" onClick={() => setShowDetail(false)}>
+                閉じる
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="sn-controls">
         <button
           className="ghost-button sn-nav-btn"
           onClick={handlePrev}
-          disabled={currentStep === 0 || !isPlaying}
+          disabled={currentStep === 0 || !isPlaying || inTransition}
         >
           前へ
         </button>
@@ -323,7 +407,7 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
           </button>
         )}
 
-        {isPlaying && !isPaused && (
+        {isPlaying && !isPaused && !inTransition && (
           <button className="secondary-button sn-next-btn" onClick={handlePause}>
             一時停止
           </button>
@@ -335,7 +419,7 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
           </button>
         )}
 
-        {isPlaying && (
+        {isPlaying && !inTransition && (
           <button className="secondary-button sn-next-btn" onClick={handleNext}>
             {currentStep + 1 < totalSteps ? '次へ' : side === 'right' ? '反対側へ' : '完了'}
           </button>
@@ -343,7 +427,7 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
 
         {completed && (
           <div className="sn-complete-message">
-            <p style={{ fontWeight: 600, color: 'var(--green-strong)' }}>1ラウンド完了！お疲れさまでした。</p>
+            <p style={{ fontWeight: 600, color: 'var(--green-strong)' }}>左右の太陽礼拝が終わりました。1ラウンド完了です。お疲れさまでした。</p>
           </div>
         )}
       </div>

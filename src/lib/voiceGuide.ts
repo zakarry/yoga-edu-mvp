@@ -236,6 +236,11 @@ const PHRASE_MAP: Record<string, string> = {
   '吸いながら、胸を起こします。': 'voice-surya-07',
   '吸いながら、反対側の脚を前へ出します。': 'voice-surya-09',
   '自然な呼吸に戻り、胸の前で合掌します。': 'voice-surya-12',
+  '吸いながら、右脚を後ろへ引き、右膝を床につきます。': 'voice-surya-04-right',
+  '吸いながら、左脚を後ろへ引き、左膝を床につきます。': 'voice-surya-04-left',
+  '吸いながら、右脚を両手の間へ踏み込み、左膝を床につきます。': 'voice-surya-09-right',
+  '吸いながら、左脚を両手の間へ踏み込み、右膝を床につきます。': 'voice-surya-09-left',
+  '右側が終わりました。次は左側です。': 'voice-surya-transition',
 };
 
 function getVoiceKey(text: string): string | null {

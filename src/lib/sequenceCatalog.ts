@@ -14,7 +14,12 @@ export interface SequenceStep {
   breathing: SequenceBreathing;
   voiceGuide: string[];
   audioKey?: string;
+  audioKeyLeft?: string;
+  instructionLeft?: string[];
+  voiceGuideLeft?: string[];
   image?: string;
+  imageLeft?: string;
+  mirrorImageLeft?: boolean;
   knowledgeRef?: string;
 }
 
@@ -86,11 +91,15 @@ export const SEQUENCE_CATALOG: SequenceCatalogEntry[] = [
         stepNumber: 4,
         nameJa: 'アシュヴァ・サンチャラナーサナ',
         nameSanskrit: 'Ashva Sanchalanasana',
-        instruction: ['片脚を後方へ引き、後ろの膝を床へ下ろす。'],
+        instruction: ['右脚を後方へ引き、右膝を床へ下ろす。'],
+        instructionLeft: ['左脚を後方へ引き、左膝を床へ下ろす。'],
         breathing: 'inhale',
-        voiceGuide: ['吸いながら、右脚を後ろへ引きます。'],
-        audioKey: 'voice-surya-04',
+        voiceGuide: ['吸いながら、右脚を後ろへ引き、右膝を床につきます。'],
+        voiceGuideLeft: ['吸いながら、左脚を後ろへ引き、左膝を床につきます。'],
+        audioKey: 'voice-surya-04-right',
+        audioKeyLeft: 'voice-surya-04-left',
         image: '/surya-namaskar/04-ashva-sanchalanasana.webp',
+        mirrorImageLeft: true,
       },
       {
         stepNumber: 5,
@@ -136,11 +145,15 @@ export const SEQUENCE_CATALOG: SequenceCatalogEntry[] = [
         stepNumber: 9,
         nameJa: 'アシュヴァ・サンチャラナーサナ（反対側）',
         nameSanskrit: 'Ashva Sanchalanasana',
-        instruction: ['反対側の脚を前へ出す。'],
+        instruction: ['右脚を両手の間へ踏み込み、左膝を床へ下ろす。'],
+        instructionLeft: ['左脚を両手の間へ踏み込み、右膝を床へ下ろす。'],
         breathing: 'inhale',
-        voiceGuide: ['吸いながら、反対側の脚を前へ出します。'],
-        audioKey: 'voice-surya-09',
+        voiceGuide: ['吸いながら、右脚を両手の間へ踏み込み、左膝を床につきます。'],
+        voiceGuideLeft: ['吸いながら、左脚を両手の間へ踏み込み、右膝を床につきます。'],
+        audioKey: 'voice-surya-09-right',
+        audioKeyLeft: 'voice-surya-09-left',
         image: '/surya-namaskar/09-ashva-sanchalanasana.webp',
+        mirrorImageLeft: true,
       },
       {
         stepNumber: 10,
