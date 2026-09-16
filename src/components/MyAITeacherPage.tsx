@@ -499,6 +499,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const voiceGuideRef = useRef<VoiceGuideSequence | null>(null);
   const firedCuesRef = useRef<Set<string>>(new Set());
   const lastBoxPhaseRef = useRef<string>('');
+  const pendingAdvanceRef = useRef(false);
   const ttsAvailable = isTTSAvailable();
   const voiceEngine = getVoiceGuideEngine();
   const [engineType, setEngineType] = useState<EngineType>(voiceEngine.type);
@@ -982,16 +983,38 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             const elapsedMin = Math.max(1, Math.round(elapsedSec / 60));
             setPracticeDuration(elapsedMin);
           }
-          setPracticePhase('done');
-          voiceEngine.stop();
-          setCurrentSubtitle('');
+          const seq = voiceGuideRef.current;
+          const hasFinalCuePlaying = voiceGuideOn && voiceEngine.isPlaying() && seq?.cues.some((c) => c.isFinalCue);
+          if (hasFinalCuePlaying) {
+            pendingAdvanceRef.current = true;
+            const safetyTimeout = window.setTimeout(() => {
+              if (!pendingAdvanceRef.current) return;
+              pendingAdvanceRef.current = false;
+              voiceEngine.setOnCueEnd(null);
+              setPracticePhase('done');
+              voiceEngine.stop();
+              setCurrentSubtitle('');
+            }, 10000);
+            voiceEngine.setOnCueEnd(() => {
+              window.clearTimeout(safetyTimeout);
+              pendingAdvanceRef.current = false;
+              voiceEngine.setOnCueEnd(null);
+              setPracticePhase('done');
+              voiceEngine.stop();
+              setCurrentSubtitle('');
+            });
+          } else {
+            setPracticePhase('done');
+            voiceEngine.stop();
+            setCurrentSubtitle('');
+          }
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => window.clearInterval(tick);
-  }, [timerRunning, selectedGuide, practicePhase, practiceDuration]);
+  }, [timerRunning, selectedGuide, practicePhase, practiceDuration, voiceEngine, voiceGuideOn]);
 
   const fireCue = useCallback((text: string, audioKey?: string) => {
     if (!voiceGuideOn) return;
@@ -1067,6 +1090,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   }, [simpleTimerRemaining, timerRunning, practicePaused, selectedGuide, fireCue]);
 
   const handleAbortPractice = useCallback(() => {
+    pendingAdvanceRef.current = false;
+    voiceEngine.setOnCueEnd(null);
     setTimerRunning(false);
     setTimerPhaseIdx(0);
     setTimerRound(1);
@@ -1100,6 +1125,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   }, [practiceActive, practicePhase]);
 
   const confirmPracticeExit = useCallback(() => {
+    pendingAdvanceRef.current = false;
+    voiceEngine.setOnCueEnd(null);
     setShowExitConfirm(false);
     setTimerRunning(false);
     setPracticeActive(false);
@@ -1146,6 +1173,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const startVoiceGuide = useCallback((pose: ConcretePose) => {
     if (!voiceGuideOn) return;
     unlockAudioContext();
+    pendingAdvanceRef.current = false;
+    voiceEngine.setOnCueEnd(null);
     const seq = buildVoiceGuide(pose);
     voiceGuideRef.current = seq;
     firedCuesRef.current = new Set();

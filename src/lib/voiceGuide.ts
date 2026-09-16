@@ -4,6 +4,7 @@ export interface VoiceCue {
   text: string;
   atSeconds: number;
   audioKey?: string;
+  isFinalCue?: boolean;
 }
 
 export interface VoiceGuideSequence {
@@ -24,6 +25,7 @@ export interface VoiceGuideEngine {
   resume(): void;
   unlock(): void;
   getAudioDuration(key: string): number | null;
+  isPlaying(): boolean;
   setOnCueEnd(cb: (() => void) | null): void;
   getStatus(): { status: VoiceStatus; voiceName: string | null; error: string | null };
 }
@@ -337,6 +339,7 @@ class BrowserTTSEngine implements VoiceGuideEngine {
   resume() { resumeSpeech(); }
   unlock() {}
   getAudioDuration(_key: string): number | null { return null; }
+  isPlaying(): boolean { return isTTSAvailable() && window.speechSynthesis.speaking; }
   setOnCueEnd(cb: (() => void) | null): void { setCueEndCallback(cb); }
   getStatus() { return getVoiceStatus(); }
 }
@@ -506,6 +509,13 @@ class AudioFileEngine implements VoiceGuideEngine {
     return null;
   }
 
+  isPlaying(): boolean {
+    if (this.currentSource) return true;
+    if (this.fallbackAudio && !this.fallbackAudio.ended) return true;
+    if (this.usingTTS && isTTSAvailable() && window.speechSynthesis.speaking) return true;
+    return false;
+  }
+
   setOnCueEnd(cb: (() => void) | null): void { setCueEndCallback(cb); }
 
   getStatus() {
@@ -638,7 +648,8 @@ export function buildAsanaVoiceGuide(poseId: string, poseName: string, totalMinu
     }
   }
   if (vg?.breathingCue) {
-    cues.push({ text: vg.breathingCue, atSeconds: Math.min(10, Math.max(0, totalSeconds - 30)), audioKey: vg.breathingCueAudioKey });
+    const breathAt = Math.max(0, totalSeconds - 30);
+    cues.push({ text: vg.breathingCue, atSeconds: breathAt, audioKey: vg.breathingCueAudioKey, isFinalCue: true });
   }
   const secondRound = vg?.secondRound ?? [];
   const reviewStart = Math.max(35, Math.floor(totalSeconds * 0.45));
