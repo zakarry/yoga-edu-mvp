@@ -97,11 +97,12 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
 
   const startTimeRef = useRef<number | null>(null);
   const stepTimeoutRef = useRef<number | null>(null);
-  const voiceEndedRef = useRef(false);
   const engineRef = useRef<VoiceGuideEngine | null>(null);
   const isPausedRef = useRef(false);
   const isPlayingRef = useRef(false);
   const tempoRef = useRef<TempoMode>('standard');
+  const inTransitionRef = useRef(false);
+  const runStepTokenRef = useRef(0);
 
   useEffect(() => {
     isPausedRef.current = isPaused;
@@ -114,6 +115,10 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
   useEffect(() => {
     tempoRef.current = tempo;
   }, [tempo]);
+
+  useEffect(() => {
+    inTransitionRef.current = inTransition;
+  }, [inTransition]);
 
   useEffect(() => {
     if (!isPlaying || isPaused) return;
@@ -144,16 +149,17 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
       const audioKey = getStepAudioKey(step, currentSide);
       const voiceGuide = getStepVoiceGuide(step, currentSide);
       const text = voiceGuide[0] ?? step.nameJa;
-      voiceEndedRef.current = false;
 
       const durationSec = STEP_DURATIONS[tempoRef.current][step.stepNumber - 1] ?? 6;
       const fallbackMs = durationSec * 1000;
 
       addDebugLog(`speakStep side=${currentSide} step=${step.stepNumber} key=${audioKey ?? 'none'}`);
 
+      let settled = false;
+
       const onVoiceEnd = () => {
-        if (voiceEndedRef.current) return;
-        voiceEndedRef.current = true;
+        if (settled) return;
+        settled = true;
         engine.setOnCueEnd(null);
         addDebugLog(`voiceEnded side=${currentSide} step=${step.stepNumber}`);
         resolve();
@@ -168,8 +174,8 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
       }
 
       window.setTimeout(() => {
-        if (!voiceEndedRef.current) {
-          voiceEndedRef.current = true;
+        if (!settled) {
+          settled = true;
           engine.setOnCueEnd(null);
           addDebugLog(`fallbackTimer side=${currentSide} step=${step.stepNumber} (${fallbackMs}ms)`);
           resolve();
@@ -182,13 +188,14 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
     return new Promise<void>((resolve) => {
       const engine = engineRef.current ?? getVoiceGuideEngine();
       engineRef.current = engine;
-      voiceEndedRef.current = false;
 
       addDebugLog(`speakTransition key=${audioKey}`);
 
+      let settled = false;
+
       const onVoiceEnd = () => {
-        if (voiceEndedRef.current) return;
-        voiceEndedRef.current = true;
+        if (settled) return;
+        settled = true;
         engine.setOnCueEnd(null);
         addDebugLog('transitionEnded');
         resolve();
@@ -198,8 +205,8 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
       engine.speakByKey(audioKey, text);
 
       window.setTimeout(() => {
-        if (!voiceEndedRef.current) {
-          voiceEndedRef.current = true;
+        if (!settled) {
+          settled = true;
           engine.setOnCueEnd(null);
           addDebugLog('transitionFallback');
           resolve();
@@ -220,12 +227,14 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
     } else {
       if (currentSide === 'right') {
         setInTransition(true);
+        inTransitionRef.current = true;
         setTransitionMsg('右側が終わりました。次は左側です。');
         clearStepTimeout();
 
         const run = async () => {
           await speakTransition('右側が終わりました。次は左側です。', 'voice-surya-transition');
           if (!isPlayingRef.current || isPausedRef.current) return;
+          inTransitionRef.current = false;
           setInTransition(false);
           setSide('left');
           setCurrentStep(0);
@@ -242,31 +251,32 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
   }, [entry, onComplete, clearStepTimeout, speakTransition, addDebugLog]);
 
   const runStepAuto = useCallback(async (stepIdx: number, currentSide: Side, currentRound: number) => {
-    if (!entry || isPausedRef.current || !isPlayingRef.current || inTransition) return;
+    if (!entry || isPausedRef.current || !isPlayingRef.current || inTransitionRef.current) return;
+    const token = ++runStepTokenRef.current;
     const step = entry.steps[stepIdx];
     const durationSec = STEP_DURATIONS[tempoRef.current][stepIdx] ?? 6;
 
     await speakStep(step, currentSide);
 
-    if (isPausedRef.current || !isPlayingRef.current || inTransition) return;
+    if (token !== runStepTokenRef.current) return;
+    if (isPausedRef.current || !isPlayingRef.current || inTransitionRef.current) return;
 
     const remaining = Math.max(durationSec * 1000 - POST_VOICE_BUFFER_MS, 800);
 
     clearStepTimeout();
     stepTimeoutRef.current = window.setTimeout(() => {
       stepTimeoutRef.current = null;
-      if (!isPausedRef.current && isPlayingRef.current && !inTransition) {
+      if (token !== runStepTokenRef.current) return;
+      if (!isPausedRef.current && isPlayingRef.current && !inTransitionRef.current) {
         advanceStep(stepIdx, currentSide, currentRound);
       }
     }, remaining);
-  }, [entry, speakStep, advanceStep, clearStepTimeout, inTransition]);
+  }, [entry, speakStep, advanceStep, clearStepTimeout]);
 
-  // CRITICAL: `side` is in the dependency array so the effect re-fires
-  // when transitioning from right to left, even if currentStep is the same index.
   useEffect(() => {
     if (!isPlaying || isPaused || !entry || inTransition) return;
     runStepAuto(currentStep, side, round);
-    return () => clearStepTimeout();
+    return () => { clearStepTimeout(); ++runStepTokenRef.current; };
   }, [currentStep, side, isPlaying, isPaused, inTransition]);
 
   const handleStart = useCallback(() => {
@@ -282,6 +292,8 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
     setElapsedSec(0);
     setShowDetail(false);
     setInTransition(false);
+    inTransitionRef.current = false;
+    runStepTokenRef.current++;
     setDebugLog([]);
     startTimeRef.current = Date.now();
     addDebugLog('practice started');

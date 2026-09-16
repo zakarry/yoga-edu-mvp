@@ -377,6 +377,7 @@ class AudioFileEngine implements VoiceGuideEngine {
   }
 
   speakByKey(key: string, fallbackText?: string): void {
+    this.stop();
     lastDiagnostic.lastCue = key;
     const ctx = getAudioContext();
     if (!ctx) {
