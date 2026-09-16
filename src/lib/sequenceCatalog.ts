@@ -74,7 +74,8 @@ export const SEQUENCE_CATALOG: SequenceCatalogEntry[] = [
         nameSanskrit: 'Hastottanasana',
         instruction: ['合掌した手を頭上へ上げ、無理のない範囲で上体を後方へ伸ばす。'],
         breathing: 'inhale',
-        voiceGuide: ['ハストーッターナーサナ。吸いながら、両腕を頭上へ伸ばします。'],
+        voiceGuide: ['吸いながら、両腕を頭上へ伸ばします。'],
+        audioKey: 'voice-surya-02',
         image: '/surya-namaskar/02-hastottanasana.webp',
       },
       {

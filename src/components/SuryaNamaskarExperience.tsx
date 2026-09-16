@@ -40,7 +40,6 @@ const STEP_DURATIONS: Record<TempoMode, number[]> = {
 };
 
 const POST_VOICE_BUFFER_MS = 700;
-const TRANSITION_DURATION_MS = 2000;
 
 const SURYA_AUDIO_KEYS = [
   'voice-surya-01', 'voice-surya-02', 'voice-surya-03',
@@ -94,6 +93,7 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
   const [showDebug, setShowDebug] = useState(false);
   const [inTransition, setInTransition] = useState(false);
   const [transitionMsg, setTransitionMsg] = useState('');
+  const [debugLog, setDebugLog] = useState<string[]>([]);
 
   const startTimeRef = useRef<number | null>(null);
   const stepTimeoutRef = useRef<number | null>(null);
@@ -101,6 +101,7 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
   const engineRef = useRef<VoiceGuideEngine | null>(null);
   const isPausedRef = useRef(false);
   const isPlayingRef = useRef(false);
+  const tempoRef = useRef<TempoMode>('standard');
 
   useEffect(() => {
     isPausedRef.current = isPaused;
@@ -111,6 +112,10 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
   }, [isPlaying]);
 
   useEffect(() => {
+    tempoRef.current = tempo;
+  }, [tempo]);
+
+  useEffect(() => {
     if (!isPlaying || isPaused) return;
     const timer = window.setInterval(() => {
       if (startTimeRef.current !== null) {
@@ -119,6 +124,11 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
     }, 1000);
     return () => window.clearInterval(timer);
   }, [isPlaying, isPaused]);
+
+  const addDebugLog = useCallback((msg: string) => {
+    const ts = new Date().toLocaleTimeString();
+    setDebugLog((prev) => [...prev.slice(-8), `[${ts}] ${msg}`]);
+  }, []);
 
   const clearStepTimeout = useCallback(() => {
     if (stepTimeoutRef.current !== null) {
@@ -136,10 +146,16 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
       const text = voiceGuide[0] ?? step.nameJa;
       voiceEndedRef.current = false;
 
+      const durationSec = STEP_DURATIONS[tempoRef.current][step.stepNumber - 1] ?? 6;
+      const fallbackMs = durationSec * 1000;
+
+      addDebugLog(`speakStep side=${currentSide} step=${step.stepNumber} key=${audioKey ?? 'none'}`);
+
       const onVoiceEnd = () => {
         if (voiceEndedRef.current) return;
         voiceEndedRef.current = true;
         engine.setOnCueEnd(null);
+        addDebugLog(`voiceEnded side=${currentSide} step=${step.stepNumber}`);
         resolve();
       };
 
@@ -155,11 +171,12 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
         if (!voiceEndedRef.current) {
           voiceEndedRef.current = true;
           engine.setOnCueEnd(null);
+          addDebugLog(`fallbackTimer side=${currentSide} step=${step.stepNumber} (${fallbackMs}ms)`);
           resolve();
         }
-      }, 6000);
+      }, fallbackMs);
     });
-  }, []);
+  }, [addDebugLog]);
 
   const speakTransition = useCallback((text: string, audioKey: string): Promise<void> => {
     return new Promise<void>((resolve) => {
@@ -167,10 +184,13 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
       engineRef.current = engine;
       voiceEndedRef.current = false;
 
+      addDebugLog(`speakTransition key=${audioKey}`);
+
       const onVoiceEnd = () => {
         if (voiceEndedRef.current) return;
         voiceEndedRef.current = true;
         engine.setOnCueEnd(null);
+        addDebugLog('transitionEnded');
         resolve();
       };
 
@@ -181,16 +201,19 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
         if (!voiceEndedRef.current) {
           voiceEndedRef.current = true;
           engine.setOnCueEnd(null);
+          addDebugLog('transitionFallback');
           resolve();
         }
       }, 5000);
     });
-  }, []);
+  }, [addDebugLog]);
 
   const advanceStep = useCallback((stepIdx: number, currentSide: Side, currentRound: number) => {
     if (!entry) return;
     const totalSteps = entry.steps.length;
     const nextStep = stepIdx + 1;
+
+    addDebugLog(`advanceStep from=${stepIdx} side=${currentSide} next=${nextStep}`);
 
     if (nextStep < totalSteps) {
       setCurrentStep(nextStep);
@@ -206,6 +229,7 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
           setInTransition(false);
           setSide('left');
           setCurrentStep(0);
+          addDebugLog('transitioned to left side, step=0');
         };
         void run();
       } else {
@@ -215,12 +239,12 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
         onComplete?.(currentRound, totalSec);
       }
     }
-  }, [entry, onComplete, clearStepTimeout, speakTransition]);
+  }, [entry, onComplete, clearStepTimeout, speakTransition, addDebugLog]);
 
   const runStepAuto = useCallback(async (stepIdx: number, currentSide: Side, currentRound: number) => {
     if (!entry || isPausedRef.current || !isPlayingRef.current || inTransition) return;
     const step = entry.steps[stepIdx];
-    const durationSec = STEP_DURATIONS[tempo][stepIdx] ?? 6;
+    const durationSec = STEP_DURATIONS[tempoRef.current][stepIdx] ?? 6;
 
     await speakStep(step, currentSide);
 
@@ -235,13 +259,15 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
         advanceStep(stepIdx, currentSide, currentRound);
       }
     }, remaining);
-  }, [entry, tempo, speakStep, advanceStep, clearStepTimeout, inTransition]);
+  }, [entry, speakStep, advanceStep, clearStepTimeout, inTransition]);
 
+  // CRITICAL: `side` is in the dependency array so the effect re-fires
+  // when transitioning from right to left, even if currentStep is the same index.
   useEffect(() => {
     if (!isPlaying || isPaused || !entry || inTransition) return;
     runStepAuto(currentStep, side, round);
     return () => clearStepTimeout();
-  }, [currentStep, isPlaying, isPaused, inTransition]);
+  }, [currentStep, side, isPlaying, isPaused, inTransition]);
 
   const handleStart = useCallback(() => {
     if (!entry) return;
@@ -256,19 +282,23 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
     setElapsedSec(0);
     setShowDetail(false);
     setInTransition(false);
+    setDebugLog([]);
     startTimeRef.current = Date.now();
-  }, [entry]);
+    addDebugLog('practice started');
+  }, [entry, addDebugLog]);
 
   const handlePause = useCallback(() => {
     setIsPaused(true);
     clearStepTimeout();
     const engine = engineRef.current ?? getVoiceGuideEngine();
     engine.stop();
-  }, [clearStepTimeout]);
+    addDebugLog('paused');
+  }, [clearStepTimeout, addDebugLog]);
 
   const handleResume = useCallback(() => {
     setIsPaused(false);
-  }, []);
+    addDebugLog('resumed');
+  }, [addDebugLog]);
 
   const handleNext = useCallback(() => {
     if (!entry || completed) return;
@@ -457,6 +487,11 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
           <p>lastCue: {diag.lastCue ?? '—'}</p>
           <p>lastPlayResult: {diag.lastPlayResult ?? '—'}</p>
           <p>lastError: {diag.lastError ?? '—'}</p>
+          <div style={{ marginTop: 8, borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 8 }}>
+            {debugLog.map((line, i) => (
+              <p key={i} style={{ margin: '2px 0' }}>{line}</p>
+            ))}
+          </div>
         </div>
       )}
     </div>
