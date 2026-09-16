@@ -10,6 +10,7 @@ export interface Profile {
   area: string | null;
   created_at: string;
   updated_at: string;
+  is_admin?: boolean;
 }
 
 export interface PrivacySettings {
