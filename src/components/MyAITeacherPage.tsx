@@ -16,7 +16,7 @@ import {
 import type { DiagnosisRecord, SafetyState } from '../services/diagnosisService';
 import { buildTeacherContext, type TeacherContext } from '../services/teacherContextService';
 import { generateTodayPlan, type TodayPlan } from '../services/todayPlannerService';
-import { generateTeacherResponse, generateNextSuggestion, type ConversationContext } from '../services/teacherResponseService';
+import { generateTeacherResponse, generateNextSuggestion, type ConversationContext, type TeacherResponseAction } from '../services/teacherResponseService';
 import { attachKnowledgeToTodayPlan, fetchKnowledgeExplanation, type TodayPlanWithKnowledge } from '../services/todayPlanKnowledgeService';
 import type { KnowledgeExplanation } from '../services/teacherKnowledgeService';
 import { runLLMRequestDryRun, type DryRunResult } from '../services/llmRequestDryRun';
@@ -306,6 +306,7 @@ interface ChatMessage {
   text: string;
   isSafety?: boolean;
   knowledgeUsed?: boolean;
+  action?: TeacherResponseAction;
 }
 
 function buildLocalContextFast(growth: AITeacherGrowth, sessionIntent?: ConversationContext, todayContext?: TodayContext): TeacherContext {
@@ -480,6 +481,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [formTeachingLang, setFormTeachingLang] = useState<LangCode>('ja');
   const [demoMsgIdx, setDemoMsgIdx] = useState(0);
   const [chatTyping, setChatTyping] = useState(false);
+  const [returnFromChat, setReturnFromChat] = useState(false);
   const [selectedGuide, setSelectedGuide] = useState<PracticeGuide | null>(null);
   const [practicePhase, setPracticePhase] = useState<'guide' | 'active' | 'done'>('guide');
   const [timerRunning, setTimerRunning] = useState(false);
@@ -855,6 +857,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         text: response.text,
         isSafety: response.isSafety,
         knowledgeUsed: response.knowledgeUsed,
+        action: response.action,
       };
       setChatMessages((prev) => [...prev, reply]);
       setChatTyping(false);
@@ -863,6 +866,50 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       }
     }, delay);
   }, [chatInput, persona, teacherContext, growth, conversationContext]);
+
+  const handlePracticeAction = useCallback((action: TeacherResponseAction) => {
+    if (!action.targetId) return;
+    setReturnFromChat(true);
+    if (action.type === 'start_pose') {
+      const pose = getPoseById(action.targetId);
+      if (pose) {
+        setConcretePosesOverride([{ ...pose, defaultMinutes: pose.defaultMinutes }]);
+        setPracticeType('asana');
+        setSelectedGuide(null);
+        setPracticePhase('guide');
+        setPosePhase('list');
+        setStep('step6');
+      }
+    } else if (action.type === 'start_breathwork') {
+      unlockBreathworkAudio();
+      setSelectedBreathworkId(action.targetId);
+      setDirectPractice({ id: action.targetId, type: 'pranayama' });
+      setPracticeType('pranayama');
+      setPracticePhase('active');
+      setPracticeActive(true);
+      setPracticeAborted(false);
+      setPracticeSessionId(crypto.randomUUID());
+      setStep('step6');
+    } else if (action.type === 'start_meditation') {
+      setSelectedMeditationId(action.targetId);
+      setPracticeType('dhyana');
+      setPracticePhase('active');
+      setPracticeActive(true);
+      setPracticeAborted(false);
+      setPracticeSessionId(crypto.randomUUID());
+      setStep('step6');
+    } else if (action.type === 'start_sequence') {
+      setPracticeType('sequence');
+      setSelectedMeditationId(null);
+      setSelectedBreathworkId(null);
+      setDirectPractice(null);
+      setPracticePhase('guide');
+      setPosePhase('list');
+      setStep('step6');
+    } else if (action.type === 'open_today_plan') {
+      setStep('step2');
+    }
+  }, []);
 
   useEffect(() => {
     if (!timerRunning || !selectedGuide?.hasTimer) return;
@@ -1007,7 +1054,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPracticePaused(false);
     voiceEngine.stop();
     setCurrentSubtitle('');
-  }, [voiceEngine]);
+    if (returnFromChat) {
+      setStep('step5');
+    }
+  }, [voiceEngine, returnFromChat]);
 
   const handlePracticeBack = useCallback(() => {
     if (practiceActive && practicePhase === 'active') {
@@ -1038,7 +1088,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPoseElapsedTotal(0);
     setSessionStartedAt(null);
     setPracticeSessionId(null);
-  }, [voiceEngine, selectedBreathworkId, selectedMeditationId]);
+    if (returnFromChat) {
+      setStep('step5');
+    }
+  }, [voiceEngine, selectedBreathworkId, selectedMeditationId, returnFromChat]);
 
   useEffect(() => {
     if (step !== 'step6') return;
@@ -1049,7 +1102,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         history.pushState({ step6: true }, '');
       } else {
         confirmPracticeExit();
-        setStep('home');
+        setStep(returnFromChat ? 'step5' : 'home');
       }
     };
     window.addEventListener('popstate', onPop);
@@ -1820,6 +1873,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   <span className="chat-role">{msg.role === 'teacher' ? (persona?.name ?? 'AI先生') : 'あなた'}</span>
                   <p>{msg.text}</p>
                   {msg.knowledgeUsed && <span className="chat-knowledge-badge">Yoga Knowledgeを参考にしています</span>}
+                  {msg.action && msg.action.type !== 'none' && msg.action.label && (
+                    <div className="chat-cta-card">
+                      <span className="chat-cta-label">このまま実践しますか？</span>
+                      <button className="primary-button chat-cta-btn" onClick={() => handlePracticeAction(msg.action!)}>{msg.action.label}</button>
+                    </div>
+                  )}
                 </div>
               ))}
               {chatTyping && (
@@ -2747,6 +2806,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           )}
           <div className="ai-teacher-step7-cta">
             <button className="primary-button" onClick={onOpenMyPage}>myYOGAカルテで実践履歴を見る</button>
+            {returnFromChat && (
+              <button className="secondary-button" onClick={() => { setReturnFromChat(false); setStep('step5'); }}>AI先生に戻る</button>
+            )}
           </div>
           <p className="ai-teacher-safety-note">気分は感じ方のメモであり、医療診断ではありません。</p>
         </section>

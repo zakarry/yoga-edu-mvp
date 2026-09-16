@@ -5541,6 +5541,26 @@ h1 {
   font-weight: 600;
   color: var(--green-strong);
 }
+.chat-cta-card {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(108, 138, 118, 0.06);
+  border: 1px solid rgba(108, 138, 118, 0.14);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.chat-cta-label {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.chat-cta-btn {
+  font-size: 14px;
+  padding: 10px 20px;
+}
 .ai-teacher-chat-input-row {
   display: flex;
   gap: 8px;

@@ -31,6 +31,20 @@ export interface ConversationContext {
   lastQuestionType?: QuestionType;
 }
 
+export type TeacherResponseActionType =
+  | 'start_pose'
+  | 'start_breathwork'
+  | 'start_meditation'
+  | 'start_sequence'
+  | 'open_today_plan'
+  | 'none';
+
+export interface TeacherResponseAction {
+  type: TeacherResponseActionType;
+  targetId?: string;
+  label?: string;
+}
+
 export interface TeacherResponse {
   text: string;
   isSafety?: boolean;
@@ -38,6 +52,7 @@ export interface TeacherResponse {
   knowledgeMasterId?: string;
   knowledgeTitle?: string;
   updatedContext?: ConversationContext;
+  action?: TeacherResponseAction;
 }
 
 
@@ -124,6 +139,7 @@ function buildUserStateResponse(
 
   return {
     text: `${name}です。${empathy} ${suggestion}\n${followUp}`,
+    action: { type: 'open_today_plan', label: '今日のヨガを作る' },
     updatedContext: { ...prevContext, lastUserMessage: userMessage },
   };
 }
@@ -623,6 +639,7 @@ function buildPoseSpecificResponse(
   return {
     text,
     knowledgeUsed: false,
+    action: { type: 'start_pose', targetId: pose.id, label: `${pose.nameJa}を実践する` },
     updatedContext: { ...prevContext, lastTeacherText: text, lastAssistantMode: 'knowledge_lookup', lastPoseId: pose.id, lastTopic: pose.nameJa, lastQuestionType: questionType },
   };
 }
@@ -747,6 +764,7 @@ function buildBreathworkSpecificResponse(
   return {
     text,
     knowledgeUsed: false,
+    action: { type: 'start_breathwork', targetId: bw.id, label: `${bw.nameJa}を実践する` },
     updatedContext: { ...prevContext, lastTeacherText: text, lastAssistantMode: 'knowledge_lookup', lastBreathworkId: bw.id, lastPracticeDomain: 'pranayama', lastTopic: bw.nameJa, lastQuestionType: questionType, lastPoseId: undefined, lastMeditationId: undefined },
   };
 }
@@ -783,37 +801,37 @@ function buildSequenceSpecificResponse(
   if (questionType === 'definition') {
     const text = `${name}です。${seq.nameJa}は、12のステップを呼吸とともに流れるようにつなぐ代表的なヨガシークエンスです。インド政府AYUSH省の公式テキストに基づく体系です。各ステップで吸う・吐くを合わせながら、体を動かしていきます。`;
     updated.lastTeacherText = text;
-    return { text, updatedContext: updated };
+    return { text, updatedContext: updated, action: { type: 'start_sequence', targetId: seq.id, label: `${seq.nameJa}を実践する` } };
   }
 
   if (questionType === 'duration') {
     const text = `${name}です。${seq.nameJa}は12ステップを片側行い、反対側も行うことで1ラウンドになります。時間に決まりはありませんが、AI先生では1ラウンドを目安に案内しています。`;
     updated.lastTeacherText = text;
-    return { text, updatedContext: updated };
+    return { text, updatedContext: updated, action: { type: 'start_sequence', targetId: seq.id, label: `${seq.nameJa}を実践する` } };
   }
 
   if (questionType === 'breathing' || questionType === 'breathing_pattern') {
     const text = `${name}です。各ステップの呼吸は：ステップ1は自然呼吸、2は吸う、3は吐く、4は吸う、5は吐く、6は保持、7は吸う、8は吐く、9は吸う、10は吐く、11は吸う、12は自然呼吸です。呼吸と動きを同期させることが大切です。`;
     updated.lastTeacherText = text;
-    return { text, updatedContext: updated };
+    return { text, updatedContext: updated, action: { type: 'start_sequence', targetId: seq.id, label: `${seq.nameJa}を実践する` } };
   }
 
   if (questionType === 'how_to') {
     const stepNames = seq.steps.map((s, i) => `${i + 1}. ${s.nameJa}`).join('、');
     const text = `${name}です。${seq.nameJa}の12ステップは：${stepNames}。吸う・吐くを合わせながら流れるようにつなぎます。`;
     updated.lastTeacherText = text;
-    return { text, updatedContext: updated };
+    return { text, updatedContext: updated, action: { type: 'start_sequence', targetId: seq.id, label: `${seq.nameJa}を実践する` } };
   }
 
   if (questionType === 'precautions') {
     const text = `${name}です。急な動きをしない、呼吸を無理に強くしない、不快感がある場合は中止してください。痛みがある場合は無理に進めないでください。`;
     updated.lastTeacherText = text;
-    return { text, updatedContext: updated };
+    return { text, updatedContext: updated, action: { type: 'start_sequence', targetId: seq.id, label: `${seq.nameJa}を実践する` } };
   }
 
   const text = `${name}です。${seq.nameJa}は12ステップを呼吸とともにつなぐシークエンスです。やり方や呼吸について聞いてください。`;
   updated.lastTeacherText = text;
-  return { text, updatedContext: updated };
+  return { text, updatedContext: updated, action: { type: 'start_sequence', targetId: seq.id, label: `${seq.nameJa}を実践する` } };
 }
 
 function buildMeditationAnswer(
@@ -923,6 +941,7 @@ function buildMeditationSpecificResponse(
   return {
     text,
     knowledgeUsed: false,
+    action: { type: 'start_meditation', targetId: med.id, label: `${med.nameJa}を実践する` },
     updatedContext: { ...prevContext, lastTeacherText: text, lastAssistantMode: 'knowledge_lookup', lastMeditationId: med.id, lastPracticeDomain: 'dhyana', lastTopic: med.nameJa, lastQuestionType: questionType, lastPoseId: undefined, lastBreathworkId: undefined },
   };
 }
@@ -1063,6 +1082,15 @@ export async function generateTeacherResponse(
   userMessage: string,
   prevContext?: ConversationContext,
 ): Promise<TeacherResponse> {
+  const result = await generateTeacherResponseInner(context, userMessage, prevContext);
+  return stripActionIfSafety(result, prevContext);
+}
+
+async function generateTeacherResponseInner(
+  context: TeacherContext,
+  userMessage: string,
+  prevContext?: ConversationContext,
+): Promise<TeacherResponse> {
   const safetyHit = detectSafetyKeyword(userMessage);
   const intent = classifyIntent(userMessage);
   const name = context.persona?.name ?? 'AI先生';
@@ -1177,6 +1205,15 @@ export async function generateTeacherResponse(
     text,
     updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text },
   };
+}
+
+function stripActionIfSafety(response: TeacherResponse, prevContext?: ConversationContext): TeacherResponse {
+  if (response.action && response.action.type !== 'none' && response.action.type !== 'open_today_plan') {
+    if (response.isSafety || prevContext?.safetyContextActive) {
+      return { ...response, action: undefined };
+    }
+  }
+  return response;
 }
 
 export function generateNextSuggestion(
