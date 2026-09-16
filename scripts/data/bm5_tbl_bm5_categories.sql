@@ -1,0 +1,14 @@
+INSERT INTO breath_manager_v5.bm5_categories (category_id, name, description) VALUES ('physiology', '呼吸の仕組み', '換気・ガス交換・酸素運搬') ON CONFLICT (category_id) DO NOTHING;
+INSERT INTO breath_manager_v5.bm5_categories (category_id, name, description) VALUES ('cell_energy', '細胞とエネルギー', 'ATP・ミトコンドリア') ON CONFLICT (category_id) DO NOTHING;
+INSERT INTO breath_manager_v5.bm5_categories (category_id, name, description) VALUES ('co2', '二酸化炭素と呼吸調節', 'CO₂・pH・ボーア効果') ON CONFLICT (category_id) DO NOTHING;
+INSERT INTO breath_manager_v5.bm5_categories (category_id, name, description) VALUES ('observation', '呼吸の観察と記録', '測定・気づき・カルテ') ON CONFLICT (category_id) DO NOTHING;
+INSERT INTO breath_manager_v5.bm5_categories (category_id, name, description) VALUES ('yoga_theory', 'ヨガの考え方', 'プラーナ・プラーナーヤーマ') ON CONFLICT (category_id) DO NOTHING;
+INSERT INTO breath_manager_v5.bm5_categories (category_id, name, description) VALUES ('practice', '呼吸法の実践', '手順・時間・対象') ON CONFLICT (category_id) DO NOTHING;
+INSERT INTO breath_manager_v5.bm5_categories (category_id, name, description) VALUES ('safety', '注意事項と実践範囲', '中止条件・原稿の安全原則') ON CONFLICT (category_id) DO NOTHING;
+INSERT INTO breath_manager_v5.bm5_categories (category_id, name, description) VALUES ('sleep', '睡眠と休息', '睡眠・いびき・休息') ON CONFLICT (category_id) DO NOTHING;
+INSERT INTO breath_manager_v5.bm5_categories (category_id, name, description) VALUES ('mind', '自律神経と集中', '自律神経・脳・集中') ON CONFLICT (category_id) DO NOTHING;
+INSERT INTO breath_manager_v5.bm5_categories (category_id, name, description) VALUES ('conditioning', '運動と日常生活', '日常のコンディショニング') ON CONFLICT (category_id) DO NOTHING;
+INSERT INTO breath_manager_v5.bm5_categories (category_id, name, description) VALUES ('gut', '横隔膜・お腹・腸', '横隔膜・お腹・腸') ON CONFLICT (category_id) DO NOTHING;
+INSERT INTO breath_manager_v5.bm5_categories (category_id, name, description) VALUES ('lifestyle', '生活習慣と伝統的な健康観', '生活習慣と伝統的な健康観') ON CONFLICT (category_id) DO NOTHING;
+INSERT INTO breath_manager_v5.bm5_categories (category_id, name, description) VALUES ('performance', 'スポーツと本番の準備', 'スポーツと本番の準備') ON CONFLICT (category_id) DO NOTHING;
+INSERT INTO breath_manager_v5.bm5_categories (category_id, name, description) VALUES ('voice', '発声と呼吸', '発声と呼吸') ON CONFLICT (category_id) DO NOTHING;
