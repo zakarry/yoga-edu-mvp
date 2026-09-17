@@ -4,7 +4,7 @@ import type { VoiceCueDef } from './poseCatalog';
 // Only these practices opt into completion-driven cues. Complete yoga breathing
 // keeps its existing audio timeline.
 export const usesBreathworkSequence = (id: string) =>
-  ['box-breathing', 'abdominal-breathing', 'thoracic-breathing'].includes(id);
+  ['box-breathing', 'abdominal-breathing', 'thoracic-breathing', 'brahmari'].includes(id);
 
 export function getBreathworkPhaseSequence(entry: BreathworkCatalogEntry, phase: string, round: number): VoiceCueDef[] {
   const vg = entry.voiceGuide;
@@ -16,6 +16,19 @@ export function getBreathworkPhaseSequence(entry: BreathworkCatalogEntry, phase:
     const text = vg.phaseCues?.[label] ?? '';
     const key = vg.phaseAudioKeys?.[phase] ?? vg.phaseAudioKeys?.[label];
     return text ? [{ at: 0, text, audioKey: key }] : [];
+  }
+  if (entry.id === 'brahmari') {
+    const rc = entry.voiceGuide.repeatCues ?? [];
+    if (round > 0 && rc.length >= 2) {
+      if (phase === 'inhale') {
+        return [{ at: 0, text: rc[0].text, audioKey: rc[0].audioKey }];
+      }
+      if (phase === 'exhale') {
+        return [{ at: 0, text: rc[1].text, audioKey: rc[1].audioKey }];
+      }
+    }
+    const cueText = entry.voiceGuide.phaseCues?.[phase === 'inhale' ? '吸う' : '吐く'] ?? '';
+    return cueText ? [{ at: 0, text: cueText }] : [];
   }
   const prefix = entry.id === 'abdominal-breathing' ? 'abdominal' : 'thoracic';
   if (phase === 'inhale') {
@@ -36,7 +49,9 @@ export function getBreathworkPhaseSequence(entry: BreathworkCatalogEntry, phase:
 export function getBreathworkIntro(entry: BreathworkCatalogEntry): VoiceCueDef[] {
   // The remaining body intro instructions are now spoken in their own phases,
   // on every round, rather than before an unrelated timer starts.
-  return entry.id === 'box-breathing' ? entry.voiceGuide.intro : entry.voiceGuide.intro.slice(0, 1);
+  if (entry.id === 'box-breathing') return entry.voiceGuide.intro;
+  if (entry.id === 'brahmari') return entry.voiceGuide.intro;
+  return entry.voiceGuide.intro.slice(0, 1);
 }
 
 export function waitForBreathwork(ms: number, signal: AbortSignal): Promise<void> {

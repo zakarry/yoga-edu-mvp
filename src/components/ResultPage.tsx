@@ -131,8 +131,13 @@ export function BreathworkExperience({
       const controller = new AbortController();
       const { signal } = controller;
       const intro = getBreathworkIntro(entry);
-      const finalCue = { at: 0, text: '最後の呼吸です。', audioKey: 'voice-box-final' };
-      const ending = { at: 0, text: '自然な呼吸に戻りましょう。', audioKey: 'voice-abdominal-end-2' };
+      const vg = entry.voiceGuide;
+      const finalCue = vg.completion[0]
+        ? { at: 0, text: vg.completion[0].text, audioKey: vg.completion[0].audioKey }
+        : { at: 0, text: '最後の呼吸です。', audioKey: 'voice-box-final' };
+      const ending = vg.completion[1]
+        ? { at: 0, text: vg.completion[1].text, audioKey: vg.completion[1].audioKey }
+        : { at: 0, text: '自然な呼吸に戻りましょう。', audioKey: 'voice-abdominal-end-2' };
       const allCues = [...intro, finalCue, ending,
         ...[0, 1].flatMap((round) => phases.flatMap((p) => getBreathworkPhaseSequence(entry, p.key, round)))];
       const durations = new Map<string, number>();
