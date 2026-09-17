@@ -96,6 +96,8 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
   const [running, setRunning] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<{ entry_id: string; title: string; answer: string; type: string }[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   const checkAdmin = useCallback(async () => {
     if (!auth.user || !supabase) {
@@ -126,11 +128,14 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
 
   const loadTests = useCallback(async () => {
     if (!supabase || !isAdmin) return;
+    setLoadError(null);
     const { data, error } = await supabase
-      .from('breath_manager_v5.bm5_acceptance_tests')
+      .from('bm5_acceptance_tests_view')
       .select('*')
       .order('test_id');
-    if (!error && data) {
+    if (error) {
+      setLoadError(error.message);
+    } else if (data) {
       setTests(data as AcceptanceTest[]);
     }
   }, [isAdmin]);
@@ -151,7 +156,7 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
 
     if (refIds.length > 0 && supabase) {
       const { data: kData, error: kErr } = await supabase
-        .from('breath_manager_v5.bm5_knowledge')
+        .from('bm5_knowledge_view')
         .select('knowledge_id, title, answer_short, answer_detail')
         .in('knowledge_id', refIds);
       if (kErr) errorMsg = `Knowledge: ${kErr.message}`;
@@ -163,7 +168,7 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
 
       if (!entryFound && !errorMsg) {
         const { data: cData, error: cErr } = await supabase
-          .from('breath_manager_v5.bm5_catalog')
+          .from('bm5_catalog_view')
           .select('catalog_id, name')
           .in('catalog_id', refIds);
         if (cErr) errorMsg = `Catalog: ${cErr.message}`;
@@ -178,7 +183,7 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
     let passagesFound: PassageEntry[] = [];
     if (passageIds.length > 0 && supabase) {
       const { data: pData, error: pErr } = await supabase
-        .from('breath_manager_v5.bm5_passages')
+        .from('bm5_passages_view')
         .select('passage_id, source_id, section_label, content, page_label')
         .in('passage_id', passageIds);
       if (pErr) errorMsg = errorMsg ? `${errorMsg}; Passages: ${pErr.message}` : `Passages: ${pErr.message}`;
@@ -188,7 +193,7 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
     let safetyEntries: SafetyEntry[] = [];
     if (safetyIds.length > 0 && supabase) {
       const { data: sData, error: sErr } = await supabase
-        .from('breath_manager_v5.bm5_safety')
+        .from('bm5_safety_view')
         .select('safety_id, title, description, urgency')
         .in('safety_id', safetyIds);
       if (sErr) errorMsg = errorMsg ? `${errorMsg}; Safety: ${sErr.message}` : `Safety: ${sErr.message}`;
@@ -199,7 +204,7 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
     let relatedCorrections: CorrectionEntry[] = [];
     if (entryFound && supabase) {
       const { data: kData, error: kErr } = await supabase
-        .from('breath_manager_v5.bm5_knowledge')
+        .from('bm5_knowledge_view')
         .select('issue_ids, editorial_correction_ids')
         .in('knowledge_id', refIds);
       if (kErr) errorMsg = errorMsg ? `${errorMsg}; Issues: ${kErr.message}` : `Issues: ${kErr.message}`;
@@ -208,7 +213,7 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
         const corrIds = (kData[0] as { editorial_correction_ids?: string[] }).editorial_correction_ids || [];
         if (issueIds.length > 0) {
           const { data: iData, error: iErr } = await supabase
-            .from('breath_manager_v5.bm5_issues')
+            .from('bm5_issues_view')
             .select('issue_id, title, description, status, related_entry_ids')
             .in('issue_id', issueIds);
           if (iErr) errorMsg = errorMsg ? `${errorMsg}; Issues query: ${iErr.message}` : `Issues query: ${iErr.message}`;
@@ -216,7 +221,7 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
         }
         if (corrIds.length > 0) {
           const { data: cData, error: cErr } = await supabase
-            .from('breath_manager_v5.bm5_editorial_corrections')
+            .from('bm5_editorial_corrections_view')
             .select('correction_id, issue_id, description, rule_text, applied')
             .in('correction_id', corrIds);
           if (cErr) errorMsg = errorMsg ? `${errorMsg}; Corrections: ${cErr.message}` : `Corrections: ${cErr.message}`;
@@ -264,7 +269,7 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
       setResults([...allResults]);
       if (supabase) {
         await supabase
-          .from('breath_manager_v5.bm5_acceptance_tests')
+          .from('bm5_acceptance_tests_view')
           .update({
             actual_pass: result.pass,
             tested_at: new Date().toISOString(),
@@ -278,16 +283,19 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
 
   const doSearch = async () => {
     if (!supabase || !isAdmin || !searchQuery.trim()) return;
-    const { data: kData } = await supabase
-      .from('breath_manager_v5.bm5_knowledge')
+    setSearchError(null);
+    const { data: kData, error: kErr } = await supabase
+      .from('bm5_knowledge_view')
       .select('knowledge_id, title, answer_short')
       .ilike('title', `%${searchQuery}%`)
       .limit(10);
-    const { data: cData } = await supabase
-      .from('breath_manager_v5.bm5_catalog')
+    if (kErr) setSearchError(kErr.message);
+    const { data: cData, error: cErr } = await supabase
+      .from('bm5_catalog_view')
       .select('catalog_id, name')
       .ilike('name', `%${searchQuery}%`)
       .limit(10);
+    if (cErr) setSearchError(cErr.message);
     const combined: { entry_id: string; title: string; answer: string; type: string }[] = [];
     if (kData) {
       for (const k of kData as { knowledge_id: string; title: string; answer_short: string }[]) {
@@ -339,6 +347,21 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
     <div className="page-shell">
       <PageHeader eyebrow="管理者限定" title="呼吸マネージャー検定 第5版 確認画面" subtitle="本番公開前のテスト用データです。出典・注意事項・修正方針を同時に参照できます。" onBackHome={onBackHome} />
 
+      <section className="panel" style={{ marginBottom: 16, fontSize: 12, color: '#666', background: '#f8f8f8' }}>
+        <details open>
+          <summary style={{ cursor: 'pointer', fontWeight: 600 }}>デバッグステータス</summary>
+          <div style={{ marginTop: 8, lineHeight: 1.8 }}>
+            <div>Admin UID: {auth.user?.id ?? '(未ログイン)'}</div>
+            <div>is_admin: {String(isAdmin)}</div>
+            <div>Tests loaded: {tests.length} / 20</div>
+            <div>Search ready: {String(supabase !== null && isAdmin)}</div>
+            <div>RPC ready: {String(supabase !== null)}</div>
+            <div>Load error: {loadError ?? '(なし)'}</div>
+            <div>Search error: {searchError ?? '(なし)'}</div>
+          </div>
+        </details>
+      </section>
+
       <section className="panel" style={{ marginBottom: 16 }}>
         <h3 style={{ marginBottom: 8 }}>データ件数</h3>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 14 }}>
@@ -365,6 +388,9 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
           />
           <button className="primary-button" onClick={doSearch}>検索</button>
         </div>
+        {searchError && (
+          <div style={{ fontSize: 12, color: '#d32f2f', marginBottom: 8 }}>検索エラー: {searchError}</div>
+        )}
         {searchResults.length > 0 && (
           <div>
             {searchResults.map((r) => (
@@ -458,7 +484,12 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
             </div>
           ))}
         </div>
-        {tests.length === 0 && !running && (
+        {loadError && (
+          <div style={{ fontSize: 12, color: '#d32f2f', marginBottom: 8, padding: 8, background: '#ffebee', borderRadius: 4 }}>
+            テスト読込エラー: {loadError}
+          </div>
+        )}
+        {tests.length === 0 && !running && !loadError && (
           <div style={{ padding: 16, textAlign: 'center', color: '#888' }}>テストデータを読み込むには「全テスト実行」を押してください。</div>
         )}
       </section>
