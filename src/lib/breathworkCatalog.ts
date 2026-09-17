@@ -381,7 +381,7 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     nameEn: 'Bhramari (Bee Breath)',
     aliases: ['ハチの呼吸', 'ブラマリ', 'ブラーマリ', 'Bhramari'],
     category: 'pranayama',
-    defaultDurationMin: 2,
+    defaultDurationMin: 1,
     pattern: {
       inhaleSec: 4,
       holdAfterInhaleSec: 0,
