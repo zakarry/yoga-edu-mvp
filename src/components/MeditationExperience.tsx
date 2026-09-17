@@ -322,10 +322,11 @@ function TimelineMeditationExperience({ entry }: MeditationExperienceProps) {
     (event: MeditationTimelineEvent) => {
       if (event.type === 'voice') {
         if (event.text) {
+          const speakText = event.audioText ?? event.text;
           if (event.audioKey) {
-            voiceEngine.speakByKey(event.audioKey, event.text);
+            voiceEngine.speakByKey(event.audioKey, speakText);
           } else {
-            voiceEngine.speak(event.text);
+            voiceEngine.speak(speakText);
           }
           setCurrentSubtitle(event.text);
         }
