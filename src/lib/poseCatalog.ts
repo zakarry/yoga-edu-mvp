@@ -24,6 +24,7 @@ export interface VoiceGuideDef {
   breathingCueAudioKey?: string;
   breathingReminderCue?: string;
   completion?: string;
+  completionAudioKey?: string;
 }
 
 export interface PlannerAttrs {
@@ -447,11 +448,13 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
       '眠くなったら目を開けてもよい。雑念が来るのは自然なこと',
     ],
     voiceGuide: {
-      intro: '1分間マインドフルネスを始めます。',
+      intro: '楽な姿勢で、自然な呼吸に戻ります。今ここにある呼吸や身体の感覚に静かに意識を向けてみましょう。',
+      introAudioKey: 'voice-mindfulness-1min-intro',
       firstRound: [
-        { at: 5, text: '肩の力を抜きましょう。' },
+        { at: 10, text: '呼吸がそれても、やさしく戻すだけで大丈夫です。', audioKey: 'voice-mindfulness-1min-mid' },
       ],
-      completion: 'お疲れさまでした。',
+      completion: 'ゆっくり意識を身体に戻します。準備ができたら目を開けましょう。',
+      completionAudioKey: 'voice-mindfulness-1min-outro',
     },
     planner: {
       beginnerFriendly: true,
@@ -784,7 +787,7 @@ export function getDefaultPlanPoseIds(): string[] {
 }
 
 function breathworkEntryToPoseEntry(bw: BreathworkCatalogEntry): PoseCatalogEntry {
-  const firstRound = bw.voiceGuide.intro.map((c) => ({ at: c.at, text: c.text }));
+  const firstRound = bw.voiceGuide.intro.map((c) => ({ at: c.at, text: c.text, audioKey: c.audioKey }));
   const completionText = bw.voiceGuide.completion[0]?.text ?? 'お疲れさまでした。';
   return {
     id: bw.id,
@@ -801,9 +804,10 @@ function breathworkEntryToPoseEntry(bw: BreathworkCatalogEntry): PoseCatalogEntr
     voiceGuide: {
       intro: bw.voiceGuide.intro[0]?.text ?? `${bw.nameJa}を始めます。`,
       firstRound,
-      secondRound: bw.voiceGuide.repeatCues?.map((c) => ({ at: c.at, text: c.text })),
+      secondRound: bw.voiceGuide.repeatCues?.map((c) => ({ at: c.at, text: c.text, audioKey: c.audioKey })),
       breathingCue: bw.breathing.nasalCue,
       completion: completionText,
+      completionAudioKey: bw.voiceGuide.completion[0]?.audioKey,
     },
     planner: {
       beginnerFriendly: bw.safety.beginnerFriendly,
@@ -832,7 +836,7 @@ function breathworkToPoseEntryByName(name: string): PoseCatalogEntry | undefined
 function meditationEntryToPoseEntry(m: MeditationCatalogEntry): PoseCatalogEntry {
   const voiceCues = m.timeline
     .filter((t) => t.type === 'voice' && t.text)
-    .map((t) => ({ at: t.atSec, text: t.text! }));
+    .map((t) => ({ at: t.atSec, text: t.text!, audioKey: t.audioKey }));
   const completionEvent = m.timeline.find((t) => t.type === 'complete');
   return {
     id: m.id,
@@ -852,6 +856,7 @@ function meditationEntryToPoseEntry(m: MeditationCatalogEntry): PoseCatalogEntry
       secondRound: undefined,
       breathingCue: undefined,
       completion: completionEvent?.text ?? 'お疲れさまでした。',
+      completionAudioKey: completionEvent?.audioKey,
     },
     planner: {
       beginnerFriendly: true,

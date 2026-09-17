@@ -784,7 +784,7 @@ function buildRecommendedYogaPoseRaw(input: StudentDiagnosisInput): YogaPoseReco
       poseId: 'brahmari',
       type: 'pranayama',
       category: '呼吸・瞑想',
-      title: 'ブラマリ（ハチの呼吸）',
+      title: 'ブラーマリー（ハチの呼吸）',
       description: '息を吐くときに小さくハミングする呼吸法です。無理のない範囲で音を響かせ、気分を静めます。',
       practice: '3呼吸 × 3回',
     };

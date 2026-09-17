@@ -252,6 +252,18 @@ const PHRASE_MAP: Record<string, string> = {
   'コブラのポーズを始めます。': 'voice-start-bhujanga',
   '三角のポーズを始めます。': 'voice-start-trikona',
   '金剛座（正座）を始めます。': 'voice-start-vajra',
+  'ブラーマリー（ハチの呼吸）を始めます。楽な姿勢で座り、肩の力を抜きましょう。': 'voice-bhramari-intro',
+  '苦しくない範囲で繰り返しましょう。': 'voice-bhramari-repeat',
+  '吐きながら、やさしく音を響かせます。': 'voice-bhramari-r2',
+  'アヌローマ・ヴィローマ（ナーディー・ショーダナ）を始めます。楽な姿勢で座り、肩の力を抜きましょう。': 'voice-anuloma-intro',
+  '右手の親指で右の鼻を閉じ、左の鼻からゆっくり吸います。': 'voice-anuloma-inhale-left',
+  '親指を離し、薬指で左の鼻を閉じ、右の鼻からゆっくり吐きます。': 'voice-anuloma-exhale-right',
+  '右から吸い、左から吐く。これを交互に繰り返します。': 'voice-anuloma-alternate',
+  'もう一度、左の鼻からゆっくり吸います。': 'voice-anuloma-r1',
+  '右の鼻からゆっくり吐きます。': 'voice-anuloma-r2',
+  '楽な姿勢で、自然な呼吸に戻ります。今ここにある呼吸や身体の感覚に静かに意識を向けてみましょう。': 'voice-mindfulness-1min-intro',
+  '呼吸がそれても、やさしく戻すだけで大丈夫です。': 'voice-mindfulness-1min-mid',
+  'ゆっくり意識を身体に戻します。準備ができたら目を開けましょう。': 'voice-mindfulness-1min-outro',
 };
 
 function getVoiceKey(text: string): string | null {
@@ -415,19 +427,20 @@ class AudioFileEngine implements VoiceGuideEngine {
     if (!buffer) {
       fetchAndDecode(key).then((buf) => {
         if (requestId !== this.activeRequestId) return;
-        if (buf) this.playBuffer(buf, requestId);
+        if (buf) this.playBuffer(buf, requestId, key);
         else this.playFallback(key, fallbackText, requestId);
       });
       return;
     }
-    this.playBuffer(buffer, requestId);
+    this.playBuffer(buffer, requestId, key);
   }
 
-  private playBuffer(buffer: AudioBuffer, requestId: number): void {
+  private playBuffer(buffer: AudioBuffer, requestId: number, key: string): void {
     const ctx = getAudioContext();
     if (!ctx) return;
     const source = ctx.createBufferSource();
     source.buffer = buffer;
+    if (key.startsWith('voice-nidra')) source.playbackRate.value = 1.08;
     source.connect(ctx.destination);
     source.onended = () => {
       if (this.currentSource === source) this.currentSource = null;
@@ -449,6 +462,7 @@ class AudioFileEngine implements VoiceGuideEngine {
     const audio = getAudioElementForKey(key);
     if (!audio) return;
     audio.currentTime = 0;
+    audio.playbackRate = key.startsWith('voice-nidra') ? 1.08 : 1.0;
     audio.onended = () => {
       if (this.fallbackAudio === audio) this.fallbackAudio = null;
       if (requestId === this.activeRequestId && cueEndCallback) cueEndCallback();
@@ -612,6 +626,7 @@ export async function playBreathworkAudio(
         if (ctx.state !== 'running') return finish(false);
         source = ctx.createBufferSource();
         source.buffer = buffer;
+        if (key && key.startsWith('voice-nidra')) source.playbackRate.value = 1.08;
         source.connect(ctx.destination);
         source.onended = () => finish(true);
         clearTimeout(watchdog);
@@ -669,7 +684,7 @@ export function buildAsanaVoiceGuide(poseId: string, poseName: string, totalMinu
   cues.push({ text: 'あと30秒です。', atSeconds: Math.max(0, totalSeconds - 30) });
   cues.push({ text: 'あと15秒です。', atSeconds: Math.max(0, totalSeconds - 15) });
   cues.push({ text: 'あと少しです。', atSeconds: Math.max(0, totalSeconds - 5) });
-  cues.push({ text: vg?.completion ?? 'お疲れさまでした。', atSeconds: totalSeconds });
+  cues.push({ text: vg?.completion ?? 'お疲れさまでした。', atSeconds: totalSeconds, audioKey: vg?.completionAudioKey });
   cues.push({ text: '次のポーズへ進みます。', atSeconds: totalSeconds + 1 });
   return { cues, totalSeconds };
 }
@@ -693,7 +708,7 @@ export function buildPranayamaVoiceGuide(poseId: string, poseName: string, total
   cues.push({ text: 'あと30秒です。', atSeconds: Math.max(0, totalSeconds - 30) });
   cues.push({ text: 'あと15秒です。', atSeconds: Math.max(0, totalSeconds - 15) });
   cues.push({ text: 'あと少しです。', atSeconds: Math.max(0, totalSeconds - 5) });
-  cues.push({ text: 'お疲れさまでした。', atSeconds: totalSeconds });
+  cues.push({ text: 'お疲れさまでした。', atSeconds: totalSeconds, audioKey: vg?.completionAudioKey });
   cues.push({ text: '次のポーズへ進みます。', atSeconds: totalSeconds + 1 });
   return { cues, totalSeconds };
 }
@@ -717,7 +732,7 @@ export function buildMeditationVoiceGuide(poseId: string, poseName: string, tota
   cues.push({ text: 'あと30秒です。', atSeconds: Math.max(0, totalSeconds - 30) });
   cues.push({ text: 'あと15秒です。', atSeconds: Math.max(0, totalSeconds - 15) });
   cues.push({ text: 'あと少しです。', atSeconds: Math.max(0, totalSeconds - 5) });
-  cues.push({ text: 'お疲れさまでした。', atSeconds: totalSeconds });
+  cues.push({ text: 'お疲れさまでした。', atSeconds: totalSeconds, audioKey: vg?.completionAudioKey });
   cues.push({ text: '次のポーズへ進みます。', atSeconds: totalSeconds + 1 });
   return { cues, totalSeconds };
 }
@@ -928,4 +943,9 @@ export const ALL_VOICE_KEYS: string[] = [
   'voice-catcow-1-v2', 'voice-catcow-2-v2', 'voice-catcow-3-v2', 'voice-catcow-r1-v2', 'voice-catcow-r2-v2',
   'voice-paschi-1-v2', 'voice-paschi-2-v2', 'voice-paschi-3-v2',
   'voice-uttanasana-2-v2', 'voice-balasana-1-v2',
+  'voice-bhramari-intro', 'voice-bhramari-inhale', 'voice-bhramari-hum', 'voice-bhramari-repeat',
+  'voice-bhramari-r1', 'voice-bhramari-r2', 'voice-bhramari-end', 'voice-bhramari-outro',
+  'voice-anuloma-intro', 'voice-anuloma-inhale-left', 'voice-anuloma-exhale-right', 'voice-anuloma-alternate',
+  'voice-anuloma-r1', 'voice-anuloma-r2', 'voice-anuloma-end', 'voice-anuloma-outro',
+  'voice-mindfulness-1min-intro', 'voice-mindfulness-1min-mid', 'voice-mindfulness-1min-outro',
 ];
