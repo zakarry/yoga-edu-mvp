@@ -786,7 +786,9 @@ export function getDefaultPlanPoseIds(): string[] {
 
 function breathworkEntryToPoseEntry(bw: BreathworkCatalogEntry): PoseCatalogEntry {
   const firstRound = bw.voiceGuide.intro.map((c) => ({ at: c.at, text: c.text, audioKey: c.audioKey }));
-  const completionText = bw.voiceGuide.completion[0]?.text ?? 'お疲れさまでした。';
+  const completionCues = bw.voiceGuide.completion;
+  const completionText = completionCues.map((c) => c.text).join(' ');
+  const completionAudioKey = completionCues[0]?.audioKey;
   return {
     id: bw.id,
     type: 'pranayama' as PoseType,
@@ -801,11 +803,12 @@ function breathworkEntryToPoseEntry(bw: BreathworkCatalogEntry): PoseCatalogEntr
     generalCautions: [],
     voiceGuide: {
       intro: bw.voiceGuide.intro[0]?.text ?? `${bw.nameJa}を始めます。`,
+      introAudioKey: bw.voiceGuide.intro[0]?.audioKey,
       firstRound,
       secondRound: bw.voiceGuide.repeatCues?.map((c) => ({ at: c.at, text: c.text, audioKey: c.audioKey })),
       breathingCue: bw.breathing.nasalCue,
       completion: completionText,
-      completionAudioKey: bw.voiceGuide.completion[0]?.audioKey,
+      completionAudioKey,
     },
     planner: {
       beginnerFriendly: bw.safety.beginnerFriendly,

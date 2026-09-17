@@ -952,5 +952,10 @@ export const ALL_VOICE_KEYS: string[] = [
   'voice-bhramari-r1', 'voice-bhramari-r2', 'voice-bhramari-end', 'voice-bhramari-outro',
   'voice-anuloma-intro', 'voice-anuloma-inhale-left', 'voice-anuloma-exhale-right', 'voice-anuloma-alternate',
   'voice-anuloma-r1', 'voice-anuloma-r2', 'voice-anuloma-end', 'voice-anuloma-outro',
+  'voice-nadi-intro', 'voice-nadi-1-close-right-inhale-left', 'voice-nadi-2-switch-exhale-right',
+  'voice-nadi-3-inhale-right', 'voice-nadi-4-switch-exhale-left', 'voice-nadi-5-inhale-left',
+  'voice-nadi-6-repeat-switch',
+  'voice-nadi-r-inhale-left', 'voice-nadi-r-exhale-right', 'voice-nadi-r-inhale-right', 'voice-nadi-r-exhale-left',
+  'voice-nadi-end', 'voice-nadi-outro',
   'voice-mindfulness-1min-intro', 'voice-mindfulness-1min-mid', 'voice-mindfulness-1min-outro',
 ];

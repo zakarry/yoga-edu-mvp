@@ -430,9 +430,9 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     voiceGuide: {
       intro: [
         { at: 0, text: 'ブラーマリー（ハチの呼吸）を始めます。楽な姿勢で座り、肩の力を抜きましょう。', audioKey: 'voice-bhramari-intro' },
-        { at: 6, text: '鼻からゆっくり息を吸います。', audioKey: 'voice-bhramari-inhale' },
-        { at: 12, text: '息を吐きながら、無理のない範囲で小さくハミングするようにやさしく音を響かせます。', audioKey: 'voice-bhramari-hum' },
-        { at: 20, text: '苦しくない範囲で繰り返しましょう。', audioKey: 'voice-bhramari-repeat' },
+        { at: 19, text: '鼻からゆっくり息を吸います。', audioKey: 'voice-bhramari-inhale' },
+        { at: 27, text: '息を吐きながら、無理のない範囲で小さくハミングするようにやさしく音を響かせます。', audioKey: 'voice-bhramari-hum' },
+        { at: 45, text: '苦しくない範囲で繰り返しましょう。', audioKey: 'voice-bhramari-repeat' },
       ],
       phaseCues: {
         '吸う': '鼻からゆっくり吸います。',
@@ -440,21 +440,21 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
       },
       repeatCues: [
         { at: 0, text: 'もう一度、鼻からゆっくり吸います。', audioKey: 'voice-bhramari-r1' },
-        { at: 6, text: '吐きながら、やさしく音を響かせます。', audioKey: 'voice-bhramari-r2' },
+        { at: 9, text: '吐きながら、やさしく音を響かせます。', audioKey: 'voice-bhramari-r2' },
       ],
       completion: [
         { at: 0, text: '最後の呼吸です。', audioKey: 'voice-bhramari-end' },
-        { at: 3, text: '自然な呼吸に戻しましょう。', audioKey: 'voice-bhramari-outro' },
+        { at: 6, text: '自然な呼吸に戻しましょう。', audioKey: 'voice-bhramari-outro' },
       ],
     },
     status: 'active',
   },
   {
     id: 'anuloma-viloma',
-    nameJa: 'アヌローマ・ヴィローマ（ナーディー・ショーダナ）',
-    nameSanskrit: 'Anuloma Viloma / Nadi Shodhana',
+    nameJa: 'ナディー・ショーダナ',
+    nameSanskrit: 'Nadi Shodhana',
     nameEn: 'Alternate Nostril Breathing',
-    aliases: ['ナーディー・ショーダナ', '片鼻呼吸', 'アヌローマ・ヴィローマ'],
+    aliases: ['アヌローマ・ヴィローマ', 'Anuloma Viloma', '片鼻呼吸', 'ナーディー・ショーダナ'],
     category: 'pranayama',
     defaultDurationMin: 3,
     pattern: {
@@ -506,22 +506,27 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     },
     voiceGuide: {
       intro: [
-        { at: 0, text: 'アヌローマ・ヴィローマ（ナーディー・ショーダナ）を始めます。楽な姿勢で座り、肩の力を抜きましょう。', audioKey: 'voice-anuloma-intro' },
-        { at: 6, text: '右手の親指で右の鼻を閉じ、左の鼻からゆっくり吸います。', audioKey: 'voice-anuloma-inhale-left' },
-        { at: 14, text: '親指を離し、薬指で左の鼻を閉じ、右の鼻からゆっくり吐きます。', audioKey: 'voice-anuloma-exhale-right' },
-        { at: 22, text: '右から吸い、左から吐く。これを交互に繰り返します。', audioKey: 'voice-anuloma-alternate' },
+        { at: 0, text: 'ナディー・ショーダナを始めます。楽な姿勢で座り、肩の力を抜きましょう。', audioKey: 'voice-nadi-intro' },
+        { at: 17, text: '右の親指で右の鼻を閉じ、左の鼻から息を吸います。', audioKey: 'voice-nadi-1-close-right-inhale-left' },
+        { at: 30, text: '次に、小指と薬指で左の鼻を閉じ、親指をはなし、右の鼻から息を吐きます。', audioKey: 'voice-nadi-2-switch-exhale-right' },
+        { at: 49, text: 'そのまま右の鼻で息を吸います。', audioKey: 'voice-nadi-3-inhale-right' },
+        { at: 57, text: '吸いきったら親指で右の鼻を閉じ、小指と薬指をはなし、左の鼻から吐きます。', audioKey: 'voice-nadi-4-switch-exhale-left' },
+        { at: 75, text: 'そのまま左の鼻から息を吸います。', audioKey: 'voice-nadi-5-inhale-left' },
+        { at: 84, text: '吸い終わったら指を入れ替えて、息を吐く動きを繰り返します。', audioKey: 'voice-nadi-6-repeat-switch' },
       ],
       phaseCues: {
         '吸う': 'ゆっくり鼻から吸います。',
         '吐く': 'ゆっくり鼻から吐きます。',
       },
       repeatCues: [
-        { at: 0, text: 'もう一度、左の鼻からゆっくり吸います。', audioKey: 'voice-anuloma-r1' },
-        { at: 6, text: '右の鼻からゆっくり吐きます。', audioKey: 'voice-anuloma-r2' },
+        { at: 0, text: '左から吸います。', audioKey: 'voice-nadi-r-inhale-left' },
+        { at: 6, text: '右から吐きます。', audioKey: 'voice-nadi-r-exhale-right' },
+        { at: 12, text: '右から吸います。', audioKey: 'voice-nadi-r-inhale-right' },
+        { at: 18, text: '左から吐きます。', audioKey: 'voice-nadi-r-exhale-left' },
       ],
       completion: [
-        { at: 0, text: '最後の呼吸です。', audioKey: 'voice-anuloma-end' },
-        { at: 3, text: '自然な呼吸に戻しましょう。', audioKey: 'voice-anuloma-outro' },
+        { at: 0, text: '最後の呼吸です。', audioKey: 'voice-nadi-end' },
+        { at: 6, text: '自然な呼吸に戻しましょう。', audioKey: 'voice-nadi-outro' },
       ],
     },
     status: 'active',
