@@ -1300,8 +1300,14 @@ async function generateTeacherResponseInner(
   prevContext?: ConversationContext,
 ): Promise<TeacherResponse> {
   const safetyHit = detectSafetyKeyword(userMessage);
-  const intent = classifyIntent(userMessage);
   const name = context.persona?.name ?? 'AI先生';
+
+  if (!safetyHit) {
+    const bm5Early = await tryBM5Lookup(userMessage, context, prevContext);
+    if (bm5Early) return bm5Early;
+  }
+
+  const intent = classifyIntent(userMessage);
 
   if (intent === 'contextual_followup') {
     const followup = buildTopicFollowupResponse(userMessage, context, prevContext);
@@ -1375,9 +1381,6 @@ async function generateTeacherResponseInner(
       const pose = getCatalogEntry(resolution.poseId);
       if (pose) return buildPoseSpecificResponse(pose, resolution.questionType, context, prevContext);
     }
-
-    const bm5Result = await tryBM5Lookup(userMessage, context, prevContext);
-    if (bm5Result) return bm5Result;
 
     const breathworkResult = await tryBreathworkKnowledgeLookup(userMessage, context, prevContext);
     if (breathworkResult) return breathworkResult;

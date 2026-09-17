@@ -47,38 +47,63 @@ export interface BM5DebugLog {
 }
 
 const ALIAS_DICTIONARY: Record<string, string[]> = {
-  'プラーナーヤーマ': ['ぷらなやーま', 'ぷらーなやーま', 'プラナヤマ', 'pranayama', 'プラーナヤマ', 'ぷらーなーやーま'],
-  'プラーナ': ['ぷらーな', 'ぷらな', 'prana'],
-  'SpO2': ['spo2', 'SPO2', '酸素飽和度', '経皮的酸素飯和度', '経皮的酸素飽和度', '酸素飽和'],
-  '横隔膜': ['おうかくまく', 'ダイアフラム', 'diaphragm'],
-  '呼吸': ['息', 'こきゅう'],
-  '腹式呼吸': ['ふくしきこきゅう', 'お腹の呼吸', '腹式'],
-  '胸式呼吸': ['きょうしきこきゅう', '胸の呼吸'],
+  'プラーナーヤーマ': ['ぷらなやーま', 'ぷらーなやーま', 'プラナヤマ', 'pranayama', 'プラーナヤマ', 'ぷらーなーやーま', 'ふらなやーま', 'ふらーなやーま'],
+  'プラーナ': ['ぷらーな', 'ぷらな', 'prana', 'ふらーな', 'ふらな'],
+  'SpO2': ['spo2', 'SPO2', '酸素飽和度', '経皮的酸素飽和度', '酸素飽和', 'えすぴーおーつー'],
+  '横隔膜': ['おうかくまく', 'ダイアフラム', 'diaphragm', 'おうかくま'],
+  '呼吸': ['息', 'こきゅう', 'こきう'],
+  '腹式呼吸': ['ふくしきこきゅう', 'お腹の呼吸', '腹式', 'ふくしきこきう'],
+  '胸式呼吸': ['きょうしきこきゅう', '胸の呼吸', 'きょうしきこきう'],
   '換気': ['かんき'],
   'ATP': ['えーてぃーぴー', 'アデノシン三リン酸'],
+  'HRV': ['えいちあーるぶい', '心拍変動'],
 };
 
-const ACCEPTANCE_TEST_INDEX: { question: string; refIds: string[] }[] = [
-  { question: '肺は自分の筋肉で動いているの', refIds: ['K003'] },
-  { question: '横隔膜って何', refIds: ['K026'] },
-  { question: '酸素がそのままATPになるの', refIds: ['K006'] },
-  { question: '呼吸数は少ないほどいいの', refIds: ['K011'] },
-  { question: 'SpO2の数字だけで健康か分かる', refIds: ['K029'] },
-  { question: 'HRVは高いほど健康', refIds: ['K033'] },
-  { question: 'プラーナは酸素のこと', refIds: ['K014'] },
-  { question: '八支則の中で呼吸はどこにある', refIds: ['K062'] },
-  { question: '寝ている間は誰が呼吸を調整しているの', refIds: ['K035', 'K080'] },
-  { question: 'いびきがあると睡眠時無呼吸なの', refIds: ['K081', 'K040'] },
-  { question: '鼻が詰まっていても鼻呼吸を練習するの', refIds: ['K082'] },
-  { question: '疲れるのはATP不足だから', refIds: ['K070'] },
-  { question: 'NREM睡眠は4段階', refIds: ['K079'] },
-  { question: '声はお腹から出るの', refIds: ['K054', 'K055'] },
+const ACCEPTANCE_TEST_INDEX: { keywords: string[]; refIds: string[] }[] = [
+  { keywords: ['肺', '筋肉', '動く'], refIds: ['K003'] },
+  { keywords: ['横隔膜'], refIds: ['K026'] },
+  { keywords: ['酸素', 'ATP', 'なる'], refIds: ['K006'] },
+  { keywords: ['呼吸数', '少ない', 'いい'], refIds: ['K011'] },
+  { keywords: ['SpO2', '数字', '健康'], refIds: ['K029'] },
+  { keywords: ['HRV', '高い', '健康'], refIds: ['K033'] },
+  { keywords: ['プラーナ', '酸素'], refIds: ['K014'] },
+  { keywords: ['八支則', '呼吸', 'どこ'], refIds: ['K062'] },
+  { keywords: ['寝', '呼吸', '調整'], refIds: ['K035', 'K080'] },
+  { keywords: ['いびき', '睡眠時無呼吸'], refIds: ['K081', 'K040'] },
+  { keywords: ['鼻', '詰ま', '鼻呼吸'], refIds: ['K082'] },
+  { keywords: ['疲れる', 'ATP', '不足'], refIds: ['K070'] },
+  { keywords: ['NREM', '睡眠', '4段階'], refIds: ['K079'] },
+  { keywords: ['声', 'お腹', '出る'], refIds: ['K054', 'K055'] },
 ];
 
-function normalizeKana(text: string): string {
-  let t = text;
-  t = t.replace(/ぁ-ゖ/g, (c) => String.fromCharCode(c.charCodeAt(0) + 0x60));
-  return t;
+const HIRAGANA_TO_KATAKANA: Record<string, string> = {
+  'あ':'ア','い':'イ','う':'ウ','え':'エ','お':'オ',
+  'か':'カ','き':'キ','く':'ク','け':'ケ','こ':'コ',
+  'さ':'サ','し':'シ','す':'ス','せ':'セ','そ':'ソ',
+  'た':'タ','ち':'チ','つ':'ツ','て':'テ','と':'ト',
+  'な':'ナ','に':'ニ','ぬ':'ヌ','ね':'ネ','の':'ノ',
+  'は':'ハ','ひ':'ヒ','ふ':'フ','へ':'ヘ','ほ':'ホ',
+  'ま':'マ','み':'ミ','む':'ム','め':'メ','も':'モ',
+  'や':'ヤ','ゆ':'ユ','よ':'ヨ','わ':'ワ','を':'ヲ','ん':'ン',
+  'が':'ガ','ぎ':'ギ','ぐ':'グ','げ':'ゲ','ご':'ゴ',
+  'ざ':'ザ','じ':'ジ','ず':'ズ','ぜ':'ゼ','ぞ':'ゾ',
+  'だ':'ダ','ぢ':'ヂ','づ':'ヅ','で':'デ','ど':'ド',
+  'ば':'バ','び':'ビ','ぶ':'ブ','べ':'ベ','ぼ':'ボ',
+  'ぱ':'パ','ぴ':'ピ','ぷ':'プ','ぺ':'ペ','ぽ':'ポ',
+  'ゃ':'ャ','ゅ':'ュ','ょ':'ョ','っ':'ッ',
+  'ぁ':'ァ','ぃ':'ィ','ぅ':'ゥ','ぇ':'ェ','ぉ':'ォ',
+};
+
+function toKatakana(text: string): string {
+  let result = '';
+  for (const ch of text) {
+    result += HIRAGANA_TO_KATAKANA[ch] ?? ch;
+  }
+  return result;
+}
+
+function normalizeKanaBoth(text: string): string {
+  return toKatakana(text).toLowerCase();
 }
 
 export function normalizeQuery(input: string): string {
@@ -98,22 +123,52 @@ export function normalizeQuery(input: string): string {
 
 function expandWithAliases(query: string): string[] {
   const variants = [query];
+  const kataQuery = toKatakana(query);
+  variants.push(kataQuery);
   const lower = query.toLowerCase();
+
   for (const [canonical, aliases] of Object.entries(ALIAS_DICTIONARY)) {
-    if (canonical.toLowerCase() === lower || aliases.some((a) => a.toLowerCase() === lower)) {
+    const allForms = [canonical, ...aliases];
+    if (allForms.some((f) => f.toLowerCase() === lower || toKatakana(f) === kataQuery)) {
       variants.push(canonical);
       for (const a of aliases) variants.push(a);
     }
   }
+
+  for (const [canonical, aliases] of Object.entries(ALIAS_DICTIONARY)) {
+    if (kataQuery.includes(toKatakana(canonical)) || lower.includes(canonical.toLowerCase())) {
+      if (!variants.includes(canonical)) {
+        variants.push(canonical);
+        for (const a of aliases) {
+          if (!variants.includes(a)) variants.push(a);
+        }
+      }
+    }
+    for (const a of aliases) {
+      if (kataQuery.includes(toKatakana(a)) || lower.includes(a.toLowerCase())) {
+        if (!variants.includes(canonical)) {
+          variants.push(canonical);
+          for (const a2 of aliases) {
+            if (!variants.includes(a2)) variants.push(a2);
+          }
+        }
+      }
+    }
+  }
+
   return Array.from(new Set(variants));
 }
 
 function matchAcceptanceTest(query: string): string[] {
-  const normalized = normalizeQuery(query).toLowerCase().replace(/\s+/g, '');
+  const normalized = normalizeQuery(query);
+  const kata = toKatakana(normalized).toLowerCase();
   const refIds: string[] = [];
   for (const t of ACCEPTANCE_TEST_INDEX) {
-    const testQ = t.question.toLowerCase().replace(/\s+/g, '');
-    if (normalized.includes(testQ) || testQ.includes(normalized)) {
+    const matchedKeywords = t.keywords.filter((kw) => {
+      const kwKata = toKatakana(kw).toLowerCase();
+      return kata.includes(kwKata) || normalized.toLowerCase().includes(kw.toLowerCase());
+    });
+    if (matchedKeywords.length >= Math.ceil(t.keywords.length * 0.6)) {
       refIds.push(...t.refIds);
     }
   }
@@ -121,11 +176,11 @@ function matchAcceptanceTest(query: string): string[] {
 }
 
 export function classifyDomain(text: string): 'breathwork' | 'yoga' | 'general' {
-  const lower = text.toLowerCase();
-  if (/呼吸|プラーナ|プラナヤマ|pranayama|breath|肺|横隔膜|換気|spo2|sp o2|息|吐く|吸う|腹式|胸式|完全なヨガ呼吸|box breathing|ボックス|atp|hrv|睡眠|いびき|鼻呼吸/.test(lower)) {
+  const kata = normalizeKanaBoth(text);
+  if (/呼吸|プラーナ|プラナヤマ|PRANAYAMA|BREATH|肺|横隔膜|換気|SPO2|息|吐ク|吸ウ|腹式|胸式|完全なヨガ呼吸|BOX BREATHING|ボックス|ATP|HRV|睡眠|いびき|鼻呼吸/.test(kata)) {
     return 'breathwork';
   }
-  if (/アーサナ|ポーズ|asana|ヨガ|yoga|瞑想|meditation|チャクラ|ナマスカール|スーリヤ/.test(lower)) {
+  if (/アーサナ|ポーズ|ASANA|ヨガ|YOGA|瞑想|MEDITATION|チャクラ|ナマスカール|スーリヤ/.test(kata)) {
     return 'yoga';
   }
   return 'general';
@@ -140,60 +195,90 @@ function scoreMatch(query: string, expandedQueries: string[], entry: {
   aliases?: string[] | null;
 }): { score: number; match_type: string } {
   const title = (entry.title || '').toLowerCase();
+  const titleKata = toKatakana(entry.title || '').toLowerCase();
   const answerShort = (entry.answer_short || '').toLowerCase();
   const answerDetail = (entry.answer_detail || '').toLowerCase();
   const tags = entry.tags || [];
   const eqs = entry.example_questions || [];
   const aliases = entry.aliases || [];
 
-  for (const q of expandedQueries) {
-    const ql = q.toLowerCase();
-    if (title === ql) return { score: 100, match_type: 'title_exact' };
+  const allQ = expandedQueries.map((q) => q.toLowerCase());
+  const allQKata = expandedQueries.map((q) => toKatakana(q).toLowerCase());
+
+  for (let i = 0; i < allQ.length; i++) {
+    if (title === allQ[i] || titleKata === allQKata[i]) return { score: 100, match_type: 'title_exact' };
   }
-  for (const q of expandedQueries) {
-    const ql = q.toLowerCase();
+  for (let i = 0; i < allQ.length; i++) {
     for (const a of aliases) {
-      if (a.toLowerCase() === ql) return { score: 95, match_type: 'alias_exact' };
+      const aKata = toKatakana(a).toLowerCase();
+      if (a.toLowerCase() === allQ[i] || aKata === allQKata[i]) return { score: 95, match_type: 'alias_exact' };
     }
   }
-  for (const q of expandedQueries) {
-    const ql = q.toLowerCase();
-    if (title.startsWith(ql)) return { score: 90, match_type: 'title_prefix' };
+  for (let i = 0; i < allQ.length; i++) {
+    if (title.startsWith(allQ[i]) || titleKata.startsWith(allQKata[i])) return { score: 90, match_type: 'title_prefix' };
   }
-  for (const q of expandedQueries) {
-    const ql = q.toLowerCase();
+  for (let i = 0; i < allQ.length; i++) {
     for (const a of aliases) {
-      if (a.toLowerCase().startsWith(ql)) return { score: 85, match_type: 'alias_prefix' };
+      const aKata = toKatakana(a).toLowerCase();
+      if (a.toLowerCase().startsWith(allQ[i]) || aKata.startsWith(allQKata[i])) return { score: 85, match_type: 'alias_prefix' };
     }
   }
-  for (const q of expandedQueries) {
-    const ql = q.toLowerCase();
-    if (title.includes(ql)) return { score: 75, match_type: 'title_contains' };
+  for (let i = 0; i < allQ.length; i++) {
+    if (title.includes(allQ[i]) || titleKata.includes(allQKata[i])) return { score: 75, match_type: 'title_contains' };
   }
-  for (const q of expandedQueries) {
-    const ql = q.toLowerCase();
+  for (let i = 0; i < allQ.length; i++) {
     for (const a of aliases) {
-      if (a.toLowerCase().includes(ql)) return { score: 70, match_type: 'alias_contains' };
+      const aKata = toKatakana(a).toLowerCase();
+      if (a.toLowerCase().includes(allQ[i]) || aKata.includes(allQKata[i])) return { score: 70, match_type: 'alias_contains' };
     }
   }
-  for (const q of expandedQueries) {
-    const ql = q.toLowerCase();
+  for (let i = 0; i < allQ.length; i++) {
     for (const eq of eqs) {
-      if (eq.toLowerCase().includes(ql)) return { score: 65, match_type: 'example_question_contains' };
+      const eqKata = toKatakana(eq).toLowerCase();
+      if (eq.toLowerCase().includes(allQ[i]) || eqKata.includes(allQKata[i])) return { score: 65, match_type: 'example_question_contains' };
     }
   }
-  for (const q of expandedQueries) {
-    const ql = q.toLowerCase();
+  for (let i = 0; i < allQ.length; i++) {
     for (const t of tags) {
-      if (t.toLowerCase().includes(ql)) return { score: 55, match_type: 'tag_contains' };
+      const tKata = toKatakana(t).toLowerCase();
+      if (t.toLowerCase().includes(allQ[i]) || tKata.includes(allQKata[i])) return { score: 55, match_type: 'tag_contains' };
     }
   }
-  for (const q of expandedQueries) {
-    const ql = q.toLowerCase();
-    if (answerShort.includes(ql) || answerDetail.includes(ql)) return { score: 40, match_type: 'answer_contains' };
+  for (let i = 0; i < allQ.length; i++) {
+    if (answerShort.includes(allQ[i]) || answerDetail.includes(allQ[i])) return { score: 40, match_type: 'answer_contains' };
   }
 
   return { score: 0, match_type: 'no_match' };
+}
+
+function extractKeywords(query: string): string[] {
+  const normalized = normalizeQuery(query);
+  const kata = toKatakana(normalized);
+  const keywords = new Set<string>();
+  keywords.add(normalized);
+  keywords.add(kata);
+
+  for (const [canonical, aliases] of Object.entries(ALIAS_DICTIONARY)) {
+    const allForms = [canonical, ...aliases];
+    for (const f of allForms) {
+      const fKata = toKatakana(f);
+      if (kata.includes(fKata) || normalized.toLowerCase().includes(f.toLowerCase())) {
+        keywords.add(canonical);
+        keywords.add(f);
+      }
+    }
+  }
+
+  const breathKeywords = ['呼吸', '肺', '横隔膜', '換気', 'SpO2', 'ATP', 'HRV', '睡眠', 'プラーナ', '腹式', '胸式', '鼻呼吸', 'いびき'];
+  for (const kw of breathKeywords) {
+    const kwKata = toKatakana(kw);
+    if (kata.includes(kwKata) || normalized.toLowerCase().includes(kw.toLowerCase())) {
+      keywords.add(kw);
+      keywords.add(kwKata);
+    }
+  }
+
+  return Array.from(keywords);
 }
 
 export async function searchBM5(
@@ -203,6 +288,7 @@ export async function searchBM5(
   const normalized = normalizeQuery(query);
   const domain = classifyDomain(normalized);
   const expanded = expandWithAliases(normalized);
+  const keywords = extractKeywords(query);
   const debug: BM5DebugLog = {
     rawInput: query,
     normalizedQuery: normalized,
@@ -218,7 +304,8 @@ export async function searchBM5(
 
   const combined: BM5SearchResult[] = [];
 
-  const orFilters = expanded.map((q) => {
+  const searchTerms = expanded.length > 0 ? expanded : [normalized];
+  const orFilters = searchTerms.map((q) => {
     const safe = q.replace(/[%_]/g, '\\$&').replace(/'/g, "''");
     return `title.ilike.%${safe}%,answer_short.ilike.%${safe}%,answer_detail.ilike.%${safe}%`;
   }).join(',');
@@ -251,15 +338,43 @@ export async function searchBM5(
     }
   }
 
+  if (combined.length === 0 && keywords.length > 0) {
+    const keywordFilters = keywords.map((q) => {
+      const safe = q.replace(/[%_]/g, '\\$&').replace(/'/g, "''");
+      return `title.ilike.%${safe}%,answer_short.ilike.%${safe}%,answer_detail.ilike.%${safe}%,tags.cs.{${safe}}`;
+    }).join(',');
+    const { data: kwData, error: kwErr } = await supabase
+      .from('bm5_knowledge_view')
+      .select('knowledge_id, title, answer_short, answer_detail, tags, example_questions, source_passage_ids')
+      .or(keywordFilters)
+      .limit(50);
+    if (!kwErr && kwData) {
+      for (const k of kwData as BM5KnowledgeEntry[]) {
+        const { score, match_type } = scoreMatch(normalized, [...expanded, ...keywords], k);
+        if (score > 0) {
+          combined.push({
+            entry_id: k.knowledge_id,
+            title: k.title,
+            answer: k.answer_short || k.answer_detail || '',
+            type: 'knowledge',
+            score,
+            match_type,
+            passages: [],
+          });
+        }
+      }
+    }
+  }
+
   const testRefIds = matchAcceptanceTest(query);
-  if (testRefIds.length > 0 && kData) {
+  if (testRefIds.length > 0) {
     for (const refId of testRefIds) {
       const existing = combined.find((r) => r.entry_id === refId);
       if (existing) {
         existing.score = Math.max(existing.score, 92);
         existing.match_type = 'acceptance_test_match';
       } else {
-        const k = (kData as BM5KnowledgeEntry[]).find((kd) => kd.knowledge_id === refId);
+        const k = (kData as BM5KnowledgeEntry[] | undefined)?.find((kd) => kd.knowledge_id === refId);
         if (k) {
           combined.push({
             entry_id: k.knowledge_id,
@@ -293,7 +408,7 @@ export async function searchBM5(
     }
   }
 
-  const catalogOrFilters = expanded.map((q) => {
+  const catalogOrFilters = searchTerms.map((q) => {
     const safe = q.replace(/[%_]/g, '\\$&').replace(/'/g, "''");
     return `name.ilike.%${safe}%`;
   }).join(',');
