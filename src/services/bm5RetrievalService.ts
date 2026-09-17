@@ -364,7 +364,7 @@ export async function searchBM5(
         combined.push({
           entry_id: k.knowledge_id,
           title: k.title,
-          answer: k.answer_short || k.answer_detail || '',
+          answer: k.answer_detail || k.answer_short || '',
           type: 'knowledge',
           score,
           match_type,
@@ -391,7 +391,7 @@ export async function searchBM5(
           combined.push({
             entry_id: k.knowledge_id,
             title: k.title,
-            answer: k.answer_short || k.answer_detail || '',
+            answer: k.answer_detail || k.answer_short || '',
             type: 'knowledge',
             score,
             match_type,
@@ -414,7 +414,7 @@ export async function searchBM5(
         combined.push({
           entry_id: k.knowledge_id,
           title: k.title,
-          answer: k.answer_short || k.answer_detail || '',
+          answer: k.answer_detail || k.answer_short || '',
           type: 'knowledge',
           score: 99,
           match_type: 'canonical_concept_match',
@@ -455,7 +455,7 @@ export async function searchBM5(
           combined.push({
             entry_id: k.knowledge_id,
             title: k.title,
-            answer: k.answer_short || k.answer_detail || '',
+            answer: k.answer_detail || k.answer_short || '',
             type: 'knowledge',
             score: 92,
             match_type: 'acceptance_test_match',
@@ -581,7 +581,7 @@ export async function fetchBM5ById(
   return {
     entry_id: k.knowledge_id,
     title: k.title,
-    answer: k.answer_short || k.answer_detail || '',
+    answer: k.answer_detail || k.answer_short || '',
     type: 'knowledge',
     score: 100,
     match_type: 'direct_id_fetch',
@@ -593,7 +593,7 @@ export function formatBM5Response(
   result: BM5SearchResult,
   _teacherName: string,
   explanationPref: 'short' | 'standard' | 'detailed',
-  questionContext?: string,
+  _questionContext?: string,
 ): string {
   let body: string;
   if (explanationPref === 'short') {
@@ -606,25 +606,12 @@ export function formatBM5Response(
     body = sentences.slice(0, Math.min(5, sentences.length)).join('。') + '。';
   }
 
-  let prefix = '';
-  if (questionContext) {
-    const kata = toKatakana(questionContext).toLowerCase();
-    if (result.entry_id === 'K003' && kata.includes('筋肉') && kata.includes('動ク')) {
-      prefix = 'はい、肺は自分の筋肉で動いています。';
-    } else if (result.entry_id === 'K003' && kata.includes('肺') && kata.includes('動ク')) {
-      prefix = 'はい、肺は筋肉の働きで動いています。';
-    } else if (result.entry_id === 'K029' && kata.includes('健康')) {
-      prefix = 'SpO2の数字だけでは健康を断定できません。';
-    }
-  }
-
   const sourceLabel = '呼吸マネージャー検定 第5版';
   const passageInfo = result.passages.length > 0
     ? ` / ${result.passages.map((p) => p.section_label || p.page_label || p.passage_id).join(', ')}`
     : '';
 
-  const bodyText = prefix ? `${prefix}\n${body}` : body;
-  return `${bodyText}\n\n参考：${sourceLabel} / ${result.title}${passageInfo}`;
+  return `${body}\n\n参考：${sourceLabel} / ${result.title}${passageInfo}`;
 }
 
 export function buildBM5Followup(
