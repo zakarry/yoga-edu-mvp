@@ -41,7 +41,6 @@ interface SafetyEntry {
   safety_id: string;
   title: string;
   description: string;
-  urgency: string | null;
 }
 
 interface IssueEntry {
@@ -98,6 +97,7 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
   const [searchResults, setSearchResults] = useState<{ entry_id: string; title: string; answer: string; type: string }[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [searched, setSearched] = useState(false);
 
   const checkAdmin = useCallback(async () => {
     if (!auth.user || !supabase) {
@@ -194,7 +194,7 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
     if (safetyIds.length > 0 && supabase) {
       const { data: sData, error: sErr } = await supabase
         .from('bm5_safety_view')
-        .select('safety_id, title, description, urgency')
+        .select('safety_id, title, description')
         .in('safety_id', safetyIds);
       if (sErr) errorMsg = errorMsg ? `${errorMsg}; Safety: ${sErr.message}` : `Safety: ${sErr.message}`;
       if (sData) safetyEntries = sData as SafetyEntry[];
@@ -231,12 +231,18 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
     }
 
     const passagesOk = passagesFound.length === passageIds.length;
-    const pass = entryFound && passagesOk;
-    const reason = entryFound
-      ? passagesOk
-        ? '参照エントリ・出典パッセージ・安全注意事項すべて確認済み'
-        : `出典パッセージ不足: ${passageIds.length}件中${passagesFound.length}件`
-      : '参照エントリが見つかりません';
+    const safetyOk = safetyIds.length === 0 || safetyEntries.length === safetyIds.length;
+    const hasError = errorMsg !== null;
+    const pass = entryFound && passagesOk && safetyOk && !hasError;
+    const reason = hasError
+      ? `クエリエラー: ${errorMsg}`
+      : !entryFound
+        ? '参照エントリが見つかりません'
+        : !passagesOk
+          ? `出典パッセージ不足: ${passageIds.length}件中${passagesFound.length}件`
+          : !safetyOk
+            ? `安全注意事項不足: ${safetyIds.length}件中${safetyEntries.length}件`
+            : '参照エントリ・出典パッセージ・安全注意事項すべて確認済み';
 
     return {
       test_id: test.test_id,
@@ -284,29 +290,41 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
   const doSearch = async () => {
     if (!supabase || !isAdmin || !searchQuery.trim()) return;
     setSearchError(null);
+    setSearched(true);
+    const q = searchQuery.trim();
+    const combined: { entry_id: string; title: string; answer: string; type: string }[] = [];
+
     const { data: kData, error: kErr } = await supabase
       .from('bm5_knowledge_view')
-      .select('knowledge_id, title, answer_short')
-      .ilike('title', `%${searchQuery}%`)
-      .limit(10);
+      .select('knowledge_id, title, answer_short, answer_detail, tags, example_questions')
+      .or(`title.ilike.%${q}%,answer_short.ilike.%${q}%,answer_detail.ilike.%${q}%`)
+      .limit(20);
     if (kErr) setSearchError(kErr.message);
+    if (kData) {
+      for (const k of kData as { knowledge_id: string; title: string; answer_short: string; answer_detail: string; tags: string[] | null; example_questions: string[] | null }[]) {
+        const tagMatch = k.tags?.some((t) => t.toLowerCase().includes(q.toLowerCase())) ?? false;
+        const eqMatch = k.example_questions?.some((e) => e.toLowerCase().includes(q.toLowerCase())) ?? false;
+        if (k.title?.toLowerCase().includes(q.toLowerCase()) || k.answer_short?.toLowerCase().includes(q.toLowerCase()) || k.answer_detail?.toLowerCase().includes(q.toLowerCase()) || tagMatch || eqMatch) {
+          combined.push({ entry_id: k.knowledge_id, title: k.title, answer: k.answer_short || k.answer_detail || '', type: 'knowledge' });
+        }
+      }
+    }
+
     const { data: cData, error: cErr } = await supabase
       .from('bm5_catalog_view')
-      .select('catalog_id, name')
-      .ilike('name', `%${searchQuery}%`)
-      .limit(10);
+      .select('catalog_id, name, aliases')
+      .or(`name.ilike.%${q}%,aliases.cs.{"${q}"}`)
+      .limit(20);
     if (cErr) setSearchError(cErr.message);
-    const combined: { entry_id: string; title: string; answer: string; type: string }[] = [];
-    if (kData) {
-      for (const k of kData as { knowledge_id: string; title: string; answer_short: string }[]) {
-        combined.push({ entry_id: k.knowledge_id, title: k.title, answer: k.answer_short, type: 'knowledge' });
-      }
-    }
     if (cData) {
-      for (const c of cData as { catalog_id: string; name: string }[]) {
-        combined.push({ entry_id: c.catalog_id, title: c.name, answer: '(呼吸法カタログ)', type: 'catalog' });
+      for (const c of cData as { catalog_id: string; name: string; aliases: string[] | null }[]) {
+        const aliasMatch = c.aliases?.some((a) => a.toLowerCase().includes(q.toLowerCase())) ?? false;
+        if (c.name?.toLowerCase().includes(q.toLowerCase()) || aliasMatch) {
+          combined.push({ entry_id: c.catalog_id, title: c.name, answer: '(呼吸法カタログ)', type: 'catalog' });
+        }
       }
     }
+
     setSearchResults(combined);
   };
 
@@ -391,8 +409,12 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
         {searchError && (
           <div style={{ fontSize: 12, color: '#d32f2f', marginBottom: 8 }}>検索エラー: {searchError}</div>
         )}
+        {searched && searchResults.length === 0 && !searchError && (
+          <div style={{ padding: 12, color: '#888', fontSize: 14 }}>該当する項目が見つかりませんでした</div>
+        )}
         {searchResults.length > 0 && (
           <div>
+            <div style={{ fontSize: 13, color: '#666', marginBottom: 8 }}>検索結果: {searchResults.length}件</div>
             {searchResults.map((r) => (
               <div key={r.entry_id} style={{ padding: 12, borderBottom: '1px solid #eee' }}>
                 <div style={{ fontWeight: 600 }}>{r.title} <span style={{ fontSize: 12, color: '#888' }}>({r.type}: {r.entry_id})</span></div>
