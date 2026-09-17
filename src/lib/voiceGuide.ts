@@ -956,6 +956,7 @@ export const ALL_VOICE_KEYS: string[] = [
   'voice-nadi-3-inhale-right', 'voice-nadi-4-switch-exhale-left', 'voice-nadi-5-inhale-left',
   'voice-nadi-6-repeat-switch',
   'voice-nadi-r-inhale-left', 'voice-nadi-r-exhale-right', 'voice-nadi-r-inhale-right', 'voice-nadi-r-exhale-left',
+  'voice-nadi-repeat-guide', 'voice-nadi-continue',
   'voice-nadi-end', 'voice-nadi-outro',
   'voice-mindfulness-1min-intro', 'voice-mindfulness-1min-mid', 'voice-mindfulness-1min-outro',
 ];

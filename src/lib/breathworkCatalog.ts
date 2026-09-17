@@ -519,10 +519,8 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
         '吐く': 'ゆっくり鼻から吐きます。',
       },
       repeatCues: [
-        { at: 0, text: '左から吸います。', audioKey: 'voice-nadi-r-inhale-left' },
-        { at: 6, text: '右から吐きます。', audioKey: 'voice-nadi-r-exhale-right' },
-        { at: 12, text: '右から吸います。', audioKey: 'voice-nadi-r-inhale-right' },
-        { at: 18, text: '左から吐きます。', audioKey: 'voice-nadi-r-exhale-left' },
+        { at: 0, text: '今の流れのまま、片鼻での呼吸を交互に繰り返します。', audioKey: 'voice-nadi-repeat-guide' },
+        { at: 30, text: '無理のない範囲で、ゆっくり続けましょう。', audioKey: 'voice-nadi-continue' },
       ],
       completion: [
         { at: 0, text: '最後の呼吸です。', audioKey: 'voice-nadi-end' },
