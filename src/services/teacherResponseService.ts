@@ -7,7 +7,11 @@ import { getBreathworkEntry, type BreathworkCatalogEntry } from '../lib/breathwo
 import { getMeditationEntry, type MeditationCatalogEntry } from '../lib/meditationCatalog';
 import { getSequenceEntry, type SequenceCatalogEntry } from '../lib/sequenceCatalog';
 import { fetchLLMExplanation } from './llmExplanationService';
+import { searchBM5, formatBM5Response, buildBM5Fallback, classifyDomain as classifyBM5Domain, normalizeQuery, type BM5SearchResult, type BM5DebugLog } from './bm5RetrievalService';
 import type { AITeacherLLMRequest, LLMKnowledgeItem, LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
+
+let lastBM5Debug: BM5DebugLog | null = null;
+export function getLastBM5Debug(): BM5DebugLog | null { return lastBM5Debug; }
 
 export interface ConversationContext {
   requestedMinutes?: number;
@@ -407,6 +411,43 @@ function buildContextualFollowupResponse(
     text,
     updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'contextual_followup' },
   };
+}
+
+async function tryBM5Lookup(
+  userMessage: string,
+  context: TeacherContext,
+  prevContext: ConversationContext | undefined,
+): Promise<TeacherResponse | null> {
+  const domain = classifyBM5Domain(userMessage);
+  if (domain !== 'breathwork') return null;
+
+  const { results, debug } = await searchBM5(userMessage, 5);
+  lastBM5Debug = debug;
+
+  if (results.length === 0) return null;
+
+  const name = context.persona?.name ?? 'AI先生';
+  const top = results[0];
+
+  if (top.score >= 40) {
+    const text = formatBM5Response(top, name, context.preferences.explanation);
+    return {
+      text,
+      knowledgeUsed: true,
+      knowledgeMasterId: top.entry_id,
+      knowledgeTitle: top.title,
+      updatedContext: {
+        ...prevContext,
+        lastUserMessage: userMessage,
+        lastTeacherText: text,
+        lastKnowledgeMasterId: top.entry_id,
+        lastKnowledgeTitle: top.title,
+        lastAssistantMode: 'knowledge_lookup',
+      },
+    };
+  }
+
+  return null;
 }
 
 async function tryBreathworkKnowledgeLookup(
@@ -1052,6 +1093,15 @@ function buildGeneralKnowledgeFallback(
   prevContext?: ConversationContext,
 ): TeacherResponse {
   const name = context.persona?.name ?? 'AI先生';
+  const domain = classifyBM5Domain(userMessage);
+  if (domain === 'breathwork') {
+    const text = buildBM5Fallback(name, normalizeQuery(userMessage), []);
+    return {
+      text,
+      knowledgeUsed: false,
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'general_explanation' },
+    };
+  }
   const activeTopic = prevContext?.lastTopic;
   let text: string;
   if (activeTopic) {
@@ -1239,6 +1289,9 @@ async function generateTeacherResponseInner(
       const pose = getCatalogEntry(resolution.poseId);
       if (pose) return buildPoseSpecificResponse(pose, resolution.questionType, context, prevContext);
     }
+
+    const bm5Result = await tryBM5Lookup(userMessage, context, prevContext);
+    if (bm5Result) return bm5Result;
 
     const breathworkResult = await tryBreathworkKnowledgeLookup(userMessage, context, prevContext);
     if (breathworkResult) return breathworkResult;
