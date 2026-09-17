@@ -306,6 +306,7 @@ interface ChatMessage {
   text: string;
   isSafety?: boolean;
   knowledgeUsed?: boolean;
+  knowledgeSource?: 'bm5' | 'yoga_knowledge' | 'mixed' | 'none';
   action?: TeacherResponseAction;
 }
 
@@ -858,6 +859,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         text: response.text,
         isSafety: response.isSafety,
         knowledgeUsed: response.knowledgeUsed,
+        knowledgeSource: response.knowledgeSource,
         action: response.action,
       };
       setChatMessages((prev) => [...prev, reply]);
@@ -1940,7 +1942,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 <div key={idx} className={`chat-message ${msg.role} ${msg.isSafety ? 'safety' : ''}`}>
                   <span className="chat-role">{msg.role === 'teacher' ? (persona?.name ?? 'AI先生') : 'あなた'}</span>
                   <p>{msg.text}</p>
-                  {msg.knowledgeUsed && <span className="chat-knowledge-badge">Yoga Knowledgeを参考にしています</span>}
+                  {msg.knowledgeUsed && <span className="chat-knowledge-badge">{msg.knowledgeSource === 'bm5' ? '呼吸マネージャー検定 第5版を参考にしています' : msg.knowledgeSource === 'mixed' ? '呼吸マネージャー検定 第5版・Yoga Knowledgeを参考にしています' : 'Yoga Knowledgeを参考にしています'}</span>}
                   {msg.action && msg.action.type !== 'none' && msg.action.label && (
                     <div className="chat-cta-card">
                       <span className="chat-cta-label">このまま実践しますか？</span>

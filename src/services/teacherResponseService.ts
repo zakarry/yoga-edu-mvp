@@ -7,7 +7,7 @@ import { getBreathworkEntry, type BreathworkCatalogEntry } from '../lib/breathwo
 import { getMeditationEntry, type MeditationCatalogEntry } from '../lib/meditationCatalog';
 import { getSequenceEntry, type SequenceCatalogEntry } from '../lib/sequenceCatalog';
 import { fetchLLMExplanation } from './llmExplanationService';
-import { searchBM5, formatBM5Response, buildBM5Fallback, classifyDomain as classifyBM5Domain, normalizeQuery, type BM5SearchResult, type BM5DebugLog } from './bm5RetrievalService';
+import { searchBM5, formatBM5Response, buildBM5Fallback, buildBM5Followup, classifyDomain as classifyBM5Domain, normalizeQuery, type BM5SearchResult, type BM5DebugLog } from './bm5RetrievalService';
 import type { AITeacherLLMRequest, LLMKnowledgeItem, LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
 
 let lastBM5Debug: BM5DebugLog | null = null;
@@ -33,6 +33,9 @@ export interface ConversationContext {
   lastSequenceId?: string;
   lastPracticeDomain?: PracticeDomain;
   lastQuestionType?: QuestionType;
+  lastBM5Topic?: string;
+  lastBM5ResultId?: string;
+  lastKnowledgeSource?: 'bm5' | 'yoga_knowledge' | 'mixed' | 'none';
 }
 
 export type TeacherResponseActionType =
@@ -55,6 +58,7 @@ export interface TeacherResponse {
   knowledgeUsed?: boolean;
   knowledgeMasterId?: string;
   knowledgeTitle?: string;
+  knowledgeSource?: 'bm5' | 'yoga_knowledge' | 'mixed' | 'none';
   updatedContext?: ConversationContext;
   action?: TeacherResponseAction;
 }
@@ -413,11 +417,83 @@ function buildContextualFollowupResponse(
   };
 }
 
+const FOLLOWUP_PATTERNS = /^(で|それで|もう少し|詳しく|どういうこと|どこにいった|どこ行った|続けて|もっと|それで？|で？)$/;
+const REPAIR_PATTERNS = /(どこにいった|どこ行った|どうした|何があった|戻って|戻して)/;
+
+function isBM5Followup(userMessage: string, prevContext?: ConversationContext): boolean {
+  if (!prevContext?.lastBM5Topic) return false;
+  const trimmed = userMessage.trim().replace(/[？?。、]/g, '');
+  return FOLLOWUP_PATTERNS.test(trimmed) || (trimmed.length <= 6 && /^(で|それで|もっと|詳しく|続けて)/.test(trimmed));
+}
+
+function isBM5Repair(userMessage: string, prevContext?: ConversationContext): boolean {
+  if (!prevContext?.lastBM5Topic) return false;
+  return REPAIR_PATTERNS.test(userMessage);
+}
+
 async function tryBM5Lookup(
   userMessage: string,
   context: TeacherContext,
   prevContext: ConversationContext | undefined,
 ): Promise<TeacherResponse | null> {
+  const name = context.persona?.name ?? 'AI先生';
+
+  if (isBM5Repair(userMessage, prevContext) && prevContext?.lastBM5ResultId) {
+    const topic = prevContext.lastBM5Topic ?? '先ほどの話題';
+    const text = `${topic}の話ですね。先ほどの続きから説明します。`;
+    const { results: repairResults } = await searchBM5(topic, 1);
+    if (repairResults.length > 0) {
+      const repairText = formatBM5Response(repairResults[0], name, context.preferences.explanation);
+      return {
+        text: `${text}\n\n${repairText}`,
+        knowledgeUsed: true,
+        knowledgeMasterId: repairResults[0].entry_id,
+        knowledgeTitle: repairResults[0].title,
+        knowledgeSource: 'bm5',
+        updatedContext: {
+          ...prevContext,
+          lastUserMessage: userMessage,
+          lastTeacherText: text,
+          lastKnowledgeMasterId: repairResults[0].entry_id,
+          lastKnowledgeTitle: repairResults[0].title,
+          lastAssistantMode: 'knowledge_lookup',
+          lastBM5Topic: repairResults[0].title,
+          lastBM5ResultId: repairResults[0].entry_id,
+          lastKnowledgeSource: 'bm5',
+        },
+      };
+    }
+    return {
+      text,
+      knowledgeUsed: false,
+      knowledgeSource: 'none',
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text },
+    };
+  }
+
+  if (isBM5Followup(userMessage, prevContext) && prevContext?.lastBM5ResultId) {
+    const { results: followupResults } = await searchBM5(prevContext.lastBM5Topic ?? '', 1);
+    if (followupResults.length > 0) {
+      const text = buildBM5Followup(followupResults[0], context.preferences.explanation);
+      return {
+        text,
+        knowledgeUsed: true,
+        knowledgeMasterId: followupResults[0].entry_id,
+        knowledgeTitle: followupResults[0].title,
+        knowledgeSource: 'bm5',
+        updatedContext: {
+          ...prevContext,
+          lastUserMessage: userMessage,
+          lastTeacherText: text,
+          lastAssistantMode: 'knowledge_lookup',
+          lastBM5Topic: followupResults[0].title,
+          lastBM5ResultId: followupResults[0].entry_id,
+          lastKnowledgeSource: 'bm5',
+        },
+      };
+    }
+  }
+
   const domain = classifyBM5Domain(userMessage);
   if (domain !== 'breathwork') return null;
 
@@ -426,7 +502,6 @@ async function tryBM5Lookup(
 
   if (results.length === 0) return null;
 
-  const name = context.persona?.name ?? 'AI先生';
   const top = results[0];
 
   if (top.score >= 40) {
@@ -436,6 +511,7 @@ async function tryBM5Lookup(
       knowledgeUsed: true,
       knowledgeMasterId: top.entry_id,
       knowledgeTitle: top.title,
+      knowledgeSource: 'bm5',
       updatedContext: {
         ...prevContext,
         lastUserMessage: userMessage,
@@ -443,6 +519,9 @@ async function tryBM5Lookup(
         lastKnowledgeMasterId: top.entry_id,
         lastKnowledgeTitle: top.title,
         lastAssistantMode: 'knowledge_lookup',
+        lastBM5Topic: top.title,
+        lastBM5ResultId: top.entry_id,
+        lastKnowledgeSource: 'bm5',
       },
     };
   }
@@ -500,6 +579,7 @@ async function tryBreathworkKnowledgeLookup(
       knowledgeUsed: true,
       knowledgeMasterId: entry.masterId,
       knowledgeTitle: entry.title,
+      knowledgeSource: 'yoga_knowledge',
       updatedContext: {
         ...prevContext,
         lastUserMessage: userMessage,
@@ -507,6 +587,7 @@ async function tryBreathworkKnowledgeLookup(
         lastKnowledgeMasterId: entry.masterId,
         lastKnowledgeTitle: entry.title,
         lastAssistantMode: 'knowledge_lookup',
+        lastKnowledgeSource: 'yoga_knowledge',
       },
     };
   }
@@ -580,12 +661,14 @@ async function tryKnowledgeLookup(
         knowledgeUsed: true,
         knowledgeMasterId: primaryEntry.masterId,
         knowledgeTitle: primaryEntry.title,
+        knowledgeSource: 'yoga_knowledge',
         updatedContext: {
           ...prevContext,
           lastUserMessage: userMessage,
           lastTeacherText: text,
           lastKnowledgeMasterId: primaryEntry.masterId,
           lastKnowledgeTitle: primaryEntry.title,
+          lastKnowledgeSource: 'yoga_knowledge',
         },
       };
     }
@@ -600,12 +683,14 @@ async function tryKnowledgeLookup(
       knowledgeUsed: true,
       knowledgeMasterId: primaryEntry.masterId,
       knowledgeTitle: primaryEntry.title,
+      knowledgeSource: 'yoga_knowledge',
       updatedContext: {
         ...prevContext,
         lastUserMessage: userMessage,
         lastTeacherText: fallbackText,
         lastKnowledgeMasterId: primaryEntry.masterId,
         lastKnowledgeTitle: primaryEntry.title,
+        lastKnowledgeSource: 'yoga_knowledge',
       },
     };
   }
@@ -1099,7 +1184,8 @@ function buildGeneralKnowledgeFallback(
     return {
       text,
       knowledgeUsed: false,
-      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'general_explanation' },
+      knowledgeSource: 'none',
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'general_explanation', lastKnowledgeSource: 'none' },
     };
   }
   const activeTopic = prevContext?.lastTopic;
