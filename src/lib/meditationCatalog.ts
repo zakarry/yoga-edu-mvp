@@ -21,6 +21,9 @@ export interface MeditationVisual {
 
 export interface MeditationKnowledge {
   knowledgeEntryId?: string | null;
+  knowledgeMasterId?: string | null;
+  zukanSlug?: string | null;
+  zukanUrl?: string | null;
   verified: boolean;
   professionalYogaRelated: true | false | null;
 }
@@ -190,6 +193,8 @@ export const MEDITATION_CATALOG: MeditationCatalogEntry[] = [
     visual: { type: 'minimal' },
     knowledge: {
       knowledgeEntryId: null,
+      knowledgeMasterId: 'YK-0307',
+      zukanSlug: 'yk-0307',
       verified: true,
       professionalYogaRelated: false,
     },

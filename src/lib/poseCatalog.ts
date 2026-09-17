@@ -430,48 +430,6 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     status: 'active',
   },
   {
-    id: 'mindfulness-1min',
-    type: 'dhyana',
-    nameJa: '1分間マインドフルネス',
-    nameSanskrit: 'Dhyana',
-    nameEn: 'One Minute Mindfulness',
-    image: '/pose-mindfulness.webp',
-    defaultDurationMin: 1,
-    beginnerInstructions: [
-      '背筋を伸ばして楽な姿勢で座る。目を閉じるか薄く開く',
-      '呼吸の動き（鼻の奥、胸、お腹）に注意を向ける。呼吸がそれたらやさしく戻す',
-    ],
-    breathingInstructions: [
-      '自然な呼吸。変えようとしない',
-    ],
-    generalCautions: [
-      '眠くなったら目を開けてもよい。雑念が来るのは自然なこと',
-    ],
-    voiceGuide: {
-      intro: '楽な姿勢で、自然な呼吸に戻ります。今ここにある呼吸や身体の感覚に静かに意識を向けてみましょう。',
-      introAudioKey: 'voice-mindfulness-1min-intro',
-      firstRound: [],
-      completion: 'ゆっくり意識を身体に戻します。準備ができたら目を開けましょう。',
-      completionAudioKey: 'voice-mindfulness-1min-outro',
-    },
-    planner: {
-      beginnerFriendly: true,
-      gentleAllowed: true,
-      intensity: 'low',
-      advancedBalance: false,
-      deepRange: false,
-      highLoad: false,
-      transitionComplexity: 'low',
-    },
-    knowledge: {
-      knowledgeMasterId: 'YK-0307',
-      zukanSlug: 'yk-0307',
-      verified: true,
-      professionalYogaRelated: null,
-    },
-    status: 'active',
-  },
-  {
     id: 'setu-bandhasana',
     type: 'asana',
     nameJa: 'セツ・バンダーサナ（橋のポーズ）',
@@ -868,7 +826,14 @@ function meditationEntryToPoseEntry(m: MeditationCatalogEntry): PoseCatalogEntry
       highLoad: false,
       transitionComplexity: 'low' as PoseTransitionComplexity,
     },
-    knowledge: m.knowledge as unknown as KnowledgeLink,
+    knowledge: {
+      knowledgeEntryId: m.knowledge.knowledgeEntryId ?? null,
+      knowledgeMasterId: m.knowledge.knowledgeMasterId ?? null,
+      zukanSlug: m.knowledge.zukanSlug ?? null,
+      zukanUrl: m.knowledge.zukanUrl ?? null,
+      verified: m.knowledge.verified,
+      professionalYogaRelated: m.knowledge.professionalYogaRelated,
+    },
     status: m.status as PoseStatus,
   };
 }
