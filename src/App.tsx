@@ -23,6 +23,7 @@ import { ProDrillPage } from './ProDrillPage';
 import DiagnosisV2Page from './DiagnosisV2Page';
 import { SacredSitesPage } from './components/SacredSitesPage';
 import { LearnHubPage } from './components/LearnHubPage';
+import { BreathworkDictionaryPage } from './components/BreathworkDictionaryPage';
 import { StaticInfoPage } from './components/StaticInfoPage';
 import { TeacherDiagnosisPage } from './components/TeacherDiagnosisPage';
 import { TopBackLink } from './components/TopBackLink';
@@ -46,7 +47,7 @@ import { MeditationExperience } from './components/MeditationExperience';
 import { SuryaNamaskarExperience } from './components/SuryaNamaskarExperience';
 import { getActiveSequences } from './lib/sequenceCatalog';
 
-type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map' | 'box-breathing' | 'breathing-meditation' | 'breathwork-practice' | 'meditation' | 'learn' | 'surya-namaskar' | 'bm5-admin';
+type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map' | 'box-breathing' | 'breathing-meditation' | 'breathwork-practice' | 'meditation' | 'learn' | 'surya-namaskar' | 'bm5-admin' | 'breathwork-dictionary';
 
 type FilterType = SearchItem['type'] | 'all';
 
@@ -1118,6 +1119,7 @@ export default function App() {
   const [mapFilterType, setMapFilterType] = useState<FilterType>('all');
   const [aiTeacherMinutes, setAiTeacherMinutes] = useState<number | undefined>(undefined);
   const [aiTeacherInitialPoseId, setAiTeacherInitialPoseId] = useState<string | null>(null);
+  const [aiTeacherKnowledgeContext, setAiTeacherKnowledgeContext] = useState<{ title: string; knowledgeId: string } | null>(null);
   const [testMode, setTestMode] = useState<string | null>(null);
   const [entryTarget, setEntryTarget] = useState<string | null>(null);
   const [entrySection, setEntrySection] = useState<string | null>(null);
@@ -2034,6 +2036,21 @@ export default function App() {
             onOpenBreathingMeditation={() => moveTo('breathing-meditation')}
             onOpenAITeacher={() => moveTo('ai-teacher')}
             onOpenSacredSites={() => moveTo('sacred-sites')}
+            onOpenBreathworkDictionary={() => moveTo('breathwork-dictionary')}
+            onOpenBreathworkKnowledge={(breathworkId) => {
+              setAiTeacherInitialPoseId(breathworkId);
+              moveTo('breathwork-dictionary');
+            }}
+          />
+        )}
+        {page === 'breathwork-dictionary' && (
+          <BreathworkDictionaryPage
+            onBackHome={() => moveTo('home')}
+            onAskAITeacher={(knowledgeTitle, knowledgeId) => {
+              setAiTeacherKnowledgeContext({ title: knowledgeTitle, knowledgeId });
+              setAiTeacherInitialPoseId(null);
+              moveTo('ai-teacher');
+            }}
           />
         )}
         {page === 'sacred-sites' && <SacredSitesPage onBackHome={() => moveTo('home')} />}
@@ -2046,6 +2063,7 @@ export default function App() {
             latestDiagnosis={null}
             initialMinutes={aiTeacherMinutes}
             initialPoseId={aiTeacherInitialPoseId}
+            initialKnowledgeContext={aiTeacherKnowledgeContext}
             entryTarget={entryTarget}
           />
         )}

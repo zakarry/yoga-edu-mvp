@@ -42,6 +42,7 @@ interface MyAITeacherPageProps {
   latestDiagnosis: DiagnosisRecord | null;
   initialMinutes?: number;
   initialPoseId?: string | null;
+  initialKnowledgeContext?: { title: string; knowledgeId: string } | null;
   entryTarget?: string | null;
 }
 
@@ -383,7 +384,7 @@ function resolvePosesFromProgram(prog: TodayProgram | null): ConcretePose[] {
   return poses;
 }
 
-export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onOpenProYoga, latestDiagnosis, initialMinutes, initialPoseId, entryTarget }: MyAITeacherPageProps) {
+export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onOpenProYoga, latestDiagnosis, initialMinutes, initialPoseId, initialKnowledgeContext, entryTarget }: MyAITeacherPageProps) {
   const auth = useAuth();
   const [step, setStep] = useState<StepId>('home');
   const [persona, setPersona] = useState<AITeacherPersona | null>(null);
@@ -1344,6 +1345,18 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       poseGuideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 80);
   }, [initialPoseId]);
+
+  const initialKnowledgeApplied = useRef(false);
+  useEffect(() => {
+    if (!initialKnowledgeContext || initialKnowledgeApplied.current) return;
+    initialKnowledgeApplied.current = true;
+    setStep('step5');
+    setChatInput(`${initialKnowledgeContext.title}について教えてください`);
+    setTimeout(() => {
+      const input = document.querySelector('.ai-teacher-chat-input-row input') as HTMLInputElement | null;
+      input?.focus();
+    }, 100);
+  }, [initialKnowledgeContext]);
 
   const handleEventDemoStart = useCallback(() => {
     if (safetyBlocked || !practiceEntryAllows(practiceEntryVerdict)) return;

@@ -9649,3 +9649,222 @@ html, body {
     flex-direction: column;
   }
 }
+
+/* === Breathwork Dictionary Page === */
+.breathwork-dictionary-page { max-width: 100%; }
+.breathwork-dictionary-search {
+  padding: 20px 24px;
+}
+.breathwork-dictionary-search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.breathwork-dictionary-search-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: 15px;
+}
+.breathwork-dictionary-search-input:focus {
+  outline: none;
+  border-color: var(--green-strong);
+  box-shadow: 0 0 0 3px rgba(77, 182, 172, 0.15);
+}
+.breathwork-dictionary-categories {
+  padding: 16px 24px;
+}
+.breathwork-dictionary-category-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.breathwork-dictionary-chip {
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--navy);
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+.breathwork-dictionary-chip:hover {
+  border-color: var(--green-strong);
+  background: rgba(220, 236, 225, 0.2);
+}
+.breathwork-dictionary-chip.active {
+  border-color: var(--green-strong);
+  background: rgba(77, 182, 172, 0.15);
+  font-weight: 600;
+}
+.breathwork-dictionary-list {
+  padding: 16px 24px;
+}
+.breathwork-dictionary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.breathwork-dictionary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  transition: border-color .2s, box-shadow .2s;
+}
+.breathwork-dictionary-card:hover {
+  border-color: var(--green-strong);
+  box-shadow: var(--shadow);
+}
+.breathwork-dictionary-card-id {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.breathwork-dictionary-card-title {
+  font-size: 16px;
+  color: var(--navy);
+  line-height: 1.4;
+}
+.breathwork-dictionary-card-answer {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  flex: 1;
+}
+.breathwork-dictionary-card-category {
+  font-size: 11px;
+  color: var(--green-strong);
+  font-weight: 600;
+}
+.breathwork-dictionary-card-btn {
+  align-self: flex-start;
+  margin-top: 4px;
+  font-size: 13px;
+  padding: 6px 14px;
+}
+.breathwork-dictionary-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+.breathwork-dictionary-modal {
+  background: var(--paper);
+  border-radius: 16px;
+  padding: 28px 32px;
+  max-width: 560px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+}
+.breathwork-dictionary-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 13px;
+  padding: 4px 12px;
+}
+.breathwork-dictionary-modal-id {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.breathwork-dictionary-modal-title {
+  font-size: 20px;
+  color: var(--navy);
+  margin-bottom: 16px;
+}
+.breathwork-dictionary-modal-section {
+  margin-bottom: 16px;
+}
+.breathwork-dictionary-modal-section strong {
+  display: block;
+  font-size: 13px;
+  color: var(--navy);
+  margin-bottom: 4px;
+}
+.breathwork-dictionary-modal-section p {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.7;
+}
+.breathwork-dictionary-modal-passage {
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.03);
+}
+.breathwork-dictionary-modal-passage-label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.breathwork-dictionary-modal-source {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 16px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.breathwork-dictionary-modal-ask-btn {
+  width: 100%;
+}
+.breathwork-practice-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.breathwork-practice-link-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .2s, box-shadow .2s;
+}
+.breathwork-practice-link-card:hover {
+  border-color: var(--green-strong);
+  box-shadow: var(--shadow);
+}
+.breathwork-practice-link-card strong {
+  font-size: 14px;
+  color: var(--navy);
+}
+.breathwork-practice-link-card span {
+  font-size: 12px;
+  color: var(--green-strong);
+  font-weight: 600;
+}
+@media (max-width: 768px) {
+  .breathwork-dictionary-grid {
+    grid-template-columns: 1fr;
+  }
+  .breathwork-dictionary-modal {
+    padding: 20px 20px;
+  max-height: 85vh;
+  border-radius: 12px;
+  }
+}

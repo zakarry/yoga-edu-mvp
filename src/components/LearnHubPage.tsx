@@ -7,7 +7,18 @@ interface LearnHubPageProps {
   onOpenBreathingMeditation: () => void;
   onOpenAITeacher: () => void;
   onOpenSacredSites: () => void;
+  onOpenBreathworkDictionary: () => void;
+  onOpenBreathworkKnowledge: (breathworkId: string) => void;
 }
+
+const PRACTICE_KNOWLEDGE_LINKS: { id: string; label: string; knowledgeQuery: string }[] = [
+  { id: 'box-breathing', label: 'Box Breathing', knowledgeQuery: 'ボックスブリージング' },
+  { id: 'abdominal-breathing', label: '腹式呼吸', knowledgeQuery: '腹式呼吸' },
+  { id: 'thoracic-breathing', label: '胸式呼吸', knowledgeQuery: '胸式呼吸' },
+  { id: 'complete-breathing', label: '完全なヨガ呼吸', knowledgeQuery: '完全なヨガ呼吸' },
+  { id: 'bhramari', label: 'ブラーマリー', knowledgeQuery: 'ブラーマリー' },
+  { id: 'alternate-nostril', label: 'ナディー・ショーダナ', knowledgeQuery: 'ナディー・ショーダナ' },
+];
 
 export function LearnHubPage({
   onBackHome,
@@ -16,6 +27,8 @@ export function LearnHubPage({
   onOpenBreathingMeditation,
   onOpenAITeacher,
   onOpenSacredSites,
+  onOpenBreathworkDictionary,
+  onOpenBreathworkKnowledge,
 }: LearnHubPageProps) {
   return (
     <div className="page-shell learn-hub-page">
@@ -32,7 +45,7 @@ export function LearnHubPage({
         { id: 'learn-sacred', label: 'ヨガの聖地と文化' },
       ]} />
 
-      {/* A. Yoga Knowledge */}
+      {/* A. Yoga Knowledge + 呼吸図鑑 */}
       <section id="learn-knowledge" className="panel learn-hub-section">
         <div className="section-inline-header">
           <h3>Yoga Knowledge</h3>
@@ -44,6 +57,12 @@ export function LearnHubPage({
             <p>ヨガの哲学、人体、指導、アーサナ、呼吸、瞑想まで。体系的に理解するための知識ライブラリ。</p>
             <span className="top-knowledge-cta">ヨガ図鑑を見る →</span>
           </a>
+          <button className="top-knowledge-card" onClick={onOpenBreathworkDictionary} style={{ textAlign: 'left' }}>
+            <span className="top-knowledge-icon">🫁</span>
+            <strong>呼吸図鑑</strong>
+            <p>呼吸マネージャー検定 第5版をベースにした呼吸の知識ライブラリ。基礎から安全まで、体系的に学べます。</p>
+            <span className="top-knowledge-cta">呼吸図鑑を見る →</span>
+          </button>
         </div>
       </section>
 
@@ -51,6 +70,15 @@ export function LearnHubPage({
       <section id="learn-cert" className="panel learn-hub-section">
         <div className="section-inline-header">
           <h3>資格・検定</h3>
+        </div>
+        <div className="top-learning-flow">
+          <span className="top-learning-step">実践</span>
+          <span className="top-learning-arrow">→</span>
+          <span className="top-learning-step">関連Knowledge</span>
+          <span className="top-learning-arrow">→</span>
+          <span className="top-learning-step">理解</span>
+          <span className="top-learning-arrow">→</span>
+          <span className="top-learning-step">対応検定</span>
         </div>
         <div className="top-learning-grid">
           <div className="top-learning-group">
@@ -98,6 +126,21 @@ export function LearnHubPage({
             <strong>My AI Teacher</strong>
             <span>AI先生と呼吸・ヨガを学ぶ</span>
           </button>
+        </div>
+        <div className="section-inline-header" style={{ marginTop: 20 }}>
+          <h4>実践から呼吸図鑑へ</h4>
+        </div>
+        <div className="breathwork-practice-links">
+          {PRACTICE_KNOWLEDGE_LINKS.map((link) => (
+            <button
+              key={link.id}
+              className="breathwork-practice-link-card"
+              onClick={() => onOpenBreathworkKnowledge(link.id)}
+            >
+              <strong>{link.label}</strong>
+              <span>関連Knowledgeを見る →</span>
+            </button>
+          ))}
         </div>
       </section>
 
