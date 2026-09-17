@@ -174,6 +174,27 @@ export const MEDITATION_CATALOG: MeditationCatalogEntry[] = [
     },
     status: 'active',
   },
+  {
+    id: 'mindfulness-1min',
+    nameJa: '1分マインドフルネス',
+    nameEn: 'One Minute Mindfulness',
+    category: 'mindfulness',
+    durationSec: 60,
+    description: '短いガイドのあと、静寂の時間を過ごす1分間の瞑想。',
+    timeline: [
+      { atSec: 0, type: 'voice', text: '楽な姿勢で、自然な呼吸に戻ります。今ここにある呼吸や身体の感覚に静かに意識を向けてみましょう。', audioKey: 'voice-mindfulness-1min-intro' },
+      { atSec: 22, type: 'silence', durationSec: 24, text: '今ここにある感覚に意識を向けます' },
+      { atSec: 46, type: 'voice', text: 'ゆっくり意識を身体に戻します。準備ができたら目を開けましょう。', audioKey: 'voice-mindfulness-1min-outro' },
+      { atSec: 60, type: 'complete', text: 'お疲れさまでした' },
+    ],
+    visual: { type: 'minimal' },
+    knowledge: {
+      knowledgeEntryId: null,
+      verified: true,
+      professionalYogaRelated: false,
+    },
+    status: 'active',
+  },
 ];
 
 export function getMeditationEntry(id: string): MeditationCatalogEntry | undefined {
