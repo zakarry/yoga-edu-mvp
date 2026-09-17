@@ -29,6 +29,8 @@ export interface BM5SearchResult {
   entry_id: string;
   title: string;
   answer: string;
+  answer_short: string | null;
+  answer_detail: string | null;
   type: 'knowledge' | 'catalog';
   score: number;
   match_type: string;
@@ -367,6 +369,8 @@ export async function searchBM5(
           entry_id: k.knowledge_id,
           title: k.title,
           answer: k.answer_detail || k.answer_short || '',
+          answer_short: k.answer_short,
+          answer_detail: k.answer_detail,
           type: 'knowledge',
           score,
           match_type,
@@ -394,6 +398,8 @@ export async function searchBM5(
             entry_id: k.knowledge_id,
             title: k.title,
             answer: k.answer_detail || k.answer_short || '',
+            answer_short: k.answer_short,
+            answer_detail: k.answer_detail,
             type: 'knowledge',
             score,
             match_type,
@@ -417,6 +423,8 @@ export async function searchBM5(
           entry_id: k.knowledge_id,
           title: k.title,
           answer: k.answer_detail || k.answer_short || '',
+          answer_short: k.answer_short,
+          answer_detail: k.answer_detail,
           type: 'knowledge',
           score: 99,
           match_type: 'canonical_concept_match',
@@ -433,7 +441,9 @@ export async function searchBM5(
           combined.push({
             entry_id: dk.knowledge_id,
             title: dk.title,
-            answer: dk.answer_short || dk.answer_detail || '',
+            answer: dk.answer_detail || dk.answer_short || '',
+            answer_short: dk.answer_short,
+            answer_detail: dk.answer_detail,
             type: 'knowledge',
             score: 99,
             match_type: 'canonical_concept_match',
@@ -458,6 +468,8 @@ export async function searchBM5(
             entry_id: k.knowledge_id,
             title: k.title,
             answer: k.answer_detail || k.answer_short || '',
+            answer_short: k.answer_short,
+            answer_detail: k.answer_detail,
             type: 'knowledge',
             score: 92,
             match_type: 'acceptance_test_match',
@@ -474,7 +486,9 @@ export async function searchBM5(
             combined.push({
               entry_id: dk.knowledge_id,
               title: dk.title,
-              answer: dk.answer_short || dk.answer_detail || '',
+              answer: dk.answer_detail || dk.answer_short || '',
+              answer_short: dk.answer_short,
+              answer_detail: dk.answer_detail,
               type: 'knowledge',
               score: 92,
               match_type: 'acceptance_test_match',
@@ -512,6 +526,8 @@ export async function searchBM5(
           entry_id: c.catalog_id,
           title: c.name,
           answer: '(呼吸法カタログ)',
+          answer_short: null,
+          answer_detail: null,
           type: 'catalog',
           score,
           match_type,
@@ -584,6 +600,8 @@ export async function fetchBM5ById(
     entry_id: k.knowledge_id,
     title: k.title,
     answer: k.answer_detail || k.answer_short || '',
+    answer_short: k.answer_short,
+    answer_detail: k.answer_detail,
     type: 'knowledge',
     score: 100,
     match_type: 'direct_id_fetch',
@@ -591,21 +609,51 @@ export async function fetchBM5ById(
   };
 }
 
+function isDefinitionQuestion(query: string): boolean {
+  const trimmed = query.trim();
+  if (/とは[？?]?$/.test(trimmed)) return true;
+  if (/って何[？?]?$/.test(trimmed)) return true;
+  if (/とは何[？?]?$/.test(trimmed)) return true;
+  const normalized = normalizeQuery(trimmed);
+  if (normalized === trimmed) return true;
+  if (normalized.length <= 8 && !/[？?]/.test(trimmed)) return true;
+  return false;
+}
+
 export function formatBM5Response(
   result: BM5SearchResult,
   _teacherName: string,
   explanationPref: 'short' | 'standard' | 'detailed',
-  _questionContext?: string,
+  questionContext?: string,
 ): string {
+  const isDefinition = questionContext ? isDefinitionQuestion(questionContext) : false;
+  const shortAns = result.answer_short ?? '';
+  const detailAns = result.answer_detail ?? '';
+
+  let primary: string;
+  let secondary: string;
+  if (isDefinition && shortAns) {
+    primary = shortAns;
+    secondary = detailAns && detailAns !== shortAns ? detailAns : '';
+  } else {
+    primary = detailAns || shortAns;
+    secondary = '';
+  }
+
   let body: string;
   if (explanationPref === 'short') {
-    const sentences = result.answer.split(/。/).filter((s) => s.trim().length > 0);
+    const sentences = primary.split(/。/).filter((s) => s.trim().length > 0);
     body = sentences.slice(0, 2).join('。') + '。';
   } else if (explanationPref === 'detailed') {
-    body = result.answer;
+    body = secondary ? `${primary} ${secondary}` : primary;
   } else {
-    const sentences = result.answer.split(/。/).filter((s) => s.trim().length > 0);
+    const sentences = primary.split(/。/).filter((s) => s.trim().length > 0);
     body = sentences.slice(0, Math.min(5, sentences.length)).join('。') + '。';
+    if (secondary && isDefinition) {
+      const secSentences = secondary.split(/。/).filter((s) => s.trim().length > 0);
+      const secBody = secSentences.slice(0, 3).join('。') + '。';
+      if (secBody && secBody !== body) body = `${body} ${secBody}`;
+    }
   }
 
   const sourceLabel = '呼吸マネージャー検定 第5版';
