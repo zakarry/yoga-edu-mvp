@@ -16,7 +16,7 @@ import {
 import type { DiagnosisRecord, SafetyState } from '../services/diagnosisService';
 import { buildTeacherContext, type TeacherContext } from '../services/teacherContextService';
 import { generateTodayPlan, type TodayPlan } from '../services/todayPlannerService';
-import { generateTeacherResponse, generateNextSuggestion, type ConversationContext, type TeacherResponseAction } from '../services/teacherResponseService';
+import { generateTeacherResponse, generateNextSuggestion, getLastBM5Debug, type ConversationContext, type TeacherResponseAction } from '../services/teacherResponseService';
 import { attachKnowledgeToTodayPlan, fetchKnowledgeExplanation, type TodayPlanWithKnowledge } from '../services/todayPlanKnowledgeService';
 import type { KnowledgeExplanation } from '../services/teacherKnowledgeService';
 import { runLLMRequestDryRun, type DryRunResult } from '../services/llmRequestDryRun';
@@ -851,6 +851,11 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setTimeout(async () => {
       const ctx = teacherContext ?? buildLocalContextFast(growth, conversationContext, todayContext);
       const response = await generateTeacherResponse(ctx, userMsg.text, conversationContext);
+      const dbg = getLastBM5Debug();
+      if (auth.profile?.is_admin && dbg) {
+        const trace = `[BM5 trace] raw="${dbg.rawInput}" norm="${dbg.normalizedQuery}" domain=${dbg.domain} matchedIds=[${dbg.matchedIds.join(',')}] source=${dbg.knowledgeSource} count=${dbg.resultCount}`;
+        console.log(trace);
+      }
       if (response.updatedContext) {
         setConversationContext(response.updatedContext);
       }

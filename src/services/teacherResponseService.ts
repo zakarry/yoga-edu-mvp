@@ -7,7 +7,7 @@ import { getBreathworkEntry, type BreathworkCatalogEntry } from '../lib/breathwo
 import { getMeditationEntry, type MeditationCatalogEntry } from '../lib/meditationCatalog';
 import { getSequenceEntry, type SequenceCatalogEntry } from '../lib/sequenceCatalog';
 import { fetchLLMExplanation } from './llmExplanationService';
-import { searchBM5, formatBM5Response, buildBM5Fallback, buildBM5Followup, classifyDomain as classifyBM5Domain, normalizeQuery, fetchBM5ById, type BM5SearchResult, type BM5DebugLog } from './bm5RetrievalService';
+import { searchBM5, formatBM5Response, buildBM5Fallback, buildBM5Followup, classifyDomain as classifyBM5Domain, normalizeQuery, fetchBM5ById, resolveCanonicalConcept, type BM5SearchResult, type BM5DebugLog } from './bm5RetrievalService';
 import type { AITeacherLLMRequest, LLMKnowledgeItem, LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
 
 let lastBM5Debug: BM5DebugLog | null = null;
@@ -542,7 +542,34 @@ async function tryBM5Lookup(
   const { results, debug } = await searchBM5(userMessage, 5);
   lastBM5Debug = debug;
 
-  if (results.length === 0) return null;
+  if (results.length === 0) {
+    const canonical = resolveCanonicalConcept(userMessage);
+    if (canonical) {
+      const directResult = await fetchBM5ById(canonical.preferredId);
+      if (directResult) {
+        const text = formatBM5Response(directResult, name, context.preferences.explanation, userMessage);
+        return {
+          text,
+          knowledgeUsed: true,
+          knowledgeMasterId: directResult.entry_id,
+          knowledgeTitle: directResult.title,
+          knowledgeSource: 'bm5',
+          updatedContext: {
+            ...prevContext,
+            lastUserMessage: userMessage,
+            lastTeacherText: text,
+            lastKnowledgeMasterId: directResult.entry_id,
+            lastKnowledgeTitle: directResult.title,
+            lastAssistantMode: 'knowledge_lookup',
+            lastBM5Topic: directResult.title,
+            lastBM5ResultId: directResult.entry_id,
+            lastKnowledgeSource: 'bm5',
+          },
+        };
+      }
+    }
+    return null;
+  }
 
   const top = results[0];
 

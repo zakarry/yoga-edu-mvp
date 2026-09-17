@@ -119,7 +119,9 @@ const HIRAGANA_TO_KATAKANA: Record<string, string> = {
   'な':'ナ','に':'ニ','ぬ':'ヌ','ね':'ネ','の':'ノ',
   'は':'ハ','ひ':'ヒ','ふ':'フ','へ':'ヘ','ほ':'ホ',
   'ま':'マ','み':'ミ','む':'ム','め':'メ','も':'モ',
-  'や':'ヤ','ゆ':'ユ','よ':'ヨ','わ':'ワ','を':'ヲ','ん':'ン',
+  'や':'ヤ','ゆ':'ユ','よ':'ヨ',
+  'ら':'ラ','り':'リ','る':'ル','れ':'レ','ろ':'ロ',
+  'わ':'ワ','を':'ヲ','ん':'ン',
   'が':'ガ','ぎ':'ギ','ぐ':'グ','げ':'ゲ','ご':'ゴ',
   'ざ':'ザ','じ':'ジ','ず':'ズ','ぜ':'ゼ','ぞ':'ゾ',
   'だ':'ダ','ぢ':'ヂ','づ':'ヅ','で':'デ','ど':'ド',
@@ -213,10 +215,10 @@ function matchAcceptanceTest(query: string): string[] {
 
 export function classifyDomain(text: string): 'breathwork' | 'yoga' | 'general' {
   const kata = normalizeKanaBoth(text);
-  if (/呼吸|プラーナ|プラナヤマ|PRANAYAMA|BREATH|肺|横隔膜|換気|SPO2|息|吐ク|吸ウ|腹式|胸式|完全なヨガ呼吸|BOX BREATHING|ボックス|ATP|HRV|睡眠|いびき|鼻呼吸/.test(kata)) {
+  if (/呼吸|プラーナ|プラナヤマ|プラナヤーマ|プラーナヤマ|pranayama|breath|肺|横隔膜|換気|spo2|息|吐ク|吸ウ|腹式|胸式|完全なヨガ呼吸|box breathing|ボックス|atp|hrv|睡眠|いびき|鼻呼吸/.test(kata)) {
     return 'breathwork';
   }
-  if (/アーサナ|ポーズ|ASANA|ヨガ|YOGA|瞑想|MEDITATION|チャクラ|ナマスカール|スーリヤ/.test(kata)) {
+  if (/アーサナ|ポーズ|asana|ヨガ|yoga|瞑想|meditation|チャクラ|ナマスカール|スーリヤ/.test(kata)) {
     return 'yoga';
   }
   return 'general';
