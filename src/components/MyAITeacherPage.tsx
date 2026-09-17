@@ -1052,9 +1052,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       }
     } else {
       const remaining = simpleTimerRemaining;
-      for (const cue of REMAINING_CUES) {
-        if (remaining <= cue.atRemaining && remaining > cue.atRemaining - 2) {
-          fireCue(cue.text);
+      const hasFinalCue = seq.cues.some((c) => c.isFinalCue);
+      if (!hasFinalCue) {
+        for (const cue of REMAINING_CUES) {
+          if (remaining <= cue.atRemaining && remaining > cue.atRemaining - 2) {
+            fireCue(cue.text);
+          }
         }
       }
       for (const cue of seq.cues) {

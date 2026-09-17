@@ -726,13 +726,18 @@ export function buildMeditationVoiceGuide(poseId: string, poseName: string, tota
       cues.push({ text: cue.text, atSeconds: cue.at, audioKey: cue.audioKey });
     }
   }
-  if (firstRound.length === 0) {
+  if (firstRound.length === 0 && !vg?.completionAudioKey) {
     cues.push({ text: '肩の力を抜きましょう。', atSeconds: 5 });
   }
-  cues.push({ text: 'あと30秒です。', atSeconds: Math.max(0, totalSeconds - 30) });
-  cues.push({ text: 'あと15秒です。', atSeconds: Math.max(0, totalSeconds - 15) });
-  cues.push({ text: 'あと少しです。', atSeconds: Math.max(0, totalSeconds - 5) });
-  cues.push({ text: 'お疲れさまでした。', atSeconds: totalSeconds, audioKey: vg?.completionAudioKey });
+  if (vg?.completionAudioKey) {
+    const outroAt = Math.max(0, totalSeconds - 14);
+    cues.push({ text: vg.completion ?? 'お疲れさまでした。', atSeconds: outroAt, audioKey: vg.completionAudioKey, isFinalCue: true });
+  } else {
+    cues.push({ text: 'あと30秒です。', atSeconds: Math.max(0, totalSeconds - 30) });
+    cues.push({ text: 'あと15秒です。', atSeconds: Math.max(0, totalSeconds - 15) });
+    cues.push({ text: 'あと少しです。', atSeconds: Math.max(0, totalSeconds - 5) });
+    cues.push({ text: 'お疲れさまでした。', atSeconds: totalSeconds });
+  }
   cues.push({ text: '次のポーズへ進みます。', atSeconds: totalSeconds + 1 });
   return { cues, totalSeconds };
 }

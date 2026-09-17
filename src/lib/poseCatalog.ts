@@ -450,9 +450,7 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     voiceGuide: {
       intro: '楽な姿勢で、自然な呼吸に戻ります。今ここにある呼吸や身体の感覚に静かに意識を向けてみましょう。',
       introAudioKey: 'voice-mindfulness-1min-intro',
-      firstRound: [
-        { at: 10, text: '呼吸がそれても、やさしく戻すだけで大丈夫です。', audioKey: 'voice-mindfulness-1min-mid' },
-      ],
+      firstRound: [],
       completion: 'ゆっくり意識を身体に戻します。準備ができたら目を開けましょう。',
       completionAudioKey: 'voice-mindfulness-1min-outro',
     },
