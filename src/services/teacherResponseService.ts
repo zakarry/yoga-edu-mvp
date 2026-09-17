@@ -7,7 +7,7 @@ import { getBreathworkEntry, type BreathworkCatalogEntry } from '../lib/breathwo
 import { getMeditationEntry, type MeditationCatalogEntry } from '../lib/meditationCatalog';
 import { getSequenceEntry, type SequenceCatalogEntry } from '../lib/sequenceCatalog';
 import { fetchLLMExplanation } from './llmExplanationService';
-import { searchBM5, formatBM5Response, buildBM5Fallback, buildBM5Followup, classifyDomain as classifyBM5Domain, normalizeQuery, type BM5SearchResult, type BM5DebugLog } from './bm5RetrievalService';
+import { searchBM5, formatBM5Response, buildBM5Fallback, buildBM5Followup, classifyDomain as classifyBM5Domain, normalizeQuery, fetchBM5ById, type BM5SearchResult, type BM5DebugLog } from './bm5RetrievalService';
 import type { AITeacherLLMRequest, LLMKnowledgeItem, LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
 
 let lastBM5Debug: BM5DebugLog | null = null;
@@ -441,9 +441,31 @@ async function tryBM5Lookup(
   if (isBM5Repair(userMessage, prevContext) && prevContext?.lastBM5ResultId) {
     const topic = prevContext.lastBM5Topic ?? '先ほどの話題';
     const text = `${topic}の話ですね。先ほどの続きから説明します。`;
+    const repairResult = await fetchBM5ById(prevContext.lastBM5ResultId);
+    if (repairResult) {
+      const repairText = formatBM5Response(repairResult, name, context.preferences.explanation, userMessage);
+      return {
+        text: `${text}\n\n${repairText}`,
+        knowledgeUsed: true,
+        knowledgeMasterId: repairResult.entry_id,
+        knowledgeTitle: repairResult.title,
+        knowledgeSource: 'bm5',
+        updatedContext: {
+          ...prevContext,
+          lastUserMessage: userMessage,
+          lastTeacherText: text,
+          lastKnowledgeMasterId: repairResult.entry_id,
+          lastKnowledgeTitle: repairResult.title,
+          lastAssistantMode: 'knowledge_lookup',
+          lastBM5Topic: repairResult.title,
+          lastBM5ResultId: repairResult.entry_id,
+          lastKnowledgeSource: 'bm5',
+        },
+      };
+    }
     const { results: repairResults } = await searchBM5(topic, 1);
     if (repairResults.length > 0) {
-      const repairText = formatBM5Response(repairResults[0], name, context.preferences.explanation);
+      const repairText = formatBM5Response(repairResults[0], name, context.preferences.explanation, userMessage);
       return {
         text: `${text}\n\n${repairText}`,
         knowledgeUsed: true,
@@ -472,6 +494,26 @@ async function tryBM5Lookup(
   }
 
   if (isBM5Followup(userMessage, prevContext) && prevContext?.lastBM5ResultId) {
+    const followupResult = await fetchBM5ById(prevContext.lastBM5ResultId);
+    if (followupResult) {
+      const text = buildBM5Followup(followupResult, context.preferences.explanation);
+      return {
+        text,
+        knowledgeUsed: true,
+        knowledgeMasterId: followupResult.entry_id,
+        knowledgeTitle: followupResult.title,
+        knowledgeSource: 'bm5',
+        updatedContext: {
+          ...prevContext,
+          lastUserMessage: userMessage,
+          lastTeacherText: text,
+          lastAssistantMode: 'knowledge_lookup',
+          lastBM5Topic: followupResult.title,
+          lastBM5ResultId: followupResult.entry_id,
+          lastKnowledgeSource: 'bm5',
+        },
+      };
+    }
     const { results: followupResults } = await searchBM5(prevContext.lastBM5Topic ?? '', 1);
     if (followupResults.length > 0) {
       const text = buildBM5Followup(followupResults[0], context.preferences.explanation);
@@ -505,7 +547,7 @@ async function tryBM5Lookup(
   const top = results[0];
 
   if (top.score >= 40) {
-    const text = formatBM5Response(top, name, context.preferences.explanation);
+    const text = formatBM5Response(top, name, context.preferences.explanation, userMessage);
     return {
       text,
       knowledgeUsed: true,
