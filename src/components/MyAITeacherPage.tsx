@@ -25,7 +25,10 @@ import { resolveConcretePoses, getDefaultPlanPoses, getDefaultPosesByType, getPo
 import { loadLocalMemory, summarizeMemory, getMemory } from '../services/aiTeacherMemoryService';
 import { emptyTodayContext, type TodayContext, type RequestedMode } from '../types/aiTeacherLayers';
 import { getPlanGate, gateVerdictAllowsGeneration, gateStateMessage, getPracticeEntryGate, practiceEntryAllows, computeTodayContextSignature, isPlanStale, type PlanGateVerdict, type PracticeEntryVerdict } from '../services/planGate';
-import { isTTSAvailable, buildVoiceGuide, getVoiceStatus, getVoiceGuideEngine, getEngineType, preloadVoicePhrases, preloadVoiceKeys, unlockAudioContext, getAudioDiagnostic, ALL_VOICE_KEYS, REMAINING_CUES, BOX_BREATHING_PHASE_CUES, type VoiceGuideSequence, type VoiceStatus, type EngineType } from '../lib/voiceGuide';
+import { isTTSAvailable, getVoiceStatus, getVoiceGuideEngine, getEngineType, preloadVoiceKeys, unlockAudioContext, getAudioDiagnostic, ALL_VOICE_KEYS, type VoiceStatus, type EngineType } from '../lib/voiceGuide';
+import { createPracticeAudioRuntime, type RuntimeEvent } from '../lib/practiceAudioRuntime';
+import { buildAsanaCues } from '../lib/asanaCueBuilder';
+import { getCatalogEntry } from '../lib/poseCatalog';
 import { getActiveMeditations, getMeditationEntry, type MeditationCatalogEntry } from '../lib/meditationCatalog';
 import { getBreathworkEntry } from '../lib/breathworkCatalog';
 import { getActiveSequences, getSequenceEntry } from '../lib/sequenceCatalog';
@@ -498,10 +501,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [voiceGuideOn, setVoiceGuideOn] = useState(true);
   const [practicePaused, setPracticePaused] = useState(false);
   const [currentSubtitle, setCurrentSubtitle] = useState('');
-  const voiceGuideRef = useRef<VoiceGuideSequence | null>(null);
-  const firedCuesRef = useRef<Set<string>>(new Set());
-  const lastBoxPhaseRef = useRef<string>('');
-  const pendingAdvanceRef = useRef(false);
+  const asanaRuntimeRef = useRef<ReturnType<typeof createPracticeAudioRuntime> | null>(null);
   const ttsAvailable = isTTSAvailable();
   const voiceEngine = getVoiceGuideEngine();
   const [engineType, setEngineType] = useState<EngineType>(voiceEngine.type);
@@ -926,48 +926,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     return 'home';
   }, [practiceEntrySource]);
 
-  useEffect(() => {
-    if (!timerRunning || !selectedGuide?.hasTimer) return;
-    const phases = selectedGuide.timerPhases!;
-    const phase = phases[timerPhaseIdx];
-    if (!phase) return;
 
-    setTimerRemaining(phase.seconds);
-    const tick = window.setInterval(() => {
-      setTimerRemaining((prev) => {
-        if (prev <= 1) {
-          window.clearInterval(tick);
-          const nextIdx = timerPhaseIdx + 1;
-          if (nextIdx >= phases.length) {
-            const nextRound = timerRound + 1;
-            if (nextRound > (selectedGuide.timerRounds ?? 1)) {
-              setTimerRunning(false);
-              setTimerPhaseIdx(0);
-              setTimerRound(1);
-              if (sessionStartedAt) {
-                const elapsedSec = Math.max(1, Math.round((Date.now() - sessionStartedAt) / 1000));
-                setPoseElapsedTotal((t) => t + elapsedSec);
-                const elapsedMin = Math.max(1, Math.round(elapsedSec / 60));
-                setPracticeDuration(elapsedMin);
-              }
-              setPracticePhase('done');
-              voiceEngine.stop();
-              setCurrentSubtitle('');
-            } else {
-              setTimerRound(nextRound);
-              setTimerPhaseIdx(0);
-            }
-          } else {
-            setTimerPhaseIdx(nextIdx);
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => window.clearInterval(tick);
-  }, [timerRunning, timerPhaseIdx, timerRound, selectedGuide]);
 
   useEffect(() => {
     if (practicePhase !== 'active') return;
@@ -977,132 +936,13 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     return () => cancelAnimationFrame(raf);
   }, [practicePhase]);
 
-  useEffect(() => {
-    if (!timerRunning || selectedGuide?.hasTimer || practicePhase !== 'active') return;
-    setSimpleTimerRemaining(practiceDuration * 60);
-    const tick = window.setInterval(() => {
-      setSimpleTimerRemaining((prev) => {
-        if (prev <= 1) {
-          window.clearInterval(tick);
-          setTimerRunning(false);
-          if (sessionStartedAt) {
-            const elapsedSec = Math.max(1, Math.round((Date.now() - sessionStartedAt) / 1000));
-            setPoseElapsedTotal((t) => t + elapsedSec);
-            const elapsedMin = Math.max(1, Math.round(elapsedSec / 60));
-            setPracticeDuration(elapsedMin);
-          }
-          const seq = voiceGuideRef.current;
-          const hasFinalCuePlaying = voiceGuideOn && voiceEngine.isPlaying() && seq?.cues.some((c) => c.isFinalCue);
-          if (hasFinalCuePlaying) {
-            pendingAdvanceRef.current = true;
-            const safetyTimeout = window.setTimeout(() => {
-              if (!pendingAdvanceRef.current) return;
-              pendingAdvanceRef.current = false;
-              voiceEngine.setOnCueEnd(null);
-              setPracticePhase('done');
-              voiceEngine.stop();
-              setCurrentSubtitle('');
-            }, 10000);
-            voiceEngine.setOnCueEnd(() => {
-              window.clearTimeout(safetyTimeout);
-              pendingAdvanceRef.current = false;
-              voiceEngine.setOnCueEnd(null);
-              setPracticePhase('done');
-              voiceEngine.stop();
-              setCurrentSubtitle('');
-            });
-          } else {
-            setPracticePhase('done');
-            voiceEngine.stop();
-            setCurrentSubtitle('');
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => window.clearInterval(tick);
-  }, [timerRunning, selectedGuide, practicePhase, practiceDuration, voiceEngine, voiceGuideOn]);
 
-  const fireCue = useCallback((text: string, audioKey?: string) => {
-    if (!voiceGuideOn) return;
-    const sessionId = practiceSessionId ?? 'no-session';
-    const dedupKey = `${sessionId}:${audioKey ?? text}`;
-    if (firedCuesRef.current.has(dedupKey)) return;
-    firedCuesRef.current.add(dedupKey);
-    if (audioKey) {
-      voiceEngine.speakByKey(audioKey, text);
-    } else {
-      voiceEngine.speak(text);
-    }
-    setCurrentSubtitle(text);
-  }, [voiceGuideOn, voiceEngine, practiceSessionId]);
 
-  useEffect(() => {
-    if (!timerRunning || practicePaused || !voiceGuideOn) return;
-    const seq = voiceGuideRef.current;
-    if (!seq) return;
-    if (selectedGuide?.hasTimer) {
-      const phase = selectedGuide.timerPhases![timerPhaseIdx];
-      if (!phase) return;
-      const phaseLabel = phase.label ?? '';
-      if (phaseLabel !== lastBoxPhaseRef.current) {
-        lastBoxPhaseRef.current = phaseLabel;
-        const cue = BOX_BREATHING_PHASE_CUES[phaseLabel];
-        if (cue) fireCue(cue);
-      }
-    } else {
-      const remaining = simpleTimerRemaining;
-      const hasFinalCue = seq.cues.some((c) => c.isFinalCue);
-      if (!hasFinalCue) {
-        for (const cue of REMAINING_CUES) {
-          if (remaining <= cue.atRemaining && remaining > cue.atRemaining - 2) {
-            fireCue(cue.text);
-          }
-        }
-      }
-      for (const cue of seq.cues) {
-        if (cue.atSeconds > 0) {
-          const cueRemaining = seq.totalSeconds - cue.atSeconds;
-          if (remaining <= cueRemaining && remaining > cueRemaining - 2) {
-            fireCue(cue.text, cue.audioKey);
-          }
-        }
-      }
-      if (remaining === 0 && seq.cues.length > 0) {
-        const lastCue = seq.cues[seq.cues.length - 1];
-        fireCue(lastCue.text, lastCue.audioKey);
-      }
-    }
-  }, [timerRunning, practicePaused, voiceGuideOn, simpleTimerRemaining, timerPhaseIdx, selectedGuide, fireCue]);
 
-  // Track previous remaining to detect timer skips (e.g. background tab)
-  const prevRemainingRef = useRef(0);
-  useEffect(() => {
-    if (!timerRunning || practicePaused || selectedGuide?.hasTimer) return;
-    const prev = prevRemainingRef.current;
-    prevRemainingRef.current = simpleTimerRemaining;
-    if (prev > simpleTimerRemaining + 1) {
-      const seq = voiceGuideRef.current;
-      if (seq) {
-        for (let t = prev; t > simpleTimerRemaining; t--) {
-          for (const cue of REMAINING_CUES) {
-            if (t === cue.atRemaining) fireCue(cue.text);
-          }
-          for (const cue of seq.cues) {
-            if (cue.atSeconds > 0) {
-              const cueRemaining = seq.totalSeconds - cue.atSeconds;
-              if (t === cueRemaining) fireCue(cue.text, cue.audioKey);
-            }
-          }
-        }
-      }
-    }
-  }, [simpleTimerRemaining, timerRunning, practicePaused, selectedGuide, fireCue]);
 
   const handleAbortPractice = useCallback(() => {
-    pendingAdvanceRef.current = false;
-    voiceEngine.setOnCueEnd(null);
+    asanaRuntimeRef.current?.dispose();
+    asanaRuntimeRef.current = null;
     setTimerRunning(false);
     setTimerPhaseIdx(0);
     setTimerRound(1);
@@ -1136,8 +976,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   }, [practiceActive, practicePhase]);
 
   const confirmPracticeExit = useCallback(() => {
-    pendingAdvanceRef.current = false;
-    voiceEngine.setOnCueEnd(null);
+    asanaRuntimeRef.current?.dispose();
+    asanaRuntimeRef.current = null;
     setShowExitConfirm(false);
     setTimerRunning(false);
     setPracticeActive(false);
@@ -1184,43 +1024,47 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const startVoiceGuide = useCallback((pose: ConcretePose) => {
     if (!voiceGuideOn) return;
     unlockAudioContext();
-    pendingAdvanceRef.current = false;
-    voiceEngine.setOnCueEnd(null);
-    const seq = buildVoiceGuide(pose);
-    voiceGuideRef.current = seq;
-    firedCuesRef.current = new Set();
-    lastBoxPhaseRef.current = '';
-    prevRemainingRef.current = 0;
-    const allTexts = seq.cues.map((c) => c.text).concat(REMAINING_CUES.map((c) => c.text));
-    preloadVoicePhrases(allTexts);
-    const allKeys = seq.cues.map((c) => c.audioKey).filter((k): k is string => !!k);
+    asanaRuntimeRef.current?.dispose();
+    const catalogEntry = getCatalogEntry(pose.id);
+    if (!catalogEntry) return;
+    const cues = buildAsanaCues(catalogEntry, pose.defaultMinutes);
+    const allKeys = cues.map((c) => c.audioKey).filter((k): k is string => !!k);
     if (allKeys.length > 0) preloadVoiceKeys(allKeys);
-    if (seq.cues.length > 0) {
-      const firstCue = seq.cues[0];
-      const sessionId = practiceSessionId ?? 'no-session';
-      const dedupKey = `${sessionId}:${firstCue.audioKey ?? firstCue.text}`;
-      firedCuesRef.current.add(dedupKey);
-      if (firstCue.audioKey) {
-        voiceEngine.speakByKey(firstCue.audioKey, firstCue.text);
-      } else {
-        voiceEngine.speak(firstCue.text);
+    const handleAsanaEvent = (event: RuntimeEvent) => {
+      if (event.type === 'subtitle') {
+        setCurrentSubtitle(event.subtitle ?? '');
+      } else if (event.type === 'complete') {
+        if (sessionStartedAt) {
+          const elapsedSec = Math.max(1, Math.round((Date.now() - sessionStartedAt) / 1000));
+          setPoseElapsedTotal((t) => t + elapsedSec);
+          setPracticeDuration(Math.max(1, Math.round(elapsedSec / 60)));
+        }
+        setPracticePhase('done');
+        voiceEngine.stop();
+        setCurrentSubtitle('');
+      } else if (event.type === 'stateChange' && event.state === 'completed') {
+        setPracticePhase('done');
       }
-      setCurrentSubtitle(firstCue.text);
-    }
-  }, [voiceGuideOn, voiceEngine, practiceSessionId]);
+    };
+    const runtime = createPracticeAudioRuntime();
+    runtime.setSource('practice_audio_runtime');
+    runtime.addListener(handleAsanaEvent);
+    asanaRuntimeRef.current = runtime;
+    runtime.start({ practiceId: pose.id, cues });
+  }, [voiceGuideOn, voiceEngine, sessionStartedAt]);
 
   const handlePausePractice = useCallback(() => {
     setTimerRunning(false);
     setPracticePaused(true);
-    voiceEngine.pause();
-  }, [voiceEngine]);
+    asanaRuntimeRef.current?.pause();
+  }, []);
 
   const handleResumePractice = useCallback(() => {
     unlockAudioContext();
     setTimerRunning(true);
     setPracticePaused(false);
-    voiceEngine.resume();
-  }, [voiceEngine]);
+    asanaRuntimeRef.current?.resume();
+  }, []);
 
   const handleCompletePractice = useCallback(async () => {
     if (!practiceType || practicePhase !== 'done' || practiceAborted || isSavingPractice) return;
@@ -1302,6 +1146,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setTimerRunning(false);
     setTimerPhaseIdx(0);
     setTimerRound(1);
+    asanaRuntimeRef.current?.dispose();
+    asanaRuntimeRef.current = null;
     setPracticePaused(false);
     voiceEngine.stop();
     setCurrentSubtitle('');

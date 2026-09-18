@@ -1,12 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getSequenceEntry, type SequenceStep } from '../lib/sequenceCatalog';
-import {
-  getVoiceGuideEngine,
-  unlockAudioContext,
-  preloadVoiceKeys,
-  getAudioDiagnostic,
-  type VoiceGuideEngine,
-} from '../lib/voiceGuide';
+import { unlockAudioContext, preloadVoiceKeys, getAudioDiagnostic } from '../lib/voiceGuide';
+import { createPracticeAudioRuntime, type RuntimeEvent, type RuntimeState } from '../lib/practiceAudioRuntime';
+import { buildSuryaCues, STEP_DURATIONS, type TempoMode } from '../lib/suryaCueBuilder';
 
 const BREATHING_LABEL: Record<string, string> = {
   inhale: '吸う',
@@ -24,7 +20,6 @@ const BREATHING_COLOR: Record<string, string> = {
   transition: 'var(--text-secondary)',
 };
 
-type TempoMode = 'beginner' | 'standard' | 'experienced';
 type Side = 'right' | 'left';
 
 const TEMPO_LABELS: Record<TempoMode, string> = {
@@ -32,14 +27,6 @@ const TEMPO_LABELS: Record<TempoMode, string> = {
   standard: '標準',
   experienced: 'スムーズ',
 };
-
-const STEP_DURATIONS: Record<TempoMode, number[]> = {
-  beginner:    [7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 7, 7],
-  standard:    [5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 5, 5],
-  experienced: [4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 4, 4],
-};
-
-const POST_VOICE_BUFFER_MS = 700;
 
 const SURYA_AUDIO_KEYS = [
   'voice-surya-01', 'voice-surya-02', 'voice-surya-03',
@@ -55,19 +42,9 @@ interface Props {
   onComplete?: (roundsCompleted: number, durationSec: number) => void;
 }
 
-function getStepAudioKey(step: SequenceStep, side: Side): string | undefined {
-  if (side === 'left' && step.audioKeyLeft) return step.audioKeyLeft;
-  return step.audioKey;
-}
-
 function getStepInstruction(step: SequenceStep, side: Side): string[] {
   if (side === 'left' && step.instructionLeft) return step.instructionLeft;
   return step.instruction;
-}
-
-function getStepVoiceGuide(step: SequenceStep, side: Side): string[] {
-  if (side === 'left' && step.voiceGuideLeft) return step.voiceGuideLeft;
-  return step.voiceGuide;
 }
 
 function getStepImage(step: SequenceStep, side: Side): string | undefined {
@@ -83,7 +60,6 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
   const entry = getSequenceEntry(sequenceId);
   const [currentStep, setCurrentStep] = useState(0);
   const [side, setSide] = useState<Side>('right');
-  const [round, setRound] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
@@ -91,34 +67,96 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
   const [completed, setCompleted] = useState(false);
   const [tempo, setTempo] = useState<TempoMode>('standard');
   const [showDebug, setShowDebug] = useState(false);
+  const [subtitle, setSubtitle] = useState('');
   const [inTransition, setInTransition] = useState(false);
-  const [transitionMsg, setTransitionMsg] = useState('');
-  const [debugLog, setDebugLog] = useState<string[]>([]);
 
   const startTimeRef = useRef<number | null>(null);
-  const stepTimeoutRef = useRef<number | null>(null);
-  const engineRef = useRef<VoiceGuideEngine | null>(null);
-  const isPausedRef = useRef(false);
-  const isPlayingRef = useRef(false);
-  const tempoRef = useRef<TempoMode>('standard');
-  const inTransitionRef = useRef(false);
-  const runStepTokenRef = useRef(0);
+  const runtimeRef = useRef<ReturnType<typeof createPracticeAudioRuntime> | null>(null);
+  const cueMapRef = useRef<{ voiceIdx: number; stepIdx: number; side: Side }[]>([]);
 
-  useEffect(() => {
-    isPausedRef.current = isPaused;
-  }, [isPaused]);
+  const handleEvent = useCallback((event: RuntimeEvent) => {
+    if (event.type === 'subtitle') {
+      setSubtitle(event.subtitle ?? '');
+    } else if (event.type === 'cueStart') {
+      const map = cueMapRef.current[event.cueIndex ?? -1];
+      if (map) {
+        if (map.side !== side) setSide(map.side);
+        setCurrentStep(map.stepIdx);
+        setInTransition(false);
+      }
+    } else if (event.type === 'complete') {
+      setCompleted(true);
+      setIsPlaying(false);
+      const totalSec = Math.floor((Date.now() - (startTimeRef.current ?? Date.now())) / 1000);
+      onComplete?.(1, totalSec);
+    } else if (event.type === 'stateChange') {
+      if (event.state === 'completed') {
+        setCompleted(true);
+        setIsPlaying(false);
+      }
+    }
+  }, [onComplete, side]);
 
-  useEffect(() => {
-    isPlayingRef.current = isPlaying;
-  }, [isPlaying]);
+  const handleStart = useCallback(() => {
+    if (!entry) return;
+    unlockAudioContext();
+    preloadVoiceKeys(SURYA_AUDIO_KEYS);
+    setIsPlaying(true);
+    setIsPaused(false);
+    setCompleted(false);
+    setCurrentStep(0);
+    setSide('right');
+    setElapsedSec(0);
+    setShowDetail(false);
+    setInTransition(false);
+    setSubtitle('');
+    startTimeRef.current = Date.now();
 
-  useEffect(() => {
-    tempoRef.current = tempo;
-  }, [tempo]);
+    const cues = buildSuryaCues(entry, tempo);
+    const map: { voiceIdx: number; stepIdx: number; side: Side }[] = [];
+    let voiceIdx = 0;
+    for (const s of ['right', 'left'] as Side[]) {
+      for (let i = 0; i < entry.steps.length; i++) {
+        map[voiceIdx] = { voiceIdx, stepIdx: i, side: s };
+        voiceIdx += 2; // voice cue + silence cue
+      }
+      if (s === 'right') {
+        map[voiceIdx] = { voiceIdx, stepIdx: entry.steps.length - 1, side: s };
+        voiceIdx += 1; // transition voice
+      }
+    }
+    cueMapRef.current = map;
 
-  useEffect(() => {
-    inTransitionRef.current = inTransition;
-  }, [inTransition]);
+    const runtime = createPracticeAudioRuntime();
+    runtime.setSource('practice_audio_runtime');
+    runtime.addListener(handleEvent);
+    runtimeRef.current = runtime;
+    runtime.start({ practiceId: 'surya-namaskar', cues });
+  }, [entry, tempo, handleEvent]);
+
+  const handlePause = useCallback(() => {
+    setIsPaused(true);
+    runtimeRef.current?.pause();
+  }, []);
+
+  const handleResume = useCallback(() => {
+    setIsPaused(false);
+    runtimeRef.current?.resume();
+  }, []);
+
+  const handleNext = useCallback(() => {
+    runtimeRef.current?.next();
+  }, []);
+
+  const handlePrev = useCallback(() => {
+    if (currentStep > 0) {
+      runtimeRef.current?.next();
+    }
+  }, [currentStep]);
+
+  const handleTempoChange = useCallback((mode: TempoMode) => {
+    setTempo(mode);
+  }, []);
 
   useEffect(() => {
     if (!isPlaying || isPaused) return;
@@ -130,211 +168,12 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
     return () => window.clearInterval(timer);
   }, [isPlaying, isPaused]);
 
-  const addDebugLog = useCallback((msg: string) => {
-    const ts = new Date().toLocaleTimeString();
-    setDebugLog((prev) => [...prev.slice(-8), `[${ts}] ${msg}`]);
-  }, []);
-
-  const clearStepTimeout = useCallback(() => {
-    if (stepTimeoutRef.current !== null) {
-      window.clearTimeout(stepTimeoutRef.current);
-      stepTimeoutRef.current = null;
-    }
-  }, []);
-
-  const speakStep = useCallback((step: SequenceStep, currentSide: Side): Promise<void> => {
-    return new Promise<void>((resolve) => {
-      const engine = engineRef.current ?? getVoiceGuideEngine();
-      engineRef.current = engine;
-      const audioKey = getStepAudioKey(step, currentSide);
-      const voiceGuide = getStepVoiceGuide(step, currentSide);
-      const text = voiceGuide[0] ?? step.nameJa;
-
-      const durationSec = STEP_DURATIONS[tempoRef.current][step.stepNumber - 1] ?? 6;
-      const fallbackMs = durationSec * 1000;
-
-      addDebugLog(`speakStep side=${currentSide} step=${step.stepNumber} key=${audioKey ?? 'none'}`);
-
-      let settled = false;
-
-      const onVoiceEnd = () => {
-        if (settled) return;
-        settled = true;
-        engine.setOnCueEnd(null);
-        addDebugLog(`voiceEnded side=${currentSide} step=${step.stepNumber}`);
-        resolve();
-      };
-
-      engine.setOnCueEnd(onVoiceEnd);
-
-      if (audioKey) {
-        engine.speakByKey(audioKey, text);
-      } else {
-        engine.speak(text);
-      }
-
-      window.setTimeout(() => {
-        if (!settled) {
-          settled = true;
-          engine.setOnCueEnd(null);
-          addDebugLog(`fallbackTimer side=${currentSide} step=${step.stepNumber} (${fallbackMs}ms)`);
-          resolve();
-        }
-      }, fallbackMs);
-    });
-  }, [addDebugLog]);
-
-  const speakTransition = useCallback((text: string, audioKey: string): Promise<void> => {
-    return new Promise<void>((resolve) => {
-      const engine = engineRef.current ?? getVoiceGuideEngine();
-      engineRef.current = engine;
-
-      addDebugLog(`speakTransition key=${audioKey}`);
-
-      let settled = false;
-
-      const onVoiceEnd = () => {
-        if (settled) return;
-        settled = true;
-        engine.setOnCueEnd(null);
-        addDebugLog('transitionEnded');
-        resolve();
-      };
-
-      engine.setOnCueEnd(onVoiceEnd);
-      engine.speakByKey(audioKey, text);
-
-      window.setTimeout(() => {
-        if (!settled) {
-          settled = true;
-          engine.setOnCueEnd(null);
-          addDebugLog('transitionFallback');
-          resolve();
-        }
-      }, 5000);
-    });
-  }, [addDebugLog]);
-
-  const advanceStep = useCallback((stepIdx: number, currentSide: Side, currentRound: number) => {
-    if (!entry) return;
-    const totalSteps = entry.steps.length;
-    const nextStep = stepIdx + 1;
-
-    addDebugLog(`advanceStep from=${stepIdx} side=${currentSide} next=${nextStep}`);
-
-    if (nextStep < totalSteps) {
-      setCurrentStep(nextStep);
-    } else {
-      if (currentSide === 'right') {
-        setInTransition(true);
-        inTransitionRef.current = true;
-        setTransitionMsg('右側が終わりました。次は左側です。');
-        clearStepTimeout();
-
-        const run = async () => {
-          await speakTransition('右側が終わりました。次は左側です。', 'voice-surya-transition');
-          if (!isPlayingRef.current || isPausedRef.current) return;
-          inTransitionRef.current = false;
-          setInTransition(false);
-          setSide('left');
-          setCurrentStep(0);
-          addDebugLog('transitioned to left side, step=0');
-        };
-        void run();
-      } else {
-        setCompleted(true);
-        setIsPlaying(false);
-        const totalSec = Math.floor((Date.now() - (startTimeRef.current ?? Date.now())) / 1000);
-        onComplete?.(currentRound, totalSec);
-      }
-    }
-  }, [entry, onComplete, clearStepTimeout, speakTransition, addDebugLog]);
-
-  const runStepAuto = useCallback(async (stepIdx: number, currentSide: Side, currentRound: number) => {
-    if (!entry || isPausedRef.current || !isPlayingRef.current || inTransitionRef.current) return;
-    const token = ++runStepTokenRef.current;
-    const step = entry.steps[stepIdx];
-    const durationSec = STEP_DURATIONS[tempoRef.current][stepIdx] ?? 6;
-
-    await speakStep(step, currentSide);
-
-    if (token !== runStepTokenRef.current) return;
-    if (isPausedRef.current || !isPlayingRef.current || inTransitionRef.current) return;
-
-    const remaining = Math.max(durationSec * 1000 - POST_VOICE_BUFFER_MS, 800);
-
-    clearStepTimeout();
-    stepTimeoutRef.current = window.setTimeout(() => {
-      stepTimeoutRef.current = null;
-      if (token !== runStepTokenRef.current) return;
-      if (!isPausedRef.current && isPlayingRef.current && !inTransitionRef.current) {
-        advanceStep(stepIdx, currentSide, currentRound);
-      }
-    }, remaining);
-  }, [entry, speakStep, advanceStep, clearStepTimeout]);
-
   useEffect(() => {
-    if (!isPlaying || isPaused || !entry || inTransition) return;
-    runStepAuto(currentStep, side, round);
-    return () => { clearStepTimeout(); ++runStepTokenRef.current; };
-  }, [currentStep, side, isPlaying, isPaused, inTransition]);
-
-  const handleStart = useCallback(() => {
-    if (!entry) return;
-    unlockAudioContext();
-    preloadVoiceKeys(SURYA_AUDIO_KEYS);
-    setIsPlaying(true);
-    setIsPaused(false);
-    setCompleted(false);
-    setCurrentStep(0);
-    setSide('right');
-    setRound(1);
-    setElapsedSec(0);
-    setShowDetail(false);
-    setInTransition(false);
-    inTransitionRef.current = false;
-    runStepTokenRef.current++;
-    setDebugLog([]);
-    startTimeRef.current = Date.now();
-    addDebugLog('practice started');
-  }, [entry, addDebugLog]);
-
-  const handlePause = useCallback(() => {
-    setIsPaused(true);
-    clearStepTimeout();
-    const engine = engineRef.current ?? getVoiceGuideEngine();
-    engine.stop();
-    addDebugLog('paused');
-  }, [clearStepTimeout, addDebugLog]);
-
-  const handleResume = useCallback(() => {
-    setIsPaused(false);
-    addDebugLog('resumed');
-  }, [addDebugLog]);
-
-  const handleNext = useCallback(() => {
-    if (!entry || completed) return;
-    clearStepTimeout();
-    const engine = engineRef.current ?? getVoiceGuideEngine();
-    engine.stop();
-    advanceStep(currentStep, side, round);
-  }, [entry, currentStep, side, round, completed, advanceStep, clearStepTimeout]);
-
-  const handlePrev = useCallback(() => {
-    if (currentStep > 0) {
-      clearStepTimeout();
-      const engine = engineRef.current ?? getVoiceGuideEngine();
-      engine.stop();
-      setCurrentStep(currentStep - 1);
-    }
-  }, [currentStep, clearStepTimeout]);
-
-  const handleTempoChange = useCallback((mode: TempoMode) => {
-    setTempo(mode);
-    if (isPlaying && !isPaused) {
-      clearStepTimeout();
-    }
-  }, [isPlaying, isPaused, clearStepTimeout]);
+    return () => {
+      runtimeRef.current?.dispose();
+      runtimeRef.current = null;
+    };
+  }, []);
 
   if (!entry) {
     return <div style={{ padding: 24, textAlign: 'center' }}>シークエンスが見つかりません。</div>;
@@ -358,7 +197,6 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
           <span className="sn-badge sn-badge-side">
             {side === 'right' ? '右側' : '左側'} {sideNum} / 2
           </span>
-          {round > 1 && <span className="sn-badge sn-badge-round">{round}ラウンド目</span>}
         </div>
       </div>
 
@@ -383,62 +221,60 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
         <div className="sn-progress-fill" style={{ width: `${progress}%` }} />
       </div>
 
-      {inTransition ? (
-        <div className="sn-transition-display">
-          <p className="sn-transition-msg">{transitionMsg}</p>
+      <div className="sn-step-display">
+        <div className="sn-step-counter">
+          STEP {currentStep + 1} / {totalSteps}
         </div>
-      ) : (
-        <div className="sn-step-display">
-          <div className="sn-step-counter">
-            STEP {currentStep + 1} / {totalSteps}
+
+        {stepImage && (
+          <div className="sn-step-image-wrap">
+            <img
+              src={stepImage}
+              alt={step.nameJa}
+              className="sn-step-image"
+              style={mirror ? { transform: 'scaleX(-1)' } : undefined}
+            />
           </div>
+        )}
 
-          {stepImage && (
-            <div className="sn-step-image-wrap">
-              <img
-                src={stepImage}
-                alt={step.nameJa}
-                className="sn-step-image"
-                style={mirror ? { transform: 'scaleX(-1)' } : undefined}
-              />
-            </div>
-          )}
+        <div className="sn-step-name-ja">{step.nameJa}</div>
+        {step.nameSanskrit && (
+          <div className="sn-step-name-sanskrit">{step.nameSanskrit}</div>
+        )}
 
-          <div className="sn-step-name-ja">{step.nameJa}</div>
-          {step.nameSanskrit && (
-            <div className="sn-step-name-sanskrit">{step.nameSanskrit}</div>
-          )}
+        <div className="sn-breathing-indicator" style={{ color: BREATHING_COLOR[step.breathing] ?? 'var(--text-secondary)' }}>
+          <span className="sn-breathing-label">呼吸：</span>
+          <span className="sn-breathing-value">{BREATHING_LABEL[step.breathing] ?? step.breathing}</span>
+        </div>
 
-          <div className="sn-breathing-indicator" style={{ color: BREATHING_COLOR[step.breathing] ?? 'var(--text-secondary)' }}>
-            <span className="sn-breathing-label">呼吸：</span>
-            <span className="sn-breathing-value">{BREATHING_LABEL[step.breathing] ?? step.breathing}</span>
-          </div>
+        <div className="sn-step-instruction">
+          {instruction.join(' ')}
+        </div>
 
-          <div className="sn-step-instruction">
-            {instruction.join(' ')}
-          </div>
+        {subtitle && isPlaying && (
+          <p className="breathing-live-copy" style={{ marginTop: 8 }}>{subtitle}</p>
+        )}
 
-          {!showDetail && (
-            <button className="ghost-button sn-detail-toggle" onClick={() => setShowDetail(true)}>
-              詳しく知る
+        {!showDetail && (
+          <button className="ghost-button sn-detail-toggle" onClick={() => setShowDetail(true)}>
+            詳しく知る
+          </button>
+        )}
+        {showDetail && (
+          <div className="sn-detail-panel">
+            <p className="sn-detail-text">{instruction.join(' ')}</p>
+            <button className="ghost-button sn-detail-toggle" onClick={() => setShowDetail(false)}>
+              閉じる
             </button>
-          )}
-          {showDetail && (
-            <div className="sn-detail-panel">
-              <p className="sn-detail-text">{instruction.join(' ')}</p>
-              <button className="ghost-button sn-detail-toggle" onClick={() => setShowDetail(false)}>
-                閉じる
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
       <div className="sn-controls">
         <button
           className="ghost-button sn-nav-btn"
           onClick={handlePrev}
-          disabled={currentStep === 0 || !isPlaying || inTransition}
+          disabled={currentStep === 0 || !isPlaying}
         >
           前へ
         </button>
@@ -449,7 +285,7 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
           </button>
         )}
 
-        {isPlaying && !isPaused && !inTransition && (
+        {isPlaying && !isPaused && (
           <button className="secondary-button sn-next-btn" onClick={handlePause}>
             一時停止
           </button>
@@ -461,7 +297,7 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
           </button>
         )}
 
-        {isPlaying && !inTransition && (
+        {isPlaying && (
           <button className="secondary-button sn-next-btn" onClick={handleNext}>
             {currentStep + 1 < totalSteps ? '次へ' : side === 'right' ? '反対側へ' : '完了'}
           </button>
@@ -494,16 +330,10 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
       </button>
       {showDebug && diag && (
         <div className="sn-debug-panel">
-          <p>engine: {engineRef.current?.type ?? '—'}</p>
           <p>audioContext: {diag.contextState}</p>
           <p>lastCue: {diag.lastCue ?? '—'}</p>
           <p>lastPlayResult: {diag.lastPlayResult ?? '—'}</p>
           <p>lastError: {diag.lastError ?? '—'}</p>
-          <div style={{ marginTop: 8, borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 8 }}>
-            {debugLog.map((line, i) => (
-              <p key={i} style={{ margin: '2px 0' }}>{line}</p>
-            ))}
-          </div>
         </div>
       )}
     </div>
