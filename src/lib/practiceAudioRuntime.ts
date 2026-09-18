@@ -165,6 +165,7 @@ export class PracticeAudioRuntime {
 
     const displayText = cue.displayText ?? cue.speechText ?? '';
     const speechText = cue.speechText ?? cue.displayText ?? '';
+    const myCueIndex = this.cueIndex;
 
     if (displayText) {
       this.emit({ type: 'subtitle', subtitle: displayText });
@@ -172,6 +173,7 @@ export class PracticeAudioRuntime {
 
     this.engine.setOnCueEnd(() => {
       if (this.state !== 'running') { this.isAdvancing = false; return; }
+      if (this.cueIndex !== myCueIndex) return;
       this.clearWatchdog();
       this.emit({ type: 'cueEnd', cueIndex: this.cueIndex, cueId: cue.id });
       this.isAdvancing = false;
@@ -190,8 +192,10 @@ export class PracticeAudioRuntime {
   private startWatchdog(cue: PracticeCue, _cueKey: string): void {
     this.clearWatchdog();
     const fallbackMs = this.estimateCueMs(cue);
+    const myCueIndex = this.cueIndex;
     this.watchdogTimer = setTimeout(() => {
       if (this.state !== 'running') return;
+      if (this.cueIndex !== myCueIndex) return;
       if (!this.engine.isPlaying()) {
         this.emit({ type: 'cueEnd', cueIndex: this.cueIndex, cueId: cue.id });
         this.isAdvancing = false;

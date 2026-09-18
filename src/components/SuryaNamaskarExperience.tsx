@@ -73,6 +73,7 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
   const startTimeRef = useRef<number | null>(null);
   const runtimeRef = useRef<ReturnType<typeof createPracticeAudioRuntime> | null>(null);
   const cueMapRef = useRef<{ voiceIdx: number; stepIdx: number; side: Side }[]>([]);
+  const sideRef = useRef<Side>('right');
 
   const handleEvent = useCallback((event: RuntimeEvent) => {
     if (event.type === 'subtitle') {
@@ -80,7 +81,10 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
     } else if (event.type === 'cueStart') {
       const map = cueMapRef.current[event.cueIndex ?? -1];
       if (map) {
-        if (map.side !== side) setSide(map.side);
+        if (map.side !== sideRef.current) {
+          sideRef.current = map.side;
+          setSide(map.side);
+        }
         setCurrentStep(map.stepIdx);
         setInTransition(false);
       }
@@ -95,7 +99,7 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
         setIsPlaying(false);
       }
     }
-  }, [onComplete, side]);
+  }, [onComplete]);
 
   const handleStart = useCallback(() => {
     if (!entry) return;
@@ -111,6 +115,7 @@ export function SuryaNamaskarExperience({ sequenceId, onComplete }: Props) {
     setInTransition(false);
     setSubtitle('');
     startTimeRef.current = Date.now();
+    sideRef.current = 'right';
 
     const cues = buildSuryaCues(entry, tempo);
     const map: { voiceIdx: number; stepIdx: number; side: Side }[] = [];
