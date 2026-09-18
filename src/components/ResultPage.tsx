@@ -1,12 +1,13 @@
-import { useEffect, useState, useRef, useCallback, type CSSProperties } from 'react';
+import { useEffect, useState, useRef, type CSSProperties } from 'react';
 import { SearchItem } from '../data';
 import { CardList } from './CardList';
 import { MapView } from './MapView';
 import { TopBackLink } from './TopBackLink';
 import { BreathworkVisual, buildPhasesFromPattern, type BreathPhase } from './BreathworkVisual';
 import { getBreathworkEntry, type BreathworkCatalogEntry, type BreathworkPattern } from '../lib/breathworkCatalog';
-import { getVoiceGuideEngine, playBreathworkAudio, prepareBreathworkAudio, unlockBreathworkAudio } from '../lib/voiceGuide';
-import { getBreathworkIntro, getBreathworkPhaseSequence, usesBreathworkSequence, waitForBreathwork } from '../lib/breathworkSequence';
+import { unlockAudioContext } from '../lib/voiceGuide';
+import { createPracticeAudioRuntime, type RuntimeEvent } from '../lib/practiceAudioRuntime';
+import { buildBreathworkCues } from '../lib/breathworkCueBuilder';
 import { resolveYogaKnowledge, type KnowledgeResolution } from '../lib/knowledgeResolver';
 
 export type RecommendationType = 'asana' | 'pranayama' | 'dhyana';
@@ -88,27 +89,14 @@ export function BreathworkExperience({
   const [subtitle, setSubtitle] = useState('');
   const [preparing, setPreparing] = useState(true);
   const [phaseDuration, setPhaseDuration] = useState<number | undefined>();
-  const [audioFailed, setAudioFailed] = useState(false);
-  const timersRef = useRef<number[]>([]);
-  const voiceEngine = getVoiceGuideEngine();
+  const runtimeRef = useRef<ReturnType<typeof createPracticeAudioRuntime> | null>(null);
+  const tickRef = useRef<number | null>(null);
+  const phaseStartRef = useRef<number>(0);
+  const phaseSecondsRef = useRef<number>(0);
 
   const phases = entry?.pattern ? buildPhasesFromPattern(entry.pattern) : [];
   const totalRounds = entry?.pattern?.rounds ?? 1;
   const totalDuration = phases.reduce((sum, p) => sum + p.seconds, 0);
-
-  const clearTimers = useCallback(() => {
-    timersRef.current.forEach((t) => window.clearTimeout(t));
-    timersRef.current = [];
-  }, []);
-
-  const playCue = useCallback((cue: { text: string; audioKey?: string }) => {
-    if (cue.audioKey) {
-      voiceEngine.speakByKey(cue.audioKey, cue.text);
-    } else {
-      voiceEngine.speak(cue.text);
-    }
-    setSubtitle(cue.text);
-  }, [voiceEngine]);
 
   useEffect(() => {
     setRunId(1);
@@ -117,224 +105,102 @@ export function BreathworkExperience({
   useEffect(() => {
     if (runId === 0 || phases.length === 0 || !entry) return;
 
-    clearTimers();
     setIsRunning(true);
     setIsCompleted(false);
     setCurrentRound(1);
     setActiveLayer(undefined);
     setSubtitle('');
-    voiceEngine.unlock();
     setPreparing(true);
-    setAudioFailed(false);
+    unlockAudioContext();
 
-    if (usesBreathworkSequence(entry.id)) {
-      const controller = new AbortController();
-      const { signal } = controller;
-      const intro = getBreathworkIntro(entry);
-      const vg = entry.voiceGuide;
-      const finalCue = vg.completion[0]
-        ? { at: 0, text: vg.completion[0].text, audioKey: vg.completion[0].audioKey }
-        : { at: 0, text: '最後の呼吸です。', audioKey: 'voice-box-final' };
-      const ending = vg.completion[1]
-        ? { at: 0, text: vg.completion[1].text, audioKey: vg.completion[1].audioKey }
-        : { at: 0, text: '自然な呼吸に戻りましょう。', audioKey: 'voice-abdominal-end-2' };
-      const allCues = [...intro, finalCue, ending,
-        ...[0, 1].flatMap((round) => phases.flatMap((p) => getBreathworkPhaseSequence(entry, p.key, round)))];
-      const durations = new Map<string, number>();
-      const loaded = Promise.all([...new Set(allCues.map((c) => c.audioKey).filter((k): k is string => !!k))].map(async (key) => {
-        const buffer = await prepareBreathworkAudio(key);
-        if (buffer) durations.set(key, buffer.duration);
-      }));
-      const play = async (cue: { text: string; audioKey?: string }) => {
-        if (signal.aborted) return;
-        const ok = await playBreathworkAudio(cue, signal, () => setSubtitle(cue.text));
-        if (!ok && !signal.aborted) {
-          setAudioFailed(true);
-          await waitForBreathwork(Math.max(1200, cue.text.length * 110), signal);
-        }
-      };
-      const run = async () => {
-        for (const cue of intro) {
-          if (signal.aborted) return;
-          await play(cue);
-          await waitForBreathwork(400, signal);
-        }
-        await loaded;
-        for (let round = 0; round < totalRounds; round++) {
-          if (signal.aborted) return;
-          if (round === totalRounds - 1) {
-            setPreparing(true);
-            await play(finalCue);
-            await waitForBreathwork(400, signal);
-          }
-          for (let index = 0; index < phases.length; index++) {
-            if (signal.aborted) return;
-            const phase = phases[index];
-            const cues = getBreathworkPhaseSequence(entry, phase.key, round);
-            const speechSeconds = cues.reduce((sum, cue) => sum + (durations.get(cue.audioKey ?? '') ?? cue.text.length * 0.11 + 1), 0) + Math.max(0, cues.length - 1) * 0.4;
-            const seconds = entry.id === 'box-breathing' ? phase.seconds : Math.max(phase.seconds, Math.ceil(speechSeconds));
-            setPreparing(false);
+    const cues = buildBreathworkCues(entry);
+    let phaseIdx = 0;
+    let round = 0;
+    let inPhase = false;
+    let phaseElapsed = 0;
+
+    const handleEvent = (event: RuntimeEvent) => {
+      if (event.type === 'subtitle') {
+        setSubtitle(event.subtitle ?? '');
+      } else if (event.type === 'cueStart') {
+        const cue = cues[event.cueIndex ?? 0];
+        if (cue?.type === 'silence') {
+          const dur = cue.durationSec ?? 1;
+          phaseIdx = phaseIdx % phases.length;
+          if (phaseIdx === 0 && round > 0) {
             setCurrentRound(round + 1);
-            setPhaseIndex(index);
-            setPhaseDuration(seconds);
-            setRemainingSeconds(seconds);
-            const started = performance.now();
-            const tick = window.setInterval(() => {
-              if (!signal.aborted) setRemainingSeconds(Math.max(0, seconds - (performance.now() - started) / 1000));
-            }, 100);
-            timersRef.current.push(tick);
-            await Promise.all([
-              waitForBreathwork(seconds * 1000, signal),
-              (async () => {
-                for (let i = 0; i < cues.length; i++) {
-                  if (signal.aborted) return;
-                  if (i > 0) await waitForBreathwork(400, signal);
-                  await play(cues[i]);
-                }
-              })(),
-            ]);
-            window.clearInterval(tick);
           }
-        }
-        if (signal.aborted) return;
-        setPreparing(true);
-        await play(ending);
-        if (signal.aborted) return;
-        setIsRunning(false);
-        setIsCompleted(true);
-      };
-      void run();
-      return () => { controller.abort(); clearTimers(); };
-    }
-
-    const vg = entry.voiceGuide;
-    const phaseCues = vg.phaseCues ?? {};
-    const phaseAudioKeys = vg.phaseAudioKeys ?? {};
-    const repeatCues = vg.repeatCues ?? [];
-
-    vg.intro.forEach((cue) => {
-      const t = window.setTimeout(() => playCue(cue), cue.at * 1000);
-      timersRef.current.push(t);
-    });
-
-    let introTotalSec: number;
-    if (vg.intro.length > 0) {
-      const lastCue = vg.intro[vg.intro.length - 1];
-      const lastDuration = lastCue.audioKey
-        ? voiceEngine.getAudioDuration(lastCue.audioKey) ?? 4
-        : 4;
-      introTotalSec = lastCue.at + lastDuration + 1;
-    } else {
-      introTotalSec = 0;
-    }
-
-    const roundDuration = totalDuration;
-
-    for (let round = 0; round < totalRounds; round++) {
-      const roundStart = introTotalSec + round * roundDuration;
-
-      phases.forEach((phase, phaseIdx) => {
-        const phaseStart = roundStart + phases.slice(0, phaseIdx).reduce((s, p) => s + p.seconds, 0);
-        const cueText = phaseCues[phase.label] ?? phaseCues[phase.key] ?? '';
-        const cueAudioKey = phaseAudioKeys[phase.label] ?? phaseAudioKeys[phase.key];
-        if (cueText) {
-          const t = window.setTimeout(() => {
-            if (cueAudioKey) {
-              voiceEngine.speakByKey(cueAudioKey, cueText);
-            } else {
-              voiceEngine.speak(cueText);
-            }
-            setSubtitle(cueText);
-          }, phaseStart * 1000);
-          timersRef.current.push(t);
-        }
-
-        for (let s = 1; s < phase.seconds; s++) {
-          const t = window.setTimeout(() => {
-            setRemainingSeconds(phase.seconds - s);
-          }, (phaseStart + s) * 1000);
-          timersRef.current.push(t);
-        }
-
-        if (entry.visual.type === 'layered_breathing') {
-          if (phase.key === 'inhale') {
-            const layers = entry.visual.layers ?? ['belly', 'chest', 'clavicle'];
-            const inhalePart = phase.seconds / layers.length;
-            layers.forEach((_, i) => {
-              if (i === 0) return;
-              const t = window.setTimeout(() => setActiveLayer(i), phaseStart * 1000 + Math.round(inhalePart * i * 1000));
-              timersRef.current.push(t);
-            });
-          } else if (phase.key === 'exhale') {
-            const layers = entry.visual.layers ?? ['belly', 'chest', 'clavicle'];
-            const exhalePart = phase.seconds / layers.length;
-            layers.forEach((_, i) => {
-              const reverseIdx = layers.length - 1 - i;
-              if (i === 0) return;
-              const t = window.setTimeout(() => setActiveLayer(reverseIdx), phaseStart * 1000 + Math.round(exhalePart * i * 1000));
-              timersRef.current.push(t);
-            });
-          }
-        }
-
-        const t = window.setTimeout(() => {
           setPreparing(false);
           setPhaseIndex(phaseIdx);
-          setPhaseDuration(phase.seconds);
-          setRemainingSeconds(phase.seconds);
-          if (entry.id === 'complete-yoga-breathing') setSubtitle('');
+          setPhaseDuration(dur);
+          setRemainingSeconds(dur);
+          phaseStartRef.current = performance.now();
+          phaseSecondsRef.current = dur;
+          if (tickRef.current) window.clearInterval(tickRef.current);
+          tickRef.current = window.setInterval(() => {
+            const elapsed = (performance.now() - phaseStartRef.current) / 1000;
+            setRemainingSeconds(Math.max(0, phaseSecondsRef.current - elapsed));
+          }, 100);
+
           if (entry.visual.type === 'layered_breathing') {
-            setActiveLayer(phase.key === 'inhale' ? 0 : (entry.visual.layers?.length ?? 3) - 1);
+            const p = phases[phaseIdx];
+            if (p?.key === 'inhale') {
+              setActiveLayer(0);
+            } else if (p?.key === 'exhale') {
+              setActiveLayer((entry.visual.layers?.length ?? 3) - 1);
+            }
           }
-        }, phaseStart * 1000);
-        timersRef.current.push(t);
-      });
-
-      if (round > 0 && repeatCues.length > 0) {
-        const phaseCueTimes = new Set<number>();
-        let phaseOffset = 0;
-        for (const phase of phases) {
-          const cueText = phaseCues[phase.label] ?? phaseCues[phase.key] ?? '';
-          if (cueText) phaseCueTimes.add(phaseOffset);
-          phaseOffset += phase.seconds;
         }
-
-        repeatCues.forEach((cue) => {
-          if (phaseCueTimes.has(cue.at)) return;
-          const t = window.setTimeout(() => playCue(cue), (roundStart + cue.at) * 1000);
-          timersRef.current.push(t);
-        });
-      }
-
-      const t = window.setTimeout(() => {
+      } else if (event.type === 'cueEnd') {
+        const cue = cues[event.cueIndex ?? 0];
+        if (cue?.type === 'silence') {
+          phaseIdx++;
+          if (phaseIdx >= phases.length) {
+            phaseIdx = 0;
+            round++;
+          }
+        }
+      } else if (event.type === 'roundChange') {
+        round = event.round ?? 0;
         setCurrentRound(round + 1);
-      }, roundStart * 1000);
-      timersRef.current.push(t);
-    }
+      } else if (event.type === 'complete') {
+        setIsRunning(false);
+        setIsCompleted(true);
+        setActiveLayer(undefined);
+        setPreparing(true);
+        if (tickRef.current) {
+          window.clearInterval(tickRef.current);
+          tickRef.current = null;
+        }
+      } else if (event.type === 'stateChange') {
+        if (event.state === 'completed') {
+          setIsRunning(false);
+          setIsCompleted(true);
+        }
+      }
+    };
 
-    const lastRoundEnd = introTotalSec + totalRounds * roundDuration;
-
-    vg.completion.forEach((cue) => {
-      const t = window.setTimeout(() => playCue(cue), (lastRoundEnd + cue.at) * 1000);
-      timersRef.current.push(t);
-    });
-
-    const endT = window.setTimeout(() => {
-      setIsRunning(false);
-      setIsCompleted(true);
-      setActiveLayer(undefined);
-    }, (lastRoundEnd + 5) * 1000);
-    timersRef.current.push(endT);
+    const runtime = createPracticeAudioRuntime();
+    runtime.setSource('practice_audio_runtime');
+    runtime.addListener(handleEvent);
+    runtimeRef.current = runtime;
+    runtime.start({ practiceId: entry.id, cues });
 
     return () => {
-      clearTimers();
+      runtime.dispose();
+      runtimeRef.current = null;
+      if (tickRef.current) {
+        window.clearInterval(tickRef.current);
+        tickRef.current = null;
+      }
     };
   }, [runId, entryId]);
 
   useEffect(() => {
     return () => {
-      clearTimers();
-      voiceEngine.stop();
+      if (tickRef.current) window.clearInterval(tickRef.current);
+      runtimeRef.current?.dispose();
+      runtimeRef.current = null;
     };
   }, []);
 
@@ -380,11 +246,10 @@ export function BreathworkExperience({
           {!isRunning && !isCompleted && (
             <p className="breathing-live-copy">準備ができたら開始してください。</p>
           )}
-          {audioFailed && <p role="status">音声の一部を再生できませんでした。字幕に合わせて続けられます。</p>}
           <button
             type="button"
             className="secondary-button breathing-replay-button"
-            onClick={() => { unlockBreathworkAudio(); voiceEngine.unlock(); setRunId((value) => value + 1); }}
+            onClick={() => { unlockAudioContext(); setRunId((value) => value + 1); }}
           >
             もう一回やる
           </button>

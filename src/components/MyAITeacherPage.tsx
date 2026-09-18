@@ -25,7 +25,7 @@ import { resolveConcretePoses, getDefaultPlanPoses, getDefaultPosesByType, getPo
 import { loadLocalMemory, summarizeMemory, getMemory } from '../services/aiTeacherMemoryService';
 import { emptyTodayContext, type TodayContext, type RequestedMode } from '../types/aiTeacherLayers';
 import { getPlanGate, gateVerdictAllowsGeneration, gateStateMessage, getPracticeEntryGate, practiceEntryAllows, computeTodayContextSignature, isPlanStale, type PlanGateVerdict, type PracticeEntryVerdict } from '../services/planGate';
-import { isTTSAvailable, buildVoiceGuide, getVoiceStatus, getVoiceGuideEngine, getEngineType, preloadVoicePhrases, preloadVoiceKeys, unlockAudioContext, unlockBreathworkAudio, getAudioDiagnostic, ALL_VOICE_KEYS, REMAINING_CUES, BOX_BREATHING_PHASE_CUES, type VoiceGuideSequence, type VoiceStatus, type EngineType } from '../lib/voiceGuide';
+import { isTTSAvailable, buildVoiceGuide, getVoiceStatus, getVoiceGuideEngine, getEngineType, preloadVoicePhrases, preloadVoiceKeys, unlockAudioContext, getAudioDiagnostic, ALL_VOICE_KEYS, REMAINING_CUES, BOX_BREATHING_PHASE_CUES, type VoiceGuideSequence, type VoiceStatus, type EngineType } from '../lib/voiceGuide';
 import { getActiveMeditations, getMeditationEntry, type MeditationCatalogEntry } from '../lib/meditationCatalog';
 import { getBreathworkEntry } from '../lib/breathworkCatalog';
 import { getActiveSequences, getSequenceEntry } from '../lib/sequenceCatalog';
@@ -891,7 +891,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         setStep('step6');
       }
     } else if (action.type === 'start_breathwork') {
-      unlockBreathworkAudio();
+      unlockAudioContext();
       setSelectedBreathworkId(action.targetId);
       setDirectPractice({ id: action.targetId, type: 'pranayama' });
       setPracticeType('pranayama');
@@ -1717,7 +1717,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     setPracticeEntrySource('step2');
                     const practiceId = item.practiceId ?? '';
                     if (item.type === 'pranayama' && practiceId) {
-                      unlockBreathworkAudio();
+                      unlockAudioContext();
                       setSelectedBreathworkId(practiceId);
                       setSelectedMeditationId(null);
                       setDirectPractice({ id: practiceId, type: 'pranayama' });
@@ -2559,7 +2559,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                         setTimerRunning(false);
                         setSelectedGuide(null);
                       } else if (pose.type === 'pranayama') {
-                        unlockBreathworkAudio();
+                        unlockAudioContext();
                         setSelectedBreathworkId(pose.id);
                         setTimerRunning(false);
                         setSelectedGuide(null);
