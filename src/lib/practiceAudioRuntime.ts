@@ -44,7 +44,7 @@ export interface PracticeSessionConfig {
   onEvent?: RuntimeListener;
 }
 
-const SILENCE_WATCHDOG_MS = 120000;
+const SILENCE_WATCHDOG_MS = 300000;
 
 export class PracticeAudioRuntime {
   private engine: VoiceGuideEngine;
@@ -198,7 +198,10 @@ export class PracticeAudioRuntime {
   private estimateCueMs(cue: PracticeCue): number {
     if (cue.audioKey) {
       const dur = this.engine.getAudioDuration(cue.audioKey);
-      if (dur && dur > 0) return (dur * 1.08 + 3) * 1000;
+      if (dur && dur > 0) {
+        const rate = cue.audioKey.startsWith('voice-nidra') ? 1.08 : 1.0;
+        return (dur / rate + 3) * 1000;
+      }
     }
     const text = cue.speechText ?? cue.displayText ?? '';
     const charCount = text.length;
