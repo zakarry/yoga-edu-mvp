@@ -275,12 +275,17 @@ function getAudioContext(): AudioContext | null {
   return ctx;
 }
 
+function getAudioFilePath(key: string): string {
+  if (key === 'susokukan-intro-full') return '/voice/susokukan-intro-full-v2.wav';
+  return `/voice/${key}.mp3`;
+}
+
 async function fetchAndDecode(key: string): Promise<AudioBuffer | null> {
   if (audioBufferCache.has(key)) return audioBufferCache.get(key)!;
   const ctx = getAudioContext();
   if (!ctx) return null;
   try {
-    const resp = await fetch(`/voice/${key}.mp3`);
+    const resp = await fetch(getAudioFilePath(key));
     if (!resp.ok) return null;
     const arrayBuf = await resp.arrayBuffer();
     const audioBuf = await ctx.decodeAudioData(arrayBuf);
@@ -293,7 +298,7 @@ async function fetchAndDecode(key: string): Promise<AudioBuffer | null> {
 
 function getAudioElementForKey(key: string): HTMLAudioElement | null {
   if (audioElementCache.has(key)) return audioElementCache.get(key)!;
-  const audio = new Audio(`/voice/${key}.mp3`);
+  const audio = new Audio(getAudioFilePath(key));
   audio.preload = 'auto';
   audioElementCache.set(key, audio);
   return audio;
@@ -659,6 +664,7 @@ export const ALL_VOICE_KEYS: string[] = [
   'voice-susokukan-end-1',
   'voice-susokukan-end-2',
   'voice-susokukan-end-3',
+  'susokukan-intro-full',
   'voice-mindfulness-1',
   'voice-mindfulness-2',
   'voice-mindfulness-3',
