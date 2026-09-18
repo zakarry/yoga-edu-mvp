@@ -518,6 +518,10 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
         '吸う': 'ゆっくり鼻から吸います。',
         '吐く': 'ゆっくり鼻から吐きます。',
       },
+      phaseAudioKeys: {
+        '吸う': 'voice-nadi-r-inhale-left',
+        '吐く': 'voice-nadi-r-exhale-left',
+      },
       repeatCues: [
         { at: 0, text: '今の流れのまま、片鼻での呼吸を交互に繰り返します。', audioKey: 'voice-nadi-repeat-guide' },
         { at: 30, text: '無理のない範囲で、ゆっくり続けましょう。', audioKey: 'voice-nadi-continue' },
