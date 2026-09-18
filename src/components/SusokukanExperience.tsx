@@ -77,7 +77,7 @@ export function SusokukanExperience() {
       if (startTimestampRef.current === 0) return;
       const now = Date.now();
       const pauseOffset = pauseAccumRef.current + (pausedAtRef.current !== null ? now - pausedAtRef.current : 0);
-      const sec = Math.min(SUSOKUKAN_TOTAL_SEC, Math.floor((now - startTimestampRef.current - pauseOffset) / 1000));
+      const sec = Math.floor((now - startTimestampRef.current - pauseOffset) / 1000);
       setElapsed(sec);
     }, 1000);
     return () => window.clearInterval(timer);
@@ -91,12 +91,12 @@ export function SusokukanExperience() {
   }, []);
 
   const active = status === 'running' || status === 'paused';
-  const remaining = Math.max(0, SUSOKUKAN_TOTAL_SEC - elapsed);
+  const remaining = status === 'completed' ? 0 : Math.max(0, SUSOKUKAN_TOTAL_SEC - elapsed);
   const label = status === 'idle' ? '準備ができたら開始してください'
     : status === 'paused' ? '一時停止中'
     : status === 'completed' ? 'お疲れさまでした'
     : status === 'error' ? '音声を再生できませんでした。通信と音量を確認して、もう一度お試しください。'
-    : elapsed >= 60 ? '静寂' : 'ガイド中';
+    : elapsed >= 60 && status === 'running' ? '静寂' : 'ガイド中';
 
   return (
     <div className="meditation-experience">

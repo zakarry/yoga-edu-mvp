@@ -102,7 +102,7 @@ function UnifiedMeditationExperience({ entry }: MeditationExperienceProps) {
       if (startTimestampRef.current === 0) return;
       const now = Date.now();
       const pauseOffset = pauseAccumRef.current + (pausedAtRef.current !== null ? now - pausedAtRef.current : 0);
-      const sec = Math.min(totalSec, Math.floor((now - startTimestampRef.current - pauseOffset) / 1000));
+      const sec = Math.floor((now - startTimestampRef.current - pauseOffset) / 1000);
       setElapsed(sec);
     }, 1000);
     return () => window.clearInterval(timer);
@@ -119,7 +119,7 @@ function UnifiedMeditationExperience({ entry }: MeditationExperienceProps) {
   const approxLabel = isNidra
     ? entry.durationSec >= 600 ? '約10分' : '約3分30秒'
     : `${Math.floor(totalSec / 60)}:${(totalSec % 60).toString().padStart(2, '0')}`;
-  const remainingSec = Math.max(0, totalSec - elapsed);
+  const remainingSec = status === 'completed' ? 0 : Math.max(0, totalSec - elapsed);
   const mins = Math.floor(remainingSec / 60);
   const secs = remainingSec % 60;
   const displayTime = `${mins}:${secs.toString().padStart(2, '0')}`;

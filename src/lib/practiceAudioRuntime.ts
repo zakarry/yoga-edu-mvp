@@ -58,6 +58,8 @@ export class PracticeAudioRuntime {
   private watchdogTimer: ReturnType<typeof setTimeout> | null = null;
   private abortController: AbortController | null = null;
   private isAdvancing = false;
+  private silenceRemainingMs = 0;
+  private silenceStartedAt = 0;
   private runtimeSource: RuntimeSource = 'practice_audio_runtime';
 
   constructor(engine?: VoiceGuideEngine) {
@@ -121,8 +123,7 @@ export class PracticeAudioRuntime {
         this.advance();
         return;
       }
-      this.setState('completed');
-      this.emit({ type: 'complete' });
+      this.setState('idle');
       this.isAdvancing = false;
       return;
     }
@@ -159,6 +160,9 @@ export class PracticeAudioRuntime {
   }
 
   private handleVoiceCue(cue: PracticeCue, cueKey: string): void {
+    this.clearSilenceTimer();
+    this.engine.setOnCueEnd(null);
+
     const displayText = cue.displayText ?? cue.speechText ?? '';
     const speechText = cue.speechText ?? cue.displayText ?? '';
 
@@ -168,6 +172,7 @@ export class PracticeAudioRuntime {
 
     this.engine.setOnCueEnd(() => {
       if (this.state !== 'running') { this.isAdvancing = false; return; }
+      this.clearWatchdog();
       this.emit({ type: 'cueEnd', cueIndex: this.cueIndex, cueId: cue.id });
       this.isAdvancing = false;
       this.advance();
@@ -202,6 +207,7 @@ export class PracticeAudioRuntime {
         const rate = cue.audioKey.startsWith('voice-nidra') ? 1.08 : 1.0;
         return (dur / rate + 3) * 1000;
       }
+      return 120000;
     }
     const text = cue.speechText ?? cue.displayText ?? '';
     const charCount = text.length;
@@ -216,14 +222,20 @@ export class PracticeAudioRuntime {
   }
 
   private handleSilence(cue: PracticeCue): void {
+    this.clearWatchdog();
+    this.engine.setOnCueEnd(null);
+
     const duration = cue.durationSec ?? 30;
     if (cue.displayText) {
       this.emit({ type: 'subtitle', subtitle: cue.displayText });
     }
     this.clearSilenceTimer();
-    const ms = Math.min(duration * 1000, SILENCE_WATCHDOG_MS);
+    const ms = duration * 1000;
+    this.silenceRemainingMs = ms;
+    this.silenceStartedAt = Date.now();
     this.silenceTimer = setTimeout(() => {
       if (this.state !== 'running') { this.isAdvancing = false; return; }
+      this.silenceRemainingMs = 0;
       this.emit({ type: 'cueEnd', cueIndex: this.cueIndex, cueId: cue.id });
       this.isAdvancing = false;
       this.advance();
@@ -240,7 +252,11 @@ export class PracticeAudioRuntime {
   pause(): void {
     if (this.state !== 'running') return;
     this.engine.pause();
-    this.clearSilenceTimer();
+    if (this.silenceTimer && this.silenceStartedAt > 0) {
+      const elapsed = Date.now() - this.silenceStartedAt;
+      this.silenceRemainingMs = Math.max(0, this.silenceRemainingMs - elapsed);
+      this.clearSilenceTimer();
+    }
     this.clearWatchdog();
     this.setState('paused');
   }
@@ -249,13 +265,16 @@ export class PracticeAudioRuntime {
     if (this.state !== 'paused') return;
     this.engine.resume();
     this.setState('running');
-    if (this.silenceTimer) {
+    if (this.silenceRemainingMs > 0) {
+      this.silenceStartedAt = Date.now();
+      const remaining = this.silenceRemainingMs;
       this.silenceTimer = setTimeout(() => {
         if (this.state !== 'running') { this.isAdvancing = false; return; }
+        this.silenceRemainingMs = 0;
         this.emit({ type: 'cueEnd', cueIndex: this.cueIndex, cueId: this.config?.cues[this.cueIndex]?.id });
         this.isAdvancing = false;
         this.advance();
-      }, 1000);
+      }, remaining);
     }
   }
 

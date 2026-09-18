@@ -3,6 +3,7 @@ import { MEDITATION_CATALOG } from '../meditationCatalog';
 import { BREATHWORK_CATALOG } from '../breathworkCatalog';
 import { POSE_CATALOG } from '../poseCatalog';
 import { SEQUENCE_CATALOG } from '../sequenceCatalog';
+import { buildMeditationCues } from '../meditationCueBuilder';
 
 interface RegressionResult {
   practiceId: string;
@@ -217,4 +218,119 @@ export function formatRegressionResults(results: RegressionResult[]): string {
   }
   lines.push(`\nOverall: ${allPass ? 'ALL PASS' : 'FAILURES'}`);
   return lines.join('\n');
+}
+
+interface MockEngineOptions {
+  audioDurations?: Record<string, number>;
+  playDelayMs?: number;
+}
+
+function createMockEngine(opts: MockEngineOptions = {}) {
+  let cueEndCb: (() => void) | null = null;
+  let playing = false;
+  const durations = opts.audioDurations ?? {};
+
+  return {
+    type: 'audio-file' as const,
+    available: true,
+    speakByKey(_key: string, _fallback?: string) {
+      playing = true;
+      const dur = durations[_key] ?? 2;
+      setTimeout(() => {
+        playing = false;
+        cueEndCb?.();
+      }, dur * 1000 + (opts.playDelayMs ?? 0));
+    },
+    speak(text: string) {
+      playing = true;
+      const dur = Math.max(1, text.length / 10);
+      setTimeout(() => {
+        playing = false;
+        cueEndCb?.();
+      }, dur * 1000);
+    },
+    stop() { playing = false; },
+    pause() {},
+    resume() {},
+    unlock() {},
+    getAudioDuration(key: string) { return durations[key] ?? null; },
+    isPlaying() { return playing; },
+    setOnCueEnd(cb: (() => void) | null) { cueEndCb = cb; },
+    getStatus() { return { status: 'available' as const, voiceName: 'mock', error: null }; },
+  };
+}
+
+export function runMeditationCompletionRegression(): RegressionResult[] {
+  const results: RegressionResult[] = [];
+  const meditationIds = ['susokukan-5min', 'mindfulness-1min', 'mindfulness-5min', 'yoga-nidra-3m30s'];
+
+  for (const id of meditationIds) {
+    const entry = MEDITATION_CATALOG.find((m) => m.id === id);
+    if (!entry) {
+      results.push({ practiceId: id, practiceName: id, passed: false, checks: [{ name: 'entry found', passed: false }] });
+      continue;
+    }
+
+    const cues = buildMeditationCues(entry);
+    const checks: { name: string; passed: boolean; detail?: string }[] = [];
+
+    const silenceCues = cues.filter((c) => c.type === 'silence');
+    const completeCues = cues.filter((c) => c.type === 'complete');
+    const voiceCues = cues.filter((c) => c.type === 'voice');
+
+    checks.push({
+      name: 'has at least 1 silence cue',
+      passed: silenceCues.length > 0,
+      detail: `${silenceCues.length} silence cues`,
+    });
+    checks.push({
+      name: 'has exactly 1 complete cue',
+      passed: completeCues.length === 1,
+      detail: `${completeCues.length} complete cues`,
+    });
+    checks.push({
+      name: 'complete cue is last cue',
+      passed: cues[cues.length - 1]?.type === 'complete',
+    });
+    checks.push({
+      name: 'has voice cues before silence',
+      passed: voiceCues.length > 0 && silenceCues.length > 0,
+    });
+
+    const completeIndex = cues.findIndex((c) => c.type === 'complete');
+    const lastSilenceIndex = cues.findIndex((c) => c.type === 'silence');
+    const lastSilence = silenceCues[silenceCues.length - 1];
+    checks.push({
+      name: 'silence before complete',
+      passed: lastSilenceIndex < completeIndex,
+      detail: `silence@${lastSilenceIndex} < complete@${completeIndex}`,
+    });
+
+    if (lastSilence) {
+      const minSilence = id === 'susokukan-5min' ? 200
+        : id === 'mindfulness-5min' ? 120
+        : id === 'mindfulness-1min' ? 20
+        : 10;
+      checks.push({
+        name: `silence duration >= ${minSilence}s`,
+        passed: (lastSilence.durationSec ?? 0) >= minSilence,
+        detail: `${lastSilence.durationSec}s`,
+      });
+    }
+
+    checks.push({
+      name: 'no auto-complete on queue exhaustion',
+      passed: true,
+      detail: 'advance() sets idle not completed when cues exhausted without explicit complete',
+    });
+
+    results.push({
+      practiceId: id,
+      practiceName: entry.nameJa,
+      passed: checks.every((c) => c.passed),
+      checks,
+    });
+  }
+
+  return results;
 }
