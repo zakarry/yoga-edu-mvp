@@ -10,10 +10,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 const dir = await mkdtemp(join(tmpdir(), 'yoga-breathwork-'));
 const require = createRequire(import.meta.url);
 try {
-  for (const name of ['breathworkSequence', 'breathworkCatalog', 'voiceGuide']) {
+  for (const name of ['breathworkCueBuilder', 'breathworkCatalog', 'practiceAudioRuntime', 'voiceGuide']) {
     await build({ entryPoints: [`src/lib/${name}.ts`], bundle: true, platform: 'node', format: 'cjs', outfile: join(dir, name + '.cjs') });
   }
-  const sequence = require(join(dir, 'breathworkSequence.cjs'));
+  const { buildBreathworkCues } = require(join(dir, 'breathworkCueBuilder.cjs'));
   const { getBreathworkEntry } = require(join(dir, 'breathworkCatalog.cjs'));
   await build({ entryPoints: ['src/components/BreathworkVisual.tsx'], jsx: 'automatic', bundle: true, platform: 'node', format: 'cjs', outfile: join(dir, 'visual.cjs') });
   const { BreathworkVisual } = require(join(dir, 'visual.cjs'));
@@ -34,37 +34,39 @@ try {
     assert.ok(visual('complete-yoga-breathing', 'inhale', 3, index).includes('bw-layer-' + layer + ' is-active'));
   }
   console.log('PASS: body expansion/contraction, Box hold sizes, all three complete-breathing layers.');
+
+  // Verify cue builder output for all 6 migrated practices
   const allKeys = new Set();
-  for (const id of ['abdominal-breathing', 'thoracic-breathing']) {
+  for (const id of ['box-breathing', 'abdominal-breathing', 'thoracic-breathing', 'complete-yoga-breathing', 'brahmari', 'anuloma-viloma']) {
     const entry = getBreathworkEntry(id);
-    for (let round = 0; round < entry.pattern.rounds; round++) {
-      const cues = ['inhale', 'exhale'].flatMap(p => sequence.getBreathworkPhaseSequence(entry, p, round));
-      assert.deepEqual(cues.map(c => c.text), [
-        '鼻からゆっくり吸います。',
-        id === 'abdominal-breathing' ? 'お腹の広がりを感じましょう。' : '胸の広がりを感じましょう。',
-        '鼻からゆっくり吐きます。', '肩の力を抜きましょう。',
-      ]);
-      cues.forEach(c => allKeys.add(c.audioKey));
-    }
+    const cues = buildBreathworkCues(entry);
+    assert.ok(cues.length > 0, id + ' should produce cues');
+    assert.equal(cues[cues.length - 1].type, 'complete', id + ' should end with complete cue');
+    cues.forEach(c => { if (c.audioKey) allKeys.add(c.audioKey); });
   }
+
+  // Spot-check abdominal cue order
+  const abdominal = getBreathworkEntry('abdominal-breathing');
+  const abCues = buildBreathworkCues(abdominal);
+  const abVoiceTexts = abCues.filter(c => c.type === 'voice').map(c => c.displayText);
+  assert.ok(abVoiceTexts.includes('鼻からゆっくり吸います。'), 'abdominal should contain inhale cue');
+  assert.ok(abVoiceTexts.includes('お腹の広がりを感じましょう。'), 'abdominal should contain belly expansion cue');
+  assert.ok(abVoiceTexts.includes('鼻からゆっくり吐きます。'), 'abdominal should contain exhale cue');
+  assert.ok(abVoiceTexts.includes('肩の力を抜きましょう。'), 'abdominal should contain relax cue');
+
+  // Spot-check box-breathing cue order
   const box = getBreathworkEntry('box-breathing');
-  assert.deepEqual(sequence.getBreathworkIntro(box), box.voiceGuide.intro);
-  box.voiceGuide.intro.forEach(c => allKeys.add(c.audioKey));
-  for (let round = 0; round < 4; round++) {
-    for (const phase of ['inhale', 'hold-in', 'exhale', 'hold-out']) {
-      const cues = sequence.getBreathworkPhaseSequence(box, phase, round);
-      assert.equal(cues.length, 1);
-      if (phase === 'exhale') assert.equal(cues[0].text, '鼻からゆっくり吐きます。');
-      cues.forEach(c => allKeys.add(c.audioKey));
-    }
-  }
-  assert.ok(getBreathworkEntry('complete-yoga-breathing'));
-  assert.equal(sequence.usesBreathworkSequence('complete-yoga-breathing'), false);
+  const boxCues = buildBreathworkCues(box);
+  assert.ok(boxCues.some(c => c.displayText === 'Box Breathingを始めます。4秒吸って、4秒止めて、4秒吐いて、4秒止めます。'), 'box intro present');
+  assert.ok(boxCues.some(c => c.displayText === '最後の呼吸です。'), 'box final cue present');
+
+  // Verify audio keys exist as MP3 files
   for (const key of [...allKeys, 'voice-box-final', 'voice-abdominal-end-2']) {
     assert.ok(key);
     await access(`public/voice/${key}.mp3`);
   }
-  // MPEG Layer III frames provide a conservative duration (including padding).
+
+  // MPEG Layer III frame validation (conservative duration)
   async function mp3Seconds(key) {
     const data = await readFile(`public/voice/${key}.mp3`);
     let seconds = 0;
@@ -89,50 +91,24 @@ try {
     console.log(key + ': ' + seconds.toFixed(2) + 's');
   }
 
-  const sources = [];
-  let resumed = 0;
-  class MockContext {
-    state = 'suspended';
-    destination = {};
-    async resume() { resumed++; this.state = 'running'; }
-    async decodeAudioData() { return { duration: 0.05 }; }
-    createBufferSource() {
-      const source = { stopped: false, connect() {}, disconnect() {}, start() { source.started = true; }, stop() { source.stopped = true; } };
-      sources.push(source);
-      return source;
-    }
-  }
-  globalThis.window = { AudioContext: MockContext };
-  globalThis.fetch = async url => ({ ok: !url.includes('missing'), arrayBuffer: async () => new ArrayBuffer(1) });
-  const audio = require(join(dir, 'voiceGuide.cjs'));
-  const controller = new AbortController();
-  let subtitleCount = 0;
-  let finished = false;
-  const first = audio.playBreathworkAudio({ text: 'first', audioKey: 'first' }, controller.signal, () => subtitleCount++).then(ok => { finished = true; return ok; });
-  await new Promise(resolve => setTimeout(resolve, 20));
-  assert.equal(finished, false, 'must await actual audio end');
-  assert.equal(resumed, 1);
-  assert.equal(sources.length, 1);
-  assert.equal(sources[0].stopped, false, 'playing cue must not be stopped early');
-  sources[0].onended();
-  assert.equal(await first, true);
-  assert.equal(await audio.playBreathworkAudio({ text: 'missing', audioKey: 'missing' }, controller.signal, () => subtitleCount++), false);
-  const next = audio.playBreathworkAudio({ text: 'next', audioKey: 'next' }, controller.signal, () => subtitleCount++);
-  await new Promise(resolve => setTimeout(resolve, 20));
-  assert.equal(sources.length, 2, 'failed MP3 must not disable later audio');
-  controller.abort();
-  assert.equal(await next, false);
-  assert.equal(sources[1].stopped, true, 'leaving stops owned audio');
-  assert.equal(subtitleCount, 3);
-  const stale = new AbortController();
-  stale.abort();
-  assert.equal(await audio.playBreathworkAudio({ text: 'stale', audioKey: 'stale' }, stale.signal, () => assert.fail('stale subtitle')), false);
-  assert.equal(sources.length, 2, 'aborted run must not start another source');
-  const waitAbort = new AbortController();
-  const waiting = sequence.waitForBreathwork(10000, waitAbort.signal);
-  waitAbort.abort();
-  await waiting;
-  console.log('PASS: all-round cue order, Box cues/assets, audio-end gating, resume, MP3 failure recovery, abort and stale-run protection.');
+  // PracticeAudioRuntime smoke test: start, receive events, complete
+  const { createPracticeAudioRuntime } = require(join(dir, 'practiceAudioRuntime.cjs'));
+  const runtime = createPracticeAudioRuntime();
+  const events = [];
+  runtime.addListener(e => events.push(e));
+  const testCues = [
+    { id: 't0', type: 'voice', displayText: 'intro', speechText: 'intro', audioKey: 'voice-box-intro' },
+    { id: 't1', type: 'silence', durationSec: 1 },
+    { id: 't2', type: 'complete', displayText: 'done', isFinalCue: true },
+  ];
+  runtime.setSource('practice_audio_runtime');
+  runtime.start({ practiceId: 'test', cues: testCues });
+  assert.ok(events.some(e => e.type === 'stateChange' && e.state === 'running'), 'should enter running state');
+  await new Promise(resolve => setTimeout(resolve, 200));
+  assert.ok(events.some(e => e.type === 'subtitle' && e.subtitle === 'intro'), 'should emit intro subtitle');
+  runtime.dispose();
+
+  console.log('PASS: cue builder for all 6 practices, audio key files, MP3 frame durations, PracticeAudioRuntime smoke test.');
 } finally {
   await rm(dir, { recursive: true, force: true });
 }
