@@ -49,6 +49,7 @@ export class AsanaClockRuntime {
     this.pausedAt = null;
     this.firedCues = new Set();
     this.pendingQueue = [];
+    this.firing = false;
     this.completed = false;
     this.onTick = onTick;
 
@@ -82,6 +83,7 @@ export class AsanaClockRuntime {
     this.completed = false;
     this.firedCues.clear();
     this.pendingQueue = [];
+    this.firing = false;
   }
 
   dispose(): void {
@@ -115,6 +117,8 @@ export class AsanaClockRuntime {
     }
   }
 
+  private firing = false;
+
   private tick(): void {
     if (!this.config || this.completed) return;
     const elapsed = this.elapsed;
@@ -124,7 +128,7 @@ export class AsanaClockRuntime {
 
     this.collectDueCues(elapsed);
 
-    if (!playing && this.pendingQueue.length > 0) {
+    if (!playing && !this.firing && this.pendingQueue.length > 0) {
       this.fireNextPending();
     }
 
@@ -164,6 +168,7 @@ export class AsanaClockRuntime {
     if (this.pendingQueue.length === 0) return;
     const cue = this.pendingQueue.shift()!;
     this.firedCues.add(cue.atMs);
+    this.firing = true;
     this.fireCue(cue);
   }
 
@@ -180,6 +185,7 @@ export class AsanaClockRuntime {
 
   private onAudioEnded(): void {
     if (!this.config || this.completed) return;
+    this.firing = false;
     if (this.pendingQueue.length > 0) {
       this.fireNextPending();
     } else {
