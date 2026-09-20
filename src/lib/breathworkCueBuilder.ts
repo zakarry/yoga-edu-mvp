@@ -21,6 +21,20 @@ function phaseCuesForRound(
     return [{ text: '止めます。', audioKey: 'voice-hold' }];
   }
 
+  if (entry.id === 'complete-yoga-breathing') {
+    if (phaseKey === 'inhale') {
+      if (round === 0) return [{ text: '吸います。お腹、胸、鎖骨周辺へ。' }];
+      if (round === 1) return [{ text: 'もう一度、お腹、胸、鎖骨へ。' }];
+      return [{ text: 'お腹、胸、鎖骨。' }];
+    }
+    if (phaseKey === 'exhale') {
+      if (round === 0) return [{ text: '吐きます。鎖骨、胸、お腹の順に戻します。' }];
+      if (round === 1) return [{ text: '鎖骨、胸、お腹へ戻します。' }];
+      return [{ text: '鎖骨、胸、お腹。' }];
+    }
+    return [];
+  }
+
   if (entry.id === 'brahmari') {
     const rc = vg.repeatCues ?? [];
     if (round > 0 && rc.length >= 2) {
@@ -89,7 +103,7 @@ function phaseCuesForRound(
     return [];
   }
 
-  // Generic fallback for other breathwork (nadi, complete-yoga-breathing, etc.)
+  // Generic fallback for other breathwork (nadi, etc.)
   if (phaseKey === 'inhale') {
     return [
       { text: '鼻からゆっくり吸います。', audioKey: 'voice-box-inhale' },
@@ -105,12 +119,32 @@ function phaseCuesForRound(
 
 function getIntroCues(entry: BreathworkCatalogEntry): { text: string; audioKey?: string }[] {
   if (entry.id === 'box-breathing' || entry.id === 'brahmari') return entry.voiceGuide.intro;
-  // For abdominal/thoracic, only use the first intro cue as the opening line;
-  // the detailed instructions are embedded in round 0 phase cues.
   if (entry.id === 'abdominal-breathing' || entry.id === 'thoracic-breathing') {
     return entry.voiceGuide.intro.slice(0, 1);
   }
+  if (entry.id === 'complete-yoga-breathing') {
+    return [
+      { text: '完全なヨガ呼吸を始めます。', audioKey: 'voice-start-complete-breathing' },
+      { text: '肩の力を抜いて、楽な姿勢をとりましょう。', audioKey: 'voice-relax-shoulders' },
+      { text: '吸うときは、まずお腹、次に胸、最後に鎖骨周辺へと呼吸を広げていきます。', audioKey: 'voice-complete-breathing-3' },
+      { text: '吐くときは、鎖骨周辺、胸、お腹の順にゆっくり戻していきます。', audioKey: 'voice-complete-breathing-4' },
+    ];
+  }
   return entry.voiceGuide.intro;
+}
+
+function getFinalCue(entry: BreathworkCatalogEntry): { text: string; audioKey?: string } {
+  if (entry.id === 'box-breathing') return { text: '最後の呼吸です。', audioKey: 'voice-box-final' };
+  if (entry.id === 'complete-yoga-breathing') return { text: '最後の呼吸です。', audioKey: 'voice-box-final' };
+  const c = entry.voiceGuide.completion[0];
+  return c ? { text: c.text, audioKey: c.audioKey } : { text: '最後の呼吸です。', audioKey: 'voice-box-final' };
+}
+
+function getEndingCue(entry: BreathworkCatalogEntry): { text: string; audioKey?: string } {
+  if (entry.id === 'box-breathing') return { text: 'お疲れさまでした。自然な呼吸に戻りましょう。', audioKey: 'voice-box-end' };
+  if (entry.id === 'complete-yoga-breathing') return { text: 'お疲れさまでした。自然な呼吸に戻りましょう。', audioKey: 'voice-complete-end' };
+  const c = entry.voiceGuide.completion[1] ?? entry.voiceGuide.completion[0];
+  return c ? { text: c.text, audioKey: c.audioKey } : { text: '自然な呼吸に戻りましょう。', audioKey: 'voice-abdominal-end-2' };
 }
 
 export function buildBreathworkCues(entry: BreathworkCatalogEntry): PracticeCue[] {
@@ -120,8 +154,7 @@ export function buildBreathworkCues(entry: BreathworkCatalogEntry): PracticeCue[
 
   const phases = buildPhasesFromPattern(pattern);
   const totalRounds = pattern.rounds;
-  const vg = entry.voiceGuide;
-  const isSequence = ['box-breathing', 'abdominal-breathing', 'thoracic-breathing', 'brahmari'].includes(entry.id);
+  const isSequence = ['box-breathing', 'abdominal-breathing', 'thoracic-breathing', 'brahmari', 'complete-yoga-breathing'].includes(entry.id);
 
   let idx = 0;
   const add = (cue: Omit<PracticeCue, 'id'>) => {
@@ -134,12 +167,8 @@ export function buildBreathworkCues(entry: BreathworkCatalogEntry): PracticeCue[
       add({ type: 'voice', displayText: c.text, speechText: c.text, audioKey: c.audioKey });
     }
 
-    const finalCue = vg.completion[0]
-      ? { text: vg.completion[0].text, audioKey: vg.completion[0].audioKey }
-      : { text: '最後の呼吸です。', audioKey: 'voice-box-final' };
-    const ending = vg.completion[1]
-      ? { text: vg.completion[1].text, audioKey: vg.completion[1].audioKey }
-      : { text: '自然な呼吸に戻りましょう。', audioKey: 'voice-abdominal-end-2' };
+    const finalCue = getFinalCue(entry);
+    const ending = getEndingCue(entry);
 
     for (let round = 0; round < totalRounds; round++) {
       if (round === totalRounds - 1) {
@@ -153,18 +182,18 @@ export function buildBreathworkCues(entry: BreathworkCatalogEntry): PracticeCue[
         add({ type: 'silence', durationSec: phase.seconds });
       }
     }
-    add({ type: 'voice', displayText: ending.text, speechText: ending.text, audioKey: ending.audioKey });
+    add({ type: 'voice', displayText: ending.text, speechText: ending.text, audioKey: ending.audioKey, isFinalCue: true });
     add({ type: 'complete', displayText: 'お疲れさまでした。', isFinalCue: true });
   } else {
-    for (const c of vg.intro) {
+    for (const c of entry.voiceGuide.intro) {
       add({ type: 'voice', displayText: c.text, speechText: c.text, audioKey: c.audioKey });
     }
     if (entry.id === 'nadi-shodhana') {
       add({ type: 'silence', durationSec: 1.5 });
     }
-    const repeatCues = vg.repeatCues ?? [];
-    const phaseCues = vg.phaseCues ?? {};
-    const phaseAudioKeys = vg.phaseAudioKeys ?? {};
+    const repeatCues = entry.voiceGuide.repeatCues ?? [];
+    const phaseCues = entry.voiceGuide.phaseCues ?? {};
+    const phaseAudioKeys = entry.voiceGuide.phaseAudioKeys ?? {};
 
     for (let round = 0; round < totalRounds; round++) {
       for (const phase of phases) {
@@ -181,8 +210,8 @@ export function buildBreathworkCues(entry: BreathworkCatalogEntry): PracticeCue[
         }
       }
     }
-    for (const c of vg.completion) {
-      add({ type: 'voice', displayText: c.text, speechText: c.text, audioKey: c.audioKey });
+    for (const c of entry.voiceGuide.completion) {
+      add({ type: 'voice', displayText: c.text, speechText: c.text, audioKey: c.audioKey, isFinalCue: true });
     }
     add({ type: 'complete', displayText: 'お疲れさまでした。', isFinalCue: true });
   }

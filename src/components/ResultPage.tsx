@@ -117,6 +117,11 @@ export function BreathworkExperience({
     let phaseIdx = 0;
     let round = 0;
 
+    const isLayered = entry.visual.type === 'layered_breathing';
+    const layerCount = entry.visual.layers?.length ?? 3;
+    const layerLabels = ['まずお腹へ', '次に胸へ', '最後に鎖骨周辺へ'];
+    const exhaleLabels = ['まず鎖骨から', '次に胸へ', '最後にお腹へ'];
+
     const handleEvent = (event: RuntimeEvent) => {
       if (event.type === 'subtitle') {
         setSubtitle(event.subtitle ?? '');
@@ -137,17 +142,26 @@ export function BreathworkExperience({
           if (tickRef.current) window.clearInterval(tickRef.current);
           tickRef.current = window.setInterval(() => {
             const elapsed = (performance.now() - phaseStartRef.current) / 1000;
-            setRemainingSeconds(Math.max(0, phaseSecondsRef.current - elapsed));
-          }, 100);
+            const remaining = Math.max(0, phaseSecondsRef.current - elapsed);
+            setRemainingSeconds(remaining);
 
-          if (entry.visual.type === 'layered_breathing') {
-            const p = phases[phaseIdx];
-            if (p?.key === 'inhale') {
-              setActiveLayer(0);
-            } else if (p?.key === 'exhale') {
-              setActiveLayer((entry.visual.layers?.length ?? 3) - 1);
+            if (isLayered) {
+              const p = phases[phaseIdx];
+              if (!p) return;
+              const phaseDur = phaseSecondsRef.current;
+              if (phaseDur <= 0) return;
+              const third = phaseDur / layerCount;
+              const segment = Math.min(layerCount - 1, Math.floor(elapsed / third));
+              if (p.key === 'inhale') {
+                setActiveLayer(segment);
+                setSubtitle(layerLabels[segment] ?? '');
+              } else if (p.key === 'exhale') {
+                const revSeg = layerCount - 1 - segment;
+                setActiveLayer(revSeg);
+                setSubtitle(exhaleLabels[segment] ?? '');
+              }
             }
-          }
+          }, 100);
         } else if (cue?.type === 'voice') {
           setPreparing(false);
         }

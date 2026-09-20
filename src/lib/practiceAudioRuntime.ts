@@ -156,6 +156,11 @@ export class PracticeAudioRuntime {
       return;
     }
 
+    if (cue.isFinalCue && cue.type === 'voice') {
+      this.handleFinalVoiceCue(cue, cueKey);
+      return;
+    }
+
     this.handleVoiceCue(cue, cueKey);
   }
 
@@ -203,6 +208,38 @@ export class PracticeAudioRuntime {
     }, fallbackMs);
   }
 
+  private handleFinalVoiceCue(cue: PracticeCue, cueKey: string): void {
+    this.clearSilenceTimer();
+
+    const displayText = cue.displayText ?? cue.speechText ?? '';
+    const speechText = cue.speechText ?? cue.displayText ?? '';
+    const myCueIndex = this.cueIndex;
+
+    if (displayText) {
+      this.emit({ type: 'subtitle', subtitle: displayText });
+    }
+
+    this.engine.setOnCueEnd(() => {
+      if (this.state !== 'running') { this.isAdvancing = false; return; }
+      if (this.cueIndex !== myCueIndex) return;
+      this.clearWatchdog();
+      this.emit({ type: 'cueEnd', cueIndex: this.cueIndex, cueId: cue.id });
+      this.isAdvancing = false;
+      setTimeout(() => {
+        if (this.state !== 'running') return;
+        this.advance();
+      }, 400);
+    });
+
+    if (cue.audioKey) {
+      this.engine.speakByKey(cue.audioKey, speechText);
+    } else {
+      this.engine.speak(speechText);
+    }
+
+    this.startWatchdog(cue, cueKey);
+  }
+
   private skipFailedCue(cue: PracticeCue, reason: string): void {
     this.engine.stop();
     this.engine.setOnCueEnd(null);
@@ -214,6 +251,14 @@ export class PracticeAudioRuntime {
   }
 
   private estimateCueMs(cue: PracticeCue): number {
+    if (cue.isFinalCue && cue.audioKey) {
+      const dur = this.engine.getAudioDuration(cue.audioKey);
+      if (dur && dur > 0) {
+        const rate = cue.audioKey.startsWith('voice-nidra') ? 1.08 : 1.0;
+        return (dur / rate + 5) * 1000;
+      }
+      return 30000;
+    }
     if (cue.audioKey) {
       const dur = this.engine.getAudioDuration(cue.audioKey);
       if (dur && dur > 0) {
