@@ -1077,6 +1077,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               setPracticeDuration(Math.max(1, Math.round(elapsedSec / 60)));
             }
             setPracticePhase('done');
+            setTimerRunning(false);
             setCurrentSubtitle('');
             setAsanaVisualStage(null);
           },
@@ -2465,6 +2466,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     className="primary-button pose-guide-start-btn"
                     onClick={() => {
                       if (practiceEntryBlocked) return;
+                      asanaClockRuntimeRef.current?.dispose();
+                      asanaClockRuntimeRef.current = null;
+                      asanaRuntimeRef.current?.dispose();
+                      asanaRuntimeRef.current = null;
+                      setCurrentSubtitle('');
+                      setAsanaVisualStage(null);
                       const pose = concretePoses[currentPoseIdx];
                       setPracticeType(pose.type);
                       setPracticeDuration(pose.defaultMinutes);
@@ -2712,7 +2719,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     </button>
                     <button
                       className="ghost-button"
-                      onClick={() => setPosePhase('list')}
+                      onClick={() => { setPosePhase('list'); setPracticePhase('guide'); }}
                     >
                       一覧に戻る
                     </button>
