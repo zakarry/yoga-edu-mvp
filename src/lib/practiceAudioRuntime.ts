@@ -9,6 +9,7 @@ export interface PracticeCue {
   speechText?: string;
   audioKey?: string;
   durationSec?: number;
+  phaseDurationSec?: number;
   isFinalCue?: boolean;
 }
 
@@ -161,7 +162,61 @@ export class PracticeAudioRuntime {
       return;
     }
 
+    if (cue.type === 'voice' && cue.phaseDurationSec) {
+      this.handlePhaseVoiceCue(cue, cueKey);
+      return;
+    }
+
     this.handleVoiceCue(cue, cueKey);
+  }
+
+  private handlePhaseVoiceCue(cue: PracticeCue, cueKey: string): void {
+    this.clearSilenceTimer();
+
+    const displayText = cue.displayText ?? cue.speechText ?? '';
+    const speechText = cue.speechText ?? cue.displayText ?? '';
+    const myCueIndex = this.cueIndex;
+
+    if (displayText) {
+      this.emit({ type: 'subtitle', subtitle: displayText });
+    }
+
+    const phaseMs = (cue.phaseDurationSec ?? 1) * 1000;
+
+    let voiceEnded = false;
+    let timerFired = false;
+
+    const tryAdvance = () => {
+      if (!voiceEnded || !timerFired) return;
+      this.clearWatchdog();
+      this.emit({ type: 'cueEnd', cueIndex: myCueIndex, cueId: cue.id });
+      this.isAdvancing = false;
+      this.advance();
+    };
+
+    this.engine.setOnCueEnd(() => {
+      if (this.state !== 'running') { this.isAdvancing = false; return; }
+      if (this.cueIndex !== myCueIndex) return;
+      voiceEnded = true;
+      tryAdvance();
+    });
+
+    if (cue.audioKey) {
+      this.engine.speakByKey(cue.audioKey, speechText);
+    } else {
+      this.engine.speak(speechText);
+    }
+
+    this.silenceRemainingMs = phaseMs;
+    this.silenceStartedAt = Date.now();
+    this.silenceTimer = setTimeout(() => {
+      if (this.state !== 'running') { this.isAdvancing = false; return; }
+      this.silenceRemainingMs = 0;
+      timerFired = true;
+      tryAdvance();
+    }, phaseMs);
+
+    this.startWatchdog(cue, cueKey);
   }
 
   private handleVoiceCue(cue: PracticeCue, cueKey: string): void {
@@ -258,6 +313,9 @@ export class PracticeAudioRuntime {
         return (dur / rate + 5) * 1000;
       }
       return 30000;
+    }
+    if (cue.phaseDurationSec) {
+      return (cue.phaseDurationSec + 10) * 1000;
     }
     if (cue.audioKey) {
       const dur = this.engine.getAudioDuration(cue.audioKey);

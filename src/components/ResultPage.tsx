@@ -122,52 +122,57 @@ export function BreathworkExperience({
     const layerLabels = ['まずお腹へ', '次に胸へ', '最後に鎖骨周辺へ'];
     const exhaleLabels = ['まず鎖骨から', '次に胸へ', '最後にお腹へ'];
 
+    const startPhaseVisual = (dur: number, phaseKeyForLayer?: string) => {
+      phaseIdx = phaseIdx % phases.length;
+      if (phaseIdx === 0 && round > 0) {
+        setCurrentRound(round + 1);
+      }
+      setPreparing(false);
+      setPhaseIndex(phaseIdx);
+      setPhaseDuration(dur);
+      setRemainingSeconds(dur);
+      phaseStartRef.current = performance.now();
+      phaseSecondsRef.current = dur;
+      if (tickRef.current) window.clearInterval(tickRef.current);
+      tickRef.current = window.setInterval(() => {
+        const elapsed = (performance.now() - phaseStartRef.current) / 1000;
+        const remaining = Math.max(0, phaseSecondsRef.current - elapsed);
+        setRemainingSeconds(remaining);
+
+        if (isLayered) {
+          const p = phases[phaseIdx];
+          if (!p) return;
+          const phaseDur = phaseSecondsRef.current;
+          if (phaseDur <= 0) return;
+          const third = phaseDur / layerCount;
+          const segment = Math.min(layerCount - 1, Math.floor(elapsed / third));
+          if (p.key === 'inhale') {
+            setActiveLayer(segment);
+            setSubtitle(layerLabels[segment] ?? '');
+          } else if (p.key === 'exhale') {
+            const revSeg = layerCount - 1 - segment;
+            setActiveLayer(revSeg);
+            setSubtitle(exhaleLabels[segment] ?? '');
+          }
+        }
+      }, 100);
+    };
+
     const handleEvent = (event: RuntimeEvent) => {
       if (event.type === 'subtitle') {
         setSubtitle(event.subtitle ?? '');
       } else if (event.type === 'cueStart') {
         const cue = cues[event.cueIndex ?? 0];
         if (cue?.type === 'silence') {
-          const dur = cue.durationSec ?? 1;
-          phaseIdx = phaseIdx % phases.length;
-          if (phaseIdx === 0 && round > 0) {
-            setCurrentRound(round + 1);
-          }
-          setPreparing(false);
-          setPhaseIndex(phaseIdx);
-          setPhaseDuration(dur);
-          setRemainingSeconds(dur);
-          phaseStartRef.current = performance.now();
-          phaseSecondsRef.current = dur;
-          if (tickRef.current) window.clearInterval(tickRef.current);
-          tickRef.current = window.setInterval(() => {
-            const elapsed = (performance.now() - phaseStartRef.current) / 1000;
-            const remaining = Math.max(0, phaseSecondsRef.current - elapsed);
-            setRemainingSeconds(remaining);
-
-            if (isLayered) {
-              const p = phases[phaseIdx];
-              if (!p) return;
-              const phaseDur = phaseSecondsRef.current;
-              if (phaseDur <= 0) return;
-              const third = phaseDur / layerCount;
-              const segment = Math.min(layerCount - 1, Math.floor(elapsed / third));
-              if (p.key === 'inhale') {
-                setActiveLayer(segment);
-                setSubtitle(layerLabels[segment] ?? '');
-              } else if (p.key === 'exhale') {
-                const revSeg = layerCount - 1 - segment;
-                setActiveLayer(revSeg);
-                setSubtitle(exhaleLabels[segment] ?? '');
-              }
-            }
-          }, 100);
+          startPhaseVisual(cue.durationSec ?? 1);
+        } else if (cue?.type === 'voice' && cue.phaseDurationSec) {
+          startPhaseVisual(cue.phaseDurationSec);
         } else if (cue?.type === 'voice') {
           setPreparing(false);
         }
       } else if (event.type === 'cueEnd') {
         const cue = cues[event.cueIndex ?? 0];
-        if (cue?.type === 'silence') {
+        if (cue?.type === 'silence' || (cue?.type === 'voice' && cue.phaseDurationSec)) {
           phaseIdx++;
           if (phaseIdx >= phases.length) {
             phaseIdx = 0;
