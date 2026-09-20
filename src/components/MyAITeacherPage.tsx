@@ -2691,23 +2691,25 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           {/* Phase: Done — after pose practice, show next pose or final recording */}
           {practicePhase === 'done' && !practiceAborted && (
             <div className="practice-done-section">
-              <div className="pose-progress-bar">
-                <span className="pose-progress-current">
-                  {currentPoseIdx + 1 < concretePoses.length
-                    ? `${currentPoseIdx + 1} / ${concretePoses.length} 完了`
-                    : `${concretePoses.length} / ${concretePoses.length} 全完了`}
-                </span>
-                <div className="pose-progress-dots">
-                  {concretePoses.map((_, idx) => (
-                    <span
-                      key={idx}
-                      className={`pose-progress-dot ${idx <= currentPoseIdx ? 'done' : ''} ${idx === currentPoseIdx ? 'active' : ''}`}
-                    />
-                  ))}
+              {practiceType !== 'sequence' && (
+                <div className="pose-progress-bar">
+                  <span className="pose-progress-current">
+                    {currentPoseIdx + 1 < concretePoses.length
+                      ? `${currentPoseIdx + 1} / ${concretePoses.length} 完了`
+                      : `${concretePoses.length} / ${concretePoses.length} 全完了`}
+                  </span>
+                  <div className="pose-progress-dots">
+                    {concretePoses.map((_, idx) => (
+                      <span
+                        key={idx}
+                        className={`pose-progress-dot ${idx <= currentPoseIdx ? 'done' : ''} ${idx === currentPoseIdx ? 'active' : ''}`}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {currentPoseIdx < concretePoses.length - 1 ? (
+              {practiceType !== 'sequence' && currentPoseIdx < concretePoses.length - 1 ? (
                 <div className="pose-next-section">
                   <h4>おつかれさまでした</h4>
                   <p>{concretePoses[currentPoseIdx].name} 完了！{concretePoses[currentPoseIdx]?.type === 'asana' ? '次のポーズのお手本画像を見ましょう。' : '次の呼吸ガイドを見ましょう。'}</p>
