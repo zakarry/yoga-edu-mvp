@@ -28,6 +28,8 @@ import { getPlanGate, gateVerdictAllowsGeneration, gateStateMessage, getPractice
 import { isTTSAvailable, getVoiceStatus, getVoiceGuideEngine, getEngineType, preloadVoiceKeys, unlockAudioContext, getAudioDiagnostic, ALL_VOICE_KEYS, type VoiceStatus, type EngineType } from '../lib/voiceGuide';
 import { createPracticeAudioRuntime, type RuntimeEvent } from '../lib/practiceAudioRuntime';
 import { buildAsanaCues } from '../lib/asanaCueBuilder';
+import { AsanaClockRuntime } from '../lib/asanaClockRuntime';
+import { buildAsanaClockTimeline } from '../lib/asanaClockTimeline';
 import { getCatalogEntry } from '../lib/poseCatalog';
 import { getActiveMeditations, getMeditationEntry, type MeditationCatalogEntry } from '../lib/meditationCatalog';
 import { getBreathworkEntry } from '../lib/breathworkCatalog';
@@ -502,6 +504,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [practicePaused, setPracticePaused] = useState(false);
   const [currentSubtitle, setCurrentSubtitle] = useState('');
   const asanaRuntimeRef = useRef<ReturnType<typeof createPracticeAudioRuntime> | null>(null);
+  const asanaClockRuntimeRef = useRef<AsanaClockRuntime | null>(null);
   const simpleTimerStartRef = useRef<number>(0);
   const simpleTimerTotalRef = useRef<number>(0);
   const ttsAvailable = isTTSAvailable();
@@ -955,6 +958,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const handleAbortPractice = useCallback(() => {
     asanaRuntimeRef.current?.dispose();
     asanaRuntimeRef.current = null;
+    asanaClockRuntimeRef.current?.dispose();
+    asanaClockRuntimeRef.current = null;
     setTimerRunning(false);
     setTimerPhaseIdx(0);
     setTimerRound(1);
@@ -990,6 +995,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const confirmPracticeExit = useCallback(() => {
     asanaRuntimeRef.current?.dispose();
     asanaRuntimeRef.current = null;
+    asanaClockRuntimeRef.current?.dispose();
+    asanaClockRuntimeRef.current = null;
     setShowExitConfirm(false);
     setTimerRunning(false);
     setPracticeActive(false);
@@ -1037,8 +1044,40 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     if (!voiceGuideOn) return;
     unlockAudioContext();
     asanaRuntimeRef.current?.dispose();
+    asanaClockRuntimeRef.current?.dispose();
     const catalogEntry = getCatalogEntry(pose.id);
     if (!catalogEntry) return;
+
+    if (pose.id === 'tadasana') {
+      const durationMs = pose.defaultMinutes * 60 * 1000;
+      const timeline = buildAsanaClockTimeline(catalogEntry, pose.defaultMinutes);
+      const allKeys = timeline.map((c) => c.audioKey).filter((k): k is string => !!k);
+      if (allKeys.length > 0) preloadVoiceKeys(allKeys);
+      const clock = new AsanaClockRuntime();
+      asanaClockRuntimeRef.current = clock;
+      clock.start(
+        {
+          poseId: pose.id,
+          durationMs,
+          timeline,
+          onSubtitle: (text) => setCurrentSubtitle(text),
+          onComplete: () => {
+            if (sessionStartedAt) {
+              const elapsedSec = Math.max(1, Math.round((Date.now() - sessionStartedAt) / 1000));
+              setPoseElapsedTotal((t) => t + elapsedSec);
+              setPracticeDuration(Math.max(1, Math.round(elapsedSec / 60)));
+            }
+            setPracticePhase('done');
+            setCurrentSubtitle('');
+          },
+        },
+        (remainingMs) => {
+          setSimpleTimerRemaining(Math.ceil(remainingMs / 1000));
+        },
+      );
+      return;
+    }
+
     const cues = buildAsanaCues(catalogEntry, pose.defaultMinutes);
     const allKeys = cues.map((c) => c.audioKey).filter((k): k is string => !!k);
     if (allKeys.length > 0) preloadVoiceKeys(allKeys);
@@ -1072,6 +1111,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setTimerRunning(false);
     setPracticePaused(true);
     asanaRuntimeRef.current?.pause();
+    asanaClockRuntimeRef.current?.pause();
   }, []);
 
   const handleResumePractice = useCallback(() => {
@@ -1080,6 +1120,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setTimerRunning(true);
     setPracticePaused(false);
     asanaRuntimeRef.current?.resume();
+    asanaClockRuntimeRef.current?.resume();
   }, []);
 
   const handleCompletePractice = useCallback(async () => {
@@ -1164,6 +1205,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setTimerRound(1);
     asanaRuntimeRef.current?.dispose();
     asanaRuntimeRef.current = null;
+    asanaClockRuntimeRef.current?.dispose();
+    asanaClockRuntimeRef.current = null;
     setPracticePaused(false);
     voiceEngine.stop();
     setCurrentSubtitle('');

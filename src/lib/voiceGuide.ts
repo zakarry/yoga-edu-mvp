@@ -258,6 +258,10 @@ function getVoiceKey(text: string): string | null {
   return PHRASE_MAP[text] ?? null;
 }
 
+export function phraseToAudioKey(text: string): string | null {
+  return PHRASE_MAP[text] ?? null;
+}
+
 const audioBufferCache: Map<string, AudioBuffer> = new Map();
 const audioElementCache: Map<string, HTMLAudioElement> = new Map();
 let sharedAudioContext: AudioContext | null = null;
