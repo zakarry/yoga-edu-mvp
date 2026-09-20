@@ -476,7 +476,6 @@ class AudioFileEngine implements VoiceGuideEngine {
     this.activeRequestId++;
     this.pendingSpeak = null;
     this.usingTTS = false;
-    setCueEndCallback(null);
     if (this.currentSource) {
       try { this.currentSource.stop(); } catch { /* already stopped */ }
       this.currentSource = null;

@@ -170,12 +170,6 @@ export class PracticeAudioRuntime {
       this.emit({ type: 'subtitle', subtitle: displayText });
     }
 
-    if (cue.audioKey) {
-      this.engine.speakByKey(cue.audioKey, speechText);
-    } else {
-      this.engine.speak(speechText);
-    }
-
     this.engine.setOnCueEnd(() => {
       if (this.state !== 'running') { this.isAdvancing = false; return; }
       if (this.cueIndex !== myCueIndex) return;
@@ -184,6 +178,12 @@ export class PracticeAudioRuntime {
       this.isAdvancing = false;
       this.advance();
     });
+
+    if (cue.audioKey) {
+      this.engine.speakByKey(cue.audioKey, speechText);
+    } else {
+      this.engine.speak(speechText);
+    }
 
     this.startWatchdog(cue, cueKey);
   }
