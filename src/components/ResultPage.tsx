@@ -116,13 +116,14 @@ export function BreathworkExperience({
     const cues = buildBreathworkCues(entry);
     let phaseIdx = 0;
     let round = 0;
+    let phaseInstanceId = 0;
 
     const isLayered = entry.visual.type === 'layered_breathing';
     const layerCount = entry.visual.layers?.length ?? 3;
     const layerLabels = ['まずお腹へ', '次に胸へ', '最後に鎖骨周辺へ'];
     const exhaleLabels = ['まず鎖骨から', '次に胸へ', '最後にお腹へ'];
 
-    const startPhaseVisual = (dur: number, phaseKeyForLayer?: string) => {
+    const startPhaseVisual = (dur: number) => {
       phaseIdx = phaseIdx % phases.length;
       if (phaseIdx === 0 && round > 0) {
         setCurrentRound(round + 1);
@@ -133,8 +134,10 @@ export function BreathworkExperience({
       setRemainingSeconds(dur);
       phaseStartRef.current = performance.now();
       phaseSecondsRef.current = dur;
+      const myInstanceId = ++phaseInstanceId;
       if (tickRef.current) window.clearInterval(tickRef.current);
       tickRef.current = window.setInterval(() => {
+        if (myInstanceId !== phaseInstanceId) return;
         const elapsed = (performance.now() - phaseStartRef.current) / 1000;
         const remaining = Math.max(0, phaseSecondsRef.current - elapsed);
         setRemainingSeconds(remaining);
@@ -168,11 +171,20 @@ export function BreathworkExperience({
         } else if (cue?.type === 'voice' && cue.phaseDurationSec) {
           startPhaseVisual(cue.phaseDurationSec);
         } else if (cue?.type === 'voice') {
+          if (phaseIdx === 0 && round > 0) {
+            setCurrentRound(round + 1);
+          }
           setPreparing(false);
+          setRemainingSeconds(0);
         }
       } else if (event.type === 'cueEnd') {
         const cue = cues[event.cueIndex ?? 0];
         if (cue?.type === 'silence' || (cue?.type === 'voice' && cue.phaseDurationSec)) {
+          if (tickRef.current) {
+            window.clearInterval(tickRef.current);
+            tickRef.current = null;
+          }
+          phaseInstanceId++;
           phaseIdx++;
           if (phaseIdx >= phases.length) {
             phaseIdx = 0;
