@@ -32,6 +32,7 @@ export interface SequenceKnowledge {
 export interface SequenceCatalogEntry {
   id: string;
   nameJa: string;
+  shortNameJa?: string;
   nameEn: string;
   category: SequenceCategory;
   level: SequenceLevel;
@@ -46,6 +47,7 @@ export const SEQUENCE_CATALOG: SequenceCatalogEntry[] = [
   {
     id: 'surya-namaskar-ayush',
     nameJa: 'インド政府AYUSH省 公認 太陽礼拝',
+    shortNameJa: '太陽礼拝',
     nameEn: 'Government of India AYUSH Certified Surya Namaskar',
     category: 'surya_namaskar',
     level: 'experienced',

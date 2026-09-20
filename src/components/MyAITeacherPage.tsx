@@ -401,6 +401,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [cameraFacingMode, setCameraFacingMode] = useState<'user' | 'environment'>('user');
   const [practiceActive, setPracticeActive] = useState(false);
   const [practiceType, setPracticeType] = useState<'asana' | 'pranayama' | 'dhyana' | 'sequence' | null>(null);
+  const [selectedSequenceId, setSelectedSequenceId] = useState<string | null>(null);
   const [selectedMeditationId, setSelectedMeditationId] = useState<string | null>(null);
   const [selectedBreathworkId, setSelectedBreathworkId] = useState<string | null>(null);
   const [directPractice, setDirectPractice] = useState<{ id: string; type: 'asana' | 'pranayama' | 'dhyana' } | null>(null);
@@ -917,6 +918,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       setStep('step6');
     } else if (action.type === 'start_sequence') {
       setPracticeType('sequence');
+      setSelectedSequenceId('surya-namaskar-ayush');
       setSelectedMeditationId(null);
       setSelectedBreathworkId(null);
       setDirectPractice(null);
@@ -1174,7 +1176,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const handleCompletePractice = useCallback(async () => {
     if (!practiceType || practicePhase !== 'done' || practiceAborted || isSavingPractice) return;
     setIsSavingPractice(true);
-    const practiceName = selectedGuide?.name ?? program?.items.find((i) => i.type === practiceType)?.name ?? '実践';
+    const sequenceName = practiceType === 'sequence' && selectedSequenceId ? (getSequenceEntry(selectedSequenceId)?.shortNameJa ?? getSequenceEntry(selectedSequenceId)?.nameJa ?? '太陽礼拝') : null;
+    const practiceName = sequenceName ?? selectedGuide?.name ?? program?.items.find((i) => i.type === practiceType)?.name ?? '実践';
     const totalElapsedSec = poseElapsedTotal > 0 ? poseElapsedTotal : (sessionStartedAt ? Math.max(1, Math.round((Date.now() - sessionStartedAt) / 1000)) : practiceDuration * 60);
     const autoDuration = Math.max(1, Math.round(totalElapsedSec / 60));
     const logParams = {
@@ -1514,6 +1517,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   if (safetyBlocked || practiceEntryBlocked) return;
                   setPracticeEntrySource('home');
                   setPracticeType('sequence');
+                  setSelectedSequenceId('surya-namaskar-ayush');
                   setSelectedGuide(null);
                   setSelectedMeditationId(null);
                   setSelectedBreathworkId(null);
@@ -2740,8 +2744,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 </div>
               ) : (
                 <div className="pose-final-section">
-                  <h4>全プログラム完了！</h4>
-                  <p>今日の実践を記録しましょう。</p>
+                  <h4>{practiceType === 'sequence' && selectedSequenceId ? `${getSequenceEntry(selectedSequenceId)?.shortNameJa ?? getSequenceEntry(selectedSequenceId)?.nameJa ?? '太陽礼拝'} 完了！` : '全プログラム完了！'}</h4>
+                  <p>お疲れさまでした。今日の実践を記録しましょう。</p>
                   <div className="pose-total-time">
                     合計実践時間：約{Math.max(1, Math.round(poseElapsedTotal / 60))}分
                   </div>
