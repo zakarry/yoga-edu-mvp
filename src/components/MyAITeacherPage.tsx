@@ -502,6 +502,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [practicePaused, setPracticePaused] = useState(false);
   const [currentSubtitle, setCurrentSubtitle] = useState('');
   const asanaRuntimeRef = useRef<ReturnType<typeof createPracticeAudioRuntime> | null>(null);
+  const simpleTimerStartRef = useRef<number>(0);
+  const simpleTimerTotalRef = useRef<number>(0);
   const ttsAvailable = isTTSAvailable();
   const voiceEngine = getVoiceGuideEngine();
   const [engineType, setEngineType] = useState<EngineType>(voiceEngine.type);
@@ -921,6 +923,16 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     }
   }, []);
 
+  useEffect(() => {
+    if (!timerRunning || practicePaused || simpleTimerTotalRef.current === 0) return;
+    const tick = window.setInterval(() => {
+      const elapsed = (Date.now() - simpleTimerStartRef.current) / 1000;
+      const remaining = Math.max(0, simpleTimerTotalRef.current - elapsed);
+      setSimpleTimerRemaining(Math.ceil(remaining));
+    }, 100);
+    return () => window.clearInterval(tick);
+  }, [timerRunning, practicePaused]);
+
   const getPracticeReturnStep = useCallback((): StepId => {
     if (practiceEntrySource && practiceEntrySource !== 'step6') return practiceEntrySource;
     return 'home';
@@ -1054,6 +1066,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   }, [voiceGuideOn, voiceEngine, sessionStartedAt]);
 
   const handlePausePractice = useCallback(() => {
+    const elapsed = simpleTimerStartRef.current > 0 ? (Date.now() - simpleTimerStartRef.current) / 1000 : 0;
+    const remaining = Math.max(0, simpleTimerTotalRef.current - elapsed);
+    simpleTimerTotalRef.current = remaining;
     setTimerRunning(false);
     setPracticePaused(true);
     asanaRuntimeRef.current?.pause();
@@ -1061,6 +1076,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
   const handleResumePractice = useCallback(() => {
     unlockAudioContext();
+    simpleTimerStartRef.current = Date.now();
     setTimerRunning(true);
     setPracticePaused(false);
     asanaRuntimeRef.current?.resume();
@@ -2412,7 +2428,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                       } else {
                         setTimerRunning(true);
                         setSelectedGuide(null);
-                        setSimpleTimerRemaining(pose.defaultMinutes * 60);
+                        const totalSec = pose.defaultMinutes * 60;
+                        setSimpleTimerRemaining(totalSec);
+                        simpleTimerTotalRef.current = totalSec;
+                        simpleTimerStartRef.current = Date.now();
                         startVoiceGuide(pose);
                       }
                     }}
