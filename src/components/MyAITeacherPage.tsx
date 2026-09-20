@@ -502,6 +502,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [isSavingPractice, setIsSavingPractice] = useState(false);
   const [voiceGuideOn, setVoiceGuideOn] = useState(true);
   const [practicePaused, setPracticePaused] = useState(false);
+  const [practiceFinishing, setPracticeFinishing] = useState(false);
   const [currentSubtitle, setCurrentSubtitle] = useState('');
   const asanaRuntimeRef = useRef<ReturnType<typeof createPracticeAudioRuntime> | null>(null);
   const asanaClockRuntimeRef = useRef<AsanaClockRuntime | null>(null);
@@ -977,6 +978,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setSessionStartedAt(null);
     setPracticeSessionId(null);
     setPracticePaused(false);
+    setPracticeFinishing(false);
     voiceEngine.stop();
     setCurrentSubtitle('');
     const ret = getPracticeReturnStep();
@@ -1004,6 +1006,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPosePhase('list');
     setPracticeAborted(true);
     setPracticePaused(false);
+    setPracticeFinishing(false);
     voiceEngine.stop();
     setCurrentSubtitle('');
     if (selectedBreathworkId) {
@@ -1071,8 +1074,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             setCurrentSubtitle('');
           },
         },
-        (remainingMs) => {
-          setSimpleTimerRemaining(Math.ceil(remainingMs / 1000));
+        (info) => {
+          setSimpleTimerRemaining(Math.ceil(info.remainingMs / 1000));
+          setPracticeFinishing(info.finishing);
         },
       );
       return;
@@ -1119,6 +1123,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     simpleTimerStartRef.current = Date.now();
     setTimerRunning(true);
     setPracticePaused(false);
+    setPracticeFinishing(false);
     asanaRuntimeRef.current?.resume();
     asanaClockRuntimeRef.current?.resume();
   }, []);
@@ -1208,6 +1213,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     asanaClockRuntimeRef.current?.dispose();
     asanaClockRuntimeRef.current = null;
     setPracticePaused(false);
+    setPracticeFinishing(false);
     voiceEngine.stop();
     setCurrentSubtitle('');
     setSessionStartedAt(null);
@@ -2459,6 +2465,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                       setPracticeAborted(false);
                       setPracticeSessionId(crypto.randomUUID());
                       setPracticePaused(false);
+                      setPracticeFinishing(false);
                       if (pose.type === 'dhyana') {
                         setSelectedMeditationId(pose.id);
                         setTimerRunning(false);
@@ -2571,8 +2578,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     <div className="breathing-orb-halo" />
                     <div className="breathing-circle is-running" aria-live="polite">
                       <div className="breathing-circle-content">
-                        <strong>実践中</strong>
-                        <span>{Math.floor(simpleTimerRemaining / 60)}:{String(simpleTimerRemaining % 60).padStart(2, '0')}</span>
+                        <strong>{practiceFinishing ? '仕上げのガイド中' : '実践中'}</strong>
+                        <span>{practiceFinishing ? '最後の説明です' : `${Math.floor(simpleTimerRemaining / 60)}:${String(simpleTimerRemaining % 60).padStart(2, '0')}`}</span>
                       </div>
                     </div>
                   </div>

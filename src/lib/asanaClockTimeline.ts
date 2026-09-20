@@ -10,8 +10,8 @@ export function buildAsanaClockTimeline(
   const vg = entry.voiceGuide;
   const timeline: AsanaCueTimed[] = [];
 
-  const add = (atMs: number, text: string, audioKey?: string) => {
-    timeline.push({ atMs, text, audioKey: audioKey ?? phraseToAudioKey(text) ?? undefined });
+  const add = (atMs: number, text: string, audioKey?: string, priority: 'mandatory' | 'optional' = 'mandatory') => {
+    timeline.push({ atMs, text, audioKey: audioKey ?? phraseToAudioKey(text) ?? undefined, priority });
   };
 
   add(0, vg.intro, vg.introAudioKey);
@@ -39,9 +39,9 @@ export function buildAsanaClockTimeline(
     }
   }
 
-  if (totalMs >= 90000) add(totalMs - 30000, 'あと30秒です。');
-  if (totalMs >= 45000) add(totalMs - 15000, 'あと15秒です。');
-  add(totalMs - 5000, 'あと少しです。');
+  if (totalMs >= 90000) add(totalMs - 30000, 'あと30秒です。', undefined, 'optional');
+  if (totalMs >= 45000) add(totalMs - 15000, 'あと15秒です。', undefined, 'optional');
+  add(totalMs - 5000, 'あと少しです。', undefined, 'optional');
 
   const completionText = vg.completion ?? 'お疲れさまでした。';
   add(totalMs, completionText, vg.completionAudioKey);
