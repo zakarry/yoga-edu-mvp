@@ -116,8 +116,6 @@ export function BreathworkExperience({
     const cues = buildBreathworkCues(entry);
     let phaseIdx = 0;
     let round = 0;
-    let inPhase = false;
-    let phaseElapsed = 0;
 
     const handleEvent = (event: RuntimeEvent) => {
       if (event.type === 'subtitle') {
@@ -162,9 +160,6 @@ export function BreathworkExperience({
             round++;
           }
         }
-      } else if (event.type === 'roundChange') {
-        round = event.round ?? 0;
-        setCurrentRound(round + 1);
       } else if (event.type === 'complete') {
         setIsRunning(false);
         setIsCompleted(true);
