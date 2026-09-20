@@ -8,15 +8,19 @@ function phaseCuesForRound(
   round: number,
 ): { text: string; audioKey?: string }[] {
   const vg = entry.voiceGuide;
+
   if (entry.id === 'box-breathing') {
-    const label = phaseKey === 'inhale' ? '吸う' : phaseKey === 'exhale' ? '吐く' : '止める';
-    if (round > 0 && phaseKey !== 'exhale') {
-      return [{ text: phaseKey === 'inhale' ? '吸います。' : '止めます。', audioKey: phaseKey === 'inhale' ? 'voice-inhale' : 'voice-hold' }];
+    if (round === 0) {
+      const label = phaseKey === 'inhale' ? '吸う' : phaseKey === 'exhale' ? '吐く' : '止める';
+      const text = vg.phaseCues?.[label] ?? '';
+      const key = vg.phaseAudioKeys?.[phaseKey] ?? vg.phaseAudioKeys?.[label];
+      return text ? [{ text, audioKey: key }] : [];
     }
-    const text = vg.phaseCues?.[label] ?? '';
-    const key = vg.phaseAudioKeys?.[phaseKey] ?? vg.phaseAudioKeys?.[label];
-    return text ? [{ text, audioKey: key }] : [];
+    if (phaseKey === 'inhale') return [{ text: '吸います。', audioKey: 'voice-inhale' }];
+    if (phaseKey === 'exhale') return [{ text: '鼻から吐きます。', audioKey: 'voice-box-exhale' }];
+    return [{ text: '止めます。', audioKey: 'voice-hold' }];
   }
+
   if (entry.id === 'brahmari') {
     const rc = vg.repeatCues ?? [];
     if (round > 0 && rc.length >= 2) {
@@ -26,17 +30,74 @@ function phaseCuesForRound(
     const cueText = vg.phaseCues?.[phaseKey === 'inhale' ? '吸う' : '吐く'] ?? '';
     return cueText ? [{ text: cueText }] : [];
   }
-  const prefix = entry.id === 'abdominal-breathing' ? 'abdominal' : 'thoracic';
+
+  if (entry.id === 'abdominal-breathing') {
+    if (phaseKey === 'inhale') {
+      if (round === 0) {
+        return [
+          { text: '苦しくなければ、鼻からゆっくり吸います。', audioKey: 'voice-abdominal-intro-2' },
+          { text: 'お腹がやさしく広がる感覚を感じます。', audioKey: 'voice-abdominal-intro-3' },
+        ];
+      }
+      if (round === 1) {
+        return [
+          { text: 'もう一度、鼻からゆっくり吸います。', audioKey: 'voice-abdominal-r3' },
+          { text: 'お腹の広がりを感じましょう。', audioKey: 'voice-abdominal-r4' },
+        ];
+      }
+      return [{ text: '鼻からゆっくり吸います。', audioKey: 'voice-abdominal-r1' }];
+    }
+    if (phaseKey === 'exhale') {
+      if (round === 0) {
+        return [
+          { text: '鼻からゆっくり吐いて、お腹がやさしく戻ります。', audioKey: 'voice-abdominal-intro-4' },
+        ];
+      }
+      return [
+        { text: '鼻からゆっくり吐いて、力を抜きます。', audioKey: 'voice-abdominal-r2' },
+      ];
+    }
+    return [];
+  }
+
+  if (entry.id === 'thoracic-breathing') {
+    if (phaseKey === 'inhale') {
+      if (round === 0) {
+        return [
+          { text: '苦しくなければ、鼻からゆっくり吸います。', audioKey: 'voice-thoracic-intro-2' },
+          { text: '胸郭が前後左右にやさしく広がる感覚を感じます。', audioKey: 'voice-thoracic-intro-3' },
+        ];
+      }
+      if (round === 1) {
+        return [
+          { text: 'もう一度、鼻からゆっくり吸います。', audioKey: 'voice-thoracic-r1' },
+          { text: '胸の広がりを感じましょう。', audioKey: 'voice-thoracic-r4' },
+        ];
+      }
+      return [{ text: '鼻からゆっくり吸います。', audioKey: 'voice-thoracic-r1' }];
+    }
+    if (phaseKey === 'exhale') {
+      if (round === 0) {
+        return [
+          { text: '鼻からゆっくり吐いて、胸郭が自然に戻るのを感じます。', audioKey: 'voice-thoracic-intro-4' },
+        ];
+      }
+      return [
+        { text: '鼻からゆっくり吐いて、力を抜きます。', audioKey: 'voice-thoracic-r2' },
+      ];
+    }
+    return [];
+  }
+
+  // Generic fallback for other breathwork (nadi, complete-yoga-breathing, etc.)
   if (phaseKey === 'inhale') {
     return [
       { text: '鼻からゆっくり吸います。', audioKey: 'voice-box-inhale' },
-      { text: entry.id === 'abdominal-breathing' ? 'お腹の広がりを感じましょう。' : '胸の広がりを感じましょう。', audioKey: `voice-${prefix}-r4` },
     ];
   }
   if (phaseKey === 'exhale') {
     return [
       { text: '鼻からゆっくり吐きます。', audioKey: 'voice-box-exhale' },
-      { text: '肩の力を抜きましょう。', audioKey: 'voice-relax-shoulders' },
     ];
   }
   return [];
@@ -44,7 +105,12 @@ function phaseCuesForRound(
 
 function getIntroCues(entry: BreathworkCatalogEntry): { text: string; audioKey?: string }[] {
   if (entry.id === 'box-breathing' || entry.id === 'brahmari') return entry.voiceGuide.intro;
-  return entry.voiceGuide.intro.slice(0, 1);
+  // For abdominal/thoracic, only use the first intro cue as the opening line;
+  // the detailed instructions are embedded in round 0 phase cues.
+  if (entry.id === 'abdominal-breathing' || entry.id === 'thoracic-breathing') {
+    return entry.voiceGuide.intro.slice(0, 1);
+  }
+  return entry.voiceGuide.intro;
 }
 
 export function buildBreathworkCues(entry: BreathworkCatalogEntry): PracticeCue[] {
@@ -67,6 +133,7 @@ export function buildBreathworkCues(entry: BreathworkCatalogEntry): PracticeCue[
     for (const c of intro) {
       add({ type: 'voice', displayText: c.text, speechText: c.text, audioKey: c.audioKey });
     }
+
     const finalCue = vg.completion[0]
       ? { text: vg.completion[0].text, audioKey: vg.completion[0].audioKey }
       : { text: '最後の呼吸です。', audioKey: 'voice-box-final' };

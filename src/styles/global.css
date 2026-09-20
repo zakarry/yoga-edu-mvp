@@ -3197,6 +3197,14 @@ h1 {
   justify-items: center;
 }
 
+.breathing-practice-title {
+  margin: 0;
+  font-size: clamp(18px, 3vw, 22px);
+  font-weight: 700;
+  color: var(--navy);
+  text-align: center;
+}
+
 .breathing-orb-stage {
   position: relative;
   width: min(100%, 280px);

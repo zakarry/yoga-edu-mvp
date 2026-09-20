@@ -203,6 +203,16 @@ export class PracticeAudioRuntime {
     }, fallbackMs);
   }
 
+  private skipFailedCue(cue: PracticeCue, reason: string): void {
+    this.engine.stop();
+    this.engine.setOnCueEnd(null);
+    this.clearWatchdog();
+    this.emit({ type: 'error', error: `cue skipped: ${cue.id} — ${reason}` });
+    this.emit({ type: 'cueEnd', cueIndex: this.cueIndex, cueId: cue.id });
+    this.isAdvancing = false;
+    this.advance();
+  }
+
   private estimateCueMs(cue: PracticeCue): number {
     if (cue.audioKey) {
       const dur = this.engine.getAudioDuration(cue.audioKey);
@@ -210,7 +220,7 @@ export class PracticeAudioRuntime {
         const rate = cue.audioKey.startsWith('voice-nidra') ? 1.08 : 1.0;
         return (dur / rate + 3) * 1000;
       }
-      return 30000;
+      return 8000;
     }
     const text = cue.speechText ?? cue.displayText ?? '';
     const charCount = text.length;

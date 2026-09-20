@@ -150,6 +150,8 @@ export function BreathworkExperience({
               setActiveLayer((entry.visual.layers?.length ?? 3) - 1);
             }
           }
+        } else if (cue?.type === 'voice') {
+          setPreparing(false);
         }
       } else if (event.type === 'cueEnd') {
         const cue = cues[event.cueIndex ?? 0];
@@ -218,6 +220,7 @@ export function BreathworkExperience({
       style={totalDuration > 0 ? ({ '--bw-duration': `${totalDuration}s` } as CSSProperties) : undefined}
     >
       <div className="breathing-visual-panel">
+        <h3 className="breathing-practice-title">{entry.nameJa}</h3>
         <BreathworkVisual
           breathwork={entry}
           phase={phaseKey}
