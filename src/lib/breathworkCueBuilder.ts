@@ -92,6 +92,9 @@ export function buildBreathworkCues(entry: BreathworkCatalogEntry): PracticeCue[
     for (const c of vg.intro) {
       add({ type: 'voice', displayText: c.text, speechText: c.text, audioKey: c.audioKey });
     }
+    if (entry.id === 'nadi-shodhana') {
+      add({ type: 'silence', durationSec: 1.5 });
+    }
     const repeatCues = vg.repeatCues ?? [];
     const phaseCues = vg.phaseCues ?? {};
     const phaseAudioKeys = vg.phaseAudioKeys ?? {};
