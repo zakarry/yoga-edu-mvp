@@ -103,8 +103,8 @@ export function resumeSpeech(): void {
 
 export function stopSpeech(): void {
   if (!isTTSAvailable()) return;
-  window.speechSynthesis.cancel();
   currentUtterance = null;
+  window.speechSynthesis.cancel();
 }
 
 const PHRASE_MAP: Record<string, string> = {
@@ -476,6 +476,7 @@ class AudioFileEngine implements VoiceGuideEngine {
     this.activeRequestId++;
     this.pendingSpeak = null;
     this.usingTTS = false;
+    setCueEndCallback(null);
     if (this.currentSource) {
       try { this.currentSource.stop(); } catch { /* already stopped */ }
       this.currentSource = null;

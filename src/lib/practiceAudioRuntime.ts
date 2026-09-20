@@ -161,7 +161,6 @@ export class PracticeAudioRuntime {
 
   private handleVoiceCue(cue: PracticeCue, cueKey: string): void {
     this.clearSilenceTimer();
-    this.engine.setOnCueEnd(null);
 
     const displayText = cue.displayText ?? cue.speechText ?? '';
     const speechText = cue.speechText ?? cue.displayText ?? '';
@@ -169,6 +168,12 @@ export class PracticeAudioRuntime {
 
     if (displayText) {
       this.emit({ type: 'subtitle', subtitle: displayText });
+    }
+
+    if (cue.audioKey) {
+      this.engine.speakByKey(cue.audioKey, speechText);
+    } else {
+      this.engine.speak(speechText);
     }
 
     this.engine.setOnCueEnd(() => {
@@ -179,12 +184,6 @@ export class PracticeAudioRuntime {
       this.isAdvancing = false;
       this.advance();
     });
-
-    if (cue.audioKey) {
-      this.engine.speakByKey(cue.audioKey, speechText);
-    } else {
-      this.engine.speak(speechText);
-    }
 
     this.startWatchdog(cue, cueKey);
   }
