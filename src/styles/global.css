@@ -5696,6 +5696,9 @@ h1 {
   padding: 6px 12px;
   border-radius: 999px;
 }
+.practice-visual-stage { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 8px; }
+.practice-visual-stage-img { width: min(260px, 80vw); border-radius: 12px; object-fit: cover; box-shadow: 0 2px 12px rgba(0,0,0,.1); transition: opacity .3s ease; }
+.practice-visual-stage-label { font-size: 0.85rem; color: var(--text-muted, #666); font-weight: 500; }
 .practice-timer { display: grid; gap: 12px; place-items: center; }
 .practice-timer-body {
   font-size: 14px;

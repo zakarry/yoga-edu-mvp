@@ -7,6 +7,7 @@ export interface AsanaCueTimed {
   text: string;
   audioKey?: string;
   priority?: CuePriority;
+  visualStage?: string;
 }
 
 export interface AsanaClockConfig {
@@ -14,6 +15,7 @@ export interface AsanaClockConfig {
   durationMs: number;
   timeline: AsanaCueTimed[];
   onSubtitle?: (text: string) => void;
+  onVisualStage?: (stage: string) => void;
   onComplete?: () => void;
 }
 
@@ -167,6 +169,7 @@ export class AsanaClockRuntime {
 
   private fireCue(cue: AsanaCueTimed): void {
     const engine = getVoiceGuideEngine();
+    if (cue.visualStage) this.config?.onVisualStage?.(cue.visualStage);
     this.config?.onSubtitle?.(cue.text);
     if (cue.audioKey) {
       engine.speakByKey(cue.audioKey, cue.text);

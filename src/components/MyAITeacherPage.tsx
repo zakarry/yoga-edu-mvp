@@ -503,6 +503,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [voiceGuideOn, setVoiceGuideOn] = useState(true);
   const [practicePaused, setPracticePaused] = useState(false);
   const [practiceFinishing, setPracticeFinishing] = useState(false);
+  const [asanaVisualStage, setAsanaVisualStage] = useState<string | null>(null);
   const [currentSubtitle, setCurrentSubtitle] = useState('');
   const asanaRuntimeRef = useRef<ReturnType<typeof createPracticeAudioRuntime> | null>(null);
   const asanaClockRuntimeRef = useRef<AsanaClockRuntime | null>(null);
@@ -979,6 +980,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPracticeSessionId(null);
     setPracticePaused(false);
     setPracticeFinishing(false);
+    setAsanaVisualStage(null);
     voiceEngine.stop();
     setCurrentSubtitle('');
     const ret = getPracticeReturnStep();
@@ -1007,6 +1009,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPracticeAborted(true);
     setPracticePaused(false);
     setPracticeFinishing(false);
+    setAsanaVisualStage(null);
     voiceEngine.stop();
     setCurrentSubtitle('');
     if (selectedBreathworkId) {
@@ -1051,11 +1054,13 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     const catalogEntry = getCatalogEntry(pose.id);
     if (!catalogEntry) return;
 
-    if (pose.id === 'tadasana') {
+    const CLOCK_RUNTIME_POSES = new Set(['tadasana', 'catcow']);
+    if (CLOCK_RUNTIME_POSES.has(pose.id)) {
       const durationMs = pose.defaultMinutes * 60 * 1000;
       const timeline = buildAsanaClockTimeline(catalogEntry, pose.defaultMinutes);
       const allKeys = timeline.map((c) => c.audioKey).filter((k): k is string => !!k);
       if (allKeys.length > 0) preloadVoiceKeys(allKeys);
+      setAsanaVisualStage(null);
       const clock = new AsanaClockRuntime();
       asanaClockRuntimeRef.current = clock;
       clock.start(
@@ -1064,6 +1069,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           durationMs,
           timeline,
           onSubtitle: (text) => setCurrentSubtitle(text),
+          onVisualStage: (stage) => setAsanaVisualStage(stage),
           onComplete: () => {
             if (sessionStartedAt) {
               const elapsedSec = Math.max(1, Math.round((Date.now() - sessionStartedAt) / 1000));
@@ -1072,6 +1078,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             }
             setPracticePhase('done');
             setCurrentSubtitle('');
+            setAsanaVisualStage(null);
           },
         },
         (info) => {
@@ -1124,6 +1131,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setTimerRunning(true);
     setPracticePaused(false);
     setPracticeFinishing(false);
+    setAsanaVisualStage(null);
     asanaRuntimeRef.current?.resume();
     asanaClockRuntimeRef.current?.resume();
   }, []);
@@ -1214,6 +1222,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     asanaClockRuntimeRef.current = null;
     setPracticePaused(false);
     setPracticeFinishing(false);
+    setAsanaVisualStage(null);
     voiceEngine.stop();
     setCurrentSubtitle('');
     setSessionStartedAt(null);
@@ -2553,6 +2562,20 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   </div>
                 </div>
               )}
+
+              {/* Visual stage for clock-driven poses (catcow) */}
+              {asanaVisualStage && concretePoses[currentPoseIdx] && (() => {
+                const stageImages: Record<string, string> = { cow: '/pose-cow.webp', cat: '/pose-cat.webp' };
+                const src = stageImages[asanaVisualStage];
+                if (!src) return null;
+                const label = asanaVisualStage === 'cow' ? '吸う：牛のポーズ' : '吐く：猫のポーズ';
+                return (
+                  <div className="practice-visual-stage">
+                    <img src={src} alt={label} className="practice-visual-stage-img" />
+                    <span className="practice-visual-stage-label">{label}</span>
+                  </div>
+                );
+              })()}
 
               {/* Timer */}
               {selectedGuide?.hasTimer && timerRunning && (

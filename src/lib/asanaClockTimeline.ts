@@ -2,16 +2,47 @@ import type { PoseCatalogEntry } from './poseCatalog';
 import type { AsanaCueTimed } from './asanaClockRuntime';
 import { phraseToAudioKey } from './voiceGuide';
 
+const CATCOW_COW_TEXTS = new Set([
+  '吸いながら胸を開き、背中をやさしく反らします。',
+  'もう一度、吸いながら胸を開きます。',
+  '猫と牛のポーズを始めます。',
+]);
+
+const CATCOW_CAT_TEXTS = new Set([
+  '吐きながら背中を丸め、おへそを見るようにします。',
+  '吐きながら背中を丸めましょう。',
+]);
+
+function catcowVisualStage(text: string): string | undefined {
+  if (CATCOW_COW_TEXTS.has(text)) return 'cow';
+  if (CATCOW_CAT_TEXTS.has(text)) return 'cat';
+  return undefined;
+}
+
 export function buildAsanaClockTimeline(
   entry: PoseCatalogEntry,
   totalMinutes: number,
 ): AsanaCueTimed[] {
+  const isCatcow = entry.id === 'catcow';
   const totalMs = totalMinutes * 60 * 1000;
   const vg = entry.voiceGuide;
   const timeline: AsanaCueTimed[] = [];
 
-  const add = (atMs: number, text: string, audioKey?: string, priority: 'mandatory' | 'optional' = 'mandatory') => {
-    timeline.push({ atMs, text, audioKey: audioKey ?? phraseToAudioKey(text) ?? undefined, priority });
+  const add = (
+    atMs: number,
+    text: string,
+    audioKey?: string,
+    priority: 'mandatory' | 'optional' = 'mandatory',
+    visualStage?: string,
+  ) => {
+    const stage = visualStage ?? (isCatcow ? catcowVisualStage(text) : undefined);
+    timeline.push({
+      atMs,
+      text,
+      audioKey: audioKey ?? phraseToAudioKey(text) ?? undefined,
+      priority,
+      ...(stage ? { visualStage: stage } : {}),
+    });
   };
 
   add(0, vg.intro, vg.introAudioKey);
