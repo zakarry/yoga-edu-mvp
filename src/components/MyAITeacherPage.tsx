@@ -957,6 +957,40 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
 
 
+  const selectAsanaForPractice = useCallback((idx: number) => {
+    asanaClockRuntimeRef.current?.dispose();
+    asanaClockRuntimeRef.current = null;
+    asanaRuntimeRef.current?.dispose();
+    asanaRuntimeRef.current = null;
+    voiceEngine.stop();
+    setTimerRunning(false);
+    setPracticePaused(false);
+    setPracticeFinishing(false);
+    setPracticeActive(false);
+    setPracticePhase('guide');
+    setPosePhase('guide');
+    setCurrentSubtitle('');
+    setAsanaVisualStage(null);
+    setPracticeAborted(false);
+    setPracticeSessionId(null);
+    setSessionStartedAt(null);
+    setSelectedBreathworkId(null);
+    setSelectedMeditationId(null);
+    setDirectPractice(null);
+    setSelectedGuide(null);
+    setSaveStatus('');
+    setCurrentPoseIdx(idx);
+    const pose = concretePoses[idx];
+    if (pose) {
+      setSimpleTimerRemaining(pose.defaultMinutes * 60);
+      simpleTimerTotalRef.current = pose.defaultMinutes * 60;
+      simpleTimerStartRef.current = 0;
+    }
+    setTimeout(() => {
+      poseGuideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  }, [voiceEngine, concretePoses]);
+
   const handleAbortPractice = useCallback(() => {
     asanaRuntimeRef.current?.dispose();
     asanaRuntimeRef.current = null;
@@ -2183,13 +2217,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                         </div>
                         <button
                           className="primary-button today-plan-pose-start-btn"
-                          onClick={() => {
-                            setCurrentPoseIdx(idx);
-                            setPosePhase('guide');
-                            setTimeout(() => {
-                              poseGuideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }, 50);
-                          }}
+                          onClick={() => selectAsanaForPractice(idx)}
                         >
                           {pose.type === 'asana' ? 'このポーズのお手本を見る' : '呼吸ガイドを見る'}
                         </button>
@@ -2199,13 +2227,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
                   <button
                     className="primary-button today-plan-start-all-btn"
-                    onClick={() => {
-                      setCurrentPoseIdx(0);
-                      setPosePhase('guide');
-                      setTimeout(() => {
-                        poseGuideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }, 50);
-                    }}
+                    onClick={() => selectAsanaForPractice(0)}
                   >
                     最初から順番に実践する
                   </button>
@@ -2458,7 +2480,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 <div className="pose-guide-actions">
                   <button
                     className="ghost-button pose-guide-back-btn"
-                    onClick={() => setPosePhase('list')}
+                    onClick={() => { setPosePhase('list'); setPracticePhase('guide'); }}
                   >
                     一覧に戻る
                   </button>
@@ -2702,18 +2724,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   <div className="pose-next-actions">
                     <button
                       className="primary-button"
-                      onClick={() => {
-                        setCurrentPoseIdx(currentPoseIdx + 1);
-                        setPracticePhase('guide');
-                        setPosePhase('guide');
-                        setSelectedBreathworkId(null);
-                        setSelectedMeditationId(null);
-                        setDirectPractice(null);
-                        setPracticeActive(false);
-                        setTimeout(() => {
-                          poseGuideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }, 50);
-                      }}
+                      onClick={() => selectAsanaForPractice(currentPoseIdx + 1)}
                     >
                       {concretePoses[currentPoseIdx]?.type === 'asana' ? '次のポーズのお手本を見る' : '次の呼吸ガイドを見る'}
                     </button>
