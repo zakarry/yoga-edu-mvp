@@ -82,7 +82,7 @@ export function speak(text: string): void {
   const v = ensureVoice();
   if (v) u.voice = v;
   u.onstart = () => { lastError = null; };
-  u.onend = () => { if (currentUtterance === u) currentUtterance = null; if (cueEndCallback) cueEndCallback(); };
+  u.onend = () => { if (currentUtterance === u) { currentUtterance = null; if (cueEndCallback) cueEndCallback(); } };
   u.onerror = (e) => {
     lastError = (e as SpeechSynthesisErrorEvent).error || 'unknown';
     if (currentUtterance === u) currentUtterance = null;

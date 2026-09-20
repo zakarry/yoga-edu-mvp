@@ -196,11 +196,11 @@ export class PracticeAudioRuntime {
     this.watchdogTimer = setTimeout(() => {
       if (this.state !== 'running') return;
       if (this.cueIndex !== myCueIndex) return;
-      if (!this.engine.isPlaying()) {
-        this.emit({ type: 'cueEnd', cueIndex: this.cueIndex, cueId: cue.id });
-        this.isAdvancing = false;
-        this.advance();
-      }
+      this.engine.stop();
+      this.engine.setOnCueEnd(null);
+      this.emit({ type: 'cueEnd', cueIndex: this.cueIndex, cueId: cue.id });
+      this.isAdvancing = false;
+      this.advance();
     }, fallbackMs);
   }
 
@@ -211,7 +211,7 @@ export class PracticeAudioRuntime {
         const rate = cue.audioKey.startsWith('voice-nidra') ? 1.08 : 1.0;
         return (dur / rate + 3) * 1000;
       }
-      return 120000;
+      return 30000;
     }
     const text = cue.speechText ?? cue.displayText ?? '';
     const charCount = text.length;
@@ -279,6 +279,12 @@ export class PracticeAudioRuntime {
         this.isAdvancing = false;
         this.advance();
       }, remaining);
+    } else if (this.config && this.cueIndex >= 0) {
+      const cue = this.config.cues[this.cueIndex];
+      if (cue && cue.type === 'voice') {
+        const cueKey = `${this.config.practiceId}:r${this.currentRound}:c${this.cueIndex}:${cue.id}`;
+        this.startWatchdog(cue, cueKey);
+      }
     }
   }
 
