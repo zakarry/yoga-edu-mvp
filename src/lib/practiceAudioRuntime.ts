@@ -153,6 +153,10 @@ export class PracticeAudioRuntime {
         this.advance();
         return;
       }
+      if (this.scheduledCues.some((sc) => !sc.fired) && this.totalDurationMs > 0) {
+        this.isAdvancing = false;
+        return;
+      }
       this.setState('idle');
       this.isAdvancing = false;
       return;

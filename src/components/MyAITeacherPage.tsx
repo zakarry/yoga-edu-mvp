@@ -2641,6 +2641,13 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 </div>
               )}
 
+              {/* Reference visual during practice */}
+              {concretePoses[currentPoseIdx]?.type === 'asana' && concretePoses[currentPoseIdx]?.image && (
+                <div className="practice-reference-visual">
+                  <img src={concretePoses[currentPoseIdx].image} alt={concretePoses[currentPoseIdx].name} loading="lazy" />
+                </div>
+              )}
+
               {/* Visual stage for clock-driven poses (catcow) */}
               {asanaVisualStage && concretePoses[currentPoseIdx] && (() => {
                 const stageImages: Record<string, string> = { cow: '/pose-cow.webp', cat: '/pose-cat.webp' };
