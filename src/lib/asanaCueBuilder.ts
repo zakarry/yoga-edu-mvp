@@ -41,10 +41,10 @@ export function buildAsanaCues(entry: PoseCatalogEntry, totalMinutes: number): P
     }
   }
 
-  if (totalSeconds >= 90) {
+  if (totalSeconds > 30) {
     add({ type: 'voice', displayText: 'あと30秒です。', speechText: 'あと30秒です。', scheduledAtSec: 30 });
   }
-  if (totalSeconds >= 45) {
+  if (totalSeconds > 15) {
     add({ type: 'voice', displayText: 'あと15秒です。', speechText: 'あと15秒です。', scheduledAtSec: 15 });
   }
   add({ type: 'voice', displayText: 'あと少しです。', speechText: 'あと少しです。', scheduledAtSec: 5 });

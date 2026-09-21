@@ -2631,7 +2631,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     </div>
                     {concretePoses[currentPoseIdx] && (
                       <div className="practice-mini-guide-overlay">
-                        <img src={concretePoses[currentPoseIdx].image} alt="" />
+                        {concretePoses[currentPoseIdx].image
+                          ? <img src={concretePoses[currentPoseIdx].image} alt="" />
+                          : <span className="practice-mini-guide-no-image">お手本画像を準備中</span>}
                         <span>{concretePoses[currentPoseIdx].name}</span>
                       </div>
                     )}
@@ -2761,7 +2763,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   <h4>おつかれさまでした</h4>
                   <p>{concretePoses[currentPoseIdx].name} 完了！{concretePoses[currentPoseIdx]?.type === 'asana' ? '次のポーズのお手本画像を見ましょう。' : '次の呼吸ガイドを見ましょう。'}</p>
                   <div className="pose-next-preview">
-                    <img src={concretePoses[currentPoseIdx + 1].image} alt="" className="pose-next-thumb" />
+                    {concretePoses[currentPoseIdx + 1].image
+                      ? <img src={concretePoses[currentPoseIdx + 1].image} alt="" className="pose-next-thumb" />
+                      : <div className="pose-next-thumb pose-next-thumb-placeholder"><span>お手本画像を準備中</span></div>}
                     <div>
                       <strong>次：{concretePoses[currentPoseIdx + 1].name}</strong>
                       {concretePoses[currentPoseIdx + 1].sanskrit && (
