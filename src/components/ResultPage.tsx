@@ -171,7 +171,7 @@ export function BreathworkExperience({
         } else if (cue?.type === 'voice' && cue.phaseDurationSec) {
           startPhaseVisual(cue.phaseDurationSec);
         } else if (cue?.type === 'voice') {
-          if (phaseIdx === 0 && round > 0) {
+          if (phaseIdx === 0 && round > 0 && round < totalRounds - 1) {
             setCurrentRound(round + 1);
           }
           setPreparing(false);
@@ -188,7 +188,9 @@ export function BreathworkExperience({
           phaseIdx++;
           if (phaseIdx >= phases.length) {
             phaseIdx = 0;
-            round++;
+            if (round < totalRounds - 1) {
+              round++;
+            }
           }
         }
       } else if (event.type === 'complete') {
