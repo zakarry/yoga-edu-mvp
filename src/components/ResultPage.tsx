@@ -94,6 +94,23 @@ export function BreathworkExperience({
   const phaseStartRef = useRef<number>(0);
   const phaseSecondsRef = useRef<number>(0);
 
+  const debugEnabled = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('breathDebug');
+  const [debugInfo, setDebugInfo] = useState('');
+  const debugLogRef = useRef<string[]>([]);
+  const debugLayerRef = useRef<number | undefined>(undefined);
+  const debugPhaseStartRef = useRef<number>(0);
+  const debugRoundRef = useRef(0);
+  const debugPhaseKeyRef = useRef('');
+  const debugFinalAudioStartRef = useRef(0);
+  const debugFinalAudioEndRef = useRef(0);
+  const debugCompletionRef = useRef(0);
+
+  const pushDebugLog = (line: string) => {
+    debugLogRef.current = [...debugLogRef.current.slice(-49), line];
+    setDebugInfo(debugLogRef.current.join('\n'));
+    if (debugEnabled) console.log(`[breathDebug] ${line}`);
+  };
+
   const phases = entry?.pattern ? buildPhasesFromPattern(entry.pattern) : [];
   const totalRounds = entry?.pattern?.rounds ?? 1;
   const totalDuration = phases.reduce((sum, p) => sum + p.seconds, 0);
@@ -134,6 +151,10 @@ export function BreathworkExperience({
       setRemainingSeconds(dur);
       phaseStartRef.current = performance.now();
       phaseSecondsRef.current = dur;
+      debugPhaseStartRef.current = performance.now();
+      debugRoundRef.current = round;
+      debugPhaseKeyRef.current = phases[phaseIdx]?.key ?? '';
+      debugLayerRef.current = undefined;
       const myInstanceId = ++phaseInstanceId;
       if (tickRef.current) window.clearInterval(tickRef.current);
       tickRef.current = window.setInterval(() => {
@@ -156,6 +177,12 @@ export function BreathworkExperience({
             const revSeg = layerCount - 1 - segment;
             setActiveLayer(revSeg);
             setSubtitle(exhaleLabels[segment] ?? '');
+          }
+          const newLayer = p.key === 'inhale' ? segment : (layerCount - 1 - segment);
+          if (newLayer !== debugLayerRef.current) {
+            const layerName = ['belly', 'chest', 'clavicle'][newLayer] ?? `L${newLayer}`;
+            pushDebugLog(`LAYER ${entry.id} R${round + 1} ${p.key} elapsed=${elapsed.toFixed(2)}s layer=${layerName}`);
+            debugLayerRef.current = newLayer;
           }
         }
       }, 100);
@@ -180,6 +207,15 @@ export function BreathworkExperience({
           setPreparing(false);
           setRemainingSeconds(0);
           setSubtitle(cue.displayText ?? '');
+          pushDebugLog(`ROUND_INTRO ${entry.id} displayRound=${cue.displayRound} audio=${cue.audioKey ?? 'none'}`);
+        } else if (cue?.type === 'voice' && cue.isFinalCue) {
+          if (phaseIdx === 0 && round > 0 && round < totalRounds - 1) {
+            setCurrentRound(round + 1);
+          }
+          setPreparing(false);
+          setRemainingSeconds(0);
+          debugFinalAudioStartRef.current = performance.now();
+          pushDebugLog(`OUTRO_START ${entry.id} audio=${cue.audioKey ?? 'none'} t=${Date.now()}`);
         } else if (cue?.type === 'voice') {
           if (phaseIdx === 0 && round > 0 && round < totalRounds - 1) {
             setCurrentRound(round + 1);
@@ -189,6 +225,10 @@ export function BreathworkExperience({
         }
       } else if (event.type === 'cueEnd') {
         const cue = cues[event.cueIndex ?? 0];
+        if (cue?.isFinalCue && cue?.type === 'voice') {
+          debugFinalAudioEndRef.current = performance.now();
+          pushDebugLog(`OUTRO_END ${entry.id} audio=${cue.audioKey ?? 'none'} t=${Date.now()}`);
+        }
         if (cue?.type === 'silence' || (cue?.type === 'voice' && cue.phaseDurationSec)) {
           if (tickRef.current) {
             window.clearInterval(tickRef.current);
@@ -204,6 +244,11 @@ export function BreathworkExperience({
           }
         }
       } else if (event.type === 'complete') {
+        debugCompletionRef.current = performance.now();
+        const gap = debugFinalAudioEndRef.current > 0
+          ? (debugCompletionRef.current - debugFinalAudioEndRef.current).toFixed(0)
+          : 'N/A';
+        pushDebugLog(`COMPLETE ${entry.id} t=${Date.now()} gap_from_outro_end=${gap}ms`);
         setIsRunning(false);
         setIsCompleted(true);
         setActiveLayer(undefined);
@@ -296,6 +341,30 @@ export function BreathworkExperience({
           </button>
         </div>
       </div>
+
+      {debugEnabled && (
+        <pre
+          style={{
+            position: 'fixed',
+            bottom: 8,
+            right: 8,
+            maxWidth: 420,
+            maxHeight: 260,
+            overflow: 'auto',
+            fontSize: 11,
+            lineHeight: 1.4,
+            background: 'rgba(0,0,0,0.82)',
+            color: '#0f0',
+            padding: 8,
+            borderRadius: 6,
+            zIndex: 9999,
+            fontFamily: 'monospace',
+            whiteSpace: 'pre-wrap',
+            pointerEvents: 'auto',
+          }}
+        >{debugInfo || '(no events yet)'}
+        </pre>
+      )}
 
       {steps && steps.length > 0 && (
         <div className="breathing-steps" aria-label={`${entry.nameJa}の手順`}>
