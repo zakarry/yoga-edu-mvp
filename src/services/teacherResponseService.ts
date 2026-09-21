@@ -138,28 +138,38 @@ function buildUserStateResponse(
   if (isStiffness) {
     if (bodyArea) {
       empathy = `教えてくれてありがとうございます。${bodyArea}まわりが硬いと感じているんですね。`;
-      suggestion = '無理に深く伸ばす必要はありません。呼吸に合わせて、動ける範囲からゆっくり始めていきましょう。';
+      suggestion = prevContext?.safetyHoldActive
+        ? '今は無理に深く伸ばす必要はありません。呼吸に合わせて、ご自身のペースで休めていきましょう。'
+        : '無理に深く伸ばす必要はありません。呼吸に合わせて、動ける範囲からゆっくり始めていきましょう。';
       followUp = '左右どちらか特に気になりますか？それとも、他にも気になるところがあれば教えてください。';
     } else {
       empathy = '教えてくれてありがとうございます。からだが硬いと感じているんですね。';
-      suggestion = '無理に深く伸ばす必要はありません。呼吸に合わせて、動ける範囲からゆっくり始めていきましょう。';
+      suggestion = prevContext?.safetyHoldActive
+        ? '今は無理に深く伸ばす必要はありません。呼吸に合わせて、ご自身のペースで休めていきましょう。'
+        : '無理に深く伸ばす必要はありません。呼吸に合わせて、動ける範囲からゆっくり始めていきましょう。';
       followUp = '特に硬さを感じるところはありますか？肩まわり、股関節、脚の裏など、気になるところがあれば教えてください。';
     }
   } else if (isTired) {
     empathy = '教えてくれてありがとうございます。疲れを感じているんですね。';
-    suggestion = '今日は無理をせず、やさしいストレッチと深呼吸で体を休める時間にしましょうか。';
+    suggestion = prevContext?.safetyHoldActive
+      ? '今日は無理をせず、深呼吸で体を休める時間にしましょう。'
+      : '今日は無理をせず、やさしいストレッチと深呼吸で体を休める時間にしましょうか。';
     followUp = '特にお疲れを感じるところがあれば教えてください。';
   } else if (isStress) {
     empathy = '教えてくれてありがとうございます。ストレスを感じているんですね。';
     suggestion = '呼吸を整えることから始めてみましょう。ゆっくり吸って、ゆっくり吐くだけでも、気持ちが落ち着きやすくなります。';
-    followUp = 'よろしければ、数分の呼吸法をご案内します。';
+    followUp = prevContext?.safetyHoldActive ? '他に気になることがあれば教えてください。' : 'よろしければ、数分の呼吸法をご案内します。';
   } else if (isSedentary) {
     empathy = '教えてくれてありがとうございます。久しぶりに体を動かすのは、はじめの一歩が大事ですね。';
-    suggestion = '無理のない範囲で、ゆっくり体を動かすところから始めましょう。';
-    followUp = '今日は5分程度のやさしいストレッチからいかがですか？';
+    suggestion = prevContext?.safetyHoldActive
+      ? '今は無理のない範囲で、呼吸に合わせてゆっくり過ごしましょう。'
+      : '無理のない範囲で、ゆっくり体を動かすところから始めましょう。';
+    followUp = prevContext?.safetyHoldActive ? '他に気になることがあれば教えてください。' : '今日は5分程度のやさしいストレッチからいかがですか？';
   } else {
     empathy = '教えてくれてありがとうございます。今の自分の状態を伝えてくれるのは、とても助かります。';
-    suggestion = '今日は無理のない範囲で、呼吸に合わせてゆっくり動くことから始めてみましょうか。';
+    suggestion = prevContext?.safetyHoldActive
+      ? '今日は無理のない範囲で、呼吸に合わせて過ごしましょう。'
+      : '今日は無理のない範囲で、呼吸に合わせてゆっくり動くことから始めてみましょうか。';
     followUp = '他に気になることがあれば、いつでも教えてください。';
   }
 
@@ -1438,9 +1448,10 @@ async function generateTeacherResponseInner(
   const intent = route?.intent ?? classifyIntent(userMessage);
   const name = context.persona?.name ?? 'AI先生';
 
-  const isSafetyRelease = /今は痛くない|今はいたくない|今日は痛くない|今日はいたくない|気にならない|きにならない|痛くない|いたくない|もう大丈夫|もうだいじょうぶ|治った|なおった/.test(userMessage);
-  if (isSafetyRelease && prevContext?.safetyHoldActive && !safetyHit) {
-    const text = `${name}です。そうですね、今日は痛みが気にならないとのこと、了解しました。無理のない範囲で進めていきましょう。`;
+  const isSafetyRelease = /今は痛くない|今はいたくない|今日は痛くない|今日はいたくない|もう痛くない|今は気にならない|今日は気にならない|きにならない|痛みはありません|今は大丈夫|痛くない|いたくない|もう大丈夫|もうだいじょうぶ|治った|なおった/.test(userMessage);
+  const isStillInPain = /少し痛い|まだ痛い|まだいたい|痛みはある|痛みがある|まだ気になる/.test(userMessage);
+  if (isSafetyRelease && !isStillInPain && prevContext?.safetyHoldActive) {
+    const text = `${name}です。今は痛みが気にならないのですね。教えてくれてありがとうございます。無理のない範囲で進めていきましょう。`;
     return {
       text,
       safetyReleased: true,

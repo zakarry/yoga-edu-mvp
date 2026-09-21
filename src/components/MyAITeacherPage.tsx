@@ -8,10 +8,12 @@ import {
   saveLocalPracticeLog, loadLocalPracticeLogs,
   loadNextSuggestion, saveNextSuggestion, clearNextSuggestion,
   saveTodayContextSession, loadTodayContextSession, clearTodayContextSession,
+  saveSessionSafety, loadSessionSafety, clearSessionSafety,
   type AITeacherPersona, type TodayProgram,
   type AITeacherGrowth, type LocalPracticeLog,
   type AITeacherPrefs, type PrefExplanation, type PrefCue, type PrefPraise,
   type NextSuggestion,
+  type SessionSafetyState,
 } from '../lib/aiTeacherStorage';
 import type { DiagnosisRecord, SafetyState } from '../services/diagnosisService';
 import { buildTeacherContext, type TeacherContext } from '../services/teacherContextService';
@@ -426,7 +428,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [todayPlan, setTodayPlan] = useState<TodayPlanWithKnowledge | null>(null);
   const [knowledgeExplanation, setKnowledgeExplanation] = useState<KnowledgeExplanation | null>(null);
   const [knowledgeLoading, setKnowledgeLoading] = useState(false);
-  const [sessionSafetyBlocked, setSessionSafetyBlocked] = useState(false);
+  const [sessionSafetyBlocked, setSessionSafetyBlocked] = useState(() => {
+    const saved = loadSessionSafety();
+    return saved?.holdActive ?? false;
+  });
   const testPlanParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('testPlan') : null;
   const testPlanMode = testPlanParam === 'knowledge-k6';
   const testPlanCompositeMode = testPlanParam === 'knowledge-k6-composite';
@@ -861,7 +866,11 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setTimeout(async () => {
       const ctx = teacherContext ?? buildLocalContextFast(growth, conversationContext, todayContext);
       try {
-        const response = await generateTeacherResponse(ctx, userMsg.text, conversationContext);
+        const contextWithSafety: ConversationContext = {
+          ...conversationContext,
+          safetyHoldActive: sessionSafetyBlocked || conversationContext.safetyHoldActive,
+        };
+        const response = await generateTeacherResponse(ctx, userMsg.text, contextWithSafety);
         const dbg = getLastBM5Debug();
         const routerDbg = getLastRouterDebug();
         if (auth.profile?.is_admin && dbg) {
@@ -886,9 +895,11 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         setChatTyping(false);
         if (response.isSafety) {
           setSessionSafetyBlocked(true);
+          saveSessionSafety({ version: 1, holdActive: true, status: 'caution', reasonCategory: 'pain', updatedAt: Date.now() });
         }
         if (response.safetyReleased) {
           setSessionSafetyBlocked(false);
+          clearSessionSafety();
         }
       } catch {
         const name = persona?.name ?? 'AI先生';
@@ -900,7 +911,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         setChatTyping(false);
       }
     }, delay);
-  }, [chatInput, persona, teacherContext, growth, conversationContext]);
+  }, [chatInput, persona, teacherContext, growth, conversationContext, sessionSafetyBlocked]);
 
   const handlePracticeAction = useCallback((action: TeacherResponseAction) => {
     if (!action.targetId) return;

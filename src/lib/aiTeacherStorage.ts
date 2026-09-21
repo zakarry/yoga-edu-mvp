@@ -265,3 +265,45 @@ export function clearNextSuggestion(): void {
     // ignore
   }
 }
+
+// ── Session Safety State (sessionStorage, per-session only) ──
+
+const SESSION_SAFETY_KEY = 'ai_teacher_session_safety_v1';
+
+export interface SessionSafetyState {
+  version: 1;
+  holdActive: boolean;
+  status: 'normal' | 'caution' | 'stop_and_refer';
+  reasonCategory?: 'pain' | 'numbness' | 'dizziness' | 'breathing_difficulty' | 'medical_restriction' | 'red_flag' | 'other';
+  updatedAt: number;
+}
+
+export function saveSessionSafety(state: SessionSafetyState): void {
+  try {
+    sessionStorage.setItem(SESSION_SAFETY_KEY, JSON.stringify(state));
+  } catch {
+    // ignore
+  }
+}
+
+export function loadSessionSafety(): SessionSafetyState | null {
+  try {
+    const raw = sessionStorage.getItem(SESSION_SAFETY_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && 'holdActive' in parsed) {
+      return parsed as SessionSafetyState;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearSessionSafety(): void {
+  try {
+    sessionStorage.removeItem(SESSION_SAFETY_KEY);
+  } catch {
+    // ignore
+  }
+}
