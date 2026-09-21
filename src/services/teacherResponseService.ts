@@ -1483,7 +1483,36 @@ function extractNegativeSafetySignals(userMessage: string): string[] {
       }
     }
   }
+  // Coordinated negation: "痛みもしびれもありません", "痛みとしびれはありません", etc.
+  const coordinated = extractCoordinatedNegationSignals(userMessage);
+  for (const c of coordinated) {
+    if (!negatives.includes(c)) negatives.push(c);
+  }
   return Array.from(new Set(negatives));
+}
+
+function extractCoordinatedNegationSignals(userMessage: string): string[] {
+  // Detect patterns like:
+  // "痛みもしびれもありません" / "痛みもしびれもない"
+  // "痛みとしびれはありません" / "痛みとしびれはない"
+  // "痛みやしびれはありません" / "痛みやしびれはない"
+  // "痛み、しびれともにありません"
+  // "痛み、しびれはありません"
+  // The key: multiple symptom keywords enumerated, then a shared negation at the end.
+  // Also handles per-segment: "痛みもしびれもない" in one segment of a "けど" split.
+  const segments = userMessage.split(/けど|けれど|けれども|が、|が,|でも|ただ|しかし/);
+  const found: string[] = [];
+  for (const seg of segments) {
+    const hasCoordinatedNegation = /も.*も(?:ありません|ない)$|と.*は(?:ありません|ない)$|や.*は(?:ありません|ない)$|、.*とも?(?:ありません|ない)$|、.*は(?:ありません|ない)$/.test(seg);
+    if (!hasCoordinatedNegation) continue;
+    for (const sig of SAFETY_SIGNALS) {
+      const hasKeyword = sig.keywords.some((k) => seg.includes(k));
+      if (hasKeyword) {
+        found.push(sig.category);
+      }
+    }
+  }
+  return Array.from(new Set(found));
 }
 
 function computeUpdatedActiveSignals(prevSignals: string[], positives: string[], negatives: string[]): string[] {
