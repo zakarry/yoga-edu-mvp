@@ -1145,8 +1145,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           onSubtitle: (text) => setCurrentSubtitle(text),
           onVisualStage: (stage) => setAsanaVisualStage(stage),
           onComplete: () => {
-            if (sessionStartedAt) {
-              const elapsedSec = Math.max(1, Math.round((Date.now() - sessionStartedAt) / 1000));
+            const startedAt = simpleTimerStartRef.current || sessionStartedAt;
+            if (startedAt) {
+              const elapsedSec = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
               setPoseElapsedTotal((t) => t + elapsedSec);
               setPracticeDuration(Math.max(1, Math.round(elapsedSec / 60)));
             }
@@ -1171,8 +1172,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       if (event.type === 'subtitle') {
         setCurrentSubtitle(event.subtitle ?? '');
       } else if (event.type === 'complete') {
-        if (sessionStartedAt) {
-          const elapsedSec = Math.max(1, Math.round((Date.now() - sessionStartedAt) / 1000));
+        const startedAt = simpleTimerStartRef.current || sessionStartedAt;
+        if (startedAt) {
+          const elapsedSec = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
           setPoseElapsedTotal((t) => t + elapsedSec);
           setPracticeDuration(Math.max(1, Math.round(elapsedSec / 60)));
         }
@@ -1215,7 +1217,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     if (!practiceType || practicePhase !== 'done' || practiceAborted || isSavingPractice) return;
     setIsSavingPractice(true);
     const practiceName = activePracticeName ?? selectedGuide?.name ?? program?.items.find((i) => i.type === practiceType)?.name ?? '実践';
-    const totalElapsedSec = poseElapsedTotal > 0 ? poseElapsedTotal : (sessionStartedAt ? Math.max(1, Math.round((Date.now() - sessionStartedAt) / 1000)) : practiceDuration * 60);
+    const startedAt = simpleTimerStartRef.current || sessionStartedAt;
+    const totalElapsedSec = poseElapsedTotal > 0 ? poseElapsedTotal : (startedAt ? Math.max(1, Math.round((Date.now() - startedAt) / 1000)) : practiceDuration * 60);
     const autoDuration = Math.max(1, Math.round(totalElapsedSec / 60));
     const logParams = {
       practice_type: practiceType,
@@ -2801,7 +2804,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   <h4>{activePracticeName ? `${activePracticeName} 完了！` : '全プログラム完了！'}</h4>
                   <p>お疲れさまでした。今日の実践を記録しましょう。</p>
                   <div className="pose-total-time">
-                    合計実践時間：約{Math.max(1, Math.round(poseElapsedTotal / 60))}分
+                    合計実践時間：約{Math.max(1, Math.round((poseElapsedTotal > 0 ? poseElapsedTotal : (simpleTimerStartRef.current ? Math.max(1, Math.round((Date.now() - simpleTimerStartRef.current) / 1000)) : practiceDuration * 60)) / 60))}分
                   </div>
                   <div className="field-grid">
                     <div className="field">
@@ -2813,7 +2816,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     </div>
                     <div className="field">
                       <label>実践時間（分）</label>
-                      <input type="number" min={1} max={120} value={Math.max(1, Math.round(poseElapsedTotal / 60))}
+                      <input type="number" min={1} max={120} value={Math.max(1, Math.round((poseElapsedTotal > 0 ? poseElapsedTotal : (simpleTimerStartRef.current ? Math.max(1, Math.round((Date.now() - simpleTimerStartRef.current) / 1000)) : practiceDuration * 60)) / 60))}
                         onChange={(e) => setPracticeDuration(Number(e.target.value))} />
                     </div>
                   </div>
