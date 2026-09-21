@@ -1,7 +1,7 @@
 import type { TeacherContext } from './teacherContextService';
 import { getKnowledgeRanking, rankKnowledgeCandidates, getSafeExplanationCandidates, type KnowledgeExplanation, type RankedCandidate } from './teacherKnowledgeService';
 import { sanitizeKnowledgePayload, MAX_KNOWLEDGE_ITEMS } from './knowledgeGuardService';
-import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, isClarificationIntent, isPrescriptionRequest, isContextualFollowup, isGeneralInfoRequest, isRedFlag, classifyQuestionType, extractPoseId, extractBreathworkId, extractMeditationId, extractSequenceId, detectPracticeDomain, resolveEntity, normalizeInput, classifyKnowledgeDomain, type ConversationIntent, type QuestionType, type PracticeDomain, type KnowledgeDomain } from './safetyAndIntent';
+import { detectSafetyKeyword, isExplanationIntent, isPracticeRequest, isLikelyKnowledgeQuery, extractExplanationKeyword, classifyIntent, isClarificationIntent, isPrescriptionRequest, isContextualFollowup, isGeneralInfoRequest, isRedFlag, classifyQuestionType, extractPoseId, extractBreathworkId, extractMeditationId, extractSequenceId, detectPracticeDomain, resolveEntity, normalizeInput, classifyKnowledgeDomain, routeConversation, type ConversationIntent, type QuestionType, type PracticeDomain, type KnowledgeDomain, type ResponseSource } from './safetyAndIntent';
 import { getCatalogEntry, getCatalogEntryByName, type PoseCatalogEntry } from '../lib/poseCatalog';
 import { getBreathworkEntry, type BreathworkCatalogEntry } from '../lib/breathworkCatalog';
 import { getMeditationEntry, type MeditationCatalogEntry } from '../lib/meditationCatalog';
@@ -61,7 +61,11 @@ export interface TeacherResponse {
   knowledgeSource?: 'bm5' | 'yoga_knowledge' | 'mixed' | 'none';
   updatedContext?: ConversationContext;
   action?: TeacherResponseAction;
+  responseSource?: ResponseSource;
 }
+
+let lastRouterDebug: { rawInput: string; normalizedInput: string; safetyResult: string | null; intent: ConversationIntent; responseSource: ResponseSource } | null = null;
+export function getLastRouterDebug() { return lastRouterDebug; }
 
 
 
@@ -126,7 +130,7 @@ function buildUserStateResponse(
 
   if (isStiffness) {
     empathy = '教えてくれてありがとうございます。からだが硬いと感じているんですね。';
-    suggestion = '無理に深く伸ばす必要はありません。今日は呼吸に合わせながら、ゆっくり動く練習にしてみますか？';
+    suggestion = '無理に深く伸ばす必要はありません。呼吸に合わせて、動ける範囲からゆっくり始めていきましょう。';
     followUp = '特に硬さを感じるところはありますか？肩まわり、股関節、脚の裏など、気になるところがあれば教えてください。';
   } else if (isTired) {
     empathy = '教えてくれてありがとうございます。疲れを感じているんですね。';
@@ -148,6 +152,7 @@ function buildUserStateResponse(
 
   return {
     text: `${name}です。${empathy} ${suggestion}\n${followUp}`,
+    responseSource: 'conversation_template',
     action: { type: 'open_today_plan', label: '今日のヨガを作る' },
     updatedContext: { ...prevContext, lastUserMessage: userMessage },
   };
@@ -177,6 +182,7 @@ function buildCasualResponse(
 
   return {
     text: `${name}です。こんにちは。今日の実践を始めましょうか？それとも、何か知りたいことがありますか？`,
+    responseSource: 'conversation_template',
     updatedContext: { ...prevContext, lastUserMessage: userMessage },
   };
 }
@@ -218,6 +224,7 @@ function buildPreferenceResponse(
 
   return {
     text: `${name}です。ご要望を覚えておきます。他にも調整したいことがあれば教えてください。`,
+    responseSource: 'conversation_template',
     updatedContext: { ...prevContext, lastUserMessage: userMessage },
   };
 }
@@ -230,10 +237,11 @@ function buildSafetySensitiveResponse(
   const name = context.persona?.name ?? 'AI先生';
   const painWord = /腰|肩|膝|首|背中|股関節|脚|腕|手/.test(userMessage) ? userMessage.match(/(腰|肩|膝|首|背中|股関節|脚|腕|手)/)?.[0] : null;
   const bodyPart = painWord ? `${painWord}に痛みがある` : '痛みや不調がある';
-  const text = `${name}です。${bodyPart}のですね。今日は通常のヨガ実践を無理に進めないようにしましょう。AI先生は痛みの原因を診断したり、痛みに対する個別のポーズ処方はできません。今は無理に動かさず、必要に応じて専門家へ相談してください。`;
+  const text = `${name}です。${bodyPart}のですね。今日は通常のヨガ実践を無理に進めないようにしましょう。\n\nAI先生は痛みの原因を診断したり、痛みに対して個別のポーズを処方することはできません。\n\n無理に動かさず、痛みが強い、続いている、しびれなどを伴う場合は専門家への相談を検討してください。`;
   return {
     text,
     isSafety: true,
+    responseSource: 'safety_gate',
     updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'safety_restriction', safetyContextActive: true, lastTopic: bodyPart, lastOfferedAction: 'safety_referral' },
   };
 }
@@ -258,6 +266,7 @@ function buildSafetyGeneralInfoResponse(
   return {
     text,
     isSafety: false,
+    responseSource: 'safety_gate',
     updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'safety_general_info', lastTopic: topic, lastOfferedAction: 'general_pose_explanation' },
   };
 }
@@ -272,6 +281,7 @@ function buildSafetyRedFlagResponse(
   return {
     text,
     isSafety: true,
+    responseSource: 'safety_gate',
     updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'safety_red_flag', safetyContextActive: true, lastOfferedAction: 'red_flag_referral' },
   };
 }
@@ -288,6 +298,7 @@ function buildSafetyPrescriptionResponse(
   return {
     text,
     isSafety: true,
+    responseSource: 'safety_gate',
     updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'general_explanation', safetyContextActive: true, lastOfferedAction: 'general_pose_explanation' },
   };
 }
@@ -1254,6 +1265,7 @@ function buildGeneralKnowledgeFallback(
       text,
       knowledgeUsed: false,
       knowledgeSource: 'none',
+      responseSource: 'knowledge',
       updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'general_explanation', lastKnowledgeSource: 'none' },
     };
   }
@@ -1267,6 +1279,7 @@ function buildGeneralKnowledgeFallback(
   return {
     text,
     knowledgeUsed: false,
+    responseSource: 'knowledge',
     updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'general_explanation' },
   };
 }
@@ -1350,6 +1363,7 @@ function buildPracticeRequestResponse(
 
   return {
     text,
+    responseSource: 'today_planner',
     updatedContext: merged,
   };
 }
@@ -1359,24 +1373,38 @@ export async function generateTeacherResponse(
   userMessage: string,
   prevContext?: ConversationContext,
 ): Promise<TeacherResponse> {
-  const result = await generateTeacherResponseInner(context, userMessage, prevContext);
-  return stripActionIfSafety(result, prevContext);
+  const route = routeConversation(userMessage);
+  lastRouterDebug = route.debug;
+  if (context.userId && import.meta.env.DEV) {
+    console.log('[ConversationRouter]', route.debug);
+  }
+  try {
+    const result = await generateTeacherResponseInner(context, userMessage, prevContext, route);
+    return stripActionIfSafety(result, prevContext);
+  } catch {
+    const name = context.persona?.name ?? 'AI先生';
+    return {
+      text: `${name}です。うまく応答を作れませんでした。もう一度送ってください。`,
+      responseSource: 'error',
+      updatedContext: { ...prevContext, lastUserMessage: userMessage },
+    };
+  }
 }
 
 async function generateTeacherResponseInner(
   context: TeacherContext,
   userMessage: string,
   prevContext?: ConversationContext,
+  route?: { intent: ConversationIntent; safetyHit: string | null },
 ): Promise<TeacherResponse> {
-  const safetyHit = detectSafetyKeyword(userMessage);
+  const safetyHit = route?.safetyHit ?? detectSafetyKeyword(userMessage);
+  const intent = route?.intent ?? classifyIntent(userMessage);
   const name = context.persona?.name ?? 'AI先生';
 
   if (!safetyHit) {
     const bm5Early = await tryBM5Lookup(userMessage, context, prevContext);
-    if (bm5Early) return bm5Early;
+    if (bm5Early) return { ...bm5Early, responseSource: 'knowledge' };
   }
-
-  const intent = classifyIntent(userMessage);
 
   if (intent === 'contextual_followup') {
     const followup = buildTopicFollowupResponse(userMessage, context, prevContext);
@@ -1489,6 +1517,7 @@ async function generateTeacherResponseInner(
   const text = `${name}です。お聞きになりたいことをもう一度教えていただけますか？`;
   return {
     text,
+    responseSource: 'conversation_template',
     updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text },
   };
 }

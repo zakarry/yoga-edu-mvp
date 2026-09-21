@@ -4,6 +4,9 @@ export const SAFETY_KEYWORDS = [
   '効く', 'に効く', '合うポーズ', '合う呼吸',
   '喘息', '偏頭痛', 'ヘルニア', '関節炎', '糖尿病',
   '安全', '腰に安全', '膝に安全',
+  '息苦しい', '動けない', '歩けない', '立てない',
+  'しびれが', 'めまいが', '腫れ', '熱がある',
+  '麻痺', '感覚がない', '動かない',
 ];
 
 const SAFETY_SENSITIVE_KEYWORDS = [
@@ -11,6 +14,8 @@ const SAFETY_SENSITIVE_KEYWORDS = [
   '医師', '運動制限', '制限', '手術', '怪我', '怪我を',
   '妊娠', '既往症', '病気', '診断', '治療', '薬',
   '高血圧', '低血圧', 'ヘルニア', '関節炎', '糖尿病', '喘息',
+  '動けない', '歩けない', '立てない', '腫れ',
+  '麻痺', '感覚がない', '動かない',
 ];
 
 const HIRAGANA_TO_KANJI: Array<[RegExp, string]> = [
@@ -23,6 +28,8 @@ const HIRAGANA_TO_KANJI: Array<[RegExp, string]> = [
   [/息苦しい/g, '息苦しい'],
   [/きず/g, '怪我'],
   [/けが/g, '怪我'],
+  [/はれ/g, '腫れ'],
+  [/まひ/g, '麻痺'],
 ];
 
 function normalizeForSafety(text: string): string {
@@ -73,20 +80,26 @@ export function normalizeInput(text: string): string {
 const USER_STATE_PATTERNS = [
   'からだが固い', '体が固い', 'からだが硬い', '体が硬い',
   '固いです', '硬いです', '固い気がする', '硬い気がする',
+  '固い感じ', '硬い感じ', '固い気が', '硬い気が',
   '柔軟性がない', '柔軟性が気になる', '柔軟性が足りない',
   '股関節が固い', '股関節が硬い', '肩が固い', '肩が硬い',
   '脚が固い', '脚が硬い', '腰が固い', '腰が硬い',
-  '運動不足', '久しぶり', '久しぶり', '体を動かしてない',
+  '首が固い', '首が硬い', '背中が固い', '背中が硬い',
+  '運動不足', '久しぶり', '体を動かしてない',
   '体を動かしていない', '運動してない', '運動していない',
-  '疲れやすい', '疲れが溜ま', '疲れがたま',
+  '体を動かしていない', '最近動かしてない', '最近動かしていない',
+  '疲れやすい', '疲れが溜ま', '疲れがたま', '疲れている',
   '肩こりがひどい', '腰が重い', 'だるい',
   'ストレスが溜ま', 'ストレスがたま',
+  'あまり体を動かして', '体を動かしてない',
 ];
 
 const CASUAL_PATTERNS = [
   'こんにちは', 'こんばんは', 'おはよう', 'おはようございます',
   'ありがとう', 'ありがとうございます', 'よろしく', 'よろしくお願いします',
   'はじめまして', 'こんちわ', 'やあ',
+  'ヨガって気持ちいい', 'ヨガきもちいい', '気持ちいい',
+  'ヨガ楽しい', 'たのしい', '楽しい',
 ];
 
 const PREFERENCE_PATTERNS = [
@@ -97,7 +110,26 @@ const PREFERENCE_PATTERNS = [
   'もっと励まして', '励ましは控えて',
   'クイズを増やして', 'クイズを減らして',
   '声のトーン', 'ゆっくり話して', '早く話して',
+  'ゆっくりしたヨガが好き', 'ゆっくりしたヨガ', '呼吸法が好き',
+  '朝にやりたい', '夜にやりたい', '説明は短い方がいい',
+  '好きな実践', '説明スタイル',
 ];
+
+export type ResponseSource =
+  | 'safety_gate'
+  | 'conversation_template'
+  | 'today_planner'
+  | 'knowledge'
+  | 'llm'
+  | 'error';
+
+export interface ConversationRouterDebug {
+  rawInput: string;
+  normalizedInput: string;
+  safetyResult: string | null;
+  intent: ConversationIntent;
+  responseSource: ResponseSource;
+}
 
 export type ConversationIntent =
   | 'knowledge_question'
@@ -110,7 +142,8 @@ export type ConversationIntent =
   | 'safety_general_information'
   | 'safety_red_flag'
   | 'conversational_clarification'
-  | 'contextual_followup';
+  | 'contextual_followup'
+  | 'unknown';
 
 const GREETINGS = ['こんにちは', 'こんばんは', 'おはよう', 'ありがとう', 'よろしく'];
 
@@ -276,11 +309,12 @@ const PRACTICE_INTENT_KEYWORDS = [
 
 export function isPracticeRequest(text: string): boolean {
   if (/\d+\s*分/.test(text)) return true;
-  if (text.includes('呼吸') && (text.includes('中心') || text.includes('多め') || text.includes('増や') || text.includes('したい') || text.includes('て') && (text.includes('制限') || text.includes('絞')))) return true;
+  if (text.includes('今日何') || text.includes('今日やる') || text.includes('今日は何')) return true;
+  if (text.includes('寝る前') || text.includes('寝るまえ')) return true;
+  if (text.includes('呼吸') && (text.includes('中心') || text.includes('多め') || text.includes('増や') || text.includes('したい') || text.includes('やりたい'))) return true;
   if (text.includes('アーサナ') && (text.includes('中心') || text.includes('多め') || text.includes('増や') || text.includes('したい'))) return true;
   if (text.includes('瞑想') && (text.includes('中心') || text.includes('多め') || text.includes('増や') || text.includes('したい'))) return true;
   if (text.includes('リラックス') || text.includes('やさしい') || text.includes('フロウ') || text.includes('動かしたい') || text.includes('動かす')) return true;
-  if (text.includes('疲れ') || text.includes('つかれた')) return true;
   if (text.includes('落ち着')) return true;
   return PRACTICE_INTENT_KEYWORDS.some((kw) => text.includes(kw));
 }
@@ -552,4 +586,25 @@ export function resolveEntity(
   }
 
   return { domain: null, poseId: null, breathworkId: null, meditationId: null, sequenceId: null, questionType: qt, isYesNoFollowup: false, usedActiveTopic: false };
+}
+
+export function routeConversation(
+  rawInput: string,
+): { intent: ConversationIntent; safetyHit: string | null; normalized: string; debug: ConversationRouterDebug } {
+  const normalized = normalizeForSafety(rawInput.trim());
+  const safetyHit = detectSafetyKeyword(rawInput);
+  const intent = classifyIntent(rawInput);
+  const responseSource: ResponseSource = safetyHit ? 'safety_gate' : 'conversation_template';
+  return {
+    intent,
+    safetyHit,
+    normalized,
+    debug: {
+      rawInput,
+      normalizedInput: normalized,
+      safetyResult: safetyHit,
+      intent,
+      responseSource,
+    },
+  };
 }

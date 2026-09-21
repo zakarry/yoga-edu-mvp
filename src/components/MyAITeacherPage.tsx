@@ -16,7 +16,7 @@ import {
 import type { DiagnosisRecord, SafetyState } from '../services/diagnosisService';
 import { buildTeacherContext, type TeacherContext } from '../services/teacherContextService';
 import { generateTodayPlan, type TodayPlan } from '../services/todayPlannerService';
-import { generateTeacherResponse, generateNextSuggestion, getLastBM5Debug, type ConversationContext, type TeacherResponseAction } from '../services/teacherResponseService';
+import { generateTeacherResponse, generateNextSuggestion, getLastBM5Debug, getLastRouterDebug, type ConversationContext, type TeacherResponseAction } from '../services/teacherResponseService';
 import { attachKnowledgeToTodayPlan, fetchKnowledgeExplanation, type TodayPlanWithKnowledge } from '../services/todayPlanKnowledgeService';
 import type { KnowledgeExplanation } from '../services/teacherKnowledgeService';
 import { runLLMRequestDryRun, type DryRunResult } from '../services/llmRequestDryRun';
@@ -860,27 +860,41 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     const delay = 150 + Math.random() * 150;
     setTimeout(async () => {
       const ctx = teacherContext ?? buildLocalContextFast(growth, conversationContext, todayContext);
-      const response = await generateTeacherResponse(ctx, userMsg.text, conversationContext);
-      const dbg = getLastBM5Debug();
-      if (auth.profile?.is_admin && dbg) {
-        const trace = `[BM5 trace] raw="${dbg.rawInput}" norm="${dbg.normalizedQuery}" domain=${dbg.domain} matchedIds=[${dbg.matchedIds.join(',')}] source=${dbg.knowledgeSource} count=${dbg.resultCount}`;
-        console.log(trace);
-      }
-      if (response.updatedContext) {
-        setConversationContext(response.updatedContext);
-      }
-      const reply: ChatMessage = {
-        role: 'teacher',
-        text: response.text,
-        isSafety: response.isSafety,
-        knowledgeUsed: response.knowledgeUsed,
-        knowledgeSource: response.knowledgeSource,
-        action: response.action,
-      };
-      setChatMessages((prev) => [...prev, reply]);
-      setChatTyping(false);
-      if (response.isSafety) {
-        setSessionSafetyBlocked(true);
+      try {
+        const response = await generateTeacherResponse(ctx, userMsg.text, conversationContext);
+        const dbg = getLastBM5Debug();
+        const routerDbg = getLastRouterDebug();
+        if (auth.profile?.is_admin && dbg) {
+          const trace = `[BM5 trace] raw="${dbg.rawInput}" norm="${dbg.normalizedQuery}" domain=${dbg.domain} matchedIds=[${dbg.matchedIds.join(',')}] source=${dbg.knowledgeSource} count=${dbg.resultCount}`;
+          console.log(trace);
+        }
+        if (auth.profile?.is_admin && routerDbg) {
+          console.log('[Router]', `raw="${routerDbg.rawInput}" norm="${routerDbg.normalizedInput}" safety=${routerDbg.safetyResult} intent=${routerDbg.intent} source=${routerDbg.responseSource}`);
+        }
+        if (response.updatedContext) {
+          setConversationContext(response.updatedContext);
+        }
+        const reply: ChatMessage = {
+          role: 'teacher',
+          text: response.text,
+          isSafety: response.isSafety,
+          knowledgeUsed: response.knowledgeUsed,
+          knowledgeSource: response.knowledgeSource,
+          action: response.action,
+        };
+        setChatMessages((prev) => [...prev, reply]);
+        setChatTyping(false);
+        if (response.isSafety) {
+          setSessionSafetyBlocked(true);
+        }
+      } catch {
+        const name = persona?.name ?? 'AI先生';
+        const reply: ChatMessage = {
+          role: 'teacher',
+          text: `${name}です。うまく応答を作れませんでした。もう一度送ってください。`,
+        };
+        setChatMessages((prev) => [...prev, reply]);
+        setChatTyping(false);
       }
     }, delay);
   }, [chatInput, persona, teacherContext, growth, conversationContext]);
