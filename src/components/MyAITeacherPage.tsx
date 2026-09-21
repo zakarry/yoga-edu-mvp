@@ -451,6 +451,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     return resolvePosesFromProgram(program);
   }, [concretePosesOverride, program]);
   const [currentPoseIdx, setCurrentPoseIdx] = useState(0);
+  const [practiceMode, setPracticeMode] = useState<'single' | 'program'>('program');
   const [posePhase, setPosePhase] = useState<'list' | 'guide' | 'active' | 'done'>('list');
   const [poseElapsedTotal, setPoseElapsedTotal] = useState(0);
   const poseGuideRef = useRef<HTMLDivElement>(null);
@@ -928,6 +929,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         setSelectedGuide(null);
         setPracticePhase('guide');
         setPosePhase('list');
+        setPracticeMode('single');
         setStep('step6');
       }
     } else if (action.type === 'start_breathwork') {
@@ -1016,6 +1018,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setDirectPractice(null);
     setSelectedGuide(null);
     setSaveStatus('');
+    setPracticeMode('single');
     setCurrentPoseIdx(idx);
     const pose = concretePoses[idx];
     if (pose) {
@@ -1043,6 +1046,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPracticePhase('guide');
     setPosePhase('guide');
     setPoseElapsedTotal(0);
+    setPracticeMode('program');
     setSelectedGuide(null);
     setPracticeType(null);
     setActivePracticeName(null);
@@ -1083,6 +1087,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPracticeAborted(true);
     setPracticePaused(false);
     setPracticeFinishing(false);
+    setPracticeMode('program');
     setAsanaVisualStage(null);
     voiceEngine.stop();
     setCurrentSubtitle('');
@@ -1308,6 +1313,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setSimpleTimerRemaining(0);
     setPracticeAborted(false);
     setPracticeSessionId(null);
+    setPracticeMode('program');
     setIsSavingPractice(false);
     setStep('step7');
   }, [practiceType, program, practiceDuration, moodBefore, moodAfter, practiceNote, auth, growth, formSpecialty, teacherContext, conversationContext, selectedGuide, practicePhase, practiceAborted, sessionStartedAt, isSavingPractice, practiceSessionId]);
@@ -1338,6 +1344,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setSelectedGuide(null);
     setPracticePhase('guide');
     setPosePhase('guide');
+    setPracticeMode('single');
     setCurrentPoseIdx(0);
     setStep('step6');
     setTimeout(() => {
@@ -1365,6 +1372,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setSelectedGuide(null);
     setPracticePhase('guide');
     setPosePhase('guide');
+    setPracticeMode('program');
     setCurrentPoseIdx(0);
     setStep('step6');
     setTimeout(() => {
@@ -2277,7 +2285,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
                   <button
                     className="primary-button today-plan-start-all-btn"
-                    onClick={() => selectAsanaForPractice(0)}
+                    onClick={() => { setPracticeMode('program'); selectAsanaForPractice(0); }}
                   >
                     最初から順番に実践する
                   </button>
@@ -2768,7 +2776,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 </div>
               )}
 
-              {practiceType !== 'sequence' && currentPoseIdx < concretePoses.length - 1 && concretePoses.length > 1 ? (
+              {practiceType !== 'sequence' && practiceMode === 'program' && currentPoseIdx < concretePoses.length - 1 ? (
                 <div className="pose-next-section">
                   <h4>おつかれさまでした</h4>
                   <p>{concretePoses[currentPoseIdx].name} 完了！{concretePoses[currentPoseIdx]?.type === 'asana' ? '次のポーズのお手本画像を見ましょう。' : '次の呼吸ガイドを見ましょう。'}</p>
