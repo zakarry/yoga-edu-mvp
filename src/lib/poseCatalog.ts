@@ -63,6 +63,10 @@ export interface PoseCatalogEntry {
   voiceGuide: VoiceGuideDef;
   planner: PlannerAttrs;
   knowledge: KnowledgeLink;
+  bilateral?: {
+    sides: ['right', 'left'];
+    switchAtRemainingSec: number;
+  };
   status: PoseStatus;
 }
 
@@ -154,6 +158,7 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
       breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
       completion: 'お疲れさまでした。',
     },
+    bilateral: { sides: ['right', 'left'], switchAtRemainingSec: 30 },
     planner: {
       beginnerFriendly: true,
       gentleAllowed: false,
@@ -611,6 +616,7 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
       breathingReminderCue: '呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。',
       completion: 'お疲れさまでした。',
     },
+    bilateral: { sides: ['right', 'left'], switchAtRemainingSec: 30 },
     planner: {
       beginnerFriendly: true,
       gentleAllowed: false,

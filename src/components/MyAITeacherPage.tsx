@@ -512,6 +512,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [practicePaused, setPracticePaused] = useState(false);
   const [practiceFinishing, setPracticeFinishing] = useState(false);
   const [asanaVisualStage, setAsanaVisualStage] = useState<string | null>(null);
+  const [bilateralSide, setBilateralSide] = useState<'right' | 'left'>('right');
   const [currentSubtitle, setCurrentSubtitle] = useState('');
   const asanaRuntimeRef = useRef<ReturnType<typeof createPracticeAudioRuntime> | null>(null);
   const asanaClockRuntimeRef = useRef<AsanaClockRuntime | null>(null);
@@ -974,6 +975,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       const elapsed = (Date.now() - simpleTimerStartRef.current) / 1000;
       const remaining = Math.max(0, simpleTimerTotalRef.current - elapsed);
       setSimpleTimerRemaining(Math.ceil(remaining));
+      const currentPose = concretePoses[currentPoseIdx];
+      if (currentPose?.bilateral) {
+        setBilateralSide(remaining <= currentPose.bilateral.switchAtRemainingSec ? 'left' : 'right');
+      }
     }, 100);
     return () => window.clearInterval(tick);
   }, [timerRunning, practicePaused]);
@@ -1011,6 +1016,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPosePhase('guide');
     setCurrentSubtitle('');
     setAsanaVisualStage(null);
+    setBilateralSide('right');
     setPracticeAborted(false);
     setPracticeSessionId(null);
     setSessionStartedAt(null);
@@ -1150,12 +1156,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           onSubtitle: (text) => setCurrentSubtitle(text),
           onVisualStage: (stage) => setAsanaVisualStage(stage),
           onComplete: () => {
-            const startedAt = simpleTimerStartRef.current || sessionStartedAt;
-            if (startedAt) {
-              const elapsedSec = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
-              setPoseElapsedTotal((t) => t + elapsedSec);
-              setPracticeDuration(Math.max(1, Math.round(elapsedSec / 60)));
-            }
+            const poseDurationSec = pose.defaultMinutes * 60;
+            setPoseElapsedTotal((t) => t + poseDurationSec);
+            setPracticeDuration(Math.max(1, Math.round(poseDurationSec / 60)));
             setPracticePhase('done');
             setTimerRunning(false);
             setCurrentSubtitle('');
@@ -1177,12 +1180,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       if (event.type === 'subtitle') {
         setCurrentSubtitle(event.subtitle ?? '');
       } else if (event.type === 'complete') {
-        const startedAt = simpleTimerStartRef.current || sessionStartedAt;
-        if (startedAt) {
-          const elapsedSec = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
-          setPoseElapsedTotal((t) => t + elapsedSec);
-          setPracticeDuration(Math.max(1, Math.round(elapsedSec / 60)));
-        }
+        const poseDurationSec = pose.defaultMinutes * 60;
+        setPoseElapsedTotal((t) => t + poseDurationSec);
+        setPracticeDuration(Math.max(1, Math.round(poseDurationSec / 60)));
         setPracticePhase('done');
         voiceEngine.stop();
         setCurrentSubtitle('');
@@ -2657,7 +2657,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               {/* Reference visual during practice */}
               {concretePoses[currentPoseIdx]?.type === 'asana' && concretePoses[currentPoseIdx]?.image && (
                 <div className="practice-reference-visual">
-                  <img src={concretePoses[currentPoseIdx].image} alt={concretePoses[currentPoseIdx].name} loading="lazy" />
+                  <img src={concretePoses[currentPoseIdx].image} alt={concretePoses[currentPoseIdx].name} loading="lazy" style={bilateralSide === 'left' && concretePoses[currentPoseIdx].bilateral ? { transform: 'scaleX(-1)' } : undefined} />
+                  {concretePoses[currentPoseIdx].bilateral && (
+                    <span className="practice-bilateral-label">{bilateralSide === 'right' ? '右側' : '左側'}</span>
+                  )}
                 </div>
               )}
 
@@ -2811,7 +2814,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 </div>
               ) : (
                 <div className="pose-final-section">
-                  <h4>{activePracticeName ? `${activePracticeName} 完了！` : '全プログラム完了！'}</h4>
+                  <h4>{practiceMode === 'program' && currentPoseIdx >= concretePoses.length - 1 ? '全プログラム完了！' : activePracticeName ? `${activePracticeName} 完了！` : '全プログラム完了！'}</h4>
                   <p>お疲れさまでした。今日の実践を記録しましょう。</p>
                   <div className="pose-total-time">
                     合計実践時間：約{Math.max(1, Math.round((poseElapsedTotal > 0 ? poseElapsedTotal : (simpleTimerStartRef.current ? Math.max(1, Math.round((Date.now() - simpleTimerStartRef.current) / 1000)) : practiceDuration * 60)) / 60))}分

@@ -5861,6 +5861,7 @@ h1 {
 .practice-visual-stage-label { font-size: 0.85rem; color: var(--text-muted, #666); font-weight: 500; }
 .practice-reference-visual { display: flex; justify-content: center; margin-bottom: 12px; }
 .practice-reference-visual img { width: min(220px, 70vw); max-height: 280px; border-radius: 12px; object-fit: contain; box-shadow: 0 2px 12px rgba(0,0,0,.1); }
+.practice-bilateral-label { display: block; text-align: center; font-size: 0.8rem; color: var(--text-muted, #666); margin-top: 4px; font-weight: 500; }
 .practice-timer { display: grid; gap: 12px; place-items: center; }
 .practice-timer-body {
   font-size: 14px;

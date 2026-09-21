@@ -35,6 +35,7 @@ export interface ConcretePose {
   professionalYogaRelated?: boolean | null;
   professionalYogaSourceLabel?: string | null;
   knowledgeVerified?: boolean;
+  bilateral?: { sides: ['right', 'left']; switchAtRemainingSec: number };
 }
 
 function entryToConcrete(entry: PoseCatalogEntry): ConcretePose {
@@ -60,6 +61,7 @@ function entryToConcrete(entry: PoseCatalogEntry): ConcretePose {
     professionalYogaRelated: entry.knowledge.professionalYogaRelated,
     professionalYogaSourceLabel: null,
     knowledgeVerified: entry.knowledge.verified,
+    bilateral: entry.bilateral,
   };
 }
 
