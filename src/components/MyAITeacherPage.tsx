@@ -895,7 +895,14 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         setChatTyping(false);
         if (response.isSafety) {
           setSessionSafetyBlocked(true);
-          saveSessionSafety({ version: 1, holdActive: true, status: 'caution', reasonCategory: 'pain', updatedAt: Date.now() });
+          const reasonStr = response.updatedContext?.safetyHoldReason ?? 'pain';
+          const reasonCategory = /しびれ/.test(reasonStr) ? 'numbness'
+            : /めまい|ふらつ/.test(reasonStr) ? 'dizziness'
+            : /息苦/.test(reasonStr) ? 'breathing_difficulty'
+            : /医師|運動制限/.test(reasonStr) ? 'medical_restriction'
+            : /red_flag/.test(reasonStr) ? 'red_flag'
+            : 'pain';
+          saveSessionSafety({ version: 1, holdActive: true, status: 'caution', reasonCategory: reasonCategory as SessionSafetyState['reasonCategory'], updatedAt: Date.now() });
         }
         if (response.safetyReleased) {
           setSessionSafetyBlocked(false);

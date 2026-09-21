@@ -139,36 +139,38 @@ function buildUserStateResponse(
     if (bodyArea) {
       empathy = `教えてくれてありがとうございます。${bodyArea}まわりが硬いと感じているんですね。`;
       suggestion = prevContext?.safetyHoldActive
-        ? '今は無理に深く伸ばす必要はありません。呼吸に合わせて、ご自身のペースで休めていきましょう。'
+        ? '今は無理に深く伸ばす必要はありません。ご自身のペースで休めていきましょう。'
         : '無理に深く伸ばす必要はありません。呼吸に合わせて、動ける範囲からゆっくり始めていきましょう。';
       followUp = '左右どちらか特に気になりますか？それとも、他にも気になるところがあれば教えてください。';
     } else {
       empathy = '教えてくれてありがとうございます。からだが硬いと感じているんですね。';
       suggestion = prevContext?.safetyHoldActive
-        ? '今は無理に深く伸ばす必要はありません。呼吸に合わせて、ご自身のペースで休めていきましょう。'
+        ? '今は無理に深く伸ばす必要はありません。ご自身のペースで休めていきましょう。'
         : '無理に深く伸ばす必要はありません。呼吸に合わせて、動ける範囲からゆっくり始めていきましょう。';
       followUp = '特に硬さを感じるところはありますか？肩まわり、股関節、脚の裏など、気になるところがあれば教えてください。';
     }
   } else if (isTired) {
     empathy = '教えてくれてありがとうございます。疲れを感じているんですね。';
     suggestion = prevContext?.safetyHoldActive
-      ? '今日は無理をせず、深呼吸で体を休める時間にしましょう。'
+      ? '今日は無理をせず、ゆっくり過ごしてください。'
       : '今日は無理をせず、やさしいストレッチと深呼吸で体を休める時間にしましょうか。';
     followUp = '特にお疲れを感じるところがあれば教えてください。';
   } else if (isStress) {
     empathy = '教えてくれてありがとうございます。ストレスを感じているんですね。';
-    suggestion = '呼吸を整えることから始めてみましょう。ゆっくり吸って、ゆっくり吐くだけでも、気持ちが落ち着きやすくなります。';
+    suggestion = prevContext?.safetyHoldActive
+      ? '今日は無理をせず、ゆっくり過ごしてください。'
+      : '呼吸を整えることから始めてみましょう。ゆっくり吸って、ゆっくり吐くだけでも、気持ちが落ち着きやすくなります。';
     followUp = prevContext?.safetyHoldActive ? '他に気になることがあれば教えてください。' : 'よろしければ、数分の呼吸法をご案内します。';
   } else if (isSedentary) {
     empathy = '教えてくれてありがとうございます。久しぶりに体を動かすのは、はじめの一歩が大事ですね。';
     suggestion = prevContext?.safetyHoldActive
-      ? '今は無理のない範囲で、呼吸に合わせてゆっくり過ごしましょう。'
+      ? '今は無理のない範囲で、ゆっくり過ごしましょう。'
       : '無理のない範囲で、ゆっくり体を動かすところから始めましょう。';
     followUp = prevContext?.safetyHoldActive ? '他に気になることがあれば教えてください。' : '今日は5分程度のやさしいストレッチからいかがですか？';
   } else {
     empathy = '教えてくれてありがとうございます。今の自分の状態を伝えてくれるのは、とても助かります。';
     suggestion = prevContext?.safetyHoldActive
-      ? '今日は無理のない範囲で、呼吸に合わせて過ごしましょう。'
+      ? '今日は無理のない範囲で、ゆっくり過ごしましょう。'
       : '今日は無理のない範囲で、呼吸に合わせてゆっくり動くことから始めてみましょうか。';
     followUp = '他に気になることがあれば、いつでも教えてください。';
   }
@@ -1438,6 +1440,35 @@ export async function generateTeacherResponse(
   }
 }
 
+interface SafetySignalDef {
+  category: string;
+  keywords: string[];
+  negations: string[];
+}
+
+const SAFETY_SIGNALS: SafetySignalDef[] = [
+  { category: '痛み', keywords: ['痛い', '痛み', 'いたい', '痛'], negations: ['痛くない', '痛みはない', '痛みはありません', '痛くありません', 'いたくない'] },
+  { category: 'しびれ', keywords: ['しびれ', '痺れ', 'しびれる', '痺れる'], negations: ['しびれはない', 'しびれはありません', 'しびれない', '痺れない'] },
+  { category: 'めまい', keywords: ['めまい', 'めまいが', 'ふらつく', 'ふらつき'], negations: ['めまいはない', 'めまいはありません'] },
+  { category: '息苦しさ', keywords: ['息苦しい', '呼吸が苦しい', '息が苦しい'], negations: ['息苦しくない', '息苦しくありません'] },
+  { category: '医療制限', keywords: ['医師から止め', '運動制限', '医者から止め'], negations: [] },
+];
+
+function extractPositiveSafetySignals(userMessage: string): string[] {
+  const segments = userMessage.split(/けど|けれど|けれども|が、|が,|でも|ただ|しかし/);
+  const positives: string[] = [];
+  for (const seg of segments) {
+    for (const sig of SAFETY_SIGNALS) {
+      const hasNegation = sig.negations.some((n) => seg.includes(n));
+      const hasKeyword = sig.keywords.some((k) => seg.includes(k));
+      if (hasKeyword && !hasNegation) {
+        positives.push(sig.category);
+      }
+    }
+  }
+  return Array.from(new Set(positives));
+}
+
 async function generateTeacherResponseInner(
   context: TeacherContext,
   userMessage: string,
@@ -1448,15 +1479,27 @@ async function generateTeacherResponseInner(
   const intent = route?.intent ?? classifyIntent(userMessage);
   const name = context.persona?.name ?? 'AI先生';
 
-  const isSafetyRelease = /今は痛くない|今はいたくない|今日は痛くない|今日はいたくない|もう痛くない|今は気にならない|今日は気にならない|きにならない|痛みはありません|今は大丈夫|痛くない|いたくない|もう大丈夫|もうだいじょうぶ|治った|なおった/.test(userMessage);
-  const isStillInPain = /少し痛い|まだ痛い|まだいたい|痛みはある|痛みがある|まだ気になる/.test(userMessage);
-  if (isSafetyRelease && !isStillInPain && prevContext?.safetyHoldActive) {
+  // Per-signal negation-aware safety release check
+  const positiveSafetySignals = extractPositiveSafetySignals(userMessage);
+  const isExplicitRelease = /今は痛くない|今はいたくない|今日は痛くない|今日はいたくない|もう痛くない|今は気にならない|今日は気にならない|きにならない|痛みはありません|痛みはない|今は大丈夫|痛くない|いたくない|もう大丈夫|もうだいじょうぶ|治った|なおった/.test(userMessage);
+  if (isExplicitRelease && positiveSafetySignals.length === 0 && prevContext?.safetyHoldActive) {
     const text = `${name}です。今は痛みが気にならないのですね。教えてくれてありがとうございます。無理のない範囲で進めていきましょう。`;
     return {
       text,
       safetyReleased: true,
       responseSource: 'conversation_template',
       updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, safetyHoldActive: false, safetyHoldReason: undefined, lastAssistantMode: 'casual' },
+    }
+  }
+  // Mixed symptom: release denied, safety hold continues with updated reason
+  if (isExplicitRelease && positiveSafetySignals.length > 0 && prevContext?.safetyHoldActive) {
+    const newReason = positiveSafetySignals[0];
+    const text = `${name}です。痛みは今は気にならないとのことですが、${newReason}があるのですね。今日は通常のヨガ実践は進めず、無理に身体を動かさないようにしましょう。`;
+    return {
+      text,
+      isSafety: true,
+      responseSource: 'safety_gate',
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, safetyHoldActive: true, safetyHoldReason: newReason, lastAssistantMode: 'safety_restriction', lastOfferedAction: 'safety_referral' },
     };
   }
 
