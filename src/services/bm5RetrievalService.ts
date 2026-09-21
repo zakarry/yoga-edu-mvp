@@ -59,6 +59,7 @@ const ALIAS_DICTIONARY: Record<string, string[]> = {
   '換気': ['かんき'],
   'ATP': ['えーてぃーぴー', 'アデノシン三リン酸'],
   'HRV': ['えいちあーるぶい', '心拍変動'],
+  '八支則': ['はちしそく', 'アシュタンガ', 'ashtanga', 'ヨガの八支則', 'ヨーガの八支則', '八支'],
 };
 
 const CANONICAL_CONCEPT_MAP: { canonical: string; aliases: string[]; preferredId: string }[] = [
@@ -68,6 +69,7 @@ const CANONICAL_CONCEPT_MAP: { canonical: string; aliases: string[]; preferredId
   { canonical: '横隔膜', preferredId: 'K026', aliases: ['おうかくまく', 'ダイアフラム', 'diaphragm', 'おうかくま'] },
   { canonical: '換気', preferredId: 'K003', aliases: ['かんき'] },
   { canonical: '腹式呼吸', preferredId: 'K015', aliases: ['ふくしきこきゅう', 'お腹の呼吸', '腹式', 'ふくしきこきう'] },
+  { canonical: '八支則', preferredId: 'K062', aliases: ['はちしそく', 'アシュタンガ', 'ashtanga', 'eight limbs', 'ヨガの八支則', 'ヨーガの八支則', '八支', '8段階'] },
 ];
 
 export function resolveCanonicalConcept(query: string): { concept: string; preferredId: string } | null {
@@ -86,7 +88,7 @@ export function resolveCanonicalConcept(query: string): { concept: string; prefe
     for (const f of allForms) {
       const fKata = toKatakana(f).toLowerCase();
       if (kata.includes(fKata) || lower.includes(f.toLowerCase())) {
-        if (entry.canonical === 'プラーナーヤーマ' || entry.canonical === 'SpO2' || entry.canonical === '横隔膜') {
+        if (entry.canonical === 'プラーナーヤーマ' || entry.canonical === 'SpO2' || entry.canonical === '横隔膜' || entry.canonical === '八支則') {
           return { concept: entry.canonical, preferredId: entry.preferredId };
         }
       }
@@ -105,6 +107,8 @@ const ACCEPTANCE_TEST_INDEX: { keywords: string[]; refIds: string[]; minMatch?: 
   { keywords: ['HRV', '高い', '健康'], refIds: ['K033'] },
   { keywords: ['プラーナ', '酸素'], refIds: ['K014'] },
   { keywords: ['八支則', '呼吸', 'どこ'], refIds: ['K062'] },
+  { keywords: ['八支則'], refIds: ['K062'], minMatch: 1 },
+  { keywords: ['アシュタンガ', 'ヨガ'], refIds: ['K062'], minMatch: 1 },
   { keywords: ['寝', '呼吸', '調整'], refIds: ['K035', 'K080'] },
   { keywords: ['いびき', '睡眠時無呼吸'], refIds: ['K081', 'K040'] },
   { keywords: ['鼻', '詰ま', '鼻呼吸'], refIds: ['K082'] },
@@ -311,6 +315,15 @@ function extractKeywords(query: string): string[] {
 
   const breathKeywords = ['呼吸', '肺', '横隔膜', '換気', 'SpO2', 'ATP', 'HRV', '睡眠', 'プラーナ', '腹式', '胸式', '鼻呼吸', 'いびき'];
   for (const kw of breathKeywords) {
+    const kwKata = toKatakana(kw);
+    if (kata.includes(kwKata) || normalized.toLowerCase().includes(kw.toLowerCase())) {
+      keywords.add(kw);
+      keywords.add(kwKata);
+    }
+  }
+
+  const yogaTheoryKeywords = ['八支則', 'アシュタンガ', 'ashtanga', 'ヨガ', 'yoga', '瞑想', 'アーサナ', 'ポーズ'];
+  for (const kw of yogaTheoryKeywords) {
     const kwKata = toKatakana(kw);
     if (kata.includes(kwKata) || normalized.toLowerCase().includes(kw.toLowerCase())) {
       keywords.add(kw);

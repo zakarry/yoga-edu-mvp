@@ -887,6 +887,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         if (response.isSafety) {
           setSessionSafetyBlocked(true);
         }
+        if (response.safetyReleased) {
+          setSessionSafetyBlocked(false);
+        }
       } catch {
         const name = persona?.name ?? 'AI先生';
         const reply: ChatMessage = {

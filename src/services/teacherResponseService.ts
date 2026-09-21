@@ -58,6 +58,7 @@ export interface TeacherResponseAction {
 export interface TeacherResponse {
   text: string;
   isSafety?: boolean;
+  safetyReleased?: boolean;
   knowledgeUsed?: boolean;
   knowledgeMasterId?: string;
   knowledgeTitle?: string;
@@ -584,7 +585,7 @@ async function tryBM5Lookup(
   }
 
   const domain = classifyBM5Domain(userMessage);
-  if (domain !== 'breathwork') return null;
+  if (domain === 'general') return null;
 
   const { results, debug } = await searchBM5(userMessage, 5);
   lastBM5Debug = debug;
@@ -1442,6 +1443,7 @@ async function generateTeacherResponseInner(
     const text = `${name}です。そうですね、今日は痛みが気にならないとのこと、了解しました。無理のない範囲で進めていきましょう。`;
     return {
       text,
+      safetyReleased: true,
       responseSource: 'conversation_template',
       updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, safetyHoldActive: false, safetyHoldReason: undefined, lastAssistantMode: 'casual' },
     };
@@ -1579,7 +1581,7 @@ async function generateTeacherResponseInner(
 }
 
 function stripActionIfSafety(response: TeacherResponse, prevContext?: ConversationContext): TeacherResponse {
-  if (response.action && response.action.type !== 'none' && response.action.type !== 'open_today_plan') {
+  if (response.action && response.action.type !== 'none') {
     if (response.isSafety || prevContext?.safetyHoldActive) {
       return { ...response, action: undefined };
     }
