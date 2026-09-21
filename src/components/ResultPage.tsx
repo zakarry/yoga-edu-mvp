@@ -161,15 +161,25 @@ export function BreathworkExperience({
       }, 100);
     };
 
+    let suppressSubtitle = false;
+
     const handleEvent = (event: RuntimeEvent) => {
       if (event.type === 'subtitle') {
+        if (suppressSubtitle) return;
         setSubtitle(event.subtitle ?? '');
       } else if (event.type === 'cueStart') {
         const cue = cues[event.cueIndex ?? 0];
+        suppressSubtitle = false;
         if (cue?.type === 'silence') {
           startPhaseVisual(cue.durationSec ?? 1);
         } else if (cue?.type === 'voice' && cue.phaseDurationSec) {
           startPhaseVisual(cue.phaseDurationSec);
+        } else if (cue?.type === 'voice' && cue.displayRound) {
+          suppressSubtitle = true;
+          setCurrentRound(cue.displayRound);
+          setPreparing(false);
+          setRemainingSeconds(0);
+          setSubtitle(cue.displayText ?? '');
         } else if (cue?.type === 'voice') {
           if (phaseIdx === 0 && round > 0 && round < totalRounds - 1) {
             setCurrentRound(round + 1);

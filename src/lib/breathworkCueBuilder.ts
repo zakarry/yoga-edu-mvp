@@ -173,7 +173,7 @@ export function buildBreathworkCues(entry: BreathworkCatalogEntry): PracticeCue[
 
     for (let round = 0; round < totalRounds; round++) {
       if (round === totalRounds - 1) {
-        add({ type: 'voice', displayText: finalCue.text, speechText: finalCue.text, audioKey: finalCue.audioKey });
+        add({ type: 'voice', displayText: finalCue.text, speechText: finalCue.text, audioKey: finalCue.audioKey, displayRound: totalRounds });
       }
       for (const phase of phases) {
         const phaseCues = phaseCuesForRound(entry, phase.key, round);

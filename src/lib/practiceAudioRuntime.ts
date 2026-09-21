@@ -11,6 +11,7 @@ export interface PracticeCue {
   durationSec?: number;
   phaseDurationSec?: number;
   isFinalCue?: boolean;
+  displayRound?: number;
 }
 
 export type RuntimeSource =
