@@ -2768,7 +2768,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 </div>
               )}
 
-              {practiceType !== 'sequence' && currentPoseIdx < concretePoses.length - 1 ? (
+              {practiceType !== 'sequence' && currentPoseIdx < concretePoses.length - 1 && concretePoses.length > 1 ? (
                 <div className="pose-next-section">
                   <h4>おつかれさまでした</h4>
                   <p>{concretePoses[currentPoseIdx].name} 完了！{concretePoses[currentPoseIdx]?.type === 'asana' ? '次のポーズのお手本画像を見ましょう。' : '次の呼吸ガイドを見ましょう。'}</p>
