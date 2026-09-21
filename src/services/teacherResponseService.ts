@@ -27,6 +27,9 @@ export interface ConversationContext {
   lastTopic?: string;
   lastOfferedAction?: string;
   safetyContextActive?: boolean;
+  safetyHoldActive?: boolean;
+  safetyHoldReason?: string;
+  pendingPreferenceSave?: string;
   lastPoseId?: string;
   lastBreathworkId?: string;
   lastMeditationId?: string;
@@ -120,18 +123,27 @@ function buildUserStateResponse(
 ): TeacherResponse {
   const name = context.persona?.name ?? 'AI先生';
   const isStiffness = /固い|硬い|柔軟性/.test(userMessage);
-  const isTired = /疲れ|だるい|疲労/.test(userMessage);
+  const isTired = /疲れ|だるい|疲労|つかれ/.test(userMessage);
   const isStress = /ストレス/.test(userMessage);
   const isSedentary = /運動不足|久しぶり|久しぶり|動かしてない|動かしていない|運動してない|運動していない/.test(userMessage);
+
+  const bodyAreaMatch = userMessage.match(/(股関節|肩まわり|肩|腰|脚の裏|脚|首|背中|腕|手|骨盤|背骨)/);
+  const bodyArea = bodyAreaMatch?.[0] ?? null;
 
   let empathy: string;
   let suggestion: string;
   let followUp: string;
 
   if (isStiffness) {
-    empathy = '教えてくれてありがとうございます。からだが硬いと感じているんですね。';
-    suggestion = '無理に深く伸ばす必要はありません。呼吸に合わせて、動ける範囲からゆっくり始めていきましょう。';
-    followUp = '特に硬さを感じるところはありますか？肩まわり、股関節、脚の裏など、気になるところがあれば教えてください。';
+    if (bodyArea) {
+      empathy = `教えてくれてありがとうございます。${bodyArea}まわりが硬いと感じているんですね。`;
+      suggestion = '無理に深く伸ばす必要はありません。呼吸に合わせて、動ける範囲からゆっくり始めていきましょう。';
+      followUp = '左右どちらか特に気になりますか？それとも、他にも気になるところがあれば教えてください。';
+    } else {
+      empathy = '教えてくれてありがとうございます。からだが硬いと感じているんですね。';
+      suggestion = '無理に深く伸ばす必要はありません。呼吸に合わせて、動ける範囲からゆっくり始めていきましょう。';
+      followUp = '特に硬さを感じるところはありますか？肩まわり、股関節、脚の裏など、気になるところがあれば教えてください。';
+    }
   } else if (isTired) {
     empathy = '教えてくれてありがとうございます。疲れを感じているんですね。';
     suggestion = '今日は無理をせず、やさしいストレッチと深呼吸で体を休める時間にしましょうか。';
@@ -154,7 +166,7 @@ function buildUserStateResponse(
     text: `${name}です。${empathy} ${suggestion}\n${followUp}`,
     responseSource: 'conversation_template',
     action: { type: 'open_today_plan', label: '今日のヨガを作る' },
-    updatedContext: { ...prevContext, lastUserMessage: userMessage },
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTopic: bodyArea ?? undefined },
   };
 }
 
@@ -169,6 +181,7 @@ function buildCasualResponse(
   if (greeting.includes('ありがとう')) {
     return {
       text: `${name}です。こちらこそ、いつもありがとうございます。何か気になることがあれば、いつでも聞いてくださいね。`,
+      responseSource: 'conversation_template',
       updatedContext: { ...prevContext, lastUserMessage: userMessage },
     };
   }
@@ -176,6 +189,15 @@ function buildCasualResponse(
   if (greeting.includes('はじめまして')) {
     return {
       text: `${name}です。はじめまして。ヨガの実践や知識について、何でも聞いてください。`,
+      responseSource: 'conversation_template',
+      updatedContext: { ...prevContext, lastUserMessage: userMessage },
+    };
+  }
+
+  if (greeting.includes('久しぶり') || greeting.includes('ひさしぶり')) {
+    return {
+      text: `${name}です。お久しぶりですね。今日は無理のないペースで始めていきましょう。`,
+      responseSource: 'conversation_template',
       updatedContext: { ...prevContext, lastUserMessage: userMessage },
     };
   }
@@ -197,6 +219,7 @@ function buildPreferenceResponse(
   if (/詳しく|もっと詳しく/.test(userMessage)) {
     return {
       text: `${name}です。わかりました。今後の説明はもう少し詳しくしますね。`,
+      responseSource: 'conversation_template',
       updatedContext: { ...prevContext, lastUserMessage: userMessage },
     };
   }
@@ -204,6 +227,7 @@ function buildPreferenceResponse(
   if (/短く|短め|簡潔/.test(userMessage)) {
     return {
       text: `${name}です。わかりました。今後の説明は短く簡潔にしますね。`,
+      responseSource: 'conversation_template',
       updatedContext: { ...prevContext, lastUserMessage: userMessage },
     };
   }
@@ -211,6 +235,7 @@ function buildPreferenceResponse(
   if (/褒めて|ほめて|もっと褒めて/.test(userMessage)) {
     return {
       text: `${name}です。わかりました。これからはもう少し励ましの言葉を増やしますね。`,
+      responseSource: 'conversation_template',
       updatedContext: { ...prevContext, lastUserMessage: userMessage },
     };
   }
@@ -218,12 +243,23 @@ function buildPreferenceResponse(
   if (/褒めすぎ|ほめすぎ|励ましは控えて/.test(userMessage)) {
     return {
       text: `${name}です。わかりました。励ましは控えめにしますね。`,
+      responseSource: 'conversation_template',
       updatedContext: { ...prevContext, lastUserMessage: userMessage },
     };
   }
 
+  const isYogaPreference = /ゆっくりしたヨガ|呼吸法が好き|朝にやりたい|夜にやりたい|説明は短い方がいい|好きな実践/.test(userMessage);
+  if (isYogaPreference) {
+    const prefLabel = userMessage.replace(/[です。、，]/g, '').trim();
+    return {
+      text: `${name}です。${prefLabel}なんですね。今後のAI先生の提案に反映できるよう、この好みを覚えておきますか？`,
+      responseSource: 'conversation_template',
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, pendingPreferenceSave: userMessage },
+    };
+  }
+
   return {
-    text: `${name}です。ご要望を覚えておきます。他にも調整したいことがあれば教えてください。`,
+    text: `${name}です。ご要望を受け取りました。他にも調整したいことがあれば教えてください。`,
     responseSource: 'conversation_template',
     updatedContext: { ...prevContext, lastUserMessage: userMessage },
   };
@@ -242,7 +278,7 @@ function buildSafetySensitiveResponse(
     text,
     isSafety: true,
     responseSource: 'safety_gate',
-    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'safety_restriction', safetyContextActive: true, lastTopic: bodyPart, lastOfferedAction: 'safety_referral' },
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'safety_restriction', safetyContextActive: false, safetyHoldActive: true, safetyHoldReason: bodyPart, lastTopic: undefined, lastOfferedAction: 'safety_referral' },
   };
 }
 
@@ -282,7 +318,7 @@ function buildSafetyRedFlagResponse(
     text,
     isSafety: true,
     responseSource: 'safety_gate',
-    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'safety_red_flag', safetyContextActive: true, lastOfferedAction: 'red_flag_referral' },
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'safety_red_flag', safetyContextActive: false, safetyHoldActive: true, safetyHoldReason: 'red_flag', lastOfferedAction: 'red_flag_referral' },
   };
 }
 
@@ -299,7 +335,7 @@ function buildSafetyPrescriptionResponse(
     text,
     isSafety: true,
     responseSource: 'safety_gate',
-    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'general_explanation', safetyContextActive: true, lastOfferedAction: 'general_pose_explanation' },
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'general_explanation', safetyContextActive: false, safetyHoldActive: true, safetyHoldReason: 'prescription_request', lastOfferedAction: 'general_pose_explanation' },
   };
 }
 
@@ -342,7 +378,7 @@ function buildContextualFollowupResponse(
   prevContext?: ConversationContext,
 ): TeacherResponse {
   const name = context.persona?.name ?? 'AI先生';
-  const isSafetyActive = prevContext?.safetyContextActive ?? false;
+  const isSafetyActive = prevContext?.safetyHoldActive ?? false;
   const lastTopic = prevContext?.lastTopic ?? '';
   const wantsDetail = /詳しく|もっと詳しく|深掘り|もう少し詳しく/.test(userMessage);
   const wantsGeneral = /一般的な話して|一般的な話|一般論として|一般的な説明して|一般論話して/.test(userMessage);
@@ -1269,7 +1305,7 @@ function buildGeneralKnowledgeFallback(
       updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'general_explanation', lastKnowledgeSource: 'none' },
     };
   }
-  const activeTopic = prevContext?.lastTopic;
+  const activeTopic = prevContext?.lastTopic && !prevContext?.safetyHoldActive ? prevContext.lastTopic : null;
   let text: string;
   if (activeTopic) {
     text = `${name}です。「${activeTopic}」について知りたいことか、別のポーズや呼吸法、瞑想について知りたいことか、もう少し教えていただけますか？例えば「やり方は？」「注意点は？」「初心者には？」のように聞いてもらえると、お答えしやすいです。`;
@@ -1401,6 +1437,16 @@ async function generateTeacherResponseInner(
   const intent = route?.intent ?? classifyIntent(userMessage);
   const name = context.persona?.name ?? 'AI先生';
 
+  const isSafetyRelease = /今は痛くない|今はいたくない|今日は痛くない|今日はいたくない|気にならない|きにならない|痛くない|いたくない|もう大丈夫|もうだいじょうぶ|治った|なおった/.test(userMessage);
+  if (isSafetyRelease && prevContext?.safetyHoldActive && !safetyHit) {
+    const text = `${name}です。そうですね、今日は痛みが気にならないとのこと、了解しました。無理のない範囲で進めていきましょう。`;
+    return {
+      text,
+      responseSource: 'conversation_template',
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, safetyHoldActive: false, safetyHoldReason: undefined, lastAssistantMode: 'casual' },
+    };
+  }
+
   if (!safetyHit) {
     const bm5Early = await tryBM5Lookup(userMessage, context, prevContext);
     if (bm5Early) return { ...bm5Early, responseSource: 'knowledge' };
@@ -1488,6 +1534,16 @@ async function generateTeacherResponseInner(
   }
 
   if (intent === 'practice_request') {
+    if (prevContext?.safetyHoldActive) {
+      const reason = prevContext.safetyHoldReason ?? '痛みや不調';
+      const text = `${name}です。先ほど${reason}があると教えてもらっているので、通常のヨガ実践は今は進めないようにしましょう。\n\n今も痛みがありますか？`;
+      return {
+        text,
+        isSafety: true,
+        responseSource: 'safety_gate',
+        updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'safety_restriction' },
+      };
+    }
     const resolution = resolveEntity(
       userMessage,
       prevContext?.lastPracticeDomain,
@@ -1524,7 +1580,7 @@ async function generateTeacherResponseInner(
 
 function stripActionIfSafety(response: TeacherResponse, prevContext?: ConversationContext): TeacherResponse {
   if (response.action && response.action.type !== 'none' && response.action.type !== 'open_today_plan') {
-    if (response.isSafety || prevContext?.safetyContextActive) {
+    if (response.isSafety || prevContext?.safetyHoldActive) {
       return { ...response, action: undefined };
     }
   }
