@@ -22,6 +22,12 @@ export interface BreathworkVisual {
   asset?: string;
   bodyFocus?: 'belly' | 'chest' | 'clavicle';
   layers?: ('belly' | 'chest' | 'clavicle')[];
+  handPlacement?: ('belly' | 'lower_ribs' | 'chest' | 'clavicle')[];
+  highlightZones?: ('belly' | 'chest' | 'clavicle')[];
+  arrowDirection?: {
+    inhale?: string[];
+    exhale?: string[];
+  };
 }
 
 export interface BreathworkInstructions {
@@ -85,6 +91,11 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     },
     visual: {
       type: 'phase_animation',
+      highlightZones: ['belly'],
+      arrowDirection: {
+        inhale: ['expand'],
+        exhale: ['contract'],
+      },
     },
     instructions: {
       intro: [
@@ -167,6 +178,12 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     visual: {
       type: 'body_breathing',
       bodyFocus: 'belly',
+      handPlacement: ['belly'],
+      highlightZones: ['belly'],
+      arrowDirection: {
+        inhale: ['out'],
+        exhale: ['in'],
+      },
     },
     instructions: {
       intro: [
@@ -245,6 +262,12 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     visual: {
       type: 'body_breathing',
       bodyFocus: 'chest',
+      handPlacement: ['lower_ribs'],
+      highlightZones: ['chest'],
+      arrowDirection: {
+        inhale: ['out', 'front'],
+        exhale: ['in'],
+      },
     },
     instructions: {
       intro: [
@@ -322,6 +345,12 @@ export const BREATHWORK_CATALOG: BreathworkCatalogEntry[] = [
     visual: {
       type: 'layered_breathing',
       layers: ['belly', 'chest', 'clavicle'],
+      handPlacement: ['belly', 'chest'],
+      highlightZones: ['belly', 'chest', 'clavicle'],
+      arrowDirection: {
+        inhale: ['up'],
+        exhale: ['down'],
+      },
     },
     instructions: {
       intro: [

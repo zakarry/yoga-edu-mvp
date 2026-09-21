@@ -3636,6 +3636,158 @@ h1 {
   }
 }
 
+/* --- breathwork reference visual enhancements --- */
+.bw-body-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.bw-hand-icon text {
+  font-family: inherit;
+}
+
+.bw-arrow {
+  animation: bwArrowPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes bwArrowPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.95; }
+}
+
+.bw-zone-label {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(108, 138, 118, 0.5);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 3;
+  transition: all 0.3s ease;
+}
+
+.bw-zone-label.is-active {
+  color: white;
+  background: var(--green-strong, #2d7d6e);
+  box-shadow: 0 2px 8px rgba(45, 125, 110, 0.3);
+  animation: bwZonePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes bwZonePulse {
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.08); }
+}
+
+.bw-hand-hint {
+  font-size: 12px;
+  color: var(--muted, #6b7280);
+  text-align: center;
+  margin: 0;
+  padding: 0 12px;
+  line-height: 1.5;
+}
+
+/* --- box breathing 4-phase indicator --- */
+.bw-box-indicator {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin-top: 12px;
+}
+
+.bw-box-side {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  opacity: 0.35;
+}
+
+.bw-box-top {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--green-strong, #2d7d6e);
+  border-radius: 2px;
+}
+
+.bw-box-right {
+  top: 0;
+  right: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--green-strong, #2d7d6e);
+  border-radius: 2px;
+}
+
+.bw-box-bottom {
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--green-strong, #2d7d6e);
+  border-radius: 2px;
+}
+
+.bw-box-left {
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--green-strong, #2d7d6e);
+  border-radius: 2px;
+}
+
+.bw-box-side.is-active {
+  opacity: 1;
+  box-shadow: 0 0 12px rgba(45, 125, 110, 0.5);
+}
+
+.bw-box-side-label {
+  position: absolute;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--navy, #102542);
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.bw-box-top .bw-box-side-label { top: -20px; }
+.bw-box-right .bw-box-side-label { right: -52px; top: 50%; transform: translateY(-50%); }
+.bw-box-bottom .bw-box-side-label { bottom: -20px; }
+.bw-box-left .bw-box-side-label { left: -52px; top: 50%; transform: translateY(-50%); }
+
+.bw-box-side.is-active .bw-box-side-label {
+  color: var(--green-strong, #2d7d6e);
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .bw-box-indicator {
+    width: 100px;
+    height: 100px;
+  }
+  .bw-zone-label {
+    font-size: 10px;
+  }
+  .bw-hand-hint {
+    font-size: 11px;
+  }
+}
+
 /* --- top hero direct search entry --- */
 .hero-secondary-search-entry {
   display: grid;
