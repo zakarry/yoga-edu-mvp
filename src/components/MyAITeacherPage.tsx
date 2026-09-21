@@ -930,6 +930,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         setPracticePhase('guide');
         setPosePhase('list');
         setPracticeMode('single');
+        setPoseElapsedTotal(0);
         setStep('step6');
       }
     } else if (action.type === 'start_breathwork') {
@@ -1018,7 +1019,6 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setDirectPractice(null);
     setSelectedGuide(null);
     setSaveStatus('');
-    setPracticeMode('single');
     setCurrentPoseIdx(idx);
     const pose = concretePoses[idx];
     if (pose) {
@@ -1345,6 +1345,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPracticePhase('guide');
     setPosePhase('guide');
     setPracticeMode('single');
+    setPoseElapsedTotal(0);
     setCurrentPoseIdx(0);
     setStep('step6');
     setTimeout(() => {
@@ -1373,6 +1374,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPracticePhase('guide');
     setPosePhase('guide');
     setPracticeMode('program');
+    setPoseElapsedTotal(0);
     setCurrentPoseIdx(0);
     setStep('step6');
     setTimeout(() => {
@@ -2275,7 +2277,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                         </div>
                         <button
                           className="primary-button today-plan-pose-start-btn"
-                          onClick={() => selectAsanaForPractice(idx)}
+                          onClick={() => { setPracticeMode('single'); setPoseElapsedTotal(0); selectAsanaForPractice(idx); }}
                         >
                           {pose.type === 'asana' ? 'このポーズのお手本を見る' : '呼吸ガイドを見る'}
                         </button>
@@ -2285,7 +2287,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
                   <button
                     className="primary-button today-plan-start-all-btn"
-                    onClick={() => { setPracticeMode('program'); selectAsanaForPractice(0); }}
+                    onClick={() => { setPracticeMode('program'); setPoseElapsedTotal(0); selectAsanaForPractice(0); }}
                   >
                     最初から順番に実践する
                   </button>
