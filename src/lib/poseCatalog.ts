@@ -582,6 +582,7 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     nameSanskrit: 'Trikonasana',
     nameEn: 'Triangle Pose',
     aliases: ['トリコーナーサナ'],
+    image: '/pose-trikonasana.svg',
     defaultDurationMin: 1,
     beginnerInstructions: [
       '足を大きく開き、右足を外に向ける',
@@ -634,6 +635,7 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     nameSanskrit: 'Vajrasana',
     nameEn: 'Thunderbolt Pose',
     aliases: ['ヴァジュラーサナ', '正座のポーズ'],
+    image: '/pose-vajrasana.svg',
     defaultDurationMin: 2,
     beginnerInstructions: [
       '床にひざまずき、両膝をそろえてかかとに座る',
