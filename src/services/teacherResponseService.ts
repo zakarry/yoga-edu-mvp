@@ -29,6 +29,7 @@ export interface ConversationContext {
   safetyContextActive?: boolean;
   safetyHoldActive?: boolean;
   safetyHoldReason?: string;
+  safetyActiveSignals?: string[];
   pendingPreferenceSave?: string;
   lastPoseId?: string;
   lastBreathworkId?: string;
@@ -59,6 +60,7 @@ export interface TeacherResponse {
   text: string;
   isSafety?: boolean;
   safetyReleased?: boolean;
+  safetyActiveSignals?: string[];
   knowledgeUsed?: boolean;
   knowledgeMasterId?: string;
   knowledgeTitle?: string;
@@ -291,7 +293,7 @@ function buildSafetySensitiveResponse(
     text,
     isSafety: true,
     responseSource: 'safety_gate',
-    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'safety_restriction', safetyContextActive: false, safetyHoldActive: true, safetyHoldReason: bodyPart, lastTopic: undefined, lastOfferedAction: 'safety_referral' },
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'safety_restriction', safetyContextActive: false, safetyHoldActive: true, safetyHoldReason: bodyPart, safetyActiveSignals: ['pain'], lastTopic: undefined, lastOfferedAction: 'safety_referral' },
   };
 }
 
@@ -331,7 +333,7 @@ function buildSafetyRedFlagResponse(
     text,
     isSafety: true,
     responseSource: 'safety_gate',
-    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'safety_red_flag', safetyContextActive: false, safetyHoldActive: true, safetyHoldReason: 'red_flag', lastOfferedAction: 'red_flag_referral' },
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'safety_red_flag', safetyContextActive: false, safetyHoldActive: true, safetyHoldReason: 'red_flag', safetyActiveSignals: ['red_flag'], lastOfferedAction: 'red_flag_referral' },
   };
 }
 
@@ -348,7 +350,7 @@ function buildSafetyPrescriptionResponse(
     text,
     isSafety: true,
     responseSource: 'safety_gate',
-    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'general_explanation', safetyContextActive: false, safetyHoldActive: true, safetyHoldReason: 'prescription_request', lastOfferedAction: 'general_pose_explanation' },
+    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, lastTeacherSuggestion: undefined, lastAssistantMode: 'general_explanation', safetyContextActive: false, safetyHoldActive: true, safetyHoldReason: 'prescription_request', safetyActiveSignals: ['pain'], lastOfferedAction: 'general_pose_explanation' },
   };
 }
 
@@ -1447,11 +1449,11 @@ interface SafetySignalDef {
 }
 
 const SAFETY_SIGNALS: SafetySignalDef[] = [
-  { category: '痛み', keywords: ['痛い', '痛み', 'いたい', '痛'], negations: ['痛くない', '痛みはない', '痛みはありません', '痛くありません', 'いたくない'] },
-  { category: 'しびれ', keywords: ['しびれ', '痺れ', 'しびれる', '痺れる'], negations: ['しびれはない', 'しびれはありません', 'しびれない', '痺れない'] },
-  { category: 'めまい', keywords: ['めまい', 'めまいが', 'ふらつく', 'ふらつき'], negations: ['めまいはない', 'めまいはありません'] },
-  { category: '息苦しさ', keywords: ['息苦しい', '呼吸が苦しい', '息が苦しい'], negations: ['息苦しくない', '息苦しくありません'] },
-  { category: '医療制限', keywords: ['医師から止め', '運動制限', '医者から止め'], negations: [] },
+  { category: 'pain', keywords: ['痛い', '痛み', 'いたい', '痛'], negations: ['痛くない', '痛みはない', '痛みはありません', '痛くありません', 'いたくない'] },
+  { category: 'numbness', keywords: ['しびれ', '痺れ', 'しびれる', '痺れる'], negations: ['しびれはない', 'しびれはありません', 'しびれない', '痺れない'] },
+  { category: 'dizziness', keywords: ['めまい', 'めまいが', 'ふらつく', 'ふらつき'], negations: ['めまいはない', 'めまいはありません', 'めまいも今はありません', 'めまいもありません'] },
+  { category: 'breathing_difficulty', keywords: ['息苦しい', '呼吸が苦しい', '息が苦しい'], negations: ['息苦しくない', '息苦しくありません'] },
+  { category: 'medical_restriction', keywords: ['医師から止め', '運動制限', '医者から止め'], negations: [] },
 ];
 
 function extractPositiveSafetySignals(userMessage: string): string[] {
@@ -1469,6 +1471,57 @@ function extractPositiveSafetySignals(userMessage: string): string[] {
   return Array.from(new Set(positives));
 }
 
+function extractNegativeSafetySignals(userMessage: string): string[] {
+  const segments = userMessage.split(/けど|けれど|けれども|が、|が,|でも|ただ|しかし/);
+  const negatives: string[] = [];
+  for (const seg of segments) {
+    for (const sig of SAFETY_SIGNALS) {
+      const hasNegation = sig.negations.some((n) => seg.includes(n));
+      const hasKeyword = sig.keywords.some((k) => seg.includes(k));
+      if (hasKeyword && hasNegation) {
+        negatives.push(sig.category);
+      }
+    }
+  }
+  return Array.from(new Set(negatives));
+}
+
+function computeUpdatedActiveSignals(prevSignals: string[], positives: string[], negatives: string[]): string[] {
+  const set = new Set(prevSignals);
+  for (const n of negatives) set.delete(n);
+  for (const p of positives) set.add(p);
+  return Array.from(set);
+}
+
+function signalLabel(signal: string): string {
+  switch (signal) {
+    case 'pain': return '痛み';
+    case 'numbness': return 'しびれ';
+    case 'dizziness': return 'めまい';
+    case 'breathing_difficulty': return '息苦しさ';
+    case 'medical_restriction': return '医療上の制限';
+    case 'red_flag': return '強い症状';
+    default: return '不調';
+  }
+}
+
+function buildSignalCheckQuestion(signals: string[]): string {
+  if (signals.length === 0) return '';
+  if (signals.length === 1) {
+    const label = signalLabel(signals[0]);
+    return `先ほどの${label}は今もありますか？`;
+  }
+  const labels = signals.map(signalLabel);
+  return `先ほど教えてもらった${labels.join('と')}は今どうですか？`;
+}
+
+function buildResolvedAcknowledgment(resolvedSignals: string[]): string {
+  if (resolvedSignals.length === 0) return '';
+  const labels = resolvedSignals.map(signalLabel);
+  if (labels.length === 1) return `${labels[0]}はないのですね。`;
+  return `${labels.join('と')}はないのですね。`;
+}
+
 async function generateTeacherResponseInner(
   context: TeacherContext,
   userMessage: string,
@@ -1481,25 +1534,34 @@ async function generateTeacherResponseInner(
 
   // Per-signal negation-aware safety release check
   const positiveSafetySignals = extractPositiveSafetySignals(userMessage);
-  const isExplicitRelease = /今は痛くない|今はいたくない|今日は痛くない|今日はいたくない|もう痛くない|今は気にならない|今日は気にならない|きにならない|痛みはありません|痛みはない|今は大丈夫|痛くない|いたくない|もう大丈夫|もうだいじょうぶ|治った|なおった/.test(userMessage);
-  if (isExplicitRelease && positiveSafetySignals.length === 0 && prevContext?.safetyHoldActive) {
-    const text = `${name}です。今は痛みが気にならないのですね。教えてくれてありがとうございます。無理のない範囲で進めていきましょう。`;
-    return {
-      text,
-      safetyReleased: true,
-      responseSource: 'conversation_template',
-      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, safetyHoldActive: false, safetyHoldReason: undefined, lastAssistantMode: 'casual' },
+  const negativeSafetySignals = extractNegativeSafetySignals(userMessage);
+  const isExplicitRelease = /今は痛くない|今はいたくない|今日は痛くない|今日はいたくない|もう痛くない|今は気にならない|今日は気にならない|きにならない|痛みはありません|痛みはない|今は大丈夫|痛くない|いたくない|もう大丈夫|もうだいじょうぶ|治った|なおった|しびれもありません|しびれはない|めまいもありません|めまいはない|息苦しくない/.test(userMessage);
+  const prevActiveSignals = prevContext?.safetyActiveSignals ?? (prevContext?.safetyHoldActive ? ['pain'] : []);
+  const updatedActiveSignals = computeUpdatedActiveSignals(prevActiveSignals, positiveSafetySignals, negativeSafetySignals);
+
+  if (prevContext?.safetyHoldActive && (isExplicitRelease || negativeSafetySignals.length > 0)) {
+    // All signals resolved → release
+    if (updatedActiveSignals.length === 0) {
+      const resolvedAck = buildResolvedAcknowledgment(negativeSafetySignals);
+      const text = `${name}です。${resolvedAck}教えてくれてありがとうございます。無理のない範囲で進めていきましょう。`;
+      return {
+        text,
+        safetyReleased: true,
+        safetyActiveSignals: [],
+        responseSource: 'conversation_template',
+        updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, safetyHoldActive: false, safetyHoldReason: undefined, safetyActiveSignals: [], lastAssistantMode: 'casual' },
+      };
     }
-  }
-  // Mixed symptom: release denied, safety hold continues with updated reason
-  if (isExplicitRelease && positiveSafetySignals.length > 0 && prevContext?.safetyHoldActive) {
-    const newReason = positiveSafetySignals[0];
-    const text = `${name}です。痛みは今は気にならないとのことですが、${newReason}があるのですね。今日は通常のヨガ実践は進めず、無理に身体を動かさないようにしましょう。`;
+    // Some signals resolved but others remain → hold continues
+    const resolvedAck = buildResolvedAcknowledgment(negativeSafetySignals);
+    const checkQ = buildSignalCheckQuestion(updatedActiveSignals);
+    const text = `${name}です。${resolvedAck ? resolvedAck + '\n' : ''}まだ${updatedActiveSignals.map(signalLabel).join('と')}があるのですね。今日は通常のヨガ実践は進めず、無理に身体を動かさないようにしましょう。\n${checkQ}`;
     return {
       text,
       isSafety: true,
+      safetyActiveSignals: updatedActiveSignals,
       responseSource: 'safety_gate',
-      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, safetyHoldActive: true, safetyHoldReason: newReason, lastAssistantMode: 'safety_restriction', lastOfferedAction: 'safety_referral' },
+      updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastSafetyMessage: text, safetyHoldActive: true, safetyHoldReason: updatedActiveSignals[0], safetyActiveSignals: updatedActiveSignals, lastAssistantMode: 'safety_restriction', lastOfferedAction: 'safety_referral' },
     };
   }
 
@@ -1591,8 +1653,9 @@ async function generateTeacherResponseInner(
 
   if (intent === 'practice_request') {
     if (prevContext?.safetyHoldActive) {
-      const reason = prevContext.safetyHoldReason ?? '痛みや不調';
-      const text = `${name}です。先ほど${reason}があると教えてもらっているので、通常のヨガ実践は今は進めないようにしましょう。\n\n今も痛みがありますか？`;
+      const activeSignals = prevContext.safetyActiveSignals ?? ['pain'];
+      const checkQ = buildSignalCheckQuestion(activeSignals);
+      const text = `${name}です。先ほど${activeSignals.map(signalLabel).join('と')}があると教えてもらっているので、通常のヨガ実践は今は進めないようにしましょう。\n\n${checkQ}`;
       return {
         text,
         isSafety: true,

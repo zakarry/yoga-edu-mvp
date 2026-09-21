@@ -869,6 +869,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         const contextWithSafety: ConversationContext = {
           ...conversationContext,
           safetyHoldActive: sessionSafetyBlocked || conversationContext.safetyHoldActive,
+          safetyActiveSignals: sessionSafetyBlocked ? (loadSessionSafety()?.activeSignals ?? conversationContext.safetyActiveSignals ?? ['pain']) : conversationContext.safetyActiveSignals,
         };
         const response = await generateTeacherResponse(ctx, userMsg.text, contextWithSafety);
         const dbg = getLastBM5Debug();
@@ -895,14 +896,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         setChatTyping(false);
         if (response.isSafety) {
           setSessionSafetyBlocked(true);
-          const reasonStr = response.updatedContext?.safetyHoldReason ?? 'pain';
-          const reasonCategory = /しびれ/.test(reasonStr) ? 'numbness'
-            : /めまい|ふらつ/.test(reasonStr) ? 'dizziness'
-            : /息苦/.test(reasonStr) ? 'breathing_difficulty'
-            : /医師|運動制限/.test(reasonStr) ? 'medical_restriction'
-            : /red_flag/.test(reasonStr) ? 'red_flag'
-            : 'pain';
-          saveSessionSafety({ version: 1, holdActive: true, status: 'caution', reasonCategory: reasonCategory as SessionSafetyState['reasonCategory'], updatedAt: Date.now() });
+          const activeSignals = response.safetyActiveSignals ?? response.updatedContext?.safetyActiveSignals ?? ['pain'];
+          saveSessionSafety({ version: 2, holdActive: true, activeSignals: activeSignals as SessionSafetyState['activeSignals'], status: 'caution', updatedAt: Date.now() });
         }
         if (response.safetyReleased) {
           setSessionSafetyBlocked(false);

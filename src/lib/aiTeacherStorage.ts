@@ -268,13 +268,15 @@ export function clearNextSuggestion(): void {
 
 // ── Session Safety State (sessionStorage, per-session only) ──
 
-const SESSION_SAFETY_KEY = 'ai_teacher_session_safety_v1';
+const SESSION_SAFETY_KEY = 'ai_teacher_session_safety_v2';
+
+export type SafetySignalCategory = 'pain' | 'numbness' | 'dizziness' | 'breathing_difficulty' | 'medical_restriction' | 'red_flag' | 'other';
 
 export interface SessionSafetyState {
-  version: 1;
+  version: 2;
   holdActive: boolean;
+  activeSignals: SafetySignalCategory[];
   status: 'normal' | 'caution' | 'stop_and_refer';
-  reasonCategory?: 'pain' | 'numbness' | 'dizziness' | 'breathing_difficulty' | 'medical_restriction' | 'red_flag' | 'other';
   updatedAt: number;
 }
 
@@ -292,6 +294,14 @@ export function loadSessionSafety(): SessionSafetyState | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (parsed && typeof parsed === 'object' && 'holdActive' in parsed) {
+      if (parsed.version === 2 && Array.isArray(parsed.activeSignals)) {
+        return parsed as SessionSafetyState;
+      }
+      // v1 backward compat: migrate reasonCategory to activeSignals
+      if (parsed.version === 1 && parsed.holdActive) {
+        const signals: SafetySignalCategory[] = parsed.reasonCategory ? [parsed.reasonCategory as SafetySignalCategory] : ['pain'];
+        return { version: 2, holdActive: true, activeSignals: signals, status: parsed.status ?? 'caution', updatedAt: parsed.updatedAt ?? Date.now() };
+      }
       return parsed as SessionSafetyState;
     }
     return null;
