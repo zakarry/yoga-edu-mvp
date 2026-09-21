@@ -1187,7 +1187,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     runtime.setSource('practice_audio_runtime');
     runtime.addListener(handleAsanaEvent);
     asanaRuntimeRef.current = runtime;
-    runtime.start({ practiceId: pose.id, cues });
+    runtime.start({ practiceId: pose.id, cues, totalDurationSec: pose.defaultMinutes * 60 });
   }, [voiceGuideOn, voiceEngine, sessionStartedAt]);
 
   const handlePausePractice = useCallback(() => {

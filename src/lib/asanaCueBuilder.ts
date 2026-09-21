@@ -41,14 +41,18 @@ export function buildAsanaCues(entry: PoseCatalogEntry, totalMinutes: number): P
     }
   }
 
-  add({ type: 'voice', displayText: 'あと30秒です。', speechText: 'あと30秒です。' });
-  add({ type: 'voice', displayText: 'あと15秒です。', speechText: 'あと15秒です。' });
-  add({ type: 'voice', displayText: 'あと少しです。', speechText: 'あと少しです。' });
+  if (totalSeconds >= 90) {
+    add({ type: 'voice', displayText: 'あと30秒です。', speechText: 'あと30秒です。', scheduledAtSec: 30 });
+  }
+  if (totalSeconds >= 45) {
+    add({ type: 'voice', displayText: 'あと15秒です。', speechText: 'あと15秒です。', scheduledAtSec: 15 });
+  }
+  add({ type: 'voice', displayText: 'あと少しです。', speechText: 'あと少しです。', scheduledAtSec: 5 });
 
   const completionText = vg.completion ?? 'お疲れさまでした。';
-  add({ type: 'voice', displayText: completionText, speechText: completionText, audioKey: vg.completionAudioKey });
-  add({ type: 'voice', displayText: '次のポーズへ進みます。', speechText: '次のポーズへ進みます。' });
-  add({ type: 'complete', displayText: 'お疲れさまでした。', isFinalCue: true });
+  add({ type: 'voice', displayText: completionText, speechText: completionText, audioKey: vg.completionAudioKey, scheduledAtSec: 0 });
+  add({ type: 'voice', displayText: '次のポーズへ進みます。', speechText: '次のポーズへ進みます。', scheduledAtSec: 0 });
+  add({ type: 'complete', displayText: 'お疲れさまでした。', isFinalCue: true, scheduledAtSec: 0 });
 
   return cues;
 }

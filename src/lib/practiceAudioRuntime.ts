@@ -12,6 +12,7 @@ export interface PracticeCue {
   phaseDurationSec?: number;
   isFinalCue?: boolean;
   displayRound?: number;
+  scheduledAtSec?: number;
 }
 
 export type RuntimeSource =
@@ -44,6 +45,7 @@ export interface PracticeSessionConfig {
   rounds?: number;
   phaseLabels?: string[];
   onEvent?: RuntimeListener;
+  totalDurationSec?: number;
 }
 
 const SILENCE_WATCHDOG_MS = 300000;
@@ -63,6 +65,13 @@ export class PracticeAudioRuntime {
   private silenceRemainingMs = 0;
   private silenceStartedAt = 0;
   private runtimeSource: RuntimeSource = 'practice_audio_runtime';
+  private clockTimer: ReturnType<typeof setInterval> | null = null;
+  private practiceStartedAt = 0;
+  private pauseAccumulatedMs = 0;
+  private pausedAt = 0;
+  private totalDurationMs = 0;
+  private scheduledCues: { cue: PracticeCue; index: number; fired: boolean }[] = [];
+  private scheduledCuePlaying = false;
 
   constructor(engine?: VoiceGuideEngine) {
     this.engine = engine ?? getVoiceGuideEngine();
@@ -104,6 +113,25 @@ export class PracticeAudioRuntime {
     this.currentRound = 0;
     this.playedCueKeys.clear();
     this.abortController = new AbortController();
+    this.scheduledCues = [];
+    this.scheduledCuePlaying = false;
+    this.totalDurationMs = (config.totalDurationSec ?? 0) * 1000;
+    this.pauseAccumulatedMs = 0;
+    this.pausedAt = 0;
+
+    if (this.totalDurationMs > 0) {
+      this.practiceStartedAt = Date.now();
+      const scheduled = config.cues
+        .map((cue, index) => ({ cue, index }))
+        .filter(({ cue }) => cue.scheduledAtSec !== undefined);
+      this.scheduledCues = scheduled.map(({ cue, index }) => ({
+        cue,
+        index,
+        fired: false,
+      }));
+      this.startClockTimer();
+    }
+
     this.setState('running');
     this.advance();
   }
@@ -142,6 +170,12 @@ export class PracticeAudioRuntime {
     this.playedCueKeys.add(cueKey);
 
     this.emit({ type: 'cueStart', cueIndex: nextIndex, cueId: cue.id, round: this.currentRound });
+
+    if (cue.scheduledAtSec !== undefined) {
+      this.isAdvancing = false;
+      this.advance();
+      return;
+    }
 
     if (cue.type === 'silence') {
       this.handleSilence(cue);
@@ -366,8 +400,95 @@ export class PracticeAudioRuntime {
     }
   }
 
+  private startClockTimer(): void {
+    this.stopClockTimer();
+    this.clockTimer = setInterval(() => {
+      if (this.state !== 'running') return;
+      this.checkScheduledCues();
+    }, 200);
+  }
+
+  private stopClockTimer(): void {
+    if (this.clockTimer) {
+      clearInterval(this.clockTimer);
+      this.clockTimer = null;
+    }
+  }
+
+  private getElapsedMs(): number {
+    if (this.practiceStartedAt === 0) return 0;
+    const now = this.pausedAt > 0 ? this.pausedAt : Date.now();
+    return now - this.practiceStartedAt - this.pauseAccumulatedMs;
+  }
+
+  private getRemainingSec(): number {
+    if (this.totalDurationMs === 0) return Infinity;
+    return Math.max(0, (this.totalDurationMs - this.getElapsedMs()) / 1000);
+  }
+
+  private checkScheduledCues(): void {
+    if (this.scheduledCues.length === 0) return;
+    if (this.scheduledCuePlaying) return;
+    const remainingSec = this.getRemainingSec();
+
+    for (const sc of this.scheduledCues) {
+      if (sc.fired) continue;
+      const fireAtSec = sc.cue.scheduledAtSec!;
+      if (remainingSec <= fireAtSec) {
+        sc.fired = true;
+        this.fireScheduledCue(sc);
+        return;
+      }
+    }
+  }
+
+  private fireScheduledCue(sc: { cue: PracticeCue; index: number; fired: boolean }): void {
+    const cue = sc.cue;
+    const displayText = cue.displayText ?? cue.speechText ?? '';
+
+    if (cue.type === 'complete') {
+      if (displayText) {
+        this.emit({ type: 'subtitle', subtitle: displayText });
+      }
+      this.setState('completed');
+      this.emit({ type: 'complete' });
+      return;
+    }
+
+    const speechText = cue.speechText ?? cue.displayText ?? '';
+
+    if (displayText) {
+      this.emit({ type: 'subtitle', subtitle: displayText });
+    }
+    this.emit({ type: 'cueStart', cueIndex: sc.index, cueId: cue.id, round: this.currentRound });
+
+    this.scheduledCuePlaying = true;
+    this.engine.setOnCueEnd(() => {
+      if (this.state !== 'running') { this.scheduledCuePlaying = false; return; }
+      this.clearWatchdog();
+      this.emit({ type: 'cueEnd', cueIndex: sc.index, cueId: cue.id });
+      this.scheduledCuePlaying = false;
+    });
+
+    if (cue.audioKey) {
+      this.engine.speakByKey(cue.audioKey, speechText);
+    } else {
+      this.engine.speak(speechText);
+    }
+
+    const fallbackMs = this.estimateCueMs(cue);
+    this.watchdogTimer = setTimeout(() => {
+      if (this.state !== 'running') { this.scheduledCuePlaying = false; return; }
+      this.engine.stop();
+      this.scheduledCuePlaying = false;
+      this.emit({ type: 'cueEnd', cueIndex: sc.index, cueId: cue.id });
+    }, fallbackMs);
+  }
+
   pause(): void {
     if (this.state !== 'running') return;
+    this.pausedAt = Date.now();
+    this.stopClockTimer();
     this.engine.pause();
     if (this.silenceTimer && this.silenceStartedAt > 0) {
       const elapsed = Date.now() - this.silenceStartedAt;
@@ -380,6 +501,11 @@ export class PracticeAudioRuntime {
 
   resume(): void {
     if (this.state !== 'paused') return;
+    if (this.pausedAt > 0) {
+      this.pauseAccumulatedMs += Date.now() - this.pausedAt;
+      this.pausedAt = 0;
+    }
+    this.startClockTimer();
     this.engine.resume();
     this.setState('running');
     if (this.silenceRemainingMs > 0) {
@@ -394,7 +520,7 @@ export class PracticeAudioRuntime {
       }, remaining);
     } else if (this.config && this.cueIndex >= 0) {
       const cue = this.config.cues[this.cueIndex];
-      if (cue && cue.type === 'voice') {
+      if (cue && cue.type === 'voice' && cue.scheduledAtSec === undefined) {
         const cueKey = `${this.config.practiceId}:r${this.currentRound}:c${this.cueIndex}:${cue.id}`;
         this.startWatchdog(cue, cueKey);
       }
@@ -413,6 +539,7 @@ export class PracticeAudioRuntime {
   stop(): void {
     this.engine.stop();
     this.engine.setOnCueEnd(null);
+    this.stopClockTimer();
     this.clearSilenceTimer();
     this.clearWatchdog();
     if (this.abortController) {
@@ -420,6 +547,12 @@ export class PracticeAudioRuntime {
       this.abortController = null;
     }
     this.isAdvancing = false;
+    this.scheduledCues = [];
+    this.scheduledCuePlaying = false;
+    this.totalDurationMs = 0;
+    this.practiceStartedAt = 0;
+    this.pauseAccumulatedMs = 0;
+    this.pausedAt = 0;
     this.config = null;
     this.cueIndex = -1;
     this.currentRound = 0;
