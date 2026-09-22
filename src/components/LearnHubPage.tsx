@@ -7,7 +7,6 @@ interface LearnHubPageProps {
   onOpenBreathingMeditation: () => void;
   onOpenAITeacher: () => void;
   onOpenSacredSites: () => void;
-  onOpenBreathworkDictionary: () => void;
   onOpenBreathworkKnowledge: (breathworkId: string) => void;
 }
 
@@ -27,7 +26,6 @@ export function LearnHubPage({
   onOpenBreathingMeditation,
   onOpenAITeacher,
   onOpenSacredSites,
-  onOpenBreathworkDictionary,
   onOpenBreathworkKnowledge,
 }: LearnHubPageProps) {
   return (
@@ -57,12 +55,12 @@ export function LearnHubPage({
             <p>ヨガの哲学、人体、指導、アーサナ、呼吸、瞑想まで。体系的に理解するための知識ライブラリ。</p>
             <span className="top-knowledge-cta">ヨガ図鑑を見る →</span>
           </a>
-          <button className="top-knowledge-card" onClick={onOpenBreathworkDictionary} style={{ textAlign: 'left' }}>
+          <a className="top-knowledge-card" href="https://yogaorg.jp/breathing/" target="_blank" rel="noopener noreferrer">
             <span className="top-knowledge-icon">🫁</span>
             <strong>呼吸図鑑</strong>
             <p>呼吸マネージャー検定 第5版をベースにした呼吸の知識ライブラリ。基礎から安全まで、体系的に学べます。</p>
             <span className="top-knowledge-cta">呼吸図鑑を見る →</span>
-          </button>
+          </a>
         </div>
       </section>
 

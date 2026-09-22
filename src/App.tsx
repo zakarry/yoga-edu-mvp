@@ -1673,12 +1673,12 @@ export default function App() {
                   <p>ヨガの哲学、人体、指導、アーサナ、呼吸、瞑想まで。体系的に理解するための知識ライブラリ。</p>
                   <span className="top-knowledge-cta">ヨガ図鑑を見る →</span>
                 </a>
-                <div className="top-knowledge-card top-knowledge-card-coming-soon">
+                <a className="top-knowledge-card" href="https://yogaorg.jp/breathing/" target="_blank" rel="noopener noreferrer">
                   <span className="top-knowledge-icon">🌬️</span>
                   <strong>呼吸図鑑</strong>
                   <p>呼吸の方法・考え方・学びまで。毎日の呼吸実践を深める知識入口。</p>
-                  <span className="top-knowledge-cta top-knowledge-coming-soon">呼吸図鑑 準備中</span>
-                </div>
+                  <span className="top-knowledge-cta">呼吸図鑑を見る →</span>
+                </a>
               </div>
               <div className="top-knowledge-bridge">
                 <p>今日の実践 → 図鑑で詳しく知る</p>
@@ -1704,7 +1704,7 @@ export default function App() {
                 <div className="top-learning-group">
                   <h4>一般向け</h4>
                   <button className="top-learning-item" onClick={() => moveTo('pro-yoga')}>ヨガ検定3級</button>
-                  <button className="top-learning-item" onClick={() => moveTo('pro-yoga')}>呼吸検定</button>
+                  <a className="top-learning-item" href="https://breathing-manager-ce-rktk.bolt.host" target="_blank" rel="noopener noreferrer">呼吸マネージャー検定</a>
                 </div>
                 <div className="top-learning-group">
                   <h4>深く学ぶ</h4>
@@ -2036,7 +2036,6 @@ export default function App() {
             onOpenBreathingMeditation={() => moveTo('breathing-meditation')}
             onOpenAITeacher={() => moveTo('ai-teacher')}
             onOpenSacredSites={() => moveTo('sacred-sites')}
-            onOpenBreathworkDictionary={() => moveTo('breathwork-dictionary')}
             onOpenBreathworkKnowledge={(breathworkId) => {
               setAiTeacherInitialPoseId(breathworkId);
               moveTo('breathwork-dictionary');

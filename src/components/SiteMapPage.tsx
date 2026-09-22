@@ -9,6 +9,7 @@ interface SitemapGroup {
     label: string;
     page?: string;
     action?: () => void;
+    href?: string;
     disabled?: boolean;
     comingLater?: boolean;
   }>;
@@ -57,7 +58,7 @@ export function SiteMapPage({ onNavigate, onOpenSearchWithType }: SiteMapPagePro
       items: [
         { label: 'ヨガ検定3級', page: 'pro-yoga' },
         { label: 'ヨガ検定2級', page: 'pro-yoga' },
-        { label: '呼吸検定', page: 'pro-yoga' },
+        { label: '呼吸マネージャー検定', href: 'https://breathing-manager-ce-rktk.bolt.host' },
         { label: 'Pro Yoga', page: 'pro-yoga' },
       ],
     },
@@ -80,6 +81,7 @@ export function SiteMapPage({ onNavigate, onOpenSearchWithType }: SiteMapPagePro
 
   const handleClick = (item: SitemapGroup['items'][number]) => {
     if (item.disabled || item.comingLater) return;
+    if (item.href) { window.open(item.href, '_blank', 'noopener noreferrer'); return; }
     if (item.action) { item.action(); return; }
     if (item.page) onNavigate(item.page);
   };
