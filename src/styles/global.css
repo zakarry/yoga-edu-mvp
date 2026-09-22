@@ -1441,23 +1441,32 @@ p { color: var(--muted); line-height: 1.75; }
   background: linear-gradient(135deg, #fffdf7 0%, #ffffff 60%, #f7faf8 100%);
 }
 .sacred-site-image {
+  position: relative;
   min-height: 180px;
   border-radius: 20px;
-  background:
-    linear-gradient(135deg, rgba(16,37,66,.82), rgba(29,53,87,.62)),
-    radial-gradient(circle at top left, rgba(201,165,76,.32), transparent 28%);
-  display: grid;
-  place-items: end start;
-  padding: 16px;
-  color: rgba(255,255,255,.92);
+  overflow: hidden;
+  display: block;
 }
-.sacred-site-image span {
+.sacred-site-image img {
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
+  max-height: 260px;
+  object-fit: cover;
+  display: block;
+}
+.sacred-site-credit {
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
   display: inline-flex;
-  padding: 7px 10px;
+  padding: 4px 8px;
   border-radius: 999px;
-  background: rgba(255,255,255,.16);
-  font-size: 12px;
-  font-weight: 700;
+  background: rgba(0,0,0,.45);
+  color: rgba(255,255,255,.85);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .02em;
 }
 .sacred-site-copy {
   display: grid;
@@ -1715,7 +1724,11 @@ p { color: var(--muted); line-height: 1.75; }
     grid-template-columns: 1fr;
   }
   .sacred-site-image {
-    min-height: 160px;
+    min-height: 140px;
+  }
+  .sacred-site-image img {
+    min-height: 140px;
+    max-height: 200px;
   }
 }
 
