@@ -8905,6 +8905,24 @@ html, body {
   box-shadow: 0 6px 20px rgba(16,37,66,.18);
 }
 
+.pose-final-continue--event-demo {
+  margin-top: 24px;
+  gap: 16px;
+}
+
+.pose-final-continue--event-demo .pose-final-line-cta--primary {
+  font-size: 20px;
+  padding: 22px 32px;
+  width: min(100%, 380px);
+  box-shadow: 0 8px 28px rgba(16,37,66,.22);
+  animation: eventDemoLinePulse 2.4s ease-in-out infinite;
+}
+
+@keyframes eventDemoLinePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
 .pose-final-nav {
   display: flex;
   flex-wrap: wrap;

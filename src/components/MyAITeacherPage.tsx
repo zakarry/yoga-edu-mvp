@@ -2814,7 +2814,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 </button>
               </div>
               <p className="practice-active-hint">
-                タイマー完了後に自動的に次のポーズへ進みます。
+                タイマーが終わったら、次のポーズのお手本を確認して進みます。
               </p>
             </div>
           )}
@@ -2873,53 +2873,60 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 </div>
               ) : (
                 <div className="pose-final-section">
-                  <h4>{practiceMode === 'program' && currentPoseIdx >= concretePoses.length - 1 ? '全プログラム完了！' : activePracticeName ? `${activePracticeName} 完了！` : '全プログラム完了！'}</h4>
-                  <p>お疲れさまでした。今日の実践を記録しましょう。</p>
-                  <div className="pose-total-time">
-                    合計実践時間：約{Math.max(1, Math.round((poseElapsedTotal > 0 ? poseElapsedTotal : (simpleTimerStartRef.current ? Math.max(1, Math.round((Date.now() - simpleTimerStartRef.current) / 1000)) : practiceDuration * 60)) / 60))}分
-                  </div>
-                  <div className="field-grid">
-                    <div className="field">
-                      <label>実践後の気分</label>
-                      <select value={moodAfter} onChange={(e) => setMoodAfter(e.target.value)}>
-                        <option value="">選択してください</option>
-                        {MOOD_AFTER_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
-                      </select>
-                    </div>
-                    <div className="field">
-                      <label>実践時間（分）</label>
-                      <input type="number" min={1} max={120} value={Math.max(1, Math.round((poseElapsedTotal > 0 ? poseElapsedTotal : (simpleTimerStartRef.current ? Math.max(1, Math.round((Date.now() - simpleTimerStartRef.current) / 1000)) : practiceDuration * 60)) / 60))}
-                        onChange={(e) => setPracticeDuration(Number(e.target.value))} />
-                    </div>
-                  </div>
-                  <div className="field">
-                    <label>自由メモ（任意）</label>
-                    <input value={practiceNote} onChange={(e) => setPracticeNote(e.target.value)} placeholder="今日の気づきやメモ" />
-                  </div>
-                  <button className="primary-button practice-save-btn" onClick={handleCompletePractice} disabled={isSavingPractice}>
-                    {isSavingPractice ? '保存中…' : '記録して完了する'}
-                  </button>
-                  <div className="pose-final-continue">
-                    {isEventDemo ? (
-                      <>
+                  {isEventDemo ? (
+                    <>
+                      <h4>デモ完了</h4>
+                      <p>約3分の体験、お疲れさまでした。AI先生とのヨガをいかがでしたか？</p>
+                      <div className="pose-total-time">
+                        合計実践時間：約{Math.max(1, Math.round((poseElapsedTotal > 0 ? poseElapsedTotal : (simpleTimerStartRef.current ? Math.max(1, Math.round((Date.now() - simpleTimerStartRef.current) / 1000)) : practiceDuration * 60)) / 60))}分
+                      </div>
+                      <div className="pose-final-continue pose-final-continue--event-demo">
                         <p className="pose-final-line-benefit">イベントのあとも、LINEで今日のヨガやAI先生を続けられます。</p>
                         <a className="primary-button pose-final-line-cta pose-final-line-cta--primary" href="https://line.me/R/" target="_blank" rel="noopener noreferrer">LINEでYoga AIを続ける</a>
                         <div className="pose-final-nav">
                           <button className="ghost-button" onClick={onOpenDiagnosis}>無料AI診断をする</button>
                           <button className="ghost-button" onClick={onOpenMyPage}>{auth.user ? 'myYOGAカルテを見る' : 'ログインしてカルテに残す'}</button>
                         </div>
-                      </>
-                    ) : (
-                      <>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h4>{practiceMode === 'program' && currentPoseIdx >= concretePoses.length - 1 ? '全プログラム完了！' : activePracticeName ? `${activePracticeName} 完了！` : '全プログラム完了！'}</h4>
+                      <p>お疲れさまでした。今日の実践を記録しましょう。</p>
+                      <div className="pose-total-time">
+                        合計実践時間：約{Math.max(1, Math.round((poseElapsedTotal > 0 ? poseElapsedTotal : (simpleTimerStartRef.current ? Math.max(1, Math.round((Date.now() - simpleTimerStartRef.current) / 1000)) : practiceDuration * 60)) / 60))}分
+                      </div>
+                      <div className="field-grid">
+                        <div className="field">
+                          <label>実践後の気分</label>
+                          <select value={moodAfter} onChange={(e) => setMoodAfter(e.target.value)}>
+                            <option value="">選択してください</option>
+                            {MOOD_AFTER_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
+                          </select>
+                        </div>
+                        <div className="field">
+                          <label>実践時間（分）</label>
+                          <input type="number" min={1} max={120} value={Math.max(1, Math.round((poseElapsedTotal > 0 ? poseElapsedTotal : (simpleTimerStartRef.current ? Math.max(1, Math.round((Date.now() - simpleTimerStartRef.current) / 1000)) : practiceDuration * 60)) / 60))}
+                            onChange={(e) => setPracticeDuration(Number(e.target.value))} />
+                        </div>
+                      </div>
+                      <div className="field">
+                        <label>自由メモ（任意）</label>
+                        <input value={practiceNote} onChange={(e) => setPracticeNote(e.target.value)} placeholder="今日の気づきやメモ" />
+                      </div>
+                      <button className="primary-button practice-save-btn" onClick={handleCompletePractice} disabled={isSavingPractice}>
+                        {isSavingPractice ? '保存中…' : '記録して完了する'}
+                      </button>
+                      <div className="pose-final-continue">
                         <p className="pose-final-line-benefit">今日のヨガやAI先生を、イベントのあともLINEから続けられます。</p>
                         <a className="primary-button pose-final-line-cta" href="https://line.me/R/" target="_blank" rel="noopener noreferrer">LINEでYoga AIを続ける</a>
                         <div className="pose-final-nav">
                           <button className="ghost-button" onClick={onOpenDiagnosis}>AI診断を受ける</button>
                           <button className="ghost-button" onClick={onOpenMyPage}>{auth.user ? 'myYOGAカルテを見る' : 'ログインしてカルテに残す'}</button>
                         </div>
-                      </>
-                    )}
-                  </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
