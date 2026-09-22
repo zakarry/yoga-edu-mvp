@@ -146,6 +146,8 @@ export interface LocalPracticeLog {
   note: string | null;
   ai_teacher_used: boolean;
   created_at: string;
+  practice_session_id?: string;
+  sync_status?: 'pending' | 'synced';
 }
 
 export function loadLocalPracticeLogs(): LocalPracticeLog[] {
@@ -165,15 +167,32 @@ export function saveLocalPracticeLog(log: Omit<LocalPracticeLog, 'id' | 'created
     ...log,
     id: `local-practice-${Date.now()}`,
     created_at: new Date().toISOString(),
+    sync_status: 'pending',
   };
   const logs = loadLocalPracticeLogs();
-  logs.unshift(entry);
+  const sessionId = log.practice_session_id;
+  const filtered = sessionId ? logs.filter((l) => l.practice_session_id !== sessionId) : logs;
+  filtered.unshift(entry);
   try {
-    localStorage.setItem(LOCAL_PRACTICE_KEY, JSON.stringify(logs.slice(0, 100)));
+    localStorage.setItem(LOCAL_PRACTICE_KEY, JSON.stringify(filtered.slice(0, 100)));
   } catch {
     // ignore
   }
   return entry;
+}
+
+export function removeLocalPracticeLogBySessionId(sessionId: string): void {
+  const logs = loadLocalPracticeLogs();
+  const filtered = logs.filter((l) => l.practice_session_id !== sessionId);
+  try {
+    localStorage.setItem(LOCAL_PRACTICE_KEY, JSON.stringify(filtered.slice(0, 100)));
+  } catch {
+    // ignore
+  }
+}
+
+export function getLocalPendingLogs(): LocalPracticeLog[] {
+  return loadLocalPracticeLogs().filter((l) => l.sync_status === 'pending' || !l.sync_status);
 }
 
 export function getLocalPracticeSummary(): { asana: number; pranayama: number; dhyana: number; sequence: number; totalSessions: number } {

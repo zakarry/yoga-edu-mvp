@@ -6,6 +6,7 @@ import {
   loadTodayProgram, saveTodayProgram,
   loadGrowth, saveGrowth,
   saveLocalPracticeLog, loadLocalPracticeLogs,
+  removeLocalPracticeLogBySessionId, getLocalPendingLogs,
   loadNextSuggestion, saveNextSuggestion, clearNextSuggestion,
   saveTodayContextSession, loadTodayContextSession, clearTodayContextSession,
   saveSessionSafety, loadSessionSafety, clearSessionSafety,
@@ -1018,7 +1019,6 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setAsanaVisualStage(null);
     setBilateralSide('right');
     setPracticeAborted(false);
-    setPracticeSessionId(null);
     setSessionStartedAt(null);
     setSelectedBreathworkId(null);
     setSelectedMeditationId(null);
@@ -1221,10 +1221,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const handleCompletePractice = useCallback(async () => {
     if (!practiceType || practicePhase !== 'done' || practiceAborted || isSavingPractice) return;
     setIsSavingPractice(true);
-    const practiceName = activePracticeName ?? selectedGuide?.name ?? program?.items.find((i) => i.type === practiceType)?.name ?? '実践';
+    const isProgram = practiceMode === 'program' && concretePoses.length > 1;
+    const practiceName = isProgram ? '今日のプログラム' : (activePracticeName ?? selectedGuide?.name ?? program?.items.find((i) => i.type === practiceType)?.name ?? '実践');
     const startedAt = simpleTimerStartRef.current || sessionStartedAt;
     const totalElapsedSec = poseElapsedTotal > 0 ? poseElapsedTotal : (startedAt ? Math.max(1, Math.round((Date.now() - startedAt) / 1000)) : practiceDuration * 60);
     const autoDuration = Math.max(1, Math.round(totalElapsedSec / 60));
+    const sessionId = practiceSessionId ?? crypto.randomUUID();
     const logParams = {
       practice_type: practiceType,
       practice_name: practiceName,
@@ -1233,16 +1235,16 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       mood_after: moodAfter || null,
       note: practiceNote || null,
       ai_teacher_used: true,
-      practice_session_id: practiceSessionId ?? undefined,
+      practice_session_id: sessionId,
     };
 
     if (auth.user) {
       const { error } = await savePracticeLog(auth.user.id, auth.privacy, logParams);
       if (error) {
-        setSaveStatus('クラウド保存に失敗しました。ローカルに保存します。');
+        setSaveStatus('クラウドに保存できなかったため、この端末に一時保存しました。');
         saveLocalPracticeLog(logParams);
       } else {
-        setSaveStatus('クラウドに保存しました');
+        setSaveStatus('実践記録を保存しました。');
       }
     } else {
       saveLocalPracticeLog(logParams);
@@ -2874,7 +2876,11 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           <h3>STEP 7 — 今日の記録</h3>
           {saveStatus && <p className="ai-teacher-save-status">{saveStatus}</p>}
           {auth.user ? (
-            <p className="ai-teacher-record-source">実践記録はクラウドに保存されています。</p>
+            practiceCount > 0 ? (
+              <p className="ai-teacher-record-source">実践記録はクラウドに保存されています。</p>
+            ) : (
+              <p className="ai-teacher-record-source">実践記録はクラウドに保存されます。</p>
+            )
           ) : (
             <p className="ai-teacher-record-source">実践記録はこの端末のローカルに保存されています。ログインするとクラウド保存が可能です。</p>
           )}
@@ -2892,6 +2898,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                       <span className={`type-pill ${type}`}>{typeLabel}</span>
                       <strong>{log.practice_name}</strong>
                       {log.ai_teacher_used && <span className="ai-teacher-badge">AI Teacher</span>}
+                      {'sync_status' in log && (log as LocalPracticeLog).sync_status === 'pending' && <span className="ai-teacher-badge ai-teacher-badge-pending">未同期</span>}
                     </div>
                     <div className="ai-teacher-record-meta">
                       <span>📅 {date}</span>

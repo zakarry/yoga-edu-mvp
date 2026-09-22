@@ -18,8 +18,6 @@ export interface PracticeLog {
   safety_category: SafetyCategory | null;
   created_at: string;
   practice_session_id: string;
-  sequence_id?: string | null;
-  rounds_completed?: number | null;
 }
 
 export interface SavePracticeLogParams {
@@ -35,8 +33,6 @@ export interface SavePracticeLogParams {
   requires_human_review?: boolean;
   safety_category?: SafetyCategory | null;
   practice_session_id?: string;
-  sequence_id?: string | null;
-  rounds_completed?: number | null;
 }
 
 export interface PracticeSummary {
@@ -62,7 +58,7 @@ export async function savePracticeLog(
   const allowSensitive = privacy.allow_sensitive_data_storage;
   const noteToSave = allowSensitive ? (params.note ?? null) : null;
 
-  const insertPayload = {
+  const insertPayload: Record<string, unknown> = {
     user_id: userId,
     practice_type: params.practice_type,
     practice_name: params.practice_name,
@@ -76,8 +72,6 @@ export async function savePracticeLog(
     requires_human_review: params.requires_human_review ?? false,
     safety_category: params.safety_category ?? null,
     practice_session_id: params.practice_session_id ?? crypto.randomUUID(),
-    sequence_id: params.sequence_id ?? null,
-    rounds_completed: params.rounds_completed ?? null,
   };
 
   const { data, error } = await supabase
