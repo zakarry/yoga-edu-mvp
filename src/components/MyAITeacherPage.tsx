@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '../lib/auth';
-import { savePracticeLog, getPracticeLogs, type PracticeLog } from '../services/practiceLogService';
+import { savePracticeLog, getPracticeLogs, syncPendingLog, type PracticeLog } from '../services/practiceLogService';
 import {
   loadPersona, savePersona, clearPersona,
   loadTodayProgram, saveTodayProgram,
@@ -477,8 +477,31 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       getPracticeLogs(auth.user.id).then(({ data }) => {
         if (data) setCloudLogs(data);
       });
+      const pending = getLocalPendingLogs();
+      if (pending.length > 0) {
+        (async () => {
+          for (const log of pending) {
+            const { savedToCloud } = await syncPendingLog(auth.user!.id, auth.privacy, {
+              practice_type: log.practice_type,
+              practice_name: log.practice_name,
+              duration_min: log.duration_min,
+              mood_before: log.mood_before,
+              mood_after: log.mood_after,
+              note: log.note,
+              ai_teacher_used: log.ai_teacher_used,
+              practice_session_id: log.practice_session_id,
+            });
+            if (savedToCloud && log.practice_session_id) {
+              removeLocalPracticeLogBySessionId(log.practice_session_id);
+            }
+          }
+          const { data: refreshed } = await getPracticeLogs(auth.user!.id);
+          if (refreshed) setCloudLogs(refreshed);
+          setLocalLogs(loadLocalPracticeLogs());
+        })();
+      }
     }
-  }, [auth.user]);
+  }, [auth.user, auth.privacy]);
 
   useEffect(() => {
     let cancelled = false;
@@ -515,6 +538,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [practiceAborted, setPracticeAborted] = useState(false);
   const [practiceSessionId, setPracticeSessionId] = useState<string | null>(null);
   const [isSavingPractice, setIsSavingPractice] = useState(false);
+  const [isRetryingSync, setIsRetryingSync] = useState(false);
   const [voiceGuideOn, setVoiceGuideOn] = useState(true);
   const [practicePaused, setPracticePaused] = useState(false);
   const [practiceFinishing, setPracticeFinishing] = useState(false);
@@ -1331,6 +1355,36 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setIsSavingPractice(false);
     setStep('step7');
   }, [practiceType, program, practiceDuration, moodBefore, moodAfter, practiceNote, auth, growth, formSpecialty, teacherContext, conversationContext, selectedGuide, practicePhase, practiceAborted, sessionStartedAt, isSavingPractice, practiceSessionId]);
+
+  const handleRetrySync = useCallback(async () => {
+    if (!auth.user) return;
+    const pending = getLocalPendingLogs();
+    if (pending.length === 0) return;
+    setIsRetryingSync(true);
+    let allSynced = true;
+    for (const log of pending) {
+      const { savedToCloud } = await syncPendingLog(auth.user.id, auth.privacy, {
+        practice_type: log.practice_type,
+        practice_name: log.practice_name,
+        duration_min: log.duration_min,
+        mood_before: log.mood_before,
+        mood_after: log.mood_after,
+        note: log.note,
+        ai_teacher_used: log.ai_teacher_used,
+        practice_session_id: log.practice_session_id,
+      });
+      if (savedToCloud && log.practice_session_id) {
+        removeLocalPracticeLogBySessionId(log.practice_session_id);
+      } else {
+        allSynced = false;
+      }
+    }
+    const { data: refreshed } = await getPracticeLogs(auth.user.id);
+    if (refreshed) setCloudLogs(refreshed);
+    setLocalLogs(loadLocalPracticeLogs());
+    if (allSynced) setSaveState('cloud_saved');
+    setIsRetryingSync(false);
+  }, [auth.user, auth.privacy]);
 
   const steps: Array<{ id: StepId; label: string; n: string }> = [
     { id: 'step1', label: '今の状態', n: '1' },
@@ -2888,7 +2942,16 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           <h3>STEP 7 — 今日の記録</h3>
           {saveStatus && <p className="ai-teacher-save-status">{saveStatus}</p>}
           {saveState === 'cloud_saved' && <p className="ai-teacher-record-source">実践記録をクラウドに保存しました。</p>}
-          {saveState === 'local_pending' && <p className="ai-teacher-record-source">クラウドに保存できなかったため、この端末に一時保存しました。</p>}
+          {saveState === 'local_pending' && (
+            <div className="ai-teacher-record-source">
+              <p>クラウドに保存できなかったため、この端末に一時保存しました。</p>
+              {auth.user && getLocalPendingLogs().length > 0 && (
+                <button className="secondary-button" onClick={() => void handleRetrySync()} disabled={isRetryingSync}>
+                  {isRetryingSync ? '同期中…' : 'クラウドに再同期する'}
+                </button>
+              )}
+            </div>
+          )}
           {saveState === 'error' && <p className="ai-teacher-record-source">実践記録を保存できませんでした。</p>}
           {saveState === 'idle' && auth.user && <p className="ai-teacher-record-source">実践記録はクラウドに保存されます。</p>}
           {saveState === 'idle' && !auth.user && <p className="ai-teacher-record-source">実践記録はこの端末のローカルに保存されています。ログインするとクラウド保存が可能です。</p>}

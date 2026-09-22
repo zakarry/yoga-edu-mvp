@@ -131,6 +131,23 @@ export async function getPracticeSummary(userId: string): Promise<{ data: Practi
   return { data: summary, error: null };
 }
 
+export async function syncPendingLog(
+  userId: string,
+  privacy: PrivacySettings | null,
+  log: { practice_type: string; practice_name: string; duration_min: number | null; mood_before: string | null; mood_after: string | null; note: string | null; ai_teacher_used: boolean; practice_session_id?: string },
+): Promise<{ data: PracticeLog | null; error: string | null; savedToCloud: boolean }> {
+  return savePracticeLog(userId, privacy, {
+    practice_type: log.practice_type as SavePracticeLogParams['practice_type'],
+    practice_name: log.practice_name,
+    duration_min: log.duration_min,
+    mood_before: log.mood_before,
+    mood_after: log.mood_after,
+    note: log.note,
+    ai_teacher_used: log.ai_teacher_used,
+    practice_session_id: log.practice_session_id,
+  });
+}
+
 export async function deletePracticeLog(userId: string, logId: string): Promise<{ error: string | null }> {
   if (!supabase) return { error: '現在クラウド保存を利用できません' };
   const { error } = await supabase
