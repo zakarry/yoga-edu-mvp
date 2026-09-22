@@ -7,6 +7,7 @@ type SiteData = {
   image: string;
   imageAlt: string;
   credit: string;
+  creditUrl: string;
 };
 
 const japanSites: SiteData[] = [
@@ -15,27 +16,34 @@ const japanSites: SiteData[] = [
     region: '鹿児島・種子島',
     description:
       '鉄砲伝来の地として知られる歴史性を持ち、日本が外の文化や技術と出会った象徴的な土地です。海と風を感じる環境の中で、歴史と新しい学びの交差点としてヨガ文化の文脈を重ねやすい場所として紹介しています。',
-    image: 'https://images.pexels.com/photos/39109685/pexels-photo-39109685.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    imageAlt: '鹿児島湾沿いの岩礁海岸と遠くの島々が見える種子島周辺の風景',
-    credit: 'Photo: lunaria plan / Pexels',
+    image:
+      'https://commons.wikimedia.org/wiki/Special:FilePath/%E6%B5%A6%E7%94%B0%E6%B5%B7%E6%B0%B4%E6%B5%B4%E5%A0%B4_(9739915363).jpg?width=960',
+    imageAlt: '鹿児島県西之表市の浦田海水浴場の風景',
+    credit: '浦田海水浴場 / over hilowsee / CC BY-SA 2.0',
+    creditUrl:
+      'https://commons.wikimedia.org/wiki/File:%E6%B5%A6%E7%94%B0%E6%B5%B7%E6%B0%B4%E6%B5%B4%E5%A0%B4_(9739915363).jpg',
   },
   {
     name: '東京スカイツリー',
     region: '東京都',
     description:
       '高さ634mを誇る世界最大級の電波塔で、東京のシンボルとして親しまれています。展望デッキからは街並みが一望でき、現代的なランドマークとして都市型ヨガやウェルネスの発信拠点としても親しみやすい存在です。',
-    image: 'https://images.pexels.com/photos/20378132/pexels-photo-20378132.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    image:
+      'https://images.pexels.com/photos/20378132/pexels-photo-20378132.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     imageAlt: '青空を背景にそびえ立つ東京スカイツリーの空撮',
     credit: 'Photo: Rin Gakusho / Pexels',
+    creditUrl: 'https://www.pexels.com/photo/20378132/',
   },
   {
     name: '久高島',
     region: '沖縄県南城市',
     description:
       '祈りや静けさのイメージと結びつきやすく、内省的な体験やリトリートの文脈に重ねやすい場所です。自然と精神文化の近さを感じながら、自分の内側に向き合う時間を想起させます。',
-    image: 'https://images.pexels.com/photos/27041999/pexels-photo-27041999.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    imageAlt: '沖縄の崖から見下ろす透明な海と青空の景色',
-    credit: 'Photo: William Chen / Pexels',
+    image:
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Kudakajimacoast-dec2012.jpg?width=960',
+    imageAlt: '沖縄県久高島の海岸線の風景',
+    credit: 'Kudakajimacoast-dec2012 / Nesnad / CC BY-SA 3.0',
+    creditUrl: 'https://commons.wikimedia.org/wiki/File:Kudakajimacoast-dec2012.jpg',
   },
 ];
 
@@ -45,36 +53,44 @@ const worldSites: SiteData[] = [
     region: 'インド',
     description:
       'ガンジス川沿いに広がる代表的なヨガの聖地で、アシュラム文化や呼吸法・瞑想の伝統に触れやすい場所です。学びと内省を重ねたい実践者が世界中から集まります。',
-    image: 'https://images.pexels.com/photos/6157502/pexels-photo-6157502.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    image:
+      'https://images.pexels.com/photos/6157502/pexels-photo-6157502.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     imageAlt: 'リシケシのガンジス川沿いでヨガのポーズをとる人物',
     credit: 'Photo: Dvine Yoga / Pexels',
+    creditUrl: 'https://www.pexels.com/photo/6157502/',
   },
   {
     name: 'Mysore',
     region: 'インド',
     description:
       '伝統的なアシュタンガヨガの拠点として知られ、毎日の積み重ねを大切にする実践文化が息づく街です。落ち着いた生活の中で深い練習に向き合えます。',
-    image: 'https://images.pexels.com/photos/34962788/pexels-photo-34962788.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    image:
+      'https://images.pexels.com/photos/34962788/pexels-photo-34962788.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     imageAlt: 'マイソール宮殿の精巧な建築と緑豊かな庭園',
     credit: 'Photo: Sachin Shettigar / Pexels',
+    creditUrl: 'https://www.pexels.com/photo/34962788/',
   },
   {
     name: 'Bali',
     region: 'インドネシア',
     description:
       '自然、癒やし、国際交流が重なる人気のリトリートエリアです。初心者から指導者層まで幅広く受け入れる空気があり、滞在型でヨガ文化に親しめます。',
-    image: 'https://images.pexels.com/photos/35428411/pexels-photo-35428411.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    image:
+      'https://images.pexels.com/photos/35428411/pexels-photo-35428411.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     imageAlt: 'バリの熱帯林に囲まれた緑豊かな棚田の空撮',
     credit: 'Photo: Tom Fisk / Pexels',
+    creditUrl: 'https://www.pexels.com/photo/35428411/',
   },
   {
     name: 'Sedona',
     region: 'アメリカ',
     description:
       '赤い岩山の景観と精神性の高い旅先として語られることが多く、瞑想や自己対話、心身を整える体験と相性の良い場所です。',
-    image: 'https://images.pexels.com/photos/26867471/pexels-photo-26867471.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    image:
+      'https://images.pexels.com/photos/26867471/pexels-photo-26867471.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     imageAlt: 'セドナの赤い岩山が夕日に照らされる風景',
     credit: 'Photo: Allen Boguslavsky / Pexels',
+    creditUrl: 'https://www.pexels.com/photo/26867471/',
   },
 ];
 
@@ -85,13 +101,21 @@ function SacredSiteCard({
   image,
   imageAlt,
   credit,
+  creditUrl,
   featured = false,
 }: SiteData & { featured?: boolean }) {
   return (
     <article className={featured ? 'sacred-site-card featured-japan-site' : 'sacred-site-card'}>
       <div className="sacred-site-image">
         <img src={image} alt={imageAlt} loading="lazy" />
-        <span className="sacred-site-credit">{credit}</span>
+        <a
+          className="sacred-site-credit"
+          href={creditUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {credit}
+        </a>
       </div>
       <div className="sacred-site-copy">
         {featured && <span className="sacred-site-badge">注目の日本の聖地</span>}
@@ -146,7 +170,7 @@ export function SacredSitesPage({ onBackHome }: { onBackHome: () => void }) {
         <div className="section-inline-header tight sacred-section-header">
           <div>
             <span className="result-step-badge">SECTION 2</span>
-            <h3>世界のヨガ聖地</h3>
+            <h3>世界のヨガの聖地</h3>
             <p className="result-section-copy">世界で広く知られるヨガ・瞑想・ウェルネス文化の拠点を、やわらかく比較しながら見られる一覧です。</p>
           </div>
         </div>
