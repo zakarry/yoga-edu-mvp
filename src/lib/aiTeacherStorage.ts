@@ -48,7 +48,7 @@ export function clearPersona(): void {
 
 export interface ProgramItem {
   name: string;
-  type: 'asana' | 'pranayama' | 'dhyana' | 'sequence';
+  type: 'asana' | 'pranayama' | 'dhyana' | 'sequence' | 'program';
   durationMin: number;
   practiceId?: string;
   sequenceId?: string;
@@ -138,7 +138,7 @@ export function saveGrowth(growth: AITeacherGrowth): void {
 
 export interface LocalPracticeLog {
   id: string;
-  practice_type: 'asana' | 'pranayama' | 'dhyana' | 'sequence';
+  practice_type: 'asana' | 'pranayama' | 'dhyana' | 'sequence' | 'program';
   practice_name: string;
   duration_min: number | null;
   mood_before: string | null;

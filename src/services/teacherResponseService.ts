@@ -1795,4 +1795,4 @@ export function generateNextSuggestion(
   };
 }
 
-type PracticeTypeLike = 'asana' | 'pranayama' | 'dhyana' | 'sequence';
+type PracticeTypeLike = 'asana' | 'pranayama' | 'dhyana' | 'sequence' | 'program';

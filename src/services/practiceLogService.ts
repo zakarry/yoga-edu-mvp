@@ -5,7 +5,7 @@ import type { SafetyState, SafetyUrgency, SafetyCategory } from './diagnosisServ
 export interface PracticeLog {
   id: string;
   user_id: string;
-  practice_type: 'asana' | 'pranayama' | 'dhyana' | 'sequence';
+  practice_type: 'asana' | 'pranayama' | 'dhyana' | 'sequence' | 'program';
   practice_name: string;
   duration_min: number | null;
   mood_before: string | null;
@@ -21,7 +21,7 @@ export interface PracticeLog {
 }
 
 export interface SavePracticeLogParams {
-  practice_type: 'asana' | 'pranayama' | 'dhyana' | 'sequence';
+  practice_type: 'asana' | 'pranayama' | 'dhyana' | 'sequence' | 'program';
   practice_name: string;
   duration_min?: number | null;
   mood_before?: string | null;

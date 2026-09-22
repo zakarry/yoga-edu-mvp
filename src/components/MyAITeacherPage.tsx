@@ -403,7 +403,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [cameraOn, setCameraOn] = useState(false);
   const [cameraFacingMode, setCameraFacingMode] = useState<'user' | 'environment'>('user');
   const [practiceActive, setPracticeActive] = useState(false);
-  const [practiceType, setPracticeType] = useState<'asana' | 'pranayama' | 'dhyana' | 'sequence' | null>(null);
+  const [practiceType, setPracticeType] = useState<'asana' | 'pranayama' | 'dhyana' | 'sequence' | 'program' | null>(null);
   const [activePracticeName, setActivePracticeName] = useState<string | null>(null);
   const [selectedSequenceId, setSelectedSequenceId] = useState<string | null>(null);
   const [selectedMeditationId, setSelectedMeditationId] = useState<string | null>(null);
@@ -417,8 +417,14 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [practiceDuration, setPracticeDuration] = useState<number>(10);
   const [localLogs, setLocalLogs] = useState<LocalPracticeLog[]>(loadLocalPracticeLogs());
   const [saveStatus, setSaveStatus] = useState<string>('');
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'cloud_saved' | 'local_pending' | 'error'>('idle');
 
   const practiceCount = auth.user ? cloudLogs.length : localLogs.length;
+  const mergedLogs = useMemo(() => {
+    const cloudSessionIds = new Set(cloudLogs.map((l) => l.practice_session_id).filter((id): id is string => !!id));
+    const pendingLocal = localLogs.filter((l) => l.practice_session_id && !cloudSessionIds.has(l.practice_session_id));
+    return [...cloudLogs, ...pendingLocal] as (PracticeLog | LocalPracticeLog)[];
+  }, [cloudLogs, localLogs]);
   const [conversationContext, setConversationContext] = useState<ConversationContext>({});
 
   useEffect(() => {
@@ -1025,6 +1031,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setDirectPractice(null);
     setSelectedGuide(null);
     setSaveStatus('');
+    setSaveState('idle');
     setCurrentPoseIdx(idx);
     const pose = concretePoses[idx];
     if (pose) {
@@ -1221,6 +1228,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const handleCompletePractice = useCallback(async () => {
     if (!practiceType || practicePhase !== 'done' || practiceAborted || isSavingPractice) return;
     setIsSavingPractice(true);
+    setSaveState('saving');
     const isProgram = practiceMode === 'program' && concretePoses.length > 1;
     const practiceName = isProgram ? '今日のプログラム' : (activePracticeName ?? selectedGuide?.name ?? program?.items.find((i) => i.type === practiceType)?.name ?? '実践');
     const startedAt = simpleTimerStartRef.current || sessionStartedAt;
@@ -1228,7 +1236,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     const autoDuration = Math.max(1, Math.round(totalElapsedSec / 60));
     const sessionId = practiceSessionId ?? crypto.randomUUID();
     const logParams = {
-      practice_type: practiceType,
+      practice_type: isProgram ? ('program' as const) : practiceType!,
       practice_name: practiceName,
       duration_min: autoDuration,
       mood_before: moodBefore || null,
@@ -1241,13 +1249,17 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     if (auth.user) {
       const { error } = await savePracticeLog(auth.user.id, auth.privacy, logParams);
       if (error) {
+        setSaveState('local_pending');
         setSaveStatus('クラウドに保存できなかったため、この端末に一時保存しました。');
         saveLocalPracticeLog(logParams);
       } else {
-        setSaveStatus('実践記録を保存しました。');
+        setSaveState('cloud_saved');
+        setSaveStatus('実践記録をクラウドに保存しました。');
+        removeLocalPracticeLogBySessionId(sessionId);
       }
     } else {
       saveLocalPracticeLog(logParams);
+      setSaveState('local_pending');
       setSaveStatus('ローカルに保存しました（ログインするとクラウド保存できます）');
     }
 
@@ -2563,7 +2575,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                       setPracticeActive(true);
                       setSessionStartedAt(Date.now());
                       setPracticeAborted(false);
-                      setPracticeSessionId(crypto.randomUUID());
+                      setPracticeSessionId(prev => prev ?? crypto.randomUUID());
                       setPracticePaused(false);
                       setPracticeFinishing(false);
                       if (pose.type === 'dhyana') {
@@ -2875,22 +2887,18 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         <section className="panel ai-teacher-step-panel">
           <h3>STEP 7 — 今日の記録</h3>
           {saveStatus && <p className="ai-teacher-save-status">{saveStatus}</p>}
-          {auth.user ? (
-            practiceCount > 0 ? (
-              <p className="ai-teacher-record-source">実践記録はクラウドに保存されています。</p>
-            ) : (
-              <p className="ai-teacher-record-source">実践記録はクラウドに保存されます。</p>
-            )
-          ) : (
-            <p className="ai-teacher-record-source">実践記録はこの端末のローカルに保存されています。ログインするとクラウド保存が可能です。</p>
-          )}
+          {saveState === 'cloud_saved' && <p className="ai-teacher-record-source">実践記録をクラウドに保存しました。</p>}
+          {saveState === 'local_pending' && <p className="ai-teacher-record-source">クラウドに保存できなかったため、この端末に一時保存しました。</p>}
+          {saveState === 'error' && <p className="ai-teacher-record-source">実践記録を保存できませんでした。</p>}
+          {saveState === 'idle' && auth.user && <p className="ai-teacher-record-source">実践記録はクラウドに保存されます。</p>}
+          {saveState === 'idle' && !auth.user && <p className="ai-teacher-record-source">実践記録はこの端末のローカルに保存されています。ログインするとクラウド保存が可能です。</p>}
 
-          {practiceCount > 0 ? (
+          {mergedLogs.length > 0 ? (
             <div className="ai-teacher-record-list">
               <h4>最近の実践記録</h4>
-              {(auth.user ? cloudLogs : localLogs).slice(0, 10).map((log) => {
+              {mergedLogs.slice(0, 10).map((log) => {
                 const type = log.practice_type;
-                const typeLabel = type === 'asana' ? 'アーサナ' : type === 'pranayama' ? '呼吸法' : '瞑想';
+                const typeLabel = type === 'asana' ? 'アーサナ' : type === 'pranayama' ? '呼吸法' : type === 'program' ? 'プログラム' : '瞑想';
                 const date = new Date(log.created_at).toLocaleDateString('ja-JP');
                 return (
                   <div key={log.id} className="ai-teacher-record-card">
@@ -3103,11 +3111,11 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           {/* 最近の実践履歴 */}
           <div className="ai-teacher-history-section">
             <h4>最近の実践履歴</h4>
-            {practiceCount > 0 ? (
+            {mergedLogs.length > 0 ? (
               <div className="ai-teacher-history-list">
-                {(auth.user ? cloudLogs : localLogs).slice(0, 20).map((log) => {
+                {mergedLogs.slice(0, 20).map((log) => {
                   const type = log.practice_type;
-                  const typeLabel = type === 'asana' ? 'アーサナ' : type === 'pranayama' ? '呼吸法' : '瞑想';
+                  const typeLabel = type === 'asana' ? 'アーサナ' : type === 'pranayama' ? '呼吸法' : type === 'program' ? 'プログラム' : '瞑想';
                   const date = new Date(log.created_at).toLocaleDateString('ja-JP');
                   return (
                     <div key={log.id} className="ai-teacher-history-row">
@@ -3115,6 +3123,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                       <strong>{log.practice_name}</strong>
                       <span className="ai-teacher-history-duration">{log.duration_min ?? '-'}分</span>
                       {log.mood_after && <span className="ai-teacher-history-mood">後: {log.mood_after}</span>}
+                      {'sync_status' in log && (log as LocalPracticeLog).sync_status === 'pending' && <span className="ai-teacher-badge ai-teacher-badge-pending">未同期</span>}
                       <small>{date}</small>
                     </div>
                   );
