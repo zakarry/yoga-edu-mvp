@@ -1437,16 +1437,18 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
   return (
     <div className="page-shell ai-teacher-shell">
-      {isEventDemo && (
+      {isEventDemo && step === 'home' && (
         <section className="panel event-demo-hero">
           <span className="eyebrow">Yoga AI / イベント体験</span>
           <h2>AI先生を体験してみよう</h2>
-          <p>山のポーズ・呼吸・瞑想をAI先生と一緒に数分で体験できます。</p>
+          <p className="event-demo-hero-sub">AI先生が、今日のあなたに合わせてヨガをガイドします。</p>
           <button className="primary-button event-demo-start-btn" onClick={handleEventDemoStart} disabled={safetyBlocked || practiceEntryBlocked}>
-            {safetyBlocked ? '安全のため現在制限されています' : 'AI先生デモを始める'}
+            {safetyBlocked ? '安全のため現在制限されています' : '実践スタート'}
           </button>
+          <p className="event-demo-hero-hint">ログイン不要・数分で体験できます</p>
         </section>
       )}
+      {(!isEventDemo || step !== 'home') && (
       <section className="hero-panel compact-hero ai-teacher-hero">
         <div className="ai-teacher-hero-main">
           <div className="ai-teacher-hero-top-bar">
@@ -1581,8 +1583,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           </div>
         </div>
       </section>
+      )}
 
       {/* Step navigation */}
+      {!isEventDemo && (
       <nav className="ai-teacher-step-nav">
         <button className={step === 'home' ? 'active' : ''} onClick={() => setStep('home')}>Home</button>
         {steps.map((s) => (
@@ -1591,9 +1595,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           </button>
         ))}
       </nav>
+      )}
 
       {/* Home / shortcut cards */}
-      {step === 'home' && (
+      {step === 'home' && !isEventDemo && (
         <section className="panel ai-teacher-pillars-panel">
           <div className="section-inline-header tight">
             <h3>今日の実践を選ぶ</h3>
@@ -2894,12 +2899,25 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     {isSavingPractice ? '保存中…' : '記録して完了する'}
                   </button>
                   <div className="pose-final-continue">
-                    <p className="pose-final-line-benefit">今日のヨガやAI先生を、イベントのあともLINEから続けられます。</p>
-                    <a className="primary-button pose-final-line-cta" href="https://line.me/R/" target="_blank" rel="noopener noreferrer">LINEでYoga AIを続ける</a>
-                    <div className="pose-final-nav">
-                      <button className="ghost-button" onClick={onOpenDiagnosis}>AI診断を受ける</button>
-                      <button className="ghost-button" onClick={onOpenMyPage}>{auth.user ? 'myYOGAカルテを見る' : 'ログインしてカルテに残す'}</button>
-                    </div>
+                    {isEventDemo ? (
+                      <>
+                        <p className="pose-final-line-benefit">イベントのあとも、LINEで今日のヨガやAI先生を続けられます。</p>
+                        <a className="primary-button pose-final-line-cta pose-final-line-cta--primary" href="https://line.me/R/" target="_blank" rel="noopener noreferrer">LINEでYoga AIを続ける</a>
+                        <div className="pose-final-nav">
+                          <button className="ghost-button" onClick={onOpenDiagnosis}>無料AI診断をする</button>
+                          <button className="ghost-button" onClick={onOpenMyPage}>{auth.user ? 'myYOGAカルテを見る' : 'ログインしてカルテに残す'}</button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <p className="pose-final-line-benefit">今日のヨガやAI先生を、イベントのあともLINEから続けられます。</p>
+                        <a className="primary-button pose-final-line-cta" href="https://line.me/R/" target="_blank" rel="noopener noreferrer">LINEでYoga AIを続ける</a>
+                        <div className="pose-final-nav">
+                          <button className="ghost-button" onClick={onOpenDiagnosis}>AI診断を受ける</button>
+                          <button className="ghost-button" onClick={onOpenMyPage}>{auth.user ? 'myYOGAカルテを見る' : 'ログインしてカルテに残す'}</button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
