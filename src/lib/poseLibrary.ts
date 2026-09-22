@@ -137,11 +137,13 @@ export function getDefaultPosesByType(type: 'asana' | 'pranayama' | 'dhyana'): C
 }
 
 const EVENT_DEMO_POSE_IDS = ['tadasana', 'catcow', 'balasana'];
+const EVENT_DEMO_DURATION_MIN = 1;
 
 export function getEventDemoPoses(): ConcretePose[] {
   return EVENT_DEMO_POSE_IDS
     .map((id) => POSE_BY_ID[id])
-    .filter(Boolean);
+    .filter(Boolean)
+    .map((pose) => ({ ...pose, defaultMinutes: EVENT_DEMO_DURATION_MIN }));
 }
 
 export interface PoseKnowledgeLink {
