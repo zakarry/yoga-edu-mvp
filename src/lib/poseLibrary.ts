@@ -136,6 +136,14 @@ export function getDefaultPosesByType(type: 'asana' | 'pranayama' | 'dhyana'): C
   return getActivePosesByType(type).map(entryToConcrete);
 }
 
+const EVENT_DEMO_POSE_IDS = ['tadasana', 'catcow', 'balasana'];
+
+export function getEventDemoPoses(): ConcretePose[] {
+  return EVENT_DEMO_POSE_IDS
+    .map((id) => POSE_BY_ID[id])
+    .filter(Boolean);
+}
+
 export interface PoseKnowledgeLink {
   available: boolean;
   knowledgeEntryId?: string;

@@ -25,7 +25,7 @@ import { attachKnowledgeToTodayPlan, fetchKnowledgeExplanation, type TodayPlanWi
 import type { KnowledgeExplanation } from '../services/teacherKnowledgeService';
 import { runLLMRequestDryRun, type DryRunResult } from '../services/llmRequestDryRun';
 import type { LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
-import { resolveConcretePoses, getDefaultPlanPoses, getDefaultPosesByType, getPoseKnowledgeLink, getPoseById, type ConcretePose, type PoseStage } from '../lib/poseLibrary';
+import { resolveConcretePoses, getDefaultPlanPoses, getDefaultPosesByType, getEventDemoPoses, getPoseKnowledgeLink, getPoseById, type ConcretePose, type PoseStage } from '../lib/poseLibrary';
 import { loadLocalMemory, summarizeMemory, getMemory } from '../services/aiTeacherMemoryService';
 import { emptyTodayContext, type TodayContext, type RequestedMode } from '../types/aiTeacherLayers';
 import { getPlanGate, gateVerdictAllowsGeneration, gateStateMessage, getPracticeEntryGate, practiceEntryAllows, computeTodayContextSignature, isPlanStale, type PlanGateVerdict, type PracticeEntryVerdict } from '../services/planGate';
@@ -1421,12 +1421,13 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const handleEventDemoStart = useCallback(() => {
     if (safetyBlocked || !practiceEntryAllows(practiceEntryVerdict)) return;
     setPracticeEntrySource('home');
-    setConcretePosesOverride(getDefaultPlanPoses());
+    setConcretePosesOverride(getEventDemoPoses());
     setPracticeType('asana');
     setSelectedGuide(null);
     setPracticePhase('guide');
     setPosePhase('guide');
     setPracticeMode('program');
+    setActivePracticeName('イベント体験ヨガ');
     setPoseElapsedTotal(0);
     setCurrentPoseIdx(0);
     setStep('step6');
@@ -1443,7 +1444,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           <h2>AI先生を体験してみよう</h2>
           <p className="event-demo-hero-sub">AI先生が、今日のあなたに合わせてヨガをガイドします。</p>
           <button className="primary-button event-demo-start-btn" onClick={handleEventDemoStart} disabled={safetyBlocked || practiceEntryBlocked}>
-            {safetyBlocked ? '安全のため現在制限されています' : '実践スタート'}
+            {safetyBlocked ? '安全のため現在制限されています' : 'AI先生を体験する'}
           </button>
           <p className="event-demo-hero-hint">ログイン不要・数分で体験できます</p>
         </section>
