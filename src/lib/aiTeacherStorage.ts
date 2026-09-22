@@ -195,6 +195,25 @@ export function getLocalPendingLogs(): LocalPracticeLog[] {
   return loadLocalPracticeLogs().filter((l) => l.sync_status === 'pending' || !l.sync_status);
 }
 
+export function ensureStableSessionIds(): LocalPracticeLog[] {
+  const logs = loadLocalPracticeLogs();
+  let changed = false;
+  for (const log of logs) {
+    if (!log.practice_session_id) {
+      log.practice_session_id = crypto.randomUUID();
+      changed = true;
+    }
+  }
+  if (changed) {
+    try {
+      localStorage.setItem(LOCAL_PRACTICE_KEY, JSON.stringify(logs.slice(0, 100)));
+    } catch {
+      // ignore
+    }
+  }
+  return logs;
+}
+
 export function getLocalPracticeSummary(): { asana: number; pranayama: number; dhyana: number; sequence: number; totalSessions: number } {
   const logs = loadLocalPracticeLogs();
   const summary = { asana: 0, pranayama: 0, dhyana: 0, sequence: 0, totalSessions: 0 };

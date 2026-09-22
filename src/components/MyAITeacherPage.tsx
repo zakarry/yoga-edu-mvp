@@ -7,6 +7,7 @@ import {
   loadGrowth, saveGrowth,
   saveLocalPracticeLog, loadLocalPracticeLogs,
   removeLocalPracticeLogBySessionId, getLocalPendingLogs,
+  ensureStableSessionIds,
   loadNextSuggestion, saveNextSuggestion, clearNextSuggestion,
   saveTodayContextSession, loadTodayContextSession, clearTodayContextSession,
   saveSessionSafety, loadSessionSafety, clearSessionSafety,
@@ -477,31 +478,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       getPracticeLogs(auth.user.id).then(({ data }) => {
         if (data) setCloudLogs(data);
       });
-      const pending = getLocalPendingLogs();
-      if (pending.length > 0) {
-        (async () => {
-          for (const log of pending) {
-            const { savedToCloud } = await syncPendingLog(auth.user!.id, auth.privacy, {
-              practice_type: log.practice_type,
-              practice_name: log.practice_name,
-              duration_min: log.duration_min,
-              mood_before: log.mood_before,
-              mood_after: log.mood_after,
-              note: log.note,
-              ai_teacher_used: log.ai_teacher_used,
-              practice_session_id: log.practice_session_id,
-            });
-            if (savedToCloud && log.practice_session_id) {
-              removeLocalPracticeLogBySessionId(log.practice_session_id);
-            }
-          }
-          const { data: refreshed } = await getPracticeLogs(auth.user!.id);
-          if (refreshed) setCloudLogs(refreshed);
-          setLocalLogs(loadLocalPracticeLogs());
-        })();
-      }
     }
-  }, [auth.user, auth.privacy]);
+  }, [auth.user]);
 
   useEffect(() => {
     let cancelled = false;
@@ -539,6 +517,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [practiceSessionId, setPracticeSessionId] = useState<string | null>(null);
   const [isSavingPractice, setIsSavingPractice] = useState(false);
   const [isRetryingSync, setIsRetryingSync] = useState(false);
+  const syncInProgressRef = useRef(false);
   const [voiceGuideOn, setVoiceGuideOn] = useState(true);
   const [practicePaused, setPracticePaused] = useState(false);
   const [practiceFinishing, setPracticeFinishing] = useState(false);
@@ -1357,12 +1336,17 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   }, [practiceType, program, practiceDuration, moodBefore, moodAfter, practiceNote, auth, growth, formSpecialty, teacherContext, conversationContext, selectedGuide, practicePhase, practiceAborted, sessionStartedAt, isSavingPractice, practiceSessionId]);
 
   const handleRetrySync = useCallback(async () => {
-    if (!auth.user) return;
+    if (!auth.user || syncInProgressRef.current) return;
     const pending = getLocalPendingLogs();
     if (pending.length === 0) return;
+    syncInProgressRef.current = true;
     setIsRetryingSync(true);
+    ensureStableSessionIds();
+    const stablePending = getLocalPendingLogs();
     let allSynced = true;
-    for (const log of pending) {
+    for (const log of stablePending) {
+      const sessionId = log.practice_session_id;
+      if (!sessionId) { allSynced = false; continue; }
       const { savedToCloud } = await syncPendingLog(auth.user.id, auth.privacy, {
         practice_type: log.practice_type,
         practice_name: log.practice_name,
@@ -1371,10 +1355,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         mood_after: log.mood_after,
         note: log.note,
         ai_teacher_used: log.ai_teacher_used,
-        practice_session_id: log.practice_session_id,
+        practice_session_id: sessionId,
       });
-      if (savedToCloud && log.practice_session_id) {
-        removeLocalPracticeLogBySessionId(log.practice_session_id);
+      if (savedToCloud) {
+        removeLocalPracticeLogBySessionId(sessionId);
       } else {
         allSynced = false;
       }
@@ -1384,6 +1368,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setLocalLogs(loadLocalPracticeLogs());
     if (allSynced) setSaveState('cloud_saved');
     setIsRetryingSync(false);
+    syncInProgressRef.current = false;
   }, [auth.user, auth.privacy]);
 
   const steps: Array<{ id: StepId; label: string; n: string }> = [
