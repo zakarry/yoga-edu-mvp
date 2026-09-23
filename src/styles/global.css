@@ -10446,3 +10446,100 @@ html, body {
   border-radius: 12px;
   }
 }
+
+/* === Mobile TOP compaction (768px and below) === */
+@media (max-width: 768px) {
+  /* 1. Compact header: logo + hamburger only, hide CTA & auth in topbar */
+  .topbar {
+    gap: 0;
+    padding: 8px 12px;
+  align-items: center;
+  }
+  .topbar-brand-row {
+    gap: 8px;
+  }
+  .topbar-actions {
+    display: none !important;
+  }
+  .nav-secondary-menu.is-open {
+    display: grid !important;
+    gap: 6px;
+    width: 100%;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    padding: 8px 12px 12px;
+    box-shadow: 0 8px 20px rgba(16,37,66,.08);
+    z-index: 100;
+  }
+  .nav-secondary-menu.is-open button {
+    padding: 10px 14px;
+    font-size: 14px;
+    border-radius: 12px;
+  }
+
+  /* 2. Hero: reduce padding and gaps */
+  .top-hero-content {
+    padding: 20px 16px;
+    gap: 12px;
+  }
+  .top-hero-actions {
+    gap: 8px;
+  }
+
+  /* 3. Hero image: more compact */
+  .top-hero-visual {
+    min-height: 140px;
+  }
+
+  /* 4. Capabilities: compact step cards */
+  .top-capabilities-panel {
+    padding: 12px 12px;
+  }
+  .top-capabilities-panel .section-inline-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+  .top-capabilities-panel .section-inline-header h3 {
+    font-size: 18px;
+  }
+  .top-capabilities-panel .top-section-sub {
+    font-size: 12px;
+  }
+  .top-capability-card {
+    padding: 10px 12px;
+    gap: 4px;
+  }
+  .top-capability-num {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+  .top-capability-card strong {
+    font-size: 14px;
+  }
+  .top-capability-desc {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .top-capability-cta {
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  /* 5. Intent grid: keep tap-friendly but tighter */
+  .top-intent-panel {
+    padding: 12px;
+  }
+  .top-intent-grid {
+    gap: 8px;
+  }
+  .top-intent-card {
+    padding: 12px;
+  }
+}
