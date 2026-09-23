@@ -57,14 +57,16 @@ export async function savePracticeLog(
 
   const allowSensitive = privacy.allow_sensitive_data_storage;
   const noteToSave = allowSensitive ? (params.note ?? null) : null;
+  const moodBeforeToSave = allowSensitive ? (params.mood_before ?? null) : null;
+  const moodAfterToSave = allowSensitive ? (params.mood_after ?? null) : null;
 
   const insertPayload: Record<string, unknown> = {
     user_id: userId,
     practice_type: params.practice_type,
     practice_name: params.practice_name,
     duration_min: params.duration_min ?? null,
-    mood_before: params.mood_before ?? null,
-    mood_after: params.mood_after ?? null,
+    mood_before: moodBeforeToSave,
+    mood_after: moodAfterToSave,
     note: noteToSave,
     ai_teacher_used: params.ai_teacher_used ?? false,
     safety_state: params.safety_state ?? 'normal',

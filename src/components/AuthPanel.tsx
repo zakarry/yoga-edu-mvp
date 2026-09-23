@@ -5,6 +5,8 @@ import { isSupabaseConfigured } from '../lib/supabase';
 interface AuthPanelProps {
   onOpenMyPage: () => void;
   openSignal?: number;
+  onNavigateTerms?: () => void;
+  onNavigatePrivacy?: () => void;
 }
 
 type OAuthId = 'google' | 'apple' | 'line';
@@ -33,7 +35,7 @@ const OAUTH_SVGS: Record<OAuthId, React.ReactElement> = {
   ),
 };
 
-export function AuthPanel({ onOpenMyPage, openSignal = 0 }: AuthPanelProps) {
+export function AuthPanel({ onOpenMyPage, openSignal = 0, onNavigateTerms, onNavigatePrivacy }: AuthPanelProps) {
   const auth = useAuth();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -42,6 +44,7 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0 }: AuthPanelProps) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const [agreed, setAgreed] = useState(false);
 
   useEffect(() => {
     if (openSignal > 0) {
@@ -82,6 +85,10 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0 }: AuthPanelProps) {
   }
 
   const handleOAuth = async (provider: 'google' | 'apple' | 'line') => {
+    if (!agreed) {
+      setError('利用規約およびプライバシーポリシーへの同意が必要です。');
+      return;
+    }
     setBusy(true);
     setError(null);
     const { error: err } = await auth.signInWithOAuth(provider);
@@ -93,6 +100,10 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0 }: AuthPanelProps) {
     e.preventDefault();
     if (mode === 'signup' && password.length < 8) {
       setError('パスワードは8文字以上でご入力ください。');
+      return;
+    }
+    if (mode === 'signup' && !agreed) {
+      setError('利用規約およびプライバシーポリシーへの同意が必要です。');
       return;
     }
     setBusy(true);
@@ -134,6 +145,20 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0 }: AuthPanelProps) {
             <h3>Yoga AIをはじめる</h3>
             <p>登録もログインも同じ入口です</p>
           </div>
+          <label className="auth-consent-row">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              className="auth-consent-checkbox"
+            />
+            <span className="auth-consent-text">
+              <button type="button" className="auth-consent-link" onClick={(e) => { e.preventDefault(); onNavigateTerms?.(); }}>利用規約</button>
+              および
+              <button type="button" className="auth-consent-link" onClick={(e) => { e.preventDefault(); onNavigatePrivacy?.(); }}>プライバシーポリシー</button>
+              を確認し、同意します
+            </span>
+          </label>
           {enabledProviders.length > 0 && (
             <div className="oauth-buttons">
               {enabledProviders.map((id) => (

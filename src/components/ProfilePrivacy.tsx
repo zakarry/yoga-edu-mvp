@@ -11,7 +11,7 @@ const privacyItems: Array<{
   { key: 'save_practice_history', label: '実践履歴を保存する', description: 'アーサナ・呼吸法・瞑想の実践記録をクラウドに保存します。' },
   { key: 'allow_ai_memory', label: 'AI先生に好みを記憶させる', description: 'AI先生があなたの好みや傾向を記憶し、より合った提案ができるようにします。' },
   { key: 'allow_teacher_sharing', label: 'リアル先生との共有を許可する', description: 'ONにしても現段階で自動共有は行いません。将来、あなたが確認したタイミングでのみ共有します。' },
-  { key: 'allow_sensitive_data_storage', label: '身体状態などセンシティブ情報の保存を許可する', description: '痛み・けが・妊娠・既往症などの情報をクラウドに保存することを許可します。' },
+  { key: 'allow_sensitive_data_storage', label: '身体状態などセンシティブ情報の保存を許可する', description: 'ONにすると、痛み・けが・妊娠・既往症等、入力した身体状態に関する情報をクラウドへ保存することを許可します。気分（実践前後のムード）もこの設定に準じます。OFFの場合、これらの情報はクラウドに保存されません。' },
 ];
 
 export function ProfileSection() {

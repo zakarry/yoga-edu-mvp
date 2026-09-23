@@ -1,0 +1,21 @@
+-- Draft migration: user_consents table for terms/privacy agreement logging
+-- NOT YET EXECUTED — for review only
+-- This migration creates a new table to record when users agree to terms and privacy policy versions.
+--
+-- Proposed table: public.user_consents
+--
+-- Columns:
+--   id                uuid PK DEFAULT gen_random_uuid()
+--   user_id           uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE
+--   terms_version     text NOT NULL DEFAULT '1.0'
+--   privacy_version   text NOT NULL DEFAULT '1.0'
+--   terms_accepted_at timestamptz NOT NULL DEFAULT now()
+--   privacy_accepted_at timestamptz NOT NULL DEFAULT now()
+--   created_at        timestamptz NOT NULL DEFAULT now()
+--   updated_at        timestamptz NOT NULL DEFAULT now()
+--
+-- Unique constraint: one consent record per user (user_id UNIQUE)
+-- RLS: enabled, policies for SELECT/INSERT/UPDATE scoped to auth.uid() = user_id
+-- Trigger: updated_at auto-update on UPDATE
+--
+-- This file is a draft. Do NOT execute without explicit approval.

@@ -1600,6 +1600,11 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
       {/* Home / shortcut cards */}
       {step === 'home' && !isEventDemo && (
+        <div className="ai-teacher-intro-notice">
+          <p>AI先生はAIを利用して回答・提案を生成します。回答には誤りが含まれる可能性があります。AI先生は人間のヨガ指導者や医師の代替ではありません。入力内容は回答生成のために処理されます。</p>
+        </div>
+      )}
+      {step === 'home' && !isEventDemo && (
         <section className="panel ai-teacher-pillars-panel">
           <div className="section-inline-header tight">
             <h3>今日の実践を選ぶ</h3>

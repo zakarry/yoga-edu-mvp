@@ -35,6 +35,11 @@ export function DiagnosisForm({ initialValue, onSubmit, onBackHome }: DiagnosisF
     <form className="page-shell" onSubmit={handleSubmit}>
       <PageHeader eyebrow="AI診断" title="無料診断を始める" subtitle={`条件・目的・身体状態・国際対応ニーズをまとめて診断し、スクールを最優先におすすめを返します。現在の選択数は ${selectedCount} 項目です。`} onBackHome={onBackHome} />
 
+      <div className="status-card soft-amber diagnosis-safety-notice">
+        <strong>健康・安全に関するご案内</strong>
+        <p>Yoga AIは医療診断を行うサービスではありません。痛みや体調に不安がある場合、医師から運動制限を受けている場合、妊娠中・産後など特別な配慮が必要な場合は、無理をせず必要に応じて医師等の専門家へご相談ください。</p>
+      </div>
+
       <div className="form-grid two-column">
         <section className="panel form-panel">
           <h3>基本情報</h3>
