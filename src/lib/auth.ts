@@ -45,6 +45,7 @@ interface AuthState {
   signInWithOAuth: (provider: OAuthProvider) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  refreshConsent: () => Promise<void>;
   updateProfile: (patch: Partial<Profile>) => Promise<{ error: string | null }>;
   updatePrivacy: (patch: Partial<PrivacySettings>) => Promise<{ error: string | null }>;
 }
@@ -66,6 +67,7 @@ const initialAuthState: AuthState = {
   signInWithOAuth: noop,
   signOut: noop,
   refreshProfile: noop,
+  refreshConsent: noop,
   updateProfile: noop,
   updatePrivacy: noop,
 };
@@ -202,6 +204,12 @@ const refreshProfile = async () => {
   setAuthState({ profile, privacy });
 };
 
+const refreshConsent = async () => {
+  if (!supabase || !authState.user) return;
+  const verified = await hasCurrentConsent(authState.user.id);
+  setAuthState({ consentVerified: verified });
+};
+
 // Columns a user is allowed to change on their own profile. Privileged columns
 // such as membership_tier are never writable from the client; the database also
 // enforces this with column-level privileges.
@@ -231,7 +239,7 @@ const updatePrivacy = async (patch: Partial<PrivacySettings>) => {
   return { error: error ? '設定を保存できませんでした。' : null };
 };
 
-setAuthState({ signIn, signUp, signInWithOAuth, signOut, refreshProfile, updateProfile, updatePrivacy });
+setAuthState({ signIn, signUp, signInWithOAuth, signOut, refreshProfile, refreshConsent, updateProfile, updatePrivacy });
 
 export function useAuth(): AuthState {
   const [, forceUpdate] = useState(0);

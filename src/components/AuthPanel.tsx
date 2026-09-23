@@ -117,6 +117,7 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0, onNavigateTerms, onNav
       // If this fails, the ConsentGate will appear on next login (safe-side).
       if (auth.user) {
         await recordConsent(auth.user.id);
+        await auth.refreshConsent();
       }
       return;
     }

@@ -24,6 +24,7 @@ export function ConsentGate({ onAgree, onNavigateTerms, onNavigatePrivacy, onLog
     const ok = await recordConsent(auth.user.id);
     setBusy(false);
     if (ok) {
+      await auth.refreshConsent();
       onAgree();
     } else {
       setError('同意の保存に失敗しました。もう一度お試しください。');

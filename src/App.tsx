@@ -1128,7 +1128,7 @@ export default function App() {
 
   const auth = useAuth();
   const liffState = useLiff();
-  const [consentJustAgreed, setConsentJustAgreed] = useState(false);
+
 
   useEffect(() => {
     void initLiffOnce();
@@ -2544,7 +2544,7 @@ export default function App() {
 
       {auth.user && !auth.consentVerified && (
         <ConsentGate
-          onAgree={() => { setConsentJustAgreed(true); moveTo('home'); }}
+          onAgree={() => { moveTo('home'); }}
           onNavigateTerms={() => moveTo('terms')}
           onNavigatePrivacy={() => moveTo('privacy')}
           onLogout={() => { auth.signOut(); moveTo('home'); }}
