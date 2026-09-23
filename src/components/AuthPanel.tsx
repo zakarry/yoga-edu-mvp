@@ -153,9 +153,9 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0, onNavigateTerms, onNav
               className="auth-consent-checkbox"
             />
             <span className="auth-consent-text">
-              <button type="button" className="auth-consent-link" onClick={(e) => { e.preventDefault(); onNavigateTerms?.(); }}>利用規約</button>
+              <button type="button" className="auth-consent-link" onClick={(e) => { e.preventDefault(); setOpen(false); onNavigateTerms?.(); }}>利用規約</button>
               および
-              <button type="button" className="auth-consent-link" onClick={(e) => { e.preventDefault(); onNavigatePrivacy?.(); }}>プライバシーポリシー</button>
+              <button type="button" className="auth-consent-link" onClick={(e) => { e.preventDefault(); setOpen(false); onNavigatePrivacy?.(); }}>プライバシーポリシー</button>
               を確認し、同意します
             </span>
           </label>
