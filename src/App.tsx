@@ -24,6 +24,7 @@ import DiagnosisV2Page from './DiagnosisV2Page';
 import { SacredSitesPage } from './components/SacredSitesPage';
 import { LearnHubPage } from './components/LearnHubPage';
 import { BreathworkDictionaryPage } from './components/BreathworkDictionaryPage';
+import { DictionaryGate } from './components/DictionaryGate';
 import { StaticInfoPage } from './components/StaticInfoPage';
 import { TeacherDiagnosisPage } from './components/TeacherDiagnosisPage';
 import { TopBackLink } from './components/TopBackLink';
@@ -1117,6 +1118,7 @@ export default function App() {
   const [teacherRelationshipRefresh, setTeacherRelationshipRefresh] = useState(0);
   const [authOpenSignal, setAuthOpenSignal] = useState(0);
   const [dictGateMsg, setDictGateMsg] = useState<string | null>(null);
+  const [dictReturnTarget, setDictReturnTarget] = useState<PageKey | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [mapFilterType, setMapFilterType] = useState<FilterType>('all');
@@ -1236,9 +1238,19 @@ export default function App() {
 
   const dictAccess = getDictionaryAccess(auth.user, auth.profile, auth.consentVerified);
 
+  useEffect(() => {
+    if (dictReturnTarget && auth.user && auth.consentVerified) {
+      const target = dictReturnTarget;
+      setDictReturnTarget(null);
+      setDictGateMsg(null);
+      moveTo(target);
+    }
+  }, [dictReturnTarget, auth.user, auth.consentVerified]);
+
   const guardDictionary = (url: string, label: string) => {
     if (dictAccess.requiresLogin) {
       setDictGateMsg(`${label}は無料会員登録後にご覧いただけます。`);
+      setDictReturnTarget('learn');
       setAuthOpenSignal((v) => v + 1);
       return;
     }
@@ -2121,25 +2133,22 @@ export default function App() {
           />
         )}
         {page === 'breathwork-dictionary' && (
-          (dictAccess.requiresLogin ? (
-            <div className="page-shell dict-login-gate">
-              <PageHeader eyebrow="呼吸図鑑" title="呼吸図鑑" subtitle="呼吸マネージャー検定 第5版をベースにした呼吸の知識ライブラリ。" onBackHome={() => moveTo('home')} />
-              <section className="panel dict-login-gate-panel">
-                <p className="dict-login-gate-msg">呼吸図鑑は無料会員登録後にご覧いただけます。</p>
-                <button className="primary-button" onClick={() => { setDictGateMsg(null); setAuthOpenSignal((v) => v + 1); }}>ログイン / 無料会員登録</button>
-                <button className="ghost-button" onClick={() => moveTo('home')}>TOPへ戻る</button>
-              </section>
-            </div>
+          dictAccess.requiresLogin ? (
+            <DictionaryGate
+              title="呼吸図鑑"
+              onSignUp={() => { setDictReturnTarget('breathwork-dictionary'); setAuthOpenSignal((v) => v + 1); }}
+              onBack={() => moveTo('home')}
+            />
           ) : (
             <BreathworkDictionaryPage
-            onBackHome={() => moveTo('home')}
-            onAskAITeacher={(knowledgeTitle, knowledgeId) => {
-              setAiTeacherKnowledgeContext({ title: knowledgeTitle, knowledgeId });
-              setAiTeacherInitialPoseId(null);
-              moveTo('ai-teacher');
-            }}
-          />
-          ))
+              onBackHome={() => moveTo('home')}
+              onAskAITeacher={(knowledgeTitle, knowledgeId) => {
+                setAiTeacherKnowledgeContext({ title: knowledgeTitle, knowledgeId });
+                setAiTeacherInitialPoseId(null);
+                moveTo('ai-teacher');
+              }}
+            />
+          )
         )}
         {page === 'sacred-sites' && <SacredSitesPage onBackHome={() => moveTo('home')} />}
         {page === 'ai-teacher' && (

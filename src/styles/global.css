@@ -4815,6 +4815,12 @@ h1 {
   margin-right: 8px;
   white-space: nowrap;
 }
+.dict-login-gate-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
 
 /* Diagnosis safety notice */
 .diagnosis-safety-notice {
