@@ -50,7 +50,7 @@ import { MeditationExperience } from './components/MeditationExperience';
 import { SuryaNamaskarExperience } from './components/SuryaNamaskarExperience';
 import { getActiveSequences } from './lib/sequenceCatalog';
 
-type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map' | 'box-breathing' | 'breathing-meditation' | 'breathwork-practice' | 'meditation' | 'learn' | 'surya-namaskar' | 'bm5-admin' | 'breathwork-dictionary';
+type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map' | 'box-breathing' | 'breathing-meditation' | 'breathwork-practice' | 'meditation' | 'learn' | 'surya-namaskar' | 'bm5-admin' | 'breathwork-dictionary' | 'dict-gate';
 
 type FilterType = SearchItem['type'] | 'all';
 
@@ -1119,7 +1119,7 @@ export default function App() {
   const [authOpenSignal, setAuthOpenSignal] = useState(0);
   const [dictGateMsg, setDictGateMsg] = useState<string | null>(null);
   const [dictReturnTarget, setDictReturnTarget] = useState<PageKey | null>(null);
-  const [dictGateView, setDictGateView] = useState<{ title: string; target: PageKey } | null>(null);
+  const [dictGateTitle, setDictGateTitle] = useState<string>('ヨガ図鑑');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [mapFilterType, setMapFilterType] = useState<FilterType>('all');
@@ -1250,7 +1250,8 @@ export default function App() {
 
   const guardDictionary = (url: string, label: string) => {
     if (dictAccess.requiresLogin) {
-      setDictGateView({ title: label, target: 'learn' });
+      setDictGateTitle(label);
+      moveTo('dict-gate');
       return;
     }
     window.open(url, '_blank', 'noopener noreferrer');
@@ -2149,6 +2150,13 @@ export default function App() {
             />
           )
         )}
+        {page === 'dict-gate' && (
+          <DictionaryGate
+            title={dictGateTitle}
+            onSignUp={() => { setDictReturnTarget('learn'); setAuthOpenSignal((v) => v + 1); }}
+            onBack={() => moveTo('learn')}
+          />
+        )}
         {page === 'sacred-sites' && <SacredSitesPage onBackHome={() => moveTo('home')} />}
         {page === 'ai-teacher' && (
           <MyAITeacherPage
@@ -2579,23 +2587,6 @@ export default function App() {
             <button className="secondary-button" onClick={() => setDetailItem(null)}>地図へ戻る</button>
           </div>
         </aside>
-      )}
-
-      {dictGateView && (
-        <div className="dict-gate-overlay" onClick={() => setDictGateView(null)}>
-          <div className="dict-gate-overlay-inner" onClick={(e) => e.stopPropagation()}>
-            <DictionaryGate
-              title={dictGateView.title}
-              onSignUp={() => {
-                const target = dictGateView.target;
-                setDictReturnTarget(target);
-                setDictGateView(null);
-                setTimeout(() => setAuthOpenSignal((v) => v + 1), 50);
-              }}
-              onBack={() => setDictGateView(null)}
-            />
-          </div>
-        </div>
       )}
 
       {auth.user && !auth.consentVerified && (
