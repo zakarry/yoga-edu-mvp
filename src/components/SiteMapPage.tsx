@@ -56,9 +56,10 @@ export function SiteMapPage({ onNavigate, onOpenSearchWithType }: SiteMapPagePro
     {
       title: '学ぶ',
       items: [
-        { label: 'ヨガ検定3級', page: 'pro-yoga' },
-        { label: 'ヨガ検定2級', page: 'pro-yoga' },
+        { label: 'ヨガ検定3級', href: 'https://yogaorg.jp/exam/index.html' },
+        { label: 'ヨガ検定2級', comingLater: true },
         { label: '呼吸マネージャー検定', href: 'https://breathing-manager-ce-rktk.bolt.host' },
+        { label: 'ヨガマネージャー認定講座', href: 'https://yogaorg.jp/yoga_manager.html' },
         { label: 'Pro Yoga', page: 'pro-yoga' },
       ],
     },

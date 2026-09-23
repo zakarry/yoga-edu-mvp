@@ -92,6 +92,7 @@ export function LearnHubPage({
           </div>
           <div className="top-learning-group">
             <h4>指導者向け</h4>
+            <a className="top-learning-item" href="https://yogaorg.jp/yoga_manager.html" target="_blank" rel="noopener noreferrer">ヨガマネージャー認定講座</a>
             <a className="top-learning-item" href="https://proyogakentei.com/" target="_blank" rel="noopener noreferrer">プロフェッショナルYoga検定</a>
             <a className="top-learning-item" href="https://proyogakentei.com/what/" target="_blank" rel="noopener noreferrer">プロフェッショナルYoga検定とは</a>
             <button className="top-learning-item" onClick={onOpenProYoga}>Pro Yoga 認定ページ</button>

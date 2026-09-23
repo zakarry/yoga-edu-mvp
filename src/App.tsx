@@ -1322,9 +1322,9 @@ export default function App() {
     {
       title: 'Others',
       links: [
-        { label: '連盟について', disabled: true },
-        { label: 'お知らせ', disabled: true },
-        { label: 'お問い合わせ', disabled: true },
+        { label: '連盟について', action: () => window.open('https://yogaorg.jp/', '_blank', 'noopener noreferrer') },
+        { label: 'お知らせ', action: () => window.open('https://yogaorg.jp/', '_blank', 'noopener noreferrer') },
+        { label: 'お問い合わせ', action: () => window.open('https://yogaorg.jp/', '_blank', 'noopener noreferrer') },
       ],
     },
   ];
@@ -1762,15 +1762,16 @@ export default function App() {
               <div className="top-learning-grid">
                 <div className="top-learning-group">
                   <h4>一般向け</h4>
-                  <button className="top-learning-item" onClick={() => moveTo('pro-yoga')}>ヨガ検定3級</button>
+                  <a className="top-learning-item" href="https://yogaorg.jp/exam/index.html" target="_blank" rel="noopener noreferrer">ヨガ検定3級</a>
                   <a className="top-learning-item" href="https://breathing-manager-ce-rktk.bolt.host" target="_blank" rel="noopener noreferrer">呼吸マネージャー検定</a>
                 </div>
                 <div className="top-learning-group">
                   <h4>深く学ぶ</h4>
-                  <button className="top-learning-item" onClick={() => moveTo('pro-yoga')}>ヨガ検定2級</button>
+                  <span className="top-learning-item top-learning-item-disabled">ヨガ検定2級（準備中）</span>
                 </div>
                 <div className="top-learning-group">
                   <h4>指導者向け</h4>
+                  <a className="top-learning-item" href="https://yogaorg.jp/yoga_manager.html" target="_blank" rel="noopener noreferrer">ヨガマネージャー認定講座</a>
                   <button className="top-learning-item" onClick={() => moveTo('pro-yoga')}>Pro Yoga</button>
                 </div>
               </div>
