@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth, OAUTH_PROVIDERS } from '../lib/auth';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { recordConsent } from '../lib/consentService';
@@ -46,6 +46,7 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0, onNavigateTerms, onNav
   const [busy, setBusy] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (openSignal > 0) {
@@ -53,6 +54,15 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0, onNavigateTerms, onNav
       setMode('signin');
     }
   }, [openSignal]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open]);
 
   // Show error if redirected back from LINE auth with an error
   useEffect(() => {
@@ -143,7 +153,12 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0, onNavigateTerms, onNav
         ログイン / myYOGAカルテを保存
       </button>
       {open && (
-        <div className="auth-dropdown" role="dialog">
+        <>
+          <div className="auth-backdrop" onClick={() => setOpen(false)} />
+          <div className="auth-dropdown" ref={dropdownRef} role="dialog">
+          <button type="button" className="auth-close-btn" aria-label="閉じる" onClick={() => setOpen(false)}>
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
           <div className="auth-welcome">
             <h3>Yoga AIをはじめる</h3>
             <p>登録もログインも同じ入口です</p>
@@ -245,6 +260,7 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0, onNavigateTerms, onNav
           )}
           {error && !showEmailForm && <p className="auth-error">{error}</p>}
         </div>
+        </>
       )}
     </>
   );
