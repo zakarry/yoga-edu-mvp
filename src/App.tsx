@@ -1357,6 +1357,18 @@ export default function App() {
             <AuthPanel onOpenMyPage={() => moveTo('my-page')} openSignal={authOpenSignal} />
           </div>
           <nav className={`nav-row nav-secondary-menu ${mobileMenuOpen ? 'is-open' : ''}`}>
+            {!auth.user && (
+              <button className="nav-mobile-auth" onClick={() => { setMobileMenuOpen(false); setAuthOpenSignal((v) => v + 1); }}>ログイン / 無料会員登録</button>
+            )}
+            {auth.user && (
+              <>
+                {(() => {
+                  const name = auth.profile?.display_name || (auth.user.email && !auth.user.email.includes('@lineauth.local') ? auth.user.email.split('@')[0] : null);
+                  return name ? <span className="nav-mobile-user-name">{name} さん</span> : null;
+                })()}
+                <button className="nav-mobile-auth" onClick={() => { setMobileMenuOpen(false); auth.signOut(); }}>ログアウト</button>
+              </>
+            )}
             <button className="nav-mobile-home" onClick={() => moveTo('home')}>TOPへ戻る</button>
             <button onClick={() => moveTo('diagnosis')}>AI診断</button>
             <button onClick={() => openSearchWithType('all', page === 'results')}>ヨガを探す</button>

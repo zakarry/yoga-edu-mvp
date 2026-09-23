@@ -10496,6 +10496,18 @@ html, body {
     width: 100%;
     text-align: left;
   }
+  .nav-mobile-auth {
+    font-weight: 700;
+    background: linear-gradient(135deg, rgba(16,37,66,.92), rgba(28,58,94,.92));
+    color: #fff;
+  }
+  .nav-mobile-user-name {
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    border-bottom: 1px solid rgba(16,37,66,.06);
+  }
 
   /* 2. Hero: reduce padding and gaps */
   .top-hero-content {
