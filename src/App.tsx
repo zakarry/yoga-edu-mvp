@@ -1540,7 +1540,8 @@ export default function App() {
                     </div>
                   </div>
                   <div className="top-hero-visual" aria-hidden="true">
-                    <div className="top-hero-visual-inner" />
+                    <img className="top-hero-visual-img" src="/Codex_画像_2026年9月23日_14_53_34.png" alt="" />
+                    <div className="top-hero-visual-overlay" />
                   </div>
                 </section>
 

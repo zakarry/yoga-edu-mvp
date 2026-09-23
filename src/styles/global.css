@@ -6971,36 +6971,30 @@ button:disabled {
 .top-hero-visual {
   position: relative;
   min-height: 420px;
-}
-.top-hero-visual-inner {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 30% 40%, rgba(255,255,255,.6), transparent 50%),
-    radial-gradient(circle at 70% 60%, rgba(145,196,159,.22), transparent 45%),
-    radial-gradient(circle at 40% 80%, rgba(168,216,232,.16), transparent 40%),
-    linear-gradient(160deg, #eaf6f0 0%, #e8f4f8 40%, #f0f7f4 100%);
+  overflow: hidden;
   border-radius: 0 23px 23px 0;
 }
-.top-hero-visual-inner::before {
-  content: '';
+.top-hero-visual-img {
   position: absolute;
-  top: 15%;
-  right: 12%;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,255,.5), transparent 70%);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 65% center;
 }
-.top-hero-visual-inner::after {
-  content: '';
+.top-hero-visual-overlay {
   position: absolute;
-  bottom: 18%;
-  left: 15%;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(168,216,232,.18), transparent 70%);
+  inset: 0;
+  background: linear-gradient(90deg,
+    rgba(255,255,255,.92) 0%,
+    rgba(255,255,255,.72) 22%,
+    rgba(255,255,255,.32) 42%,
+    rgba(255,255,255,.06) 60%,
+    transparent 75%
+  );
+}
+.top-hero-visual-inner {
+  display: none;
 }
 
 /* --- Capabilities Flow Section --- */
@@ -7080,15 +7074,23 @@ button:disabled {
     grid-template-columns: 1fr;
   }
   .top-hero-visual {
-    min-height: 180px;
+    min-height: 220px;
     order: 2;
+    border-radius: 0 0 23px 23px;
   }
   .top-hero-content {
     order: 1;
     padding: 40px 32px;
   }
-  .top-hero-visual-inner {
-    border-radius: 0 0 23px 23px;
+  .top-hero-visual-img {
+    object-position: 60% 25%;
+  }
+  .top-hero-visual-overlay {
+    background: linear-gradient(180deg,
+      rgba(255,255,255,.45) 0%,
+      rgba(255,255,255,.12) 30%,
+      transparent 60%
+    );
   }
   .top-capabilities-flow {
     flex-wrap: wrap;
@@ -7139,10 +7141,18 @@ button:disabled {
     text-align: center;
   }
   .top-hero-visual {
-    min-height: 120px;
-  }
-  .top-hero-visual-inner {
+    min-height: 180px;
     border-radius: 0 0 15px 15px;
+  }
+  .top-hero-visual-img {
+    object-position: 58% 20%;
+  }
+  .top-hero-visual-overlay {
+    background: linear-gradient(180deg,
+      rgba(255,255,255,.35) 0%,
+      rgba(255,255,255,.08) 25%,
+      transparent 55%
+    );
   }
   .top-capabilities-flow {
     flex-direction: column;
