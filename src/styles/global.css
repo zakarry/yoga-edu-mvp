@@ -164,6 +164,16 @@ p { color: var(--muted); line-height: 1.75; }
 .nav-mobile-home {
   display: none;
 }
+.nav-mobile-auth {
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(16,37,66,.92), rgba(28,58,94,.92));
+  color: #fff;
+  border-color: transparent;
+  white-space: nowrap;
+}
+.nav-mobile-auth:hover {
+  opacity: .9;
+}
 .section-heading { display: grid; gap: 12px; }
 .form-grid, .feature-showcase { display: grid; gap: 20px; }
 .two-column { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -4483,9 +4493,7 @@ h1 {
   position: relative;
 }
 .auth-trigger-button {
-  font-size: 13px;
-  padding: 10px 14px;
-  white-space: nowrap;
+  display: none;
 }
 .auth-unavailable-text {
   color: var(--muted);
