@@ -6926,6 +6926,11 @@ button:disabled {
   margin: 0;
   font-weight: 800;
 }
+@media (min-width: 769px) {
+  .top-hero-headline {
+    font-size: clamp(48px, 5vw, 52px);
+  }
+}
 .top-hero-brand {
   font-size: clamp(28px, 3vw, 38px);
   font-weight: 800;
@@ -6937,6 +6942,13 @@ button:disabled {
   margin: 4px 0 0;
   line-height: 1.35;
   padding-bottom: 4px;
+}
+@media (min-width: 769px) {
+  .top-hero-brand {
+    font-size: clamp(50px, 5.2vw, 56px);
+    line-height: 1.4;
+    padding-bottom: 6px;
+  }
 }
 .top-hero-subcopy {
   font-size: clamp(16px, 1.8vw, 20px);
