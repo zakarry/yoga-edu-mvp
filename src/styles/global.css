@@ -10471,7 +10471,21 @@ html, body {
     display: none;
   }
   .auth-area {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 0;
+    height: 0;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .auth-trigger-button,
+  .auth-logged-in {
     display: none;
+  }
+  .auth-dropdown {
+    pointer-events: auto;
+    z-index: 200;
   }
   .nav-secondary-menu {
     display: none;
