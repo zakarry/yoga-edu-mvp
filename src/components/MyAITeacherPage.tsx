@@ -2882,7 +2882,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                       </div>
                       <div className="pose-final-continue pose-final-continue--event-demo">
                         <p className="pose-final-line-benefit">イベントのあとも、LINEで今日のヨガやAI先生を続けられます。</p>
-                        <a className="primary-button pose-final-line-cta pose-final-line-cta--primary" href="https://line.me/R/" target="_blank" rel="noopener noreferrer">LINEでYoga AIを続ける</a>
+                        <a className="primary-button pose-final-line-cta pose-final-line-cta--primary" href="https://line.me/R/ti/p/%40159ppbis" target="_blank" rel="noopener noreferrer">LINEでYoga AIを続ける</a>
                         <div className="pose-final-nav">
                           <button className="ghost-button" onClick={onOpenDiagnosis}>無料AI診断をする</button>
                           <button className="ghost-button" onClick={onOpenMyPage}>{auth.user ? 'myYOGAカルテを見る' : 'ログインしてカルテに残す'}</button>
@@ -2919,7 +2919,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                       </button>
                       <div className="pose-final-continue">
                         <p className="pose-final-line-benefit">今日のヨガやAI先生を、イベントのあともLINEから続けられます。</p>
-                        <a className="primary-button pose-final-line-cta" href="https://line.me/R/" target="_blank" rel="noopener noreferrer">LINEでYoga AIを続ける</a>
+                        <a className="primary-button pose-final-line-cta" href="https://line.me/R/ti/p/%40159ppbis" target="_blank" rel="noopener noreferrer">LINEでYoga AIを続ける</a>
                         <div className="pose-final-nav">
                           <button className="ghost-button" onClick={onOpenDiagnosis}>AI診断を受ける</button>
                           <button className="ghost-button" onClick={onOpenMyPage}>{auth.user ? 'myYOGAカルテを見る' : 'ログインしてカルテに残す'}</button>
