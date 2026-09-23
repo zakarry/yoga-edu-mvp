@@ -6884,7 +6884,7 @@ button:disabled {
 /* --- Brushed Hero (logged-out) — 2-column --- */
 .top-hero-brushed.hero-panel {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-columns: 45fr 55fr;
   gap: 0;
   padding: 0;
   background:
@@ -6895,7 +6895,8 @@ button:disabled {
   border-radius: 24px;
   box-shadow: 0 24px 60px rgba(16,37,66,.06);
   overflow: hidden;
-  min-height: 420px;
+  min-height: 560px;
+  align-items: stretch;
 }
 .top-hero-content {
   display: flex;
@@ -6970,7 +6971,7 @@ button:disabled {
 /* --- Hero Visual Area --- */
 .top-hero-visual {
   position: relative;
-  min-height: 420px;
+  min-height: 560px;
   overflow: hidden;
   border-radius: 0 23px 23px 0;
 }
@@ -7449,10 +7450,12 @@ html, body {
 /* === EVENT-LIFF-1.2: LINE WebView UI final fixes === */
 
 /* --- 1. HERO: vertical stack on mobile, no side-by-side --- */
-.top-renewal .top-hero {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+@media (max-width: 768px) {
+  .top-renewal .top-hero {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
 }
 
 .top-renewal .top-hero .hero-copy-block {
@@ -7461,37 +7464,39 @@ html, body {
   min-width: 0;
 }
 
-.top-renewal .top-hero .top-hero-actions {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+@media (max-width: 768px) {
+  .top-renewal .top-hero .top-hero-actions {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
 
-.top-renewal .top-hero .top-hero-actions button,
-.top-renewal .top-hero .top-hero-actions .hero-cta-group {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-}
+  .top-renewal .top-hero .top-hero-actions button,
+  .top-renewal .top-hero .top-hero-actions .hero-cta-group {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
 
-.top-renewal .top-hero .top-hero-actions .hero-cta-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: stretch;
-}
+  .top-renewal .top-hero .top-hero-actions .hero-cta-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: stretch;
+  }
 
-.top-renewal .top-hero .top-hero-actions .hero-cta-group button {
-  width: 100%;
-}
+  .top-renewal .top-hero .top-hero-actions .hero-cta-group button {
+    width: 100%;
+  }
 
-.top-renewal .top-hero .top-hero-actions .hero-cta-sub {
-  text-align: center;
-  padding-left: 0;
+  .top-renewal .top-hero .top-hero-actions .hero-cta-sub {
+    text-align: center;
+    padding-left: 0;
+  }
 }
 
 /* --- 2. Text wrapping: keep-all, no mid-word breaks --- */
