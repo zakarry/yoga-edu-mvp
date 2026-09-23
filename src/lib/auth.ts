@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import { supabase, isSupabaseConfigured } from './supabase';
 import type { User, Provider } from '@supabase/supabase-js';
+import { hasCurrentConsent } from './consentService';
 
 export interface Profile {
   id: string;
@@ -35,6 +36,7 @@ interface AuthState {
   user: User | null;
   profile: Profile | null;
   privacy: PrivacySettings | null;
+  consentVerified: boolean;
   loading: boolean;
   authReady: boolean;
   cloudUnavailable: boolean;
@@ -55,6 +57,7 @@ const initialAuthState: AuthState = {
   user: null,
   profile: null,
   privacy: null,
+  consentVerified: false,
   loading: false,
   authReady: false,
   cloudUnavailable: !isSupabaseConfigured,
@@ -110,10 +113,12 @@ if (supabase && isSupabaseConfigured) {
       if (session?.user) {
         setAuthState({ loading: true });
         const { profile, privacy } = await fetchProfileAndPrivacy(session.user.id);
+        const verified = await hasCurrentConsent(session.user.id);
         setAuthState({
           user: session.user,
           profile,
           privacy,
+          consentVerified: verified,
           loading: false,
           authReady: true,
           cloudUnavailable: false,
@@ -123,6 +128,7 @@ if (supabase && isSupabaseConfigured) {
           user: null,
           profile: null,
           privacy: null,
+          consentVerified: false,
           authReady: true,
           loading: false,
         });
@@ -187,7 +193,7 @@ const signInWithOAuth = async (provider: OAuthProvider) => {
 const signOut = async () => {
   if (!supabase) return;
   await supabase.auth.signOut();
-  setAuthState({ user: null, profile: null, privacy: null });
+  setAuthState({ user: null, profile: null, privacy: null, consentVerified: false });
 };
 
 const refreshProfile = async () => {

@@ -38,6 +38,7 @@ import { MyAITeacherPage } from './components/MyAITeacherPage';
 import { SiteMapPage } from './components/SiteMapPage';
 import { BM5AdminPage } from './components/BM5AdminPage';
 import { useAuth, getLastAuthEvent } from './lib/auth';
+import { ConsentGate } from './components/ConsentGate';
 import { initLiffOnce, useLiff, attemptLiffAutoLogin, isAutoLoginAttempted } from './lib/liff';
 import { addTeacherRelationship } from './services/teacherRelationshipService';
 import { fetchDirectory } from './services/directoryService';
@@ -1127,6 +1128,7 @@ export default function App() {
 
   const auth = useAuth();
   const liffState = useLiff();
+  const [consentJustAgreed, setConsentJustAgreed] = useState(false);
 
   useEffect(() => {
     void initLiffOnce();
@@ -2538,6 +2540,15 @@ export default function App() {
             <button className="secondary-button" onClick={() => setDetailItem(null)}>地図へ戻る</button>
           </div>
         </aside>
+      )}
+
+      {auth.user && !auth.consentVerified && (
+        <ConsentGate
+          onAgree={() => { setConsentJustAgreed(true); moveTo('home'); }}
+          onNavigateTerms={() => moveTo('terms')}
+          onNavigatePrivacy={() => moveTo('privacy')}
+          onLogout={() => { auth.signOut(); moveTo('home'); }}
+        />
       )}
     </div>
   );

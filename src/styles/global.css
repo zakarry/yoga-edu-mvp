@@ -4694,6 +4694,78 @@ h1 {
   opacity: .7;
 }
 
+/* ConsentGate overlay */
+.consent-gate-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16,37,66,.55);
+  backdrop-filter: blur(4px);
+  padding: 20px;
+}
+.consent-gate-card {
+  max-width: 480px;
+  width: 100%;
+  background: #fff;
+  border-radius: 20px;
+  padding: 32px 28px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.2);
+  display: grid;
+  gap: 16px;
+  text-align: center;
+}
+.consent-gate-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--navy, #102542);
+  margin: 0;
+}
+.consent-gate-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted, #6b7c8e);
+  margin: 0;
+}
+.consent-gate-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+.consent-gate-link {
+  background: none;
+  border: none;
+  color: var(--navy, #102542);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background .15s ease;
+}
+.consent-gate-link:hover {
+  background: rgba(16,37,66,.06);
+}
+.consent-gate-error {
+  color: #C15B3C;
+  font-size: 13px;
+  margin: 0;
+}
+.consent-gate-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+.consent-gate-decline {
+  font-size: 13px;
+  opacity: .7;
+}
+
 /* Diagnosis safety notice */
 .diagnosis-safety-notice {
   margin-bottom: 16px;
