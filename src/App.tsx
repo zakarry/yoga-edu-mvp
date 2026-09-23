@@ -1333,7 +1333,10 @@ export default function App() {
     <div className="app-root">
       <header className="topbar">
         <div className="topbar-brand-row">
-          <button className="brandmark" onClick={() => moveTo('home')}>Yoga Organization of Japan</button>
+          <button className="brandmark" onClick={() => moveTo('home')}>
+            <span className="brandmark-main">Yoga AI</span>
+            <span className="brandmark-sub">Yoga Organization of Japan</span>
+          </button>
           <button
             type="button"
             className={`menu-toggle ${mobileMenuOpen ? 'is-open' : ''}`}
@@ -1524,14 +1527,20 @@ export default function App() {
               /* === LOGGED-OUT HERO: diagnosis as primary CTA === */
               <>
                 <section className="hero-panel top-hero top-hero-logged-out top-hero-brushed">
-                  <div className="hero-copy-block top-hero-brushed-copy">
-                    <span className="eyebrow top-hero-eyebrow">Yoga AI</span>
-                    <h1 className="top-hero-headline">自分に合うヨガは、<br className="top-hero-br" />続く！</h1>
-                    <p className="hero-subcopy top-hero-subcopy">レッスン探しから習慣化まで、AIがサポート。</p>
+                  <div className="top-hero-content">
+                    <div className="hero-copy-block top-hero-brushed-copy">
+                      <span className="top-hero-lead">今日より、ちょっといい私へ</span>
+                      <h1 className="top-hero-headline">自分に合うヨガは、<br className="top-hero-br" />続く！</h1>
+                      <div className="top-hero-brand">Yoga AI</div>
+                      <p className="hero-subcopy top-hero-subcopy">レッスン探しから習慣化まで、AIがサポート。</p>
+                    </div>
+                    <div className="hero-actions wrap top-hero-actions">
+                      <button className="primary-button hero-primary-cta top-hero-primary" onClick={() => moveTo('diagnosis')}>無料AI診断を始める</button>
+                      <button className="ghost-button hero-secondary-cta top-hero-secondary" onClick={() => moveTo('ai-teacher')}>AI先生を体験する</button>
+                    </div>
                   </div>
-                  <div className="hero-actions wrap top-hero-actions">
-                    <button className="primary-button hero-primary-cta top-hero-primary" onClick={() => moveTo('diagnosis')}>無料AI診断を始める</button>
-                    <button className="ghost-button hero-secondary-cta top-hero-secondary" onClick={() => moveTo('ai-teacher')}>AI先生を体験する</button>
+                  <div className="top-hero-visual" aria-hidden="true">
+                    <div className="top-hero-visual-inner" />
                   </div>
                 </section>
 
@@ -1541,25 +1550,28 @@ export default function App() {
                     <h3>Yoga AIでできること</h3>
                     <p className="top-section-sub">自分に合うヨガを見つけて、今日から続ける。</p>
                   </div>
-                  <div className="top-capabilities-grid">
+                  <div className="top-capabilities-flow">
                     <button className="top-capability-card" onClick={() => moveTo('diagnosis')}>
                       <span className="top-capability-num">1</span>
                       <strong>自分に合うヨガを見つける</strong>
                       <span className="top-capability-desc">AI診断で、今の自分に合うヨガを提案</span>
                       <span className="top-capability-cta">AI診断を始める →</span>
                     </button>
+                    <span className="top-capability-arrow" aria-hidden="true">→</span>
                     <button className="top-capability-card" onClick={() => moveTo('ai-teacher')}>
                       <span className="top-capability-num">2</span>
                       <strong>今日のヨガを実践する</strong>
                       <span className="top-capability-desc">AI先生と、その日の状態に合わせて実践</span>
                       <span className="top-capability-cta">AI先生を開く →</span>
                     </button>
+                    <span className="top-capability-arrow" aria-hidden="true">→</span>
                     <button className="top-capability-card" onClick={() => moveTo('my-page')}>
                       <span className="top-capability-num">3</span>
                       <strong>ヨガを続ける</strong>
                       <span className="top-capability-desc">myYOGAカルテに記録して、習慣化をサポート</span>
                       <span className="top-capability-cta">myYOGAカルテを見る →</span>
                     </button>
+                    <span className="top-capability-arrow" aria-hidden="true">→</span>
                     <button className="top-capability-card" onClick={() => moveTo('learn')}>
                       <span className="top-capability-num">4</span>
                       <strong>もっと広げる・学ぶ</strong>
