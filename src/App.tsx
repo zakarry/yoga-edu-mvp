@@ -1234,7 +1234,7 @@ export default function App() {
     moveTo('ai-teacher');
   };
 
-  const dictAccess = getDictionaryAccess(auth.user, auth.profile);
+  const dictAccess = getDictionaryAccess(auth.user, auth.profile, auth.consentVerified);
 
   const guardDictionary = (url: string, label: string) => {
     if (dictAccess.requiresLogin) {

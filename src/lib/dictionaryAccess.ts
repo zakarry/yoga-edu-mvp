@@ -1,7 +1,8 @@
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from './auth';
+import { getAccessTier, type AccessTier } from './accessTier';
 
-export type AccessTier = 'guest' | 'free' | 'paid';
+export type { AccessTier } from './accessTier';
 export type ContentLevel = 'free' | 'premium';
 
 export interface DictionaryAccess {
@@ -13,17 +14,17 @@ export interface DictionaryAccess {
 export function getDictionaryAccess(
   user: User | null,
   profile: Profile | null,
+  consentVerified = false,
 ): DictionaryAccess {
-  if (!user) {
+  const tier = getAccessTier(user, profile, consentVerified);
+
+  if (tier === 'guest') {
     return {
-      tier: 'guest',
+      tier,
       requiresLogin: true,
       canView: () => false,
     };
   }
-
-  const tier: AccessTier =
-    profile?.membership_tier === 'paid' ? 'paid' : 'free';
 
   return {
     tier,
