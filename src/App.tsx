@@ -1575,7 +1575,7 @@ export default function App() {
                     <span className="top-capability-arrow" aria-hidden="true">→</span>
                     <button className="top-capability-card" onClick={() => moveTo('learn')}>
                       <span className="top-capability-num">4</span>
-                      <strong>もっと広げる・学ぶ</strong>
+                      <strong>探せる・学べる</strong>
                       <span className="top-capability-desc">先生・スクール・イベント・資格へ</span>
                       <span className="top-capability-cta">学び・検定を見る →</span>
                     </button>

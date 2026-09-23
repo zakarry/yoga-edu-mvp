@@ -6935,7 +6935,8 @@ button:disabled {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   margin: 4px 0 0;
-  line-height: 1.2;
+  line-height: 1.35;
+  padding-bottom: 4px;
 }
 .top-hero-subcopy {
   font-size: clamp(16px, 1.8vw, 20px);
