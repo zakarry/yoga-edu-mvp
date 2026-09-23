@@ -38,6 +38,7 @@ import { MyAITeacherPage } from './components/MyAITeacherPage';
 import { SiteMapPage } from './components/SiteMapPage';
 import { BM5AdminPage } from './components/BM5AdminPage';
 import { useAuth, getLastAuthEvent } from './lib/auth';
+import { getDictionaryAccess } from './lib/dictionaryAccess';
 import { ConsentGate } from './components/ConsentGate';
 import { initLiffOnce, useLiff, attemptLiffAutoLogin, isAutoLoginAttempted } from './lib/liff';
 import { addTeacherRelationship } from './services/teacherRelationshipService';
@@ -1233,8 +1234,10 @@ export default function App() {
     moveTo('ai-teacher');
   };
 
+  const dictAccess = getDictionaryAccess(auth.user, auth.profile);
+
   const guardDictionary = (url: string, label: string) => {
-    if (!auth.user) {
+    if (dictAccess.requiresLogin) {
       setDictGateMsg(`${label}は無料会員登録後にご覧いただけます。`);
       setAuthOpenSignal((v) => v + 1);
       return;
@@ -2118,7 +2121,7 @@ export default function App() {
           />
         )}
         {page === 'breathwork-dictionary' && (
-          (!auth.user ? (
+          (dictAccess.requiresLogin ? (
             <div className="page-shell dict-login-gate">
               <PageHeader eyebrow="呼吸図鑑" title="呼吸図鑑" subtitle="呼吸マネージャー検定 第5版をベースにした呼吸の知識ライブラリ。" onBackHome={() => moveTo('home')} />
               <section className="panel dict-login-gate-panel">
