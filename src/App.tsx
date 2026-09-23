@@ -1119,6 +1119,7 @@ export default function App() {
   const [authOpenSignal, setAuthOpenSignal] = useState(0);
   const [dictGateMsg, setDictGateMsg] = useState<string | null>(null);
   const [dictReturnTarget, setDictReturnTarget] = useState<PageKey | null>(null);
+  const [dictGateView, setDictGateView] = useState<{ title: string; target: PageKey } | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [mapFilterType, setMapFilterType] = useState<FilterType>('all');
@@ -1249,9 +1250,7 @@ export default function App() {
 
   const guardDictionary = (url: string, label: string) => {
     if (dictAccess.requiresLogin) {
-      setDictGateMsg(`${label}は無料会員登録後にご覧いただけます。`);
-      setDictReturnTarget('learn');
-      setAuthOpenSignal((v) => v + 1);
+      setDictGateView({ title: label, target: 'learn' });
       return;
     }
     window.open(url, '_blank', 'noopener noreferrer');
@@ -2580,6 +2579,22 @@ export default function App() {
             <button className="secondary-button" onClick={() => setDetailItem(null)}>地図へ戻る</button>
           </div>
         </aside>
+      )}
+
+      {dictGateView && (
+        <div className="dict-gate-overlay" onClick={() => setDictGateView(null)}>
+          <div className="dict-gate-overlay-inner" onClick={(e) => e.stopPropagation()}>
+            <DictionaryGate
+              title={dictGateView.title}
+              onSignUp={() => {
+                setDictReturnTarget(dictGateView.target);
+                setDictGateView(null);
+                setAuthOpenSignal((v) => v + 1);
+              }}
+              onBack={() => setDictGateView(null)}
+            />
+          </div>
+        </div>
       )}
 
       {auth.user && !auth.consentVerified && (
