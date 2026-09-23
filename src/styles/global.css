@@ -4766,6 +4766,31 @@ h1 {
   opacity: .7;
 }
 
+/* Dictionary login gate */
+.dict-login-gate-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  padding: 40px 24px;
+}
+.dict-login-gate-msg {
+  font-size: 16px;
+  color: var(--navy, #102542);
+  font-weight: 600;
+  margin: 0;
+}
+.dict-gate-hint {
+  font-size: 12px;
+  color: var(--navy, #102542);
+  background: rgba(16,37,66,.06);
+  padding: 4px 10px;
+  border-radius: 8px;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
 /* Diagnosis safety notice */
 .diagnosis-safety-notice {
   margin-bottom: 16px;
@@ -7370,7 +7395,8 @@ button:disabled {
 }
 
 /* Fix: top-knowledge-card as anchor */
-a.top-knowledge-card {
+a.top-knowledge-card,
+button.top-knowledge-card {
   text-decoration: none;
   display: flex;
   flex-direction: column;
@@ -7381,8 +7407,13 @@ a.top-knowledge-card {
   background: var(--paper);
   cursor: pointer;
   transition: border-color .2s, box-shadow .2s, transform .15s;
+  text-align: left;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
 }
-a.top-knowledge-card:hover {
+a.top-knowledge-card:hover,
+button.top-knowledge-card:hover {
   border-color: var(--green-strong);
   box-shadow: var(--shadow);
   transform: translateY(-2px);
@@ -7492,7 +7523,8 @@ a.top-knowledge-card:hover {
   .top-intent-grid { gap: 10px; }
   .top-daily-grid { gap: 10px; }
   .top-knowledge-grid { gap: 12px; }
-  a.top-knowledge-card { padding: 16px; }
+  a.top-knowledge-card,
+  button.top-knowledge-card { padding: 16px; }
   .top-learning-grid { gap: 12px; }
   .top-myyoga-tags { gap: 6px; }
   .top-myyoga-tags span { font-size: 12px; padding: 5px 10px; }

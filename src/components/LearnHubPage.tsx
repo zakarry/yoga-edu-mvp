@@ -8,6 +8,8 @@ interface LearnHubPageProps {
   onOpenAITeacher: () => void;
   onOpenSacredSites: () => void;
   onOpenBreathworkKnowledge: (breathworkId: string) => void;
+  onOpenYogaZukan: () => void;
+  onOpenBreathingZukan: () => void;
 }
 
 const PRACTICE_KNOWLEDGE_LINKS: { id: string; label: string; knowledgeQuery: string }[] = [
@@ -27,6 +29,8 @@ export function LearnHubPage({
   onOpenAITeacher,
   onOpenSacredSites,
   onOpenBreathworkKnowledge,
+  onOpenYogaZukan,
+  onOpenBreathingZukan,
 }: LearnHubPageProps) {
   return (
     <div className="page-shell learn-hub-page">
@@ -49,18 +53,18 @@ export function LearnHubPage({
           <h3>Yoga Knowledge</h3>
         </div>
         <div className="top-knowledge-grid">
-          <a className="top-knowledge-card" href="https://yogaorg.jp/yoga_zukan/" target="_blank" rel="noopener noreferrer">
+          <button className="top-knowledge-card" onClick={onOpenYogaZukan}>
             <span className="top-knowledge-icon">📖</span>
             <strong>ヨガ図鑑</strong>
             <p>ヨガの哲学、人体、指導、アーサナ、呼吸、瞑想まで。体系的に理解するための知識ライブラリ。</p>
             <span className="top-knowledge-cta">ヨガ図鑑を見る →</span>
-          </a>
-          <a className="top-knowledge-card" href="https://yogaorg.jp/breathing/" target="_blank" rel="noopener noreferrer">
+          </button>
+          <button className="top-knowledge-card" onClick={onOpenBreathingZukan}>
             <span className="top-knowledge-icon">🫁</span>
             <strong>呼吸図鑑</strong>
             <p>呼吸マネージャー検定 第5版をベースにした呼吸の知識ライブラリ。基礎から安全まで、体系的に学べます。</p>
             <span className="top-knowledge-cta">呼吸図鑑を見る →</span>
-          </a>
+          </button>
         </div>
       </section>
 

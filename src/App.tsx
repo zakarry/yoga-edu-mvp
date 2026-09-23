@@ -1115,6 +1115,7 @@ export default function App() {
   }, [detailItem]);
   const [teacherRelationshipRefresh, setTeacherRelationshipRefresh] = useState(0);
   const [authOpenSignal, setAuthOpenSignal] = useState(0);
+  const [dictGateMsg, setDictGateMsg] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [mapFilterType, setMapFilterType] = useState<FilterType>('all');
@@ -1230,6 +1231,15 @@ export default function App() {
   const moveToAITeacher = (minutes?: number) => {
     setAiTeacherMinutes(minutes);
     moveTo('ai-teacher');
+  };
+
+  const guardDictionary = (url: string, label: string) => {
+    if (!auth.user) {
+      setDictGateMsg(`${label}は無料会員登録後にご覧いただけます。`);
+      setAuthOpenSignal((v) => v + 1);
+      return;
+    }
+    window.open(url, '_blank', 'noopener noreferrer');
   };
 
   const handleDiagnosisSubmit = (input: StudentDiagnosisInput) => {
@@ -1356,6 +1366,7 @@ export default function App() {
             <button className="primary-button header-main-button" onClick={() => moveTo('diagnosis')}>無料診断を始める</button>
           )}
           <div className="auth-area">
+            {dictGateMsg && <span className="dict-gate-hint">{dictGateMsg}</span>}
             <AuthPanel onOpenMyPage={() => moveTo('my-page')} openSignal={authOpenSignal} onNavigateTerms={() => moveTo('terms')} onNavigatePrivacy={() => moveTo('privacy')} />
           </div>
           <nav className={`nav-row nav-secondary-menu ${mobileMenuOpen ? 'is-open' : ''}`}>
@@ -1728,18 +1739,18 @@ export default function App() {
                 <h3>実践したことを、もっと知る。</h3>
               </div>
               <div className="top-knowledge-grid">
-                <a className="top-knowledge-card" href="https://yogaorg.jp/yoga_zukan/" target="_blank" rel="noopener noreferrer">
+                <button className="top-knowledge-card" onClick={() => guardDictionary('https://yogaorg.jp/yoga_zukan/', 'ヨガ図鑑')}>
                   <span className="top-knowledge-icon">📖</span>
                   <strong>ヨガ図鑑</strong>
                   <p>ヨガの哲学、人体、指導、アーサナ、呼吸、瞑想まで。体系的に理解するための知識ライブラリ。</p>
                   <span className="top-knowledge-cta">ヨガ図鑑を見る →</span>
-                </a>
-                <a className="top-knowledge-card" href="https://yogaorg.jp/breathing/" target="_blank" rel="noopener noreferrer">
+                </button>
+                <button className="top-knowledge-card" onClick={() => guardDictionary('https://yogaorg.jp/breathing/', '呼吸図鑑')}>
                   <span className="top-knowledge-icon">🌬️</span>
                   <strong>呼吸図鑑</strong>
                   <p>呼吸の方法・考え方・学びまで。毎日の呼吸実践を深める知識入口。</p>
                   <span className="top-knowledge-cta">呼吸図鑑を見る →</span>
-                </a>
+                </button>
               </div>
               <div className="top-knowledge-bridge">
                 <p>今日の実践 → 図鑑で詳しく知る</p>
@@ -2102,10 +2113,22 @@ export default function App() {
               setAiTeacherInitialPoseId(breathworkId);
               moveTo('breathwork-dictionary');
             }}
+            onOpenYogaZukan={() => guardDictionary('https://yogaorg.jp/yoga_zukan/', 'ヨガ図鑑')}
+            onOpenBreathingZukan={() => guardDictionary('https://yogaorg.jp/breathing/', '呼吸図鑑')}
           />
         )}
         {page === 'breathwork-dictionary' && (
-          <BreathworkDictionaryPage
+          (!auth.user ? (
+            <div className="page-shell dict-login-gate">
+              <PageHeader eyebrow="呼吸図鑑" title="呼吸図鑑" subtitle="呼吸マネージャー検定 第5版をベースにした呼吸の知識ライブラリ。" onBackHome={() => moveTo('home')} />
+              <section className="panel dict-login-gate-panel">
+                <p className="dict-login-gate-msg">呼吸図鑑は無料会員登録後にご覧いただけます。</p>
+                <button className="primary-button" onClick={() => { setDictGateMsg(null); setAuthOpenSignal((v) => v + 1); }}>ログイン / 無料会員登録</button>
+                <button className="ghost-button" onClick={() => moveTo('home')}>TOPへ戻る</button>
+              </section>
+            </div>
+          ) : (
+            <BreathworkDictionaryPage
             onBackHome={() => moveTo('home')}
             onAskAITeacher={(knowledgeTitle, knowledgeId) => {
               setAiTeacherKnowledgeContext({ title: knowledgeTitle, knowledgeId });
@@ -2113,6 +2136,7 @@ export default function App() {
               moveTo('ai-teacher');
             }}
           />
+          ))
         )}
         {page === 'sacred-sites' && <SacredSitesPage onBackHome={() => moveTo('home')} />}
         {page === 'ai-teacher' && (
