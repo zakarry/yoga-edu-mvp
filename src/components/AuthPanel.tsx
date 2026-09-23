@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth, OAUTH_PROVIDERS } from '../lib/auth';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { recordConsent } from '../lib/consentService';
@@ -62,6 +63,13 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0, onNavigateTerms, onNav
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
   }, [open]);
 
   // Show error if redirected back from LINE auth with an error
@@ -143,6 +151,118 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0, onNavigateTerms, onNav
   const enabledProviders = OAUTH_ORDER.filter((id) => OAUTH_PROVIDERS[id].enabled);
   const disabledProviders = OAUTH_ORDER.filter((id) => !OAUTH_PROVIDERS[id].enabled);
 
+  const portalContent = open ? createPortal(
+    <div className="auth-portal-root">
+      <div className="auth-backdrop" onClick={() => setOpen(false)} />
+      <div className="auth-dropdown" ref={dropdownRef} role="dialog">
+        <button type="button" className="auth-close-btn" aria-label="閉じる" onClick={() => setOpen(false)}>
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <div className="auth-welcome">
+          <h3>Yoga AIをはじめる</h3>
+          <p>登録もログインも同じ入口です</p>
+        </div>
+        {enabledProviders.length > 0 && (
+          <div className="oauth-buttons">
+            {enabledProviders.map((id) => (
+              <button
+                key={id}
+                type="button"
+                className={`oauth-button oauth-${id}`}
+                onClick={() => handleOAuth(id as 'google' | 'apple' | 'line')}
+                disabled={busy}
+              >
+                {OAUTH_SVGS[id]}
+                {OAUTH_PROVIDERS[id].label}
+              </button>
+            ))}
+          </div>
+        )}
+        {disabledProviders.length > 0 && (
+          <div className="oauth-buttons">
+            {disabledProviders.map((id) => (
+              <button
+                key={id}
+                type="button"
+                className={`oauth-button oauth-${id} oauth-disabled`}
+                disabled
+              >
+                {OAUTH_SVGS[id]}
+                <span>{OAUTH_PROVIDERS[id].label}</span>
+                <span className="oauth-coming-soon">準備中</span>
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="auth-divider">
+          <span>または</span>
+        </div>
+        {!showEmailForm ? (
+          <button
+            type="button"
+            className="oauth-button oauth-email"
+            onClick={() => setShowEmailForm(true)}
+          >
+            メールアドレスで続ける
+          </button>
+        ) : (
+          <>
+            <div className="auth-tabs">
+              <button type="button" className={mode === 'signin' ? 'active' : ''} onClick={() => setMode('signin')}>ログイン</button>
+              <button type="button" className={mode === 'signup' ? 'active' : ''} onClick={() => setMode('signup')}>新規登録</button>
+            </div>
+            <form onSubmit={handleSubmit} className="auth-form">
+              <input
+                type="email"
+                placeholder="メールアドレス"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+              />
+              <input
+                type="password"
+                placeholder="パスワード"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                minLength={mode === 'signin' ? 6 : 8}
+              />
+              {mode === 'signup' && (
+                <>
+                  <p className="auth-membership-notice">
+                    YOGAI.netに無料登録すると、一般社団法人 全日本ヨガ連盟「Yoga AI会員」として登録されます。
+                  </p>
+                  <label className="auth-consent-row">
+                    <input
+                      type="checkbox"
+                      checked={agreed}
+                      onChange={(e) => setAgreed(e.target.checked)}
+                      className="auth-consent-checkbox"
+                    />
+                    <span className="auth-consent-text">
+                      <button type="button" className="auth-consent-link" onClick={(e) => { e.preventDefault(); setOpen(false); onNavigateTerms?.(); }}>利用規約</button>
+                      および
+                      <button type="button" className="auth-consent-link" onClick={(e) => { e.preventDefault(); setOpen(false); onNavigatePrivacy?.(); }}>プライバシーポリシー</button>
+                      を確認し、同意します
+                    </span>
+                  </label>
+                </>
+              )}
+              {error && <p className="auth-error">{error}</p>}
+              <button type="submit" className="primary-button auth-submit" disabled={busy}>
+                {busy ? '送信中…' : mode === 'signin' ? 'ログイン' : 'アカウント作成'}
+              </button>
+            </form>
+          </>
+        )}
+        {error && !showEmailForm && <p className="auth-error">{error}</p>}
+      </div>
+    </div>,
+    document.body
+  ) : null;
+
   return (
     <>
       <button
@@ -152,116 +272,7 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0, onNavigateTerms, onNav
       >
         ログイン / myYOGAカルテを保存
       </button>
-      {open && (
-        <>
-          <div className="auth-backdrop" onClick={() => setOpen(false)} />
-          <div className="auth-dropdown" ref={dropdownRef} role="dialog">
-          <button type="button" className="auth-close-btn" aria-label="閉じる" onClick={() => setOpen(false)}>
-            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
-          <div className="auth-welcome">
-            <h3>Yoga AIをはじめる</h3>
-            <p>登録もログインも同じ入口です</p>
-          </div>
-          {enabledProviders.length > 0 && (
-            <div className="oauth-buttons">
-              {enabledProviders.map((id) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={`oauth-button oauth-${id}`}
-                  onClick={() => handleOAuth(id as 'google' | 'apple' | 'line')}
-                  disabled={busy}
-                >
-                  {OAUTH_SVGS[id]}
-                  {OAUTH_PROVIDERS[id].label}
-                </button>
-              ))}
-            </div>
-          )}
-          {disabledProviders.length > 0 && (
-            <div className="oauth-buttons">
-              {disabledProviders.map((id) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={`oauth-button oauth-${id} oauth-disabled`}
-                  disabled
-                >
-                  {OAUTH_SVGS[id]}
-                  <span>{OAUTH_PROVIDERS[id].label}</span>
-                  <span className="oauth-coming-soon">準備中</span>
-                </button>
-              ))}
-            </div>
-          )}
-          <div className="auth-divider">
-            <span>または</span>
-          </div>
-          {!showEmailForm ? (
-            <button
-              type="button"
-              className="oauth-button oauth-email"
-              onClick={() => setShowEmailForm(true)}
-            >
-              メールアドレスで続ける
-            </button>
-          ) : (
-            <>
-              <div className="auth-tabs">
-                <button type="button" className={mode === 'signin' ? 'active' : ''} onClick={() => setMode('signin')}>ログイン</button>
-                <button type="button" className={mode === 'signup' ? 'active' : ''} onClick={() => setMode('signup')}>新規登録</button>
-              </div>
-              <form onSubmit={handleSubmit} className="auth-form">
-                <input
-                  type="email"
-                  placeholder="メールアドレス"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                />
-                <input
-                  type="password"
-                  placeholder="パスワード"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-                  minLength={mode === 'signin' ? 6 : 8}
-                />
-                {mode === 'signup' && (
-                  <>
-                    <p className="auth-membership-notice">
-                      YOGAI.netに無料登録すると、一般社団法人 全日本ヨガ連盟「Yoga AI会員」として登録されます。
-                    </p>
-                    <label className="auth-consent-row">
-                      <input
-                        type="checkbox"
-                        checked={agreed}
-                        onChange={(e) => setAgreed(e.target.checked)}
-                        className="auth-consent-checkbox"
-                      />
-                      <span className="auth-consent-text">
-                        <button type="button" className="auth-consent-link" onClick={(e) => { e.preventDefault(); setOpen(false); onNavigateTerms?.(); }}>利用規約</button>
-                        および
-                        <button type="button" className="auth-consent-link" onClick={(e) => { e.preventDefault(); setOpen(false); onNavigatePrivacy?.(); }}>プライバシーポリシー</button>
-                        を確認し、同意します
-                      </span>
-                    </label>
-                  </>
-                )}
-                {error && <p className="auth-error">{error}</p>}
-                <button type="submit" className="primary-button auth-submit" disabled={busy}>
-                  {busy ? '送信中…' : mode === 'signin' ? 'ログイン' : 'アカウント作成'}
-                </button>
-              </form>
-            </>
-          )}
-          {error && !showEmailForm && <p className="auth-error">{error}</p>}
-        </div>
-        </>
-      )}
+      {portalContent}
     </>
   );
 }
