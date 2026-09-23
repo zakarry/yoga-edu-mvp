@@ -10458,8 +10458,23 @@ html, body {
   .topbar-brand-row {
     gap: 8px;
   }
+  .topbar {
+    position: relative;
+    gap: 0;
+  }
   .topbar-actions {
-    display: none !important;
+    display: grid;
+    gap: 0;
+    width: 100%;
+  }
+  .header-main-button {
+    display: none;
+  }
+  .auth-area {
+    display: none;
+  }
+  .nav-secondary-menu {
+    display: none;
   }
   .nav-secondary-menu.is-open {
     display: grid !important;
@@ -10472,12 +10487,14 @@ html, body {
     background: #ffffff;
     padding: 8px 12px 12px;
     box-shadow: 0 8px 20px rgba(16,37,66,.08);
-    z-index: 100;
+    z-index: 200;
   }
   .nav-secondary-menu.is-open button {
-    padding: 10px 14px;
+    padding: 12px 14px;
     font-size: 14px;
     border-radius: 12px;
+    width: 100%;
+    text-align: left;
   }
 
   /* 2. Hero: reduce padding and gaps */
