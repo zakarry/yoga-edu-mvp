@@ -10543,3 +10543,24 @@ html, body {
     padding: 12px;
   }
 }
+
+/* === Mobile Hero vertical spacing fine-tune (768px and below) === */
+@media (max-width: 768px) {
+  .top-hero-brushed-copy {
+    gap: 9px;
+  }
+  .top-hero-brand {
+    margin-top: 2px;
+  }
+  .top-hero-content {
+    gap: 16px;
+  }
+}
+@media (max-width: 480px) {
+  .top-hero-brushed-copy {
+    gap: 7px;
+  }
+  .top-hero-content {
+    gap: 13px;
+  }
+}
