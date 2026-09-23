@@ -4765,6 +4765,31 @@ h1 {
   font-size: 13px;
   opacity: .7;
 }
+.consent-gate-membership-note {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--navy, #102542);
+  background: rgba(16,37,66,.04);
+  border: 1px solid rgba(16,37,66,.08);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 0;
+}
+.auth-membership-notice {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--navy-soft, #3a5a7a);
+  background: rgba(16,37,66,.04);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 0 0 4px;
+}
+.mypage-member-type {
+  font-size: 13px;
+  color: var(--navy, #102542);
+  font-weight: 600;
+  margin: 4px 0 0;
+}
 
 /* Dictionary login gate */
 .dict-login-gate-panel {

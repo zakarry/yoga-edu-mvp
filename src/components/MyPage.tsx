@@ -167,7 +167,10 @@ export function MyPage({ history, onRestart, onDetail, onBackHome, cloudDiagnosi
       {auth.cloudUnavailable ? (
         <p className="auth-unavailable-text">現在クラウド保存を利用できません。診断・検索・ドリルは引き続きご利用いただけます。</p>
       ) : auth.user ? (
-        <p>ログイン中: {auth.profile?.display_name || (auth.user.email && !auth.user.email.includes('@lineauth.local') ? auth.user.email : 'Yoga AIユーザー')}</p>
+        <>
+          <p>ログイン中: {auth.profile?.display_name || (auth.user.email && !auth.user.email.includes('@lineauth.local') ? auth.user.email : 'Yoga AIユーザー')}</p>
+          <p className="mypage-member-type">会員種別：Yoga AI会員</p>
+        </>
       ) : (
         <p>未ログイン — ログインするとクラウド保存とプロフィール設定が利用できます。</p>
       )}

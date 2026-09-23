@@ -216,20 +216,25 @@ export function AuthPanel({ onOpenMyPage, openSignal = 0, onNavigateTerms, onNav
                   minLength={mode === 'signin' ? 6 : 8}
                 />
                 {mode === 'signup' && (
-                  <label className="auth-consent-row">
-                    <input
-                      type="checkbox"
-                      checked={agreed}
-                      onChange={(e) => setAgreed(e.target.checked)}
-                      className="auth-consent-checkbox"
-                    />
-                    <span className="auth-consent-text">
-                      <button type="button" className="auth-consent-link" onClick={(e) => { e.preventDefault(); setOpen(false); onNavigateTerms?.(); }}>利用規約</button>
-                      および
-                      <button type="button" className="auth-consent-link" onClick={(e) => { e.preventDefault(); setOpen(false); onNavigatePrivacy?.(); }}>プライバシーポリシー</button>
-                      を確認し、同意します
-                    </span>
-                  </label>
+                  <>
+                    <p className="auth-membership-notice">
+                      YOGAI.netに無料登録すると、一般社団法人 全日本ヨガ連盟「Yoga AI会員」として登録されます。
+                    </p>
+                    <label className="auth-consent-row">
+                      <input
+                        type="checkbox"
+                        checked={agreed}
+                        onChange={(e) => setAgreed(e.target.checked)}
+                        className="auth-consent-checkbox"
+                      />
+                      <span className="auth-consent-text">
+                        <button type="button" className="auth-consent-link" onClick={(e) => { e.preventDefault(); setOpen(false); onNavigateTerms?.(); }}>利用規約</button>
+                        および
+                        <button type="button" className="auth-consent-link" onClick={(e) => { e.preventDefault(); setOpen(false); onNavigatePrivacy?.(); }}>プライバシーポリシー</button>
+                        を確認し、同意します
+                      </span>
+                    </label>
+                  </>
                 )}
                 {error && <p className="auth-error">{error}</p>}
                 <button type="submit" className="primary-button auth-submit" disabled={busy}>

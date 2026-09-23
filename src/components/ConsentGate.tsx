@@ -39,6 +39,9 @@ export function ConsentGate({ onAgree, onNavigateTerms, onNavigatePrivacy, onLog
           サービスをご利用いただくには、最新の利用規約およびプライバシーポリシーへのご同意が必要です。
           以下をご確認のうえ、同意して続けてください。
         </p>
+        <p className="consent-gate-membership-note">
+          同意すると、一般社団法人 全日本ヨガ連盟「Yoga AI会員」としてYOGAI.netをご利用いただけます。
+        </p>
         <div className="consent-gate-links">
           <button type="button" className="consent-gate-link" onClick={onNavigateTerms}>
             利用規約（v{CURRENT_TERMS_VERSION}）を見る
