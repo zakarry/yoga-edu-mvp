@@ -2587,9 +2587,10 @@ export default function App() {
             <DictionaryGate
               title={dictGateView.title}
               onSignUp={() => {
-                setDictReturnTarget(dictGateView.target);
+                const target = dictGateView.target;
+                setDictReturnTarget(target);
                 setDictGateView(null);
-                setAuthOpenSignal((v) => v + 1);
+                setTimeout(() => setAuthOpenSignal((v) => v + 1), 50);
               }}
               onBack={() => setDictGateView(null)}
             />
