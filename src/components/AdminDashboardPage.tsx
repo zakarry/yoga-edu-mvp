@@ -217,7 +217,7 @@ export default function AdminDashboardPage({ onBackHome }: Props) {
 
               {/* Pagination */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, fontSize: 13, color: '#667' }}>
-                <span>{total}件中 {(page - 1) * pageSize + 1}〜{Math.min(page * pageSize, total)}件</span>
+                <span>{total > 0 ? `${total}件中 ${(page - 1) * pageSize + 1}〜${Math.min(page * pageSize, total)}件` : `${total}件`}</span>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button disabled={page <= 1} onClick={() => setPage(page - 1)} style={{ padding: '6px 14px', border: '1px solid #ccd', borderRadius: 8, background: '#fff', cursor: page <= 1 ? 'default' : 'pointer', opacity: page <= 1 ? 0.4 : 1, fontSize: 13 }}>前へ</button>
                   <span style={{ padding: '6px 4px' }}>{page} / {Math.max(1, totalPages)}</span>

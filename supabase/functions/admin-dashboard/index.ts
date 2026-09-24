@@ -313,12 +313,19 @@ async function handleMembers(
   }
 
   // 3. Get total count first (head request)
-  const { count: totalCount } = await admin
+  let countQuery = admin
     .from("profiles")
     .select("id", { count: "exact", head: true })
-    .in("id", memberIds)
-    .eq("membership_tier", tier === "free" || tier === "paid" ? tier : undefined as unknown as string)
-    .ilike("display_name", search ? `%${search}%` : "%%");
+    .in("id", memberIds);
+
+  if (tier === "free" || tier === "paid") {
+    countQuery = countQuery.eq("membership_tier", tier);
+  }
+  if (search) {
+    countQuery = countQuery.ilike("display_name", `%${search}%`);
+  }
+
+  const { count: totalCount } = await countQuery;
 
   // Rebuild query for actual data
   let dataQuery = admin
