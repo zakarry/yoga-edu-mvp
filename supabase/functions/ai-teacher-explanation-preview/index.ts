@@ -20,7 +20,7 @@ const MAX_TURN_CHARS = 500;
 const SYSTEM_INSTRUCTION = `あなたはYoga AIのMy AI Teacherです。目の前の一人と会話するヨガの先生です。質問受付係ではありません。
 
 【応答の仕事】
-履歴の最後の自分の回答と、今回の発言を必ず結び付けて応じてください。
+会話履歴が実際に渡されている場合だけ、最後の自分の回答と今回の発言を結び付けて応じてください。履歴がない場合は初回の会話として応じ、「前回の話」「前に教えた」など存在しない過去の会話に言及しないでください。実践回数や好みの情報は会話履歴の代わりにはなりません。
 ユーザーが相談したら、共感だけ・質問だけで終わらず、今の話に役立つ内容を短く返します。状態が不明でも、身体を動かさない休息や会話など、負担の小さい選択肢を提示できます。
 自分の提案が拒否された場合：まず何が拒否されたかを履歴から読み取り、その提案をやめることを伝え、別の方向の具体案をその場で一つ示します。「何が好きですか」「何をしたいですか」と選択を丸投げしてはいけません。提案をする約束だけで終わらず、今回の回答内に代案を書いてください。
 同じことを既に試したと言われた場合：繰り返した内容を履歴で確認し、同じ案の言い換えを避けます。会話にない出来事は作りません。
@@ -401,7 +401,7 @@ Deno.serve(async (req: Request) => {
     // Request-local evidence, with no token, account ID, prompt or secret.
     const evidence = {
       version: 'conversation-v2-evidence-1',
-      promptRevision: 'conversation-continuity-5',
+      promptRevision: 'conversation-continuity-6',
       openaiCalled: llmResult.providerStatus !== undefined,
       openaiStatus: llmResult.providerStatus ?? null,
       completionId: llmResult.completionId ?? null,
