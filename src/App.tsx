@@ -1391,7 +1391,7 @@ export default function App() {
             )}
             {auth.user && (
               <>
-                {(() => {
+                {mobileMenuOpen && (() => {
                   const name = auth.profile?.display_name || (auth.user.email && !auth.user.email.includes('@lineauth.local') ? auth.user.email.split('@')[0] : null);
                   return name ? <span className="nav-mobile-user-name">{name} さん</span> : null;
                 })()}

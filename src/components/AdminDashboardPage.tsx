@@ -107,18 +107,38 @@ export default function AdminDashboardPage({ onBackHome }: Props) {
           <div style={{ padding: 40, textAlign: 'center', color: '#667' }}>読み込み中…</div>
         ) : (
           <>
-            {/* KPI Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, marginBottom: 32 }}>
-              <KpiCard label="Yoga AI会員総数" value={summary?.totalMembers ?? 0} highlight />
-              <KpiCard label="無料会員" value={summary?.freeMembers ?? 0} />
-              <KpiCard label="有料会員" value={summary?.paidMembers ?? 0} />
-              <KpiCard label="本日の新規" value={summary?.todayNew ?? 0} />
-              <KpiCard label="今週の新規" value={summary?.weekNew ?? 0} />
-              <KpiCard label="今月の新規" value={summary?.monthNew ?? 0} />
-              <KpiCard label="LINE連携会員" value={summary?.lineLinkedMembers ?? 0} />
-              <KpiCard label="AI診断利用者" value={summary?.diagnosisUsers ?? 0} />
-              <KpiCard label="AI先生利用者" value={summary?.aiTeacherUsers ?? 0} />
-              <KpiCard label="実践利用者" value={summary?.practiceUsers ?? 0} />
+            {/* KPI Cards — 3 groups */}
+            {/* 会員 */}
+            <div style={{ marginBottom: 20 }}>
+              <h3 style={{ fontSize: 13, fontWeight: 600, color: '#667', margin: '0 0 8px', letterSpacing: '0.05em' }}>会員</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+                <KpiCard label="Yoga AI会員総数" value={summary?.totalMembers ?? 0} highlight />
+                <KpiCard label="無料会員" value={summary?.freeMembers ?? 0} />
+                <KpiCard label="有料会員" value={summary?.paidMembers ?? 0} />
+                <KpiCard label="LINE連携会員" value={summary?.lineLinkedMembers ?? 0} />
+              </div>
+            </div>
+
+            {/* 新規会員 */}
+            <div style={{ marginBottom: 20 }}>
+              <h3 style={{ fontSize: 13, fontWeight: 600, color: '#667', margin: '0 0 8px', letterSpacing: '0.05em' }}>新規会員</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+                <KpiCard label="本日の新規" value={summary?.todayNew ?? 0} />
+                <KpiCard label="今週の新規" value={summary?.weekNew ?? 0} />
+                <KpiCard label="今月の新規" value={summary?.monthNew ?? 0} />
+              </div>
+            </div>
+
+            {/* 利用 */}
+            <div style={{ marginBottom: 32 }}>
+              <h3 style={{ fontSize: 13, fontWeight: 600, color: '#667', margin: '0 0 8px', letterSpacing: '0.05em' }}>利用</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+                <KpiCard label="AI診断利用者" value={summary?.diagnosisUsers ?? 0} />
+                <KpiCard label="AI診断回数" value={summary?.diagnosisCount ?? 0} />
+                <KpiCard label="AI先生利用者" value={summary?.aiTeacherUsers ?? 0} />
+                <KpiCard label="実践利用者" value={summary?.practiceUsers ?? 0} />
+                <KpiCard label="実践回数" value={summary?.practiceCount ?? 0} />
+              </div>
             </div>
 
             {/* Members List */}

@@ -114,9 +114,10 @@ async function handleSummary(
   corsHeaders: Record<string, string>,
 ): Promise<Response> {
   // Yoga AI会員 = user_consents with current version
+  // Get consent records with terms_accepted_at for member成立日時
   const { data: consentUsers, error: consentError } = await admin
     .from("user_consents")
-    .select("user_id")
+    .select("user_id, terms_accepted_at")
     .eq("terms_version", CURRENT_TERMS_VERSION)
     .eq("privacy_version", CURRENT_PRIVACY_VERSION);
 
@@ -127,16 +128,23 @@ async function handleSummary(
     });
   }
 
-  const memberUserIds = (consentUsers ?? []).map((r: { user_id: string }) => r.user_id);
+  // Deduplicate by user_id (same user may have multiple consent records)
+  const consentDateMap = new Map<string, string>();
+  for (const r of consentUsers ?? []) {
+    if (!consentDateMap.has(r.user_id)) {
+      consentDateMap.set(r.user_id, r.terms_accepted_at);
+    }
+  }
+
+  const memberUserIds = Array.from(consentDateMap.keys());
   const totalMembers = memberUserIds.length;
 
-  // Get profiles for these members
+  // Get profiles for these members (for membership_tier classification)
   let freeCount = 0;
   let paidCount = 0;
   let todayCount = 0;
   let weekCount = 0;
   let monthCount = 0;
-  let lineLinkedCount = 0;
 
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
@@ -148,45 +156,91 @@ async function handleSummary(
   if (memberUserIds.length > 0) {
     const { data: memberProfiles } = await admin
       .from("profiles")
-      .select("id, membership_tier, created_at")
+      .select("id, membership_tier")
       .in("id", memberUserIds);
 
     if (memberProfiles) {
       for (const p of memberProfiles) {
         if (p.membership_tier === "paid") paidCount++;
         else freeCount++;
-        if (p.created_at >= todayStart) todayCount++;
-        if (p.created_at >= weekStart.toISOString()) weekCount++;
-        if (p.created_at >= monthStart) monthCount++;
       }
     }
 
-    // LINE連携会員数
-    const { count: lineCount } = await admin
-      .from("line_identities")
-      .select("user_id", { count: "exact", head: true })
-      .in("user_id", memberUserIds);
-
-    lineLinkedCount = lineCount ?? 0;
+    // 新規会員: user_consents.terms_accepted_at を基準日とする
+    for (const [_, consentDate] of consentDateMap) {
+      if (consentDate >= todayStart) todayCount++;
+      if (consentDate >= weekStart.toISOString()) weekCount++;
+      if (consentDate >= monthStart) monthCount++;
+    }
   }
 
-  // AI診断利用者数
-  const { count: diagnosisUsers } = await admin
-    .from("diagnoses")
-    .select("user_id", { count: "exact", head: true })
-    .in("user_id", memberUserIds.length > 0 ? memberUserIds : ["00000000-0000-0000-0000-000000000000"]);
+  // LINE連携会員数 = DISTINCT user_id in line_identities that are Yoga AI members
+  let lineLinkedCount = 0;
+  if (memberUserIds.length > 0) {
+    const { data: lineRows } = await admin
+      .from("line_identities")
+      .select("user_id")
+      .in("user_id", memberUserIds);
 
-  // AI先生利用者数
-  const { count: aiTeacherUsers } = await admin
-    .from("ai_teacher_memory")
-    .select("user_id", { count: "exact", head: true })
-    .in("user_id", memberUserIds.length > 0 ? memberUserIds : ["00000000-0000-0000-0000-000000000000"]);
+    const lineUserSet = new Set<string>();
+    for (const r of lineRows ?? []) {
+      lineUserSet.add(r.user_id);
+    }
+    lineLinkedCount = lineUserSet.size;
+  }
 
-  // 実践利用者数
-  const { count: practiceUsers } = await admin
-    .from("practice_logs")
-    .select("user_id", { count: "exact", head: true })
-    .in("user_id", memberUserIds.length > 0 ? memberUserIds : ["00000000-0000-0000-0000-000000000000"]);
+  const dummyId = ["00000000-0000-0000-0000-000000000000"];
+
+  // AI診断: 利用者数 (DISTINCT user_id) + 回数 (総レコード数)
+  let diagnosisUsers = 0;
+  let diagnosisCount = 0;
+  {
+    const { data: diagRows } = await admin
+      .from("diagnoses")
+      .select("user_id")
+      .in("user_id", memberUserIds.length > 0 ? memberUserIds : dummyId);
+
+    const diagUserSet = new Set<string>();
+    for (const r of diagRows ?? []) {
+      diagUserSet.add(r.user_id);
+    }
+    diagnosisUsers = diagUserSet.size;
+    diagnosisCount = (diagRows ?? []).length;
+  }
+
+  // AI先生: 利用者数 (DISTINCT user_id from ai_teacher_llm_usage) + 回数 (総レコード数)
+  let aiTeacherUsers = 0;
+  let aiTeacherCount = 0;
+  {
+    const { data: usageRows } = await admin
+      .from("ai_teacher_llm_usage")
+      .select("user_id")
+      .in("user_id", memberUserIds.length > 0 ? memberUserIds : dummyId);
+
+    const usageUserSet = new Set<string>();
+    for (const r of usageRows ?? []) {
+      usageUserSet.add(r.user_id);
+    }
+    aiTeacherUsers = usageUserSet.size;
+    aiTeacherCount = (usageRows ?? []).length;
+  }
+
+  // 実践: 利用者数 (DISTINCT user_id) + 回数 (総レコード数)
+  let practiceUsers = 0;
+  let practiceCount = 0;
+  {
+    const { data: practiceRows } = await admin
+      .from("practice_logs")
+      .select("user_id")
+      .in("user_id", memberUserIds.length > 0 ? memberUserIds : dummyId);
+
+    const practiceUserSet = new Set<string>();
+    for (const r of practiceRows ?? []) {
+      practiceUserSet.add(r.user_id);
+    }
+    practiceUsers = practiceUserSet.size;
+    practiceCount = (practiceRows ?? []).length;
+  }
 
   const summary = {
     totalMembers,
@@ -196,9 +250,12 @@ async function handleSummary(
     weekNew: weekCount,
     monthNew: monthCount,
     lineLinkedMembers: lineLinkedCount,
-    diagnosisUsers: diagnosisUsers ?? 0,
-    aiTeacherUsers: aiTeacherUsers ?? 0,
-    practiceUsers: practiceUsers ?? 0,
+    diagnosisUsers,
+    diagnosisCount,
+    aiTeacherUsers,
+    aiTeacherCount,
+    practiceUsers,
+    practiceCount,
   };
 
   return new Response(JSON.stringify({ summary }), {
@@ -228,7 +285,9 @@ async function handleMembers(
 
   const consentMap = new Map<string, string>();
   for (const r of consentRows ?? []) {
-    consentMap.set(r.user_id, r.terms_accepted_at);
+    if (!consentMap.has(r.user_id)) {
+      consentMap.set(r.user_id, r.terms_accepted_at);
+    }
   }
 
   const memberIds = Array.from(consentMap.keys());
@@ -304,7 +363,7 @@ async function handleMembers(
 
   const lineSet = new Set((lineRows ?? []).map((r: { user_id: string }) => r.user_id));
 
-  // 5. AI診断回数
+  // 5. AI診断回数 (per member)
   const { data: diagCounts } = await admin
     .from("diagnoses")
     .select("user_id")
@@ -315,7 +374,7 @@ async function handleMembers(
     diagMap.set(r.user_id, (diagMap.get(r.user_id) ?? 0) + 1);
   }
 
-  // 6. 実践回数
+  // 6. 実践回数 (per member)
   const { data: practiceCounts } = await admin
     .from("practice_logs")
     .select("user_id")
@@ -326,13 +385,13 @@ async function handleMembers(
     practiceMap.set(r.user_id, (practiceMap.get(r.user_id) ?? 0) + 1);
   }
 
-  // 7. AI先生利用有無
-  const { data: memoryRows } = await admin
-    .from("ai_teacher_memory")
+  // 7. AI先生利用有無 (from ai_teacher_llm_usage — actual usage log)
+  const { data: usageRows } = await admin
+    .from("ai_teacher_llm_usage")
     .select("user_id")
     .in("user_id", profileIds);
 
-  const memorySet = new Set((memoryRows ?? []).map((r: { user_id: string }) => r.user_id));
+  const usageSet = new Set((usageRows ?? []).map((r: { user_id: string }) => r.user_id));
 
   // 8. Assemble member list
   let members = profiles.map((p: {
@@ -354,7 +413,7 @@ async function handleMembers(
     consentDate: consentMap.get(p.id) ?? null,
     diagnosisCount: diagMap.get(p.id) ?? 0,
     practiceCount: practiceMap.get(p.id) ?? 0,
-    aiTeacherUsed: memorySet.has(p.id),
+    aiTeacherUsed: usageSet.has(p.id),
   }));
 
   // Filter by LINE連携 if requested
@@ -366,11 +425,12 @@ async function handleMembers(
   let total = totalCount ?? 0;
   if (lineLinked) {
     // Need to count LINE-linked members separately
-    const { count: lineTotal } = await admin
+    const { data: lineAllRows } = await admin
       .from("line_identities")
-      .select("user_id", { count: "exact", head: true })
+      .select("user_id")
       .in("user_id", memberIds);
-    total = lineTotal ?? 0;
+    const lineAllSet = new Set((lineAllRows ?? []).map((r: { user_id: string }) => r.user_id));
+    total = lineAllSet.size;
   }
 
   return new Response(JSON.stringify({ members, total, page, pageSize }), {

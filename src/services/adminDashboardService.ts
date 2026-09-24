@@ -9,8 +9,11 @@ export interface AdminSummary {
   monthNew: number;
   lineLinkedMembers: number;
   diagnosisUsers: number;
+  diagnosisCount: number;
   aiTeacherUsers: number;
+  aiTeacherCount: number;
   practiceUsers: number;
+  practiceCount: number;
 }
 
 export interface AdminMember {
