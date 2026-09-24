@@ -1,13 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../lib/auth';
+import { supabase } from '../lib/supabase';
 import { fetchAdminSummary, fetchAdminMembers, type AdminSummary, type AdminMember } from '../services/adminDashboardService';
+import AdminMfaSetup from './AdminMfaSetup';
+import AdminMfaChallenge from './AdminMfaChallenge';
 
 interface Props {
   onBackHome: () => void;
 }
 
+type MfaState = 'checking' | 'setup' | 'challenge' | 'verified';
+
 export default function AdminDashboardPage({ onBackHome }: Props) {
   const auth = useAuth();
+  const [mfaState, setMfaState] = useState<MfaState>('checking');
   const [summary, setSummary] = useState<AdminSummary | null>(null);
   const [members, setMembers] = useState<AdminMember[]>([]);
   const [total, setTotal] = useState(0);
@@ -20,6 +26,24 @@ export default function AdminDashboardPage({ onBackHome }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const isAdmin = auth.user && auth.profile?.is_admin === true;
+
+  // Check AAL level when admin is confirmed
+  useEffect(() => {
+    if (!isAdmin || !supabase) return;
+    void (async () => {
+      const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (!data) { setMfaState('setup'); return; }
+      if (data.currentLevel === 'aal2') {
+        setMfaState('verified');
+      } else if (data.nextLevel === 'aal2') {
+        // Has enrolled factor but this session is still AAL1
+        setMfaState('challenge');
+      } else {
+        // No factors enrolled yet
+        setMfaState('setup');
+      }
+    })();
+  }, [isAdmin]);
 
   const loadSummary = useCallback(async () => {
     try {
@@ -47,13 +71,13 @@ export default function AdminDashboardPage({ onBackHome }: Props) {
   }, [page, pageSize, search, tierFilter, lineFilter]);
 
   useEffect(() => {
-    if (!isAdmin) { setLoading(false); return; }
+    if (!isAdmin || mfaState !== 'verified') { setLoading(false); return; }
     setLoading(true);
     Promise.all([loadSummary(), loadMembers()]).finally(() => setLoading(false));
-  }, [isAdmin]);
+  }, [isAdmin, mfaState]);
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isAdmin || mfaState !== 'verified') return;
     loadMembers();
   }, [page, tierFilter, lineFilter]);
 
@@ -63,6 +87,17 @@ export default function AdminDashboardPage({ onBackHome }: Props) {
   };
 
   const totalPages = Math.ceil(total / pageSize);
+
+  // MFA screens (admin-only gating)
+  if (auth.authReady && isAdmin && mfaState === 'setup') {
+    return <AdminMfaSetup onSuccess={() => setMfaState('verified')} />;
+  }
+  if (auth.authReady && isAdmin && mfaState === 'challenge') {
+    return <AdminMfaChallenge onSuccess={() => setMfaState('verified')} />;
+  }
+  if (auth.authReady && isAdmin && mfaState === 'checking') {
+    return <div style={{ padding: 40, textAlign: 'center', color: '#667' }}>認証状態を確認中…</div>;
+  }
 
   if (!auth.authReady) {
     return <div style={{ padding: 40, textAlign: 'center', color: '#667' }}>読み込み中…</div>;
