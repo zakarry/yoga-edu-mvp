@@ -101,6 +101,7 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
   const [searched, setSearched] = useState(false);
 
   const checkAdmin = useCallback(async () => {
+    setMfaRequired(false);
     if (!auth.user || !supabase) {
       setIsAdmin(false);
       setLoading(false);

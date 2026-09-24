@@ -15,6 +15,7 @@ const MAX_PAGE_SIZE = 200;
 
 interface AdminRequest {
   action: "summary" | "members" | "permissions" | "admin_directory" | "update_member" | "set_admin";
+  [key: string]: unknown;
   page?: number;
   pageSize?: number;
   search?: string;
@@ -336,7 +337,7 @@ async function handleMembers(
   // 2. Query profiles with filters
   let query = admin
     .from("profiles")
-    .select("id, display_name, membership_tier, role, area, created_at", { count: "exact" })
+    .select("id, display_name, membership_tier, role, area, created_at, updated_at, is_admin, is_super_admin", { count: "exact" })
     .in("id", memberIds);
 
   if (tier === "free" || tier === "paid") {
@@ -365,7 +366,7 @@ async function handleMembers(
   // Rebuild query for actual data
   let dataQuery = admin
     .from("profiles")
-    .select("id, display_name, membership_tier, role, area, created_at")
+    .select("id, display_name, membership_tier, role, area, created_at, updated_at, is_admin, is_super_admin")
     .in("id", memberIds);
 
   if (tier === "free" || tier === "paid") {
@@ -443,13 +444,20 @@ async function handleMembers(
     role: string;
     area: string | null;
     created_at: string;
+    updated_at: string;
+    is_admin: boolean;
+    is_super_admin: boolean;
   }) => ({
-    id: p.id.slice(0, 8),
+    id: p.id,
     displayName: p.display_name ?? "(未設定)",
     membershipTier: p.membership_tier,
     role: p.role,
     area: p.area ?? "-",
     createdAt: p.created_at,
+    updatedAt: p.updated_at,
+    isAdmin: p.is_admin,
+    isSuperAdmin: p.is_super_admin,
+    editableProfile: { display_name: p.display_name, area: p.area, role: p.role, membership_tier: p.membership_tier },
     lineLinked: lineSet.has(p.id),
     consentVerified: consentMap.has(p.id),
     consentDate: consentMap.get(p.id) ?? null,
