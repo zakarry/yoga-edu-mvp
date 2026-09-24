@@ -64,7 +64,17 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // 3. Parse request body
+    // 3. AAL2検証 — Supabase標準APIで認証済みJWTのAALを確認
+    const accessToken = req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
+    const { data: aalData, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(accessToken);
+    if (aalError || !aalData || aalData.currentLevel !== "aal2") {
+      return new Response(JSON.stringify({ error: "MFA_REQUIRED" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 4. Parse request body
     let body: AdminRequest;
     try {
       body = await req.json();

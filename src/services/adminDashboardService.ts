@@ -67,7 +67,11 @@ async function callAdminDashboard(body: Record<string, unknown>): Promise<Respon
 
 export async function fetchAdminSummary(): Promise<AdminSummary> {
   const res = await callAdminDashboard({ action: 'summary' });
-  if (res.status === 403) throw new Error('forbidden');
+  if (res.status === 403) {
+    const data = await res.json();
+    if (data.error === 'MFA_REQUIRED') throw new Error('mfa_required');
+    throw new Error('forbidden');
+  }
   if (res.status === 401) throw new Error('unauthorized');
   if (!res.ok) throw new Error('fetch_error');
   const data = await res.json();
@@ -84,7 +88,11 @@ export async function fetchAdminMembers(params: AdminMembersParams): Promise<Adm
     membershipTier: params.membershipTier ?? 'all',
     lineLinked: params.lineLinked ?? false,
   });
-  if (res.status === 403) throw new Error('forbidden');
+  if (res.status === 403) {
+    const data = await res.json();
+    if (data.error === 'MFA_REQUIRED') throw new Error('mfa_required');
+    throw new Error('forbidden');
+  }
   if (res.status === 401) throw new Error('unauthorized');
   if (!res.ok) throw new Error('fetch_error');
   const data = await res.json();

@@ -52,6 +52,7 @@ export default function AdminDashboardPage({ onBackHome }: Props) {
       setSummary(s);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'unknown';
+      if (msg === 'mfa_required') { setMfaState('challenge'); return; }
       if (msg === 'forbidden') setError('このページを表示する権限がありません');
       else setError('管理データを取得できませんでした');
     }
@@ -65,6 +66,7 @@ export default function AdminDashboardPage({ onBackHome }: Props) {
       setTotal(res.total);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'unknown';
+      if (msg === 'mfa_required') { setMfaState('challenge'); return; }
       if (msg === 'forbidden') setError('このページを表示する権限がありません');
       else setError('管理データを取得できませんでした');
     }
