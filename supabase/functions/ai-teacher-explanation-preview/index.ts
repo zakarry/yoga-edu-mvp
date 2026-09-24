@@ -6,7 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-const LLM_MODEL = Deno.env.get("LLM_MODEL") ?? "gpt-4o-mini";
+// Scope conversation quality configuration to AI Teacher; other AI features keep LLM_MODEL.
+const LLM_MODEL = Deno.env.get("AI_TEACHER_LLM_MODEL") ?? "gpt-4.1-mini-2025-04-14";
 const LLM_TIMEOUT_MS = 15000;
 const MAX_PROMPT_CHARS = 16000;
 const MAX_KNOWLEDGE_ITEMS = 3;
@@ -400,7 +401,7 @@ Deno.serve(async (req: Request) => {
     // Request-local evidence, with no token, account ID, prompt or secret.
     const evidence = {
       version: 'conversation-v2-evidence-1',
-      promptRevision: 'conversation-continuity-4',
+      promptRevision: 'conversation-continuity-5',
       openaiCalled: llmResult.providerStatus !== undefined,
       openaiStatus: llmResult.providerStatus ?? null,
       completionId: llmResult.completionId ?? null,
