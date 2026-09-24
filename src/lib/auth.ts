@@ -12,6 +12,7 @@ export interface Profile {
   created_at: string;
   updated_at: string;
   is_admin?: boolean;
+  is_super_admin?: boolean;
   membership_tier?: 'free' | 'paid';
 }
 

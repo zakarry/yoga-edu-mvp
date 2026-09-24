@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 import { fetchAdminSummary, fetchAdminMembers, type AdminSummary, type AdminMember } from '../services/adminDashboardService';
+import { AdminMemberEdit, AdminAccessPanel } from './AdminMemberActions';
+import { fetchAdminPermissions } from '../services/adminDashboardService';
+import { clearMembershipCache } from '../services/membershipService';
 import AdminMfaSetup from './AdminMfaSetup';
 import AdminMfaChallenge from './AdminMfaChallenge';
 
@@ -24,7 +27,9 @@ export default function AdminDashboardPage({ onBackHome }: Props) {
   const [lineFilter, setLineFilter] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
+  const requireMfa = useCallback(() => setMfaState('challenge'), []);
   const isAdmin = auth.user && auth.profile?.is_admin === true;
 
   // Check AAL level when admin is confirmed
@@ -48,9 +53,12 @@ export default function AdminDashboardPage({ onBackHome }: Props) {
   const loadSummary = useCallback(async () => {
     try {
       setError(null);
+      const permissions = await fetchAdminPermissions();
+      setIsSuperAdmin(permissions.isSuperAdmin);
       const s = await fetchAdminSummary();
       setSummary(s);
     } catch (e) {
+      setIsSuperAdmin(false);
       const msg = e instanceof Error ? e.message : 'unknown';
       if (msg === 'mfa_required') { setMfaState('challenge'); return; }
       if (msg === 'forbidden') setError('このページを表示する権限がありません');
@@ -130,6 +138,7 @@ export default function AdminDashboardPage({ onBackHome }: Props) {
         <div style={{ marginBottom: 24 }}>
           <button onClick={onBackHome} style={{ background: 'none', border: 'none', color: '#39c', cursor: 'pointer', fontSize: 13, marginBottom: 8 }}>← TOPへ戻る</button>
           <h1 style={{ fontSize: 28, fontWeight: 700, color: '#102542', margin: 0 }}>Yoga AI 管理ダッシュボード</h1>
+          <p style={{fontSize:13,color:'#667'}}>{isSuperAdmin?'Super Admin':'Admin'}</p>
           <p style={{ fontSize: 13, color: '#667', marginTop: 4 }}>一般社団法人 全日本ヨガ連盟</p>
         </div>
 
@@ -223,11 +232,12 @@ export default function AdminDashboardPage({ onBackHome }: Props) {
                       <th style={{ textAlign: 'center', padding: '8px 10px', color: '#667', fontWeight: 600 }}>AI診断</th>
                       <th style={{ textAlign: 'center', padding: '8px 10px', color: '#667', fontWeight: 600 }}>実践</th>
                       <th style={{ textAlign: 'center', padding: '8px 10px', color: '#667', fontWeight: 600 }}>AI先生</th>
+                      <th style={{padding:8}}>操作</th>
                     </tr>
                   </thead>
                   <tbody>
                     {members.length === 0 ? (
-                      <tr><td colSpan={10} style={{ padding: 24, textAlign: 'center', color: '#889' }}>該当する会員がいません</td></tr>
+                      <tr><td colSpan={11} style={{ padding: 24, textAlign: 'center', color: '#889' }}>該当する会員がいません</td></tr>
                     ) : (
                       members.map((m) => (
                         <tr key={m.id} style={{ borderBottom: '1px solid #f0f3f7' }}>
@@ -245,6 +255,7 @@ export default function AdminDashboardPage({ onBackHome }: Props) {
                           <td style={{ padding: '8px 10px', textAlign: 'center', color: '#334' }}>{m.diagnosisCount > 0 ? m.diagnosisCount : '-'}</td>
                           <td style={{ padding: '8px 10px', textAlign: 'center', color: '#334' }}>{m.practiceCount > 0 ? m.practiceCount : '-'}</td>
                           <td style={{ padding: '8px 10px', textAlign: 'center' }}>{m.aiTeacherUsed ? <span style={{ color: '#1a7' }}>✓</span> : <span style={{ color: '#ccd' }}>-</span>}</td>
+                          <td><AdminMemberEdit member={m} onMfaRequired={requireMfa} onSaved={async()=>{clearMembershipCache();await Promise.all([loadSummary(),loadMembers(),auth.refreshProfile()]);}} /></td>
                         </tr>
                       ))
                     )}
@@ -262,6 +273,7 @@ export default function AdminDashboardPage({ onBackHome }: Props) {
                 </div>
               </div>
             </div>
+            {isSuperAdmin && <AdminAccessPanel onMfaRequired={requireMfa} />}
           </>
         )}
       </div>

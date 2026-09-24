@@ -89,6 +89,7 @@ interface TestResult {
 export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
   const auth = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [mfaRequired, setMfaRequired] = useState(false);
   const [loading, setLoading] = useState(true);
   const [tests, setTests] = useState<AcceptanceTest[]>([]);
   const [results, setResults] = useState<TestResult[]>([]);
@@ -108,13 +109,17 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('is_admin')
+        .select('is_admin,is_super_admin')
         .eq('id', auth.user.id)
         .maybeSingle();
       if (error || !data) {
         setIsAdmin(false);
       } else {
-        setIsAdmin(data.is_admin === true);
+        const permitted = data.is_admin === true && data.is_super_admin === true;
+        const { data: assurance, error: assuranceError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        const verified = !assuranceError && assurance?.currentLevel === 'aal2';
+        setMfaRequired(permitted && !verified);
+        setIsAdmin(permitted && verified);
       }
     } catch {
       setIsAdmin(false);
@@ -346,6 +351,10 @@ export function BM5AdminPage({ onBackHome }: { onBackHome: () => void }) {
         </div>
       </div>
     );
+  }
+
+  if (mfaRequired) {
+    return <div className="page"><PageHeader eyebrow="BM5管理" title="追加認証が必要です" onBackHome={onBackHome} /><p>先に管理ダッシュボードで追加認証を完了してから、この画面を開いてください。</p></div>;
   }
 
   if (!isAdmin) {

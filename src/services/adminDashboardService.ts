@@ -22,6 +22,10 @@ export interface AdminMember {
   membershipTier: string;
   role: string;
   area: string;
+  updatedAt: string;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
+  editableProfile: MemberPatch;
   createdAt: string;
   lineLinked: boolean;
   consentVerified: boolean;
@@ -99,3 +103,20 @@ export async function fetchAdminMembers(params: AdminMembersParams): Promise<Adm
   if (data.error) throw new Error('fetch_error');
   return data as AdminMembersResponse;
 }
+
+export interface MemberPatch { display_name?: string | null; area?: string | null; role?: 'student' | 'teacher' | 'both'; membership_tier?: 'free' | 'paid'; }
+export interface AdminUser { id:string; displayName:string; area:string; role:string; membershipTier:string; isAdmin:boolean; isSuperAdmin:boolean; updatedAt:string; }
+async function management<T>(body:Record<string,unknown>):Promise<T>{
+  const res=await callAdminDashboard(body);
+  const data=await res.json();
+  if(!res.ok){
+    const allowed=['MFA_REQUIRED','FORBIDDEN','Forbidden','PROTECTED_ADMIN','NOT_FOUND','CONFLICT','INVALID_FIELDS'];
+    const code=typeof data.error==='string'&&allowed.includes(data.error)?data.error:'FETCH_ERROR';
+    throw new Error(code==='MFA_REQUIRED'?'mfa_required':code);
+  }
+  return data as T;
+}
+export const fetchAdminPermissions=()=>management<{isSuperAdmin:boolean}>({action:'permissions'});
+export const fetchAdminDirectory=(search:string,page:number)=>management<{users:AdminUser[];total:number;page:number;pageSize:number}>({action:'admin_directory',search,page});
+export const updateAdminMember=(targetId:string,expectedUpdatedAt:string,patch:MemberPatch)=>management<{updatedAt:string}>({action:'update_member',targetId,expectedUpdatedAt,patch});
+export const setAdminAccess=(targetId:string,expectedUpdatedAt:string,enabled:boolean)=>management<{updatedAt:string}>({action:'set_admin',targetId,expectedUpdatedAt,enabled});

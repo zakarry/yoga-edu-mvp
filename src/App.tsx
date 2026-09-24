@@ -2498,7 +2498,7 @@ export default function App() {
             {auth.profile?.is_admin && (
               <button type="button" className="footer-link" onClick={() => moveTo('admin')} style={{ fontSize: 11, opacity: 0.5 }}>管理</button>
             )}
-            {auth.profile?.is_admin && (
+            {auth.profile?.is_super_admin && (
               <button type="button" className="footer-link" onClick={() => moveTo('bm5-admin')} style={{ fontSize: 11, opacity: 0.5 }}>BM5</button>
             )}
           </div>

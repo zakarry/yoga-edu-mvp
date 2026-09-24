@@ -1,5 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.45.4"; // deploy
 
+import { handleManagement } from "./management.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -12,7 +14,7 @@ const DEFAULT_PAGE_SIZE = 50;
 const MAX_PAGE_SIZE = 200;
 
 interface AdminRequest {
-  action: "summary" | "members";
+  action: "summary" | "members" | "permissions" | "admin_directory" | "update_member" | "set_admin";
   page?: number;
   pageSize?: number;
   search?: string;
@@ -60,7 +62,7 @@ Deno.serve(async (req: Request) => {
     // 2. profiles.is_admin 確認
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("is_admin")
+      .select("is_admin,is_super_admin")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -97,6 +99,7 @@ Deno.serve(async (req: Request) => {
     let body: AdminRequest;
     try {
       body = await req.json();
+      if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Invalid body");
     } catch {
       return new Response(JSON.stringify({ error: "Invalid request" }), {
         status: 400,
@@ -119,6 +122,9 @@ Deno.serve(async (req: Request) => {
       { auth: { autoRefreshToken: false, persistSession: false } },
     );
 
+    if (["permissions","admin_directory","update_member","set_admin"].includes(body.action)) {
+      return handleManagement(supabase, admin, profile, body, corsHeaders);
+    }
     if (body.action === "summary") {
       return handleSummary(admin, corsHeaders);
     } else if (body.action === "members") {
