@@ -49,12 +49,17 @@ export default function AdminMfaChallenge({ onSuccess }: Props) {
     if (error) {
       setErrorMsg('認証コードを確認してください。');
       setVerifying(false);
-      // challengeは一度使うと無効になるので再発行
       void startChallenge();
       return;
     }
 
-    onSuccess();
+    const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aalData?.currentLevel === 'aal2') {
+      onSuccess();
+    } else {
+      setErrorMsg('追加認証は完了しましたが、セッションを更新できませんでした。ページを再読み込みしてください。');
+      setVerifying(false);
+    }
   }
 
   const containerStyle: React.CSSProperties = {

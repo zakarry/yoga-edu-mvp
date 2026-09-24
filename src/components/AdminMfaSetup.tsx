@@ -64,7 +64,13 @@ export default function AdminMfaSetup({ onSuccess }: Props) {
       return;
     }
 
-    onSuccess();
+    const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aalData?.currentLevel === 'aal2') {
+      onSuccess();
+    } else {
+      setErrorMsg('追加認証は完了しましたが、セッションを更新できませんでした。ページを再読み込みしてください。');
+      setVerifying(false);
+    }
   }
 
   const containerStyle: React.CSSProperties = {
