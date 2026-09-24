@@ -871,7 +871,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   }, [dryRunInput, auth.user, persona, growth, conversationContext]);
 
   const handleSendChat = useCallback(() => {
-    if (!chatInput.trim()) return;
+    if (!chatInput.trim() || chatTyping) return;
     const userMsg: ChatMessage = { role: 'user', text: chatInput };
     // Build conversation turns from existing chat history (before adding new message)
     const turns = buildConversationTurns(chatMessages);
@@ -880,7 +880,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setChatTyping(true);
     const delay = 150 + Math.random() * 150;
     setTimeout(async () => {
-      const ctx = teacherContext ?? buildLocalContextFast(growth, conversationContext, todayContext, auth.user?.id);
+      // Never reuse a context made before login or for a previous account.
+      const ctx = teacherContext?.userId === auth.user?.id
+        ? (teacherContext ?? buildLocalContextFast(growth, conversationContext, todayContext, auth.user?.id))
+        : buildLocalContextFast(growth, conversationContext, todayContext, auth.user?.id);
       try {
         const contextWithSafety: ConversationContext = {
           ...conversationContext,
@@ -929,7 +932,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         setChatTyping(false);
       }
     }, delay);
-  }, [chatInput, persona, teacherContext, growth, conversationContext, sessionSafetyBlocked, auth.user]);
+  }, [chatInput, chatTyping, chatMessages, persona, teacherContext, growth, conversationContext, todayContext, sessionSafetyBlocked, auth.user, auth.profile?.is_admin]);
 
   const handlePracticeAction = useCallback((action: TeacherResponseAction) => {
     if (!action.targetId) return;

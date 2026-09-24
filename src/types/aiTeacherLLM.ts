@@ -36,4 +36,5 @@ export interface AITeacherLLMRequest {
   sessionContext: LLMSessionContext;
   knowledge: LLMKnowledgeItem[];
   turns?: ConversationTurn[];
+  memory?: { favoritePractices: string[]; preferredDuration: number | null; preferredExplanation: string | null; preferredTone: string | null };
 }

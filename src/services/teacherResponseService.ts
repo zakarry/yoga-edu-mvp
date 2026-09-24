@@ -1435,13 +1435,14 @@ export async function generateTeacherResponse(
   // When turns are provided (STEP 5 chat), route through the conversation engine.
   // Guest users (no userId) also fall through to the old path since they can't
   // authenticate with the Edge Function.
-  if (context.userId) {
+  if (context.userId && turns !== undefined) {
     try {
       const { generateConversationResponse } = await import('./conversationEngine');
       const result = await generateConversationResponse(context, userMessage, turns ?? [], prevContext);
       return stripActionIfSafety(result, prevContext);
     } catch {
-      // Fall through to old path on any error
+      // STEP 5 must not silently turn a failed conversation into a FAQ answer.
+      return { text: '今、先生との通信がうまくいきませんでした。少し時間をおいて、もう一度お試しください。', responseSource: 'error', updatedContext: prevContext };
     }
   }
 

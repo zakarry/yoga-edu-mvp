@@ -3,36 +3,27 @@ import type { ConversationContext, TeacherResponse } from './teacherResponseServ
 import type { ConversationTurn } from './conversationHistory';
 import type { AITeacherLLMRequest, LLMKnowledgeItem, LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
 import { fetchLLMExplanation } from './llmExplanationService';
-import { classifyIntent, detectSafetyKeyword, isRedFlag, isPrescriptionRequest, isGeneralInfoRequest, resolveEntity, type ConversationIntent } from './safetyAndIntent';
+import { classifyIntent, detectSafetyKeyword, isRedFlag, isPrescriptionRequest, isGeneralInfoRequest, resolveEntity } from './safetyAndIntent';
+import { getKnowledgeRanking } from './teacherKnowledgeService';
+import { sanitizeKnowledgePayload, MAX_KNOWLEDGE_ITEMS } from './knowledgeGuardService';
+import { startConversationTrace, updateConversationTrace } from './conversationTrace';
+import { buildSafetySensitiveResponse, buildSafetyRedFlagResponse, buildSafetyPrescriptionResponse, buildSafetyGeneralInfoResponse, buildPoseSpecificResponse, buildBreathworkSpecificResponse, buildMeditationSpecificResponse, buildSequenceSpecificResponse } from './teacherResponseService';
 import { getCatalogEntry } from '../lib/poseCatalog';
 import { getBreathworkEntry } from '../lib/breathworkCatalog';
 import { getMeditationEntry } from '../lib/meditationCatalog';
 import { getSequenceEntry } from '../lib/sequenceCatalog';
 
-// Re-import the template functions we need as fallbacks from teacherResponseService.
-// We import them lazily via a dynamic require pattern is not possible in ESM,
-// so we import them statically. These are the same functions already exported.
-import {
-  buildUserStateResponse,
-  buildCasualResponse,
-  buildPreferenceResponse,
-  buildPracticeRequestResponse,
-  buildSafetySensitiveResponse,
-  buildSafetyRedFlagResponse,
-  buildSafetyPrescriptionResponse,
-  buildSafetyGeneralInfoResponse,
-  buildPoseSpecificResponse,
-  buildBreathworkSpecificResponse,
-  buildMeditationSpecificResponse,
-  buildSequenceSpecificResponse,
-  buildTopicFollowupResponse,
-  buildContextualFollowupResponse,
-  buildClarificationResponse,
-  tryBreathworkKnowledgeLookup,
-  tryKnowledgeLookup,
-} from './teacherResponseService';
-
-const CONVERSATION_FALLBACK = '今うまくお返事を作れませんでした。少し言い方を変えてもう一度話してもらえますか？';
+function getPracticeMetadata(message: string, context: TeacherContext, previous?: ConversationContext): TeacherResponse | undefined {
+  const entity = resolveEntity(message, previous?.lastPracticeDomain, previous?.lastPoseId, previous?.lastBreathworkId, previous?.lastMeditationId);
+  const sequence = entity.sequenceId && getSequenceEntry(entity.sequenceId);
+  if (sequence) return buildSequenceSpecificResponse(sequence, entity.questionType, context, previous);
+  const breathwork = entity.breathworkId && getBreathworkEntry(entity.breathworkId);
+  if (breathwork) return buildBreathworkSpecificResponse(breathwork, entity.questionType, context, previous);
+  const meditation = entity.meditationId && getMeditationEntry(entity.meditationId);
+  if (meditation) return buildMeditationSpecificResponse(meditation, entity.questionType, context, previous, message);
+  const pose = entity.poseId && getCatalogEntry(entity.poseId);
+  if (pose) return buildPoseSpecificResponse(pose, entity.questionType, context, previous);
+}
 
 export async function generateConversationResponse(
   context: TeacherContext,
@@ -40,6 +31,8 @@ export async function generateConversationResponse(
   turns: ConversationTurn[],
   prevContext?: ConversationContext,
 ): Promise<TeacherResponse> {
+  startConversationTrace(turns.length);
+  updateConversationTrace({ outcome: 'safety' });
   const name = context.persona?.name ?? 'AI先生';
   const safetyHit = detectSafetyKeyword(userMessage);
   const intent = classifyIntent(userMessage);
@@ -75,55 +68,21 @@ export async function generateConversationResponse(
     return buildSafetyGeneralInfoResponse(userMessage, context, prevContext);
   }
 
-  // ── Knowledge retrieval (auxiliary: feeds LLM context, not a dead-end) ──
-  const knowledgeItems: LLMKnowledgeItem[] = [];
-
-  if (intent === 'knowledge_question' || intent === 'practice_request') {
-    const resolution = resolveEntity(
-      userMessage,
-      prevContext?.lastPracticeDomain,
-      prevContext?.lastPoseId,
-      prevContext?.lastBreathworkId,
-      prevContext?.lastMeditationId,
-    );
-
-    // Entity-specific responses (pose/breathwork/meditation/sequence) are still
-    // useful for structured answers with action buttons. These return directly.
-    if (resolution.sequenceId) {
-      const seq = getSequenceEntry(resolution.sequenceId);
-      if (seq) return buildSequenceSpecificResponse(seq, resolution.questionType, context, prevContext);
-    }
-    if (resolution.breathworkId) {
-      const bw = getBreathworkEntry(resolution.breathworkId);
-      if (bw) return buildBreathworkSpecificResponse(bw, resolution.questionType, context, prevContext);
-    }
-    if (resolution.meditationId) {
-      const med = getMeditationEntry(resolution.meditationId);
-      if (med) return buildMeditationSpecificResponse(med, resolution.questionType, context, prevContext, userMessage);
-    }
-    if (resolution.poseId) {
-      const pose = getCatalogEntry(resolution.poseId);
-      if (pose) return buildPoseSpecificResponse(pose, resolution.questionType, context, prevContext);
-    }
-
-    // Try BM5 / breathwork knowledge / yoga knowledge lookups.
-    // If they succeed with knowledgeUsed, they already called the LLM internally
-    // (tryKnowledgeLookup calls fetchLLMExplanation). Return those directly.
-    const breathworkResult = await tryBreathworkKnowledgeLookup(userMessage, context, prevContext);
-    if (breathworkResult && breathworkResult.knowledgeUsed) {
-      return breathworkResult;
-    }
-
-    const knowledgeResult = await tryKnowledgeLookup(userMessage, context, prevContext);
-    if (knowledgeResult && knowledgeResult.knowledgeUsed) {
-      return knowledgeResult;
-    }
+  // A safety hold remains deterministic even when the next message has no keyword.
+  if (prevContext?.safetyHoldActive) {
+    return buildSafetySensitiveResponse(userMessage, context, prevContext);
   }
 
-  // ── LLM conversation (main engine) ──
-  // For all non-safety intents (user_state, casual_conversation, knowledge_question
-  // that didn't resolve to an entity, contextual_followup, etc.) we call the LLM
-  // with conversation history + persona + knowledge context.
+  // Knowledge enriches the same LLM request; it must never terminate conversation.
+  let knowledgeItems: LLMKnowledgeItem[] = [];
+  try {
+    const ranked = await getKnowledgeRanking(userMessage);
+    knowledgeItems = ranked.filter(item => item.score >= 40).slice(0, MAX_KNOWLEDGE_ITEMS).map(item => sanitizeKnowledgePayload(item.entry));
+  } catch {
+    // A retrieval outage must not prevent general conversation.
+  }
+  updateConversationTrace({ outcome: 'started', knowledgeItems: knowledgeItems.length });
+
   const persona: LLMPersona = {
     name: context.persona?.name ?? '',
     personality: context.persona?.personality ?? '',
@@ -151,16 +110,29 @@ export async function generateConversationResponse(
     sessionContext,
     knowledge: knowledgeItems,
     turns,
+    memory: context.memorySummary ? {
+      favoritePractices: context.memorySummary.favoritePractices,
+      preferredDuration: context.memorySummary.preferredDuration,
+      preferredExplanation: context.memorySummary.preferredExplanation,
+      preferredTone: context.memorySummary.preferredTone,
+    } : undefined,
   };
 
   const llmResult = await fetchLLMExplanation(llmPayload, context.userId ?? null);
 
   if (llmResult.text && !llmResult.fallback) {
+    updateConversationTrace({ outcome: 'llm', httpStatus: llmResult.httpStatus });
+    // Keep existing explicit practice actions without using their template text.
+    const metadata = intent === 'practice_request' || intent === 'knowledge_question' ? getPracticeMetadata(userMessage, context, prevContext) : undefined;
     return {
+      action: metadata?.action,
+      knowledgeUsed: knowledgeItems.length > 0,
+      knowledgeSource: knowledgeItems.length > 0 ? 'yoga_knowledge' : undefined,
       text: llmResult.text,
       responseSource: 'llm',
       updatedContext: {
         ...prevContext,
+        ...metadata?.updatedContext,
         lastUserMessage: userMessage,
         lastTeacherText: llmResult.text,
         lastAssistantMode: 'general_explanation',
@@ -168,51 +140,12 @@ export async function generateConversationResponse(
     };
   }
 
-  // ── LLM failed: graceful fallback to old templates ──
-  return oldTemplateFallback(context, userMessage, intent, prevContext, name);
-}
-
-function oldTemplateFallback(
-  context: TeacherContext,
-  userMessage: string,
-  intent: ConversationIntent,
-  prevContext: ConversationContext | undefined,
-  name: string,
-): TeacherResponse {
-  if (intent === 'user_state') {
-    return buildUserStateResponse(userMessage, context, prevContext);
-  }
-  if (intent === 'casual_conversation') {
-    return buildCasualResponse(userMessage, context, prevContext);
-  }
-  if (intent === 'preference') {
-    return buildPreferenceResponse(userMessage, context, prevContext);
-  }
-  if (intent === 'contextual_followup') {
-    const followup = buildTopicFollowupResponse(userMessage, context, prevContext);
-    if (followup) return followup;
-    return buildContextualFollowupResponse(userMessage, context, prevContext);
-  }
-  if (intent === 'conversational_clarification') {
-    return buildClarificationResponse(userMessage, context, prevContext);
-  }
-  if (intent === 'practice_request') {
-    if (prevContext?.safetyHoldActive) {
-      const text = `${name}です。先ほど痛みがあると教えてもらっているので、通常のヨガ実践は今は進めないようにしましょう。`;
-      return {
-        text,
-        isSafety: true,
-        responseSource: 'safety_gate',
-        updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, lastAssistantMode: 'safety_restriction' },
-      };
-    }
-    return buildPracticeRequestResponse(userMessage, context, prevContext);
-  }
-
-  // Last resort: graceful conversational fallback (NOT the old FAQ prompt)
+  updateConversationTrace({ outcome: 'unavailable', reason: llmResult.reason, httpStatus: llmResult.httpStatus });
   return {
-    text: `${name}です。${CONVERSATION_FALLBACK}`,
+    text: llmResult.reason === 'rate_limited'
+      ? '少し時間をおいてから、続けてお話しください。'
+      : '今、先生との通信がうまくいきませんでした。少し時間をおいて、もう一度お試しください。',
     responseSource: 'error',
-    updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: CONVERSATION_FALLBACK },
+    updatedContext: prevContext,
   };
 }
