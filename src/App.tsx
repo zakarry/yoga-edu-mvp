@@ -1,3 +1,5 @@
+import { DirectoryDemoContext } from './lib/DirectoryDemoContext';
+import { visibleDirectoryItems, isDemoDirectoryItem } from './lib/directoryVisibility';
 import { useEffect, useMemo, useState } from 'react';
 import {
   AREAS,
@@ -1211,7 +1213,8 @@ export default function App() {
     return () => { active = false; };
   }, []);
 
-  const allItems = useMemo<SearchItem[]>(() => [...schoolList, ...teacherList, ...eventList, ...clubList], [schoolList, teacherList, eventList, clubList]);
+  const includeDemo = entryTarget === 'event-demo';
+  const allItems = useMemo<SearchItem[]>(() => visibleDirectoryItems([...schoolList, ...teacherList, ...eventList, ...clubList], includeDemo), [schoolList, teacherList, eventList, clubList, includeDemo]);
 
   const filteredItems = useMemo(() => {
     return allItems.filter((item) => {
@@ -1358,7 +1361,9 @@ export default function App() {
   ];
 
   return (
+    <DirectoryDemoContext.Provider value={includeDemo}>
     <div className="app-root">
+      {includeDemo && <div className="directory-demo-notice" role="note">DEMO：掲載先はサンプルを含みます。実在の掲載者へのご案内ではありません。</div>}
       <header className="topbar">
         <div className="topbar-brand-row">
           <button className="brandmark" onClick={() => moveTo('home')}>
@@ -2537,7 +2542,7 @@ export default function App() {
         </div>
       )}
 
-      {detailItem && (
+      {detailItem && (includeDemo || !isDemoDirectoryItem(detailItem)) && (
         <aside className="detail-drawer">
           <div className="detail-back-row">
             <button className="detail-back-button" onClick={() => setDetailItem(null)}>← 地図へ戻る</button>
@@ -2547,6 +2552,7 @@ export default function App() {
             <div>
               <span className={`type-pill ${detailItem.type}`}>{detailItem.type === 'school' ? 'スクール' : detailItem.type === 'teacher' ? '先生' : detailItem.type === 'event' ? 'イベント' : 'ヨガクラブ'}</span>
               {detailItem.type === 'event' && isPastEventItem(detailItem) && <span className="badge-ended-event" style={{ marginLeft: 8 }}>終了</span>}
+              {isDemoDirectoryItem(detailItem) && <span className="directory-demo-badge">DEMO / サンプル</span>}
               <h3>{detailItem.name}</h3>
             </div>
           </div>
@@ -2605,5 +2611,6 @@ export default function App() {
         />
       )}
     </div>
+    </DirectoryDemoContext.Provider>
   );
 }

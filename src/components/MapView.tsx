@@ -1,3 +1,5 @@
+import { useDirectoryDemo } from '../lib/DirectoryDemoContext';
+import { visibleDirectoryItems, isDemoDirectoryItem, DIRECTORY_EMPTY_MESSAGE } from '../lib/directoryVisibility';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { SearchItem } from '../data';
 
@@ -59,6 +61,8 @@ function isValidCoord(lat: unknown, lng: unknown): boolean {
 }
 
 export function MapView({ items, selectedType = 'all', onSelectItem, title, subtitle }: MapViewProps) {
+  const includeDemo = useDirectoryDemo();
+  const allowedItems = useMemo(() => visibleDirectoryItems(items, includeDemo), [items, includeDemo]);
   const mapRef = useRef<HTMLDivElement | null>(null);
   const googleMapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -68,19 +72,19 @@ export function MapView({ items, selectedType = 'all', onSelectItem, title, subt
   const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
 
   const visibleItems = useMemo(
-    () => (selectedType === 'all' ? items : items.filter((item) => item.type === selectedType)),
-    [items, selectedType],
+    () => (selectedType === 'all' ? allowedItems : allowedItems.filter((item) => item.type === selectedType)),
+    [allowedItems, selectedType],
   );
 
   useEffect(() => {
     window.__openMapDetail = (id: string) => {
-      const found = items.find((item) => item.id === id);
+      const found = allowedItems.find((item) => item.id === id);
       if (found && onSelectItem) onSelectItem(found);
     };
     return () => {
       delete window.__openMapDetail;
     };
-  }, [items, onSelectItem]);
+  }, [allowedItems, onSelectItem]);
 
   // Effect A: Initialize map instance once (apiKey + container only)
   useEffect(() => {
@@ -137,7 +141,7 @@ export function MapView({ items, selectedType = 'all', onSelectItem, title, subt
         const marker = new google.maps.Marker({
           map,
           position,
-          title: item.name,
+          title: `${isDemoDirectoryItem(item) ? 'DEMO / サンプル：' : ''}${item.name}`,
           icon: {
             url: buildMarker(pinColors[item.type]),
             scaledSize: new google.maps.Size(30, 30),
@@ -148,7 +152,7 @@ export function MapView({ items, selectedType = 'all', onSelectItem, title, subt
           try {
             infoWindowRef.current.setContent(`
               <div style="padding:8px 10px; min-width: 220px; font-family: sans-serif;">
-                <div style="font-size:12px;color:#6b7280;margin-bottom:6px;">${labelOf(item.type)}</div>
+                <div style="font-size:12px;color:#6b7280;margin-bottom:6px;">${labelOf(item.type)} ${isDemoDirectoryItem(item) ? '— DEMO / サンプル' : ''}</div>
                 <div style="font-size:15px;font-weight:700;margin-bottom:8px;">${item.name}</div>
                 <div style="font-size:13px;line-height:1.6;color:#374151;margin-bottom:10px;">${item.description}</div>
                 <button onclick="window.__openMapDetail && window.__openMapDetail('${item.id}')" style="background:#102542;color:#fff;border:none;border-radius:999px;padding:8px 12px;font-size:12px;cursor:pointer;">詳細を見る</button>
@@ -237,6 +241,7 @@ export function MapView({ items, selectedType = 'all', onSelectItem, title, subt
         <span>{visibleItems.length}件を表示中</span>
       </div>
       {subtitle && <p className="map-subtitle">{subtitle}</p>}
+      {visibleItems.length === 0 && <p className="empty-box">{DIRECTORY_EMPTY_MESSAGE}</p>}
       <div ref={mapRef} className="real-map" />
     </section>
   );

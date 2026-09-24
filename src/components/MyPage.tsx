@@ -1,3 +1,5 @@
+import { useDirectoryDemo } from '../lib/DirectoryDemoContext';
+import { visibleDirectoryItems } from '../lib/directoryVisibility';
 import type { ReactNode } from 'react';
 import type { SearchItem, StudentDiagnosisInput } from '../data';
 import type { DiagnosisResult } from './ResultPage';
@@ -155,6 +157,7 @@ function buildChangeComment(latest: DiagnosisHistoryRecord, previous?: Diagnosis
 }
 
 export function MyPage({ history, onRestart, onDetail, onBackHome, cloudDiagnosisSection, cloudPracticeSection, teachingJourneySection, myTeacherSection, aiTeacherMemorySection }: MyPageProps) {
+  const includeDemo = useDirectoryDemo();
   const auth = useAuth();
   const latest = history[0];
   const previous = history[1];
@@ -341,7 +344,7 @@ export function MyPage({ history, onRestart, onDetail, onBackHome, cloudDiagnosi
 
       <CardList
         title="最新のおすすめスクール"
-        items={latest.result.recommendedSchools.slice(0, 1)}
+        items={visibleDirectoryItems(latest.result.recommendedSchools, includeDemo).slice(0, 1)}
         onDetail={onDetail}
         variant="prioritySchool"
         stepLabel="おすすめスクール"
@@ -363,7 +366,7 @@ export function MyPage({ history, onRestart, onDetail, onBackHome, cloudDiagnosi
       <div id="recommended-school">
         <CardList
           title="最新のおすすめスクール"
-          items={latest.result.recommendedSchools.slice(0, 1)}
+          items={visibleDirectoryItems(latest.result.recommendedSchools, includeDemo).slice(0, 1)}
           onDetail={onDetail}
           variant="prioritySchool"
           stepLabel="おすすめスクール"
