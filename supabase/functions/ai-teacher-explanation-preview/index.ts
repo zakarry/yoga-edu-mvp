@@ -397,6 +397,7 @@ Deno.serve(async (req: Request) => {
     // Request-local evidence, with no token, account ID, prompt or secret.
     const evidence = {
       version: 'conversation-v2-evidence-1',
+      promptRevision: 'conversation-continuity-2',
       openaiCalled: llmResult.providerStatus !== undefined,
       openaiStatus: llmResult.providerStatus ?? null,
       completionId: llmResult.completionId ?? null,
