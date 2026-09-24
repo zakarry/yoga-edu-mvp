@@ -33,6 +33,13 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const accessToken = req.headers.get("Authorization")?.match(/^Bearer\s+(\S+)$/i)?.[1] ?? "";
+    if (!accessToken) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     // 1. JWT確認 — anon key + user's Authorization header
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -42,7 +49,7 @@ Deno.serve(async (req: Request) => {
       },
     );
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -64,10 +71,22 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // 3. AAL2検証 — Supabase標準APIで認証済みJWTのAALを確認
-    const accessToken = req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
-    const { data: aalData, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(accessToken);
-    if (aalError || !aalData || aalData.currentLevel !== "aal2") {
+    // 3. getUser(accessToken)で認証検証が成功した同一JWTのaalだけを判定。
+    // このSDK版のgetAuthenticatorAssuranceLevelはJWT引数を扱わない。
+    let aal: unknown = null;
+    try {
+      const parts = accessToken.split(".");
+      if (parts.length === 3) {
+        const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+        const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+        const bytes = Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
+        const claims = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+        aal = claims?.aal;
+      }
+    } catch {
+      // 不正・欠落したclaimは必ず拒否する。
+    }
+    if (aal !== "aal2") {
       return new Response(JSON.stringify({ error: "MFA_REQUIRED" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
