@@ -21,6 +21,7 @@ import type { DiagnosisRecord, SafetyState } from '../services/diagnosisService'
 import { buildTeacherContext, type TeacherContext } from '../services/teacherContextService';
 import { generateTodayPlan, type TodayPlan } from '../services/todayPlannerService';
 import { generateTeacherResponse, generateNextSuggestion, getLastBM5Debug, getLastRouterDebug, type ConversationContext, type TeacherResponseAction } from '../services/teacherResponseService';
+import { buildConversationTurns } from '../services/conversationHistory';
 import { attachKnowledgeToTodayPlan, fetchKnowledgeExplanation, type TodayPlanWithKnowledge } from '../services/todayPlanKnowledgeService';
 import type { KnowledgeExplanation } from '../services/teacherKnowledgeService';
 import { runLLMRequestDryRun, type DryRunResult } from '../services/llmRequestDryRun';
@@ -871,6 +872,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const handleSendChat = useCallback(() => {
     if (!chatInput.trim()) return;
     const userMsg: ChatMessage = { role: 'user', text: chatInput };
+    // Build conversation turns from existing chat history (before adding new message)
+    const turns = buildConversationTurns(chatMessages);
     setChatMessages((prev) => [...prev, userMsg]);
     setChatInput('');
     setChatTyping(true);
@@ -883,7 +886,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           safetyHoldActive: sessionSafetyBlocked || conversationContext.safetyHoldActive,
           safetyActiveSignals: sessionSafetyBlocked ? (loadSessionSafety()?.activeSignals ?? conversationContext.safetyActiveSignals ?? ['pain']) : conversationContext.safetyActiveSignals,
         };
-        const response = await generateTeacherResponse(ctx, userMsg.text, contextWithSafety);
+        const response = await generateTeacherResponse(ctx, userMsg.text, contextWithSafety, turns);
         const dbg = getLastBM5Debug();
         const routerDbg = getLastRouterDebug();
         if (auth.profile?.is_admin && dbg) {

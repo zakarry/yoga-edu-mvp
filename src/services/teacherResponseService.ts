@@ -8,7 +8,7 @@ import { getMeditationEntry, type MeditationCatalogEntry } from '../lib/meditati
 import { getSequenceEntry, type SequenceCatalogEntry } from '../lib/sequenceCatalog';
 import { fetchLLMExplanation } from './llmExplanationService';
 import { searchBM5, formatBM5Response, buildBM5Fallback, buildBM5Followup, classifyDomain as classifyBM5Domain, normalizeQuery, fetchBM5ById, resolveCanonicalConcept, type BM5SearchResult, type BM5DebugLog } from './bm5RetrievalService';
-import type { AITeacherLLMRequest, LLMKnowledgeItem, LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
+import type { AITeacherLLMRequest, LLMKnowledgeItem, LLMPersona, LLMSessionContext, ConversationTurn } from '../types/aiTeacherLLM';
 
 let lastBM5Debug: BM5DebugLog | null = null;
 export function getLastBM5Debug(): BM5DebugLog | null { return lastBM5Debug; }
@@ -119,7 +119,7 @@ function parseStyle(text: string): string | null {
   return null;
 }
 
-function buildUserStateResponse(
+export function buildUserStateResponse(
   userMessage: string,
   context: TeacherContext,
   prevContext?: ConversationContext,
@@ -185,7 +185,7 @@ function buildUserStateResponse(
   };
 }
 
-function buildCasualResponse(
+export function buildCasualResponse(
   userMessage: string,
   context: TeacherContext,
   prevContext?: ConversationContext,
@@ -224,7 +224,7 @@ function buildCasualResponse(
   };
 }
 
-function buildPreferenceResponse(
+export function buildPreferenceResponse(
   userMessage: string,
   context: TeacherContext,
   prevContext?: ConversationContext,
@@ -280,7 +280,7 @@ function buildPreferenceResponse(
   };
 }
 
-function buildSafetySensitiveResponse(
+export function buildSafetySensitiveResponse(
   userMessage: string,
   context: TeacherContext,
   prevContext?: ConversationContext,
@@ -297,7 +297,7 @@ function buildSafetySensitiveResponse(
   };
 }
 
-function buildSafetyGeneralInfoResponse(
+export function buildSafetyGeneralInfoResponse(
   userMessage: string,
   context: TeacherContext,
   prevContext?: ConversationContext,
@@ -322,7 +322,7 @@ function buildSafetyGeneralInfoResponse(
   };
 }
 
-function buildSafetyRedFlagResponse(
+export function buildSafetyRedFlagResponse(
   userMessage: string,
   context: TeacherContext,
   prevContext?: ConversationContext,
@@ -337,7 +337,7 @@ function buildSafetyRedFlagResponse(
   };
 }
 
-function buildSafetyPrescriptionResponse(
+export function buildSafetyPrescriptionResponse(
   userMessage: string,
   context: TeacherContext,
   prevContext?: ConversationContext,
@@ -354,7 +354,7 @@ function buildSafetyPrescriptionResponse(
   };
 }
 
-function buildClarificationResponse(
+export function buildClarificationResponse(
   userMessage: string,
   context: TeacherContext,
   prevContext?: ConversationContext,
@@ -387,7 +387,7 @@ function buildClarificationResponse(
   };
 }
 
-function buildContextualFollowupResponse(
+export function buildContextualFollowupResponse(
   userMessage: string,
   context: TeacherContext,
   prevContext?: ConversationContext,
@@ -493,7 +493,7 @@ function isBM5Repair(userMessage: string, prevContext?: ConversationContext): bo
   return REPAIR_PATTERNS.test(userMessage);
 }
 
-async function tryBM5Lookup(
+export async function tryBM5Lookup(
   userMessage: string,
   context: TeacherContext,
   prevContext: ConversationContext | undefined,
@@ -660,7 +660,7 @@ async function tryBM5Lookup(
   return null;
 }
 
-async function tryBreathworkKnowledgeLookup(
+export async function tryBreathworkKnowledgeLookup(
   userMessage: string,
   context: TeacherContext,
   prevContext: ConversationContext | undefined,
@@ -726,7 +726,7 @@ async function tryBreathworkKnowledgeLookup(
   return null;
 }
 
-async function tryKnowledgeLookup(
+export async function tryKnowledgeLookup(
   userMessage: string,
   context: TeacherContext,
   prevContext: ConversationContext | undefined,
@@ -955,7 +955,7 @@ function buildPoseAnswer(
   }
 }
 
-function buildPoseSpecificResponse(
+export function buildPoseSpecificResponse(
   pose: PoseCatalogEntry,
   questionType: QuestionType,
   context: TeacherContext,
@@ -1080,7 +1080,7 @@ function buildBreathworkAnswer(
   }
 }
 
-function buildBreathworkSpecificResponse(
+export function buildBreathworkSpecificResponse(
   bw: BreathworkCatalogEntry,
   questionType: QuestionType,
   context: TeacherContext,
@@ -1112,7 +1112,7 @@ function buildMeditationGeneralDefinition(med: MeditationCatalogEntry, cat: stri
   return `${name}は、${cat}です。${med.description}`;
 }
 
-function buildSequenceSpecificResponse(
+export function buildSequenceSpecificResponse(
   seq: SequenceCatalogEntry,
   questionType: QuestionType,
   context: TeacherContext,
@@ -1256,7 +1256,7 @@ function buildMeditationAnswer(
   }
 }
 
-function buildMeditationSpecificResponse(
+export function buildMeditationSpecificResponse(
   med: MeditationCatalogEntry,
   questionType: QuestionType,
   context: TeacherContext,
@@ -1275,7 +1275,7 @@ function buildMeditationSpecificResponse(
   };
 }
 
-function buildTopicFollowupResponse(
+export function buildTopicFollowupResponse(
   userMessage: string,
   context: TeacherContext,
   prevContext?: ConversationContext,
@@ -1303,7 +1303,7 @@ function buildTopicFollowupResponse(
   return null;
 }
 
-function buildGeneralKnowledgeFallback(
+export function buildGeneralKnowledgeFallback(
   userMessage: string,
   context: TeacherContext,
   prevContext?: ConversationContext,
@@ -1335,7 +1335,7 @@ function buildGeneralKnowledgeFallback(
   };
 }
 
-function buildPracticeRequestResponse(
+export function buildPracticeRequestResponse(
   userMessage: string,
   context: TeacherContext,
   prevContext?: ConversationContext,
@@ -1423,12 +1423,29 @@ export async function generateTeacherResponse(
   context: TeacherContext,
   userMessage: string,
   prevContext?: ConversationContext,
+  turns?: ConversationTurn[],
 ): Promise<TeacherResponse> {
   const route = routeConversation(userMessage);
   lastRouterDebug = route.debug;
   if (context.userId && import.meta.env.DEV) {
     console.log('[ConversationRouter]', route.debug);
   }
+
+  // ── Conversation Engine v2: LLM-centric path ──
+  // When turns are provided (STEP 5 chat), route through the conversation engine.
+  // Guest users (no userId) also fall through to the old path since they can't
+  // authenticate with the Edge Function.
+  if (turns && turns.length > 0 && context.userId) {
+    try {
+      const { generateConversationResponse } = await import('./conversationEngine');
+      const result = await generateConversationResponse(context, userMessage, turns, prevContext);
+      return stripActionIfSafety(result, prevContext);
+    } catch {
+      // Fall through to old path on any error
+    }
+  }
+
+  // ── Legacy path (STEP 1-4, guest, or engine failure) ──
   try {
     const result = await generateTeacherResponseInner(context, userMessage, prevContext, route);
     return stripActionIfSafety(result, prevContext);

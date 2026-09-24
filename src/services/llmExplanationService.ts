@@ -25,8 +25,10 @@ export interface LLMExplanationResult {
 
 async function canUseLLM(userId: string | null): Promise<boolean> {
   if (!LLM_ENABLED || !userId || !supabase) return false;
+  // Phase 1: free and paid members can use LLM conversation.
+  // Guest (no userId) falls back to old template path.
   const tier = await getMembershipTier(userId);
-  return isPaidMember(tier);
+  return tier === 'free' || isPaidMember(tier);
 }
 
 export async function fetchLLMExplanation(

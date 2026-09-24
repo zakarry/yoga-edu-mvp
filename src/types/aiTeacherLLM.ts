@@ -25,9 +25,15 @@ export interface LLMPersona {
   teachingLanguage: string;
 }
 
+export interface ConversationTurn {
+  role: 'user' | 'teacher';
+  text: string;
+}
+
 export interface AITeacherLLMRequest {
   userMessage: string;
   persona: LLMPersona;
   sessionContext: LLMSessionContext;
   knowledge: LLMKnowledgeItem[];
+  turns?: ConversationTurn[];
 }

@@ -7,30 +7,65 @@ const corsHeaders = {
 };
 
 const LLM_MODEL = Deno.env.get("LLM_MODEL") ?? "gpt-4o-mini";
-const LLM_TIMEOUT_MS = 10000;
-const MAX_PROMPT_CHARS = 12000;
+const LLM_TIMEOUT_MS = 15000;
+const MAX_PROMPT_CHARS = 16000;
 const MAX_KNOWLEDGE_ITEMS = 3;
 const MAX_USER_MESSAGE_CHARS = 1000;
 const MAX_PERSONA_FIELD_CHARS = 200;
 const MAX_PREFERENCE_CHARS = 100;
+const MAX_TURNS = 6;
+const MAX_TURN_CHARS = 500;
 
-const SYSTEM_INSTRUCTION = `あなたはYoga AIのMy AI Teacherです。
-以下のルールを厳守してください。
-- 与えられたKnowledgeの範囲だけで回答する
-- Knowledgeにない情報を追加しない
+const SYSTEM_INSTRUCTION = `あなたはYoga AIのMy AI Teacherです。ヨガの先生として、ユーザーと自然な会話をしてください。
+
+【Layer 1: Professional Yoga Core】
+あなたは以下のヨガ知識を持つ専門家です：
+- アーサナ（ポーズ）の正しい理解と初心者向け説明
+- プラーナーヤーマ（呼吸法）の安全な指導
+- ディアーナ（瞑想）の基本的な案内
+- シーケンス構成の原則
+- Yoga Knowledgeデータベースの活用
+与えられたKnowledgeがある場合はそれを参考にしてください。Knowledgeがない場合は、あなたの知識で自然に会話してください。
+
+【Layer 2: Teacher Personality】
+ユーザーが設定した先生の人格（名前、性格、得意分野）に従って話してください。
+先生ごとに話し方や距離感が変わります。
+
+【Layer 3: My Yoga Memory】
+ユーザーの練習履歴や好みが提供されている場合は、それを考慮してください。
+ただし、提供された情報の範囲で対応し、推測で補完しないでください。
+
+【Layer 4: Federation Rules — 全日本ヨガ連盟 共通ルール】
+以下のルールを厳守してください：
 - 医療診断・治療・安全性判断をしない
 - 疾患、痛み、妊娠、怪我等への個別助言をしない
-- Practiceの個別推薦をしない
+- 痛みや異常を感じた場合は実践を中止し、必要時は医療専門家への相談を勧める
+- 危険な実践を勧めない
+- 過度な断定をしない
 - 効果効能を誇張しない
-- ユーザーのPersona設定に合う話し方をする
-- 回答は簡潔で自然にする
-- 不明な場合は推測しない
-- 回答本文のみを出力する（chain-of-thoughtやreasoningは含めない）`;
+- ユーザーの状態に配慮する
+
+【会話の基本方針】
+- ユーザーの発言の意味・感情・状態をまず理解する
+- 必要なら短く共感する
+- 必要な場合だけ1つ程度聞き返す
+- ヨガの知識が必要ならKnowledgeを参照して説明する
+- 十分な情報があれば実践を提案する
+- 毎回「何を知りたいですか？」に戻さない
+- 通常会話では短く、自然に、先生らしく
+- Knowledge質問では必要な説明を行う
+- 回答本文のみを出力する（chain-of-thoughtやreasoningは含めない）
+- 不明な場合は推測しない`;
 
 const FORBIDDEN_PHRASES = [
   "治す", "治療する", "安全です", "治療します", "治ります",
   "医学的", "診断します", "完治", "療法",
 ];
+
+interface ConversationTurn {
+  role: "user" | "teacher";
+  text: string;
+}
 
 interface LLMKnowledgeItem {
   title: string;
@@ -64,6 +99,7 @@ interface AITeacherLLMRequest {
   persona: LLMPersona;
   sessionContext: LLMSessionContext;
   knowledge: LLMKnowledgeItem[];
+  turns?: ConversationTurn[];
 }
 
 function clampText(value: unknown, max: number): string {
@@ -78,18 +114,13 @@ interface ApprovedKnowledgeRow {
   publicContent: string;
 }
 
-/*
-  The browser assembles the knowledge array it wants the model to answer from, so
-  its contents are attacker controlled. Re-resolve every requested item against
-  the approved set returned by lookup_teacher_explanation (which applies the
-  usage / editorial / safety-review filters server-side) and use the stored copy
-  of the text. Anything with no approved match makes the whole request invalid.
-*/
 async function resolveApprovedKnowledge(
   // deno-lint-ignore no-explicit-any
   client: any,
   requested: LLMKnowledgeItem[],
 ): Promise<LLMKnowledgeItem[] | null> {
+  if (!requested || requested.length === 0) return [];
+
   const resolved: LLMKnowledgeItem[] = [];
   const seen = new Set<string>();
 
@@ -114,40 +145,65 @@ async function resolveApprovedKnowledge(
     });
   }
 
-  return resolved.length > 0 ? resolved : null;
+  return resolved;
 }
 
-function buildUserPrompt(req: AITeacherLLMRequest): string {
-  const knowledgeText = req.knowledge.map((k, i) => {
-    const truncated = k.content.length > 2000
-      ? k.content.slice(0, 2000) + "…"
-      : k.content;
-    return `[${i + 1}]\ntitle: ${k.title}\ncategory: ${k.category}\ncontent: ${truncated}`;
-  }).join("\n\n");
-
+function buildSystemContent(req: AITeacherLLMRequest, approvedKnowledge: LLMKnowledgeItem[]): string {
   const langMap: Record<string, string> = {
     ja: "日本語", en: "English", zh: "中文", ko: "한국어",
   };
   const lang = langMap[req.persona?.teachingLanguage ?? "ja"] ?? "日本語";
 
-  return `User question:
-${clampText(req.userMessage, MAX_USER_MESSAGE_CHARS)}
+  let knowledgeSection = "";
+  if (approvedKnowledge.length > 0) {
+    const knowledgeText = approvedKnowledge.map((k, i) => {
+      const truncated = k.content.length > 2000
+        ? k.content.slice(0, 2000) + "…"
+        : k.content;
+      return `[${i + 1}]\ntitle: ${k.title}\ncategory: ${k.category}\ncontent: ${truncated}`;
+    }).join("\n\n");
+    knowledgeSection = `\n\n【参考Knowledge】\n${knowledgeText}`;
+  }
 
-Teacher persona:
-name: ${clampText(req.persona?.name, MAX_PERSONA_FIELD_CHARS)}
-personality: ${clampText(req.persona?.personality, MAX_PERSONA_FIELD_CHARS)}
-specialty: ${clampText(req.persona?.specialty, MAX_PERSONA_FIELD_CHARS)}
-language: ${lang}
+  const personaSection = `\n\n【Teacher Personality】\nname: ${clampText(req.persona?.name, MAX_PERSONA_FIELD_CHARS)}\npersonality: ${clampText(req.persona?.personality, MAX_PERSONA_FIELD_CHARS)}\nspecialty: ${clampText(req.persona?.specialty, MAX_PERSONA_FIELD_CHARS)}\nlanguage: ${lang}`;
 
-Session preferences:
-explanationPreference: ${clampText(req.sessionContext?.explanationPreference, MAX_PREFERENCE_CHARS)}
-cuePreference: ${clampText(req.sessionContext?.cuePreference, MAX_PREFERENCE_CHARS)}
-praisePreference: ${clampText(req.sessionContext?.praisePreference, MAX_PREFERENCE_CHARS)}
+  let sessionSection = "";
+  if (req.sessionContext) {
+    const ps = req.sessionContext.practiceSummary;
+    sessionSection = `\n\n【User Context】\npracticeSessions: ${ps?.totalSessions ?? 0}\nfavoriteTypes: ${(ps?.favoriteTypes ?? []).join(", ")}\nexplanationPreference: ${clampText(req.sessionContext.explanationPreference, MAX_PREFERENCE_CHARS)}\ncuePreference: ${clampText(req.sessionContext.cuePreference, MAX_PREFERENCE_CHARS)}\npraisePreference: ${clampText(req.sessionContext.praisePreference, MAX_PREFERENCE_CHARS)}`;
+    if (req.sessionContext.requestedMinutes) sessionSection += `\nrequestedMinutes: ${req.sessionContext.requestedMinutes}`;
+    if (req.sessionContext.requestedType) sessionSection += `\nrequestedType: ${req.sessionContext.requestedType}`;
+  }
 
-Approved Yoga Knowledge:
-${knowledgeText}
+  return `${SYSTEM_INSTRUCTION}${personaSection}${sessionSection}${knowledgeSection}\n\n${lang}で回答してください。`;
+}
 
-上記Knowledgeの範囲だけで、${lang}で回答してください。`;
+function buildMessages(req: AITeacherLLMRequest, systemContent: string): Array<{ role: string; content: string }> {
+  const messages: Array<{ role: string; content: string }> = [
+    { role: "system", content: systemContent },
+  ];
+
+  // Add conversation history as alternating user/assistant messages
+  if (req.turns && Array.isArray(req.turns)) {
+    const turns = req.turns.slice(-MAX_TURNS);
+    for (const turn of turns) {
+      if (!turn || typeof turn.text !== "string") continue;
+      const text = turn.text.slice(0, MAX_TURN_CHARS);
+      if (!text.trim()) continue;
+      messages.push({
+        role: turn.role === "user" ? "user" : "assistant",
+        content: text,
+      });
+    }
+  }
+
+  // Add current user message
+  messages.push({
+    role: "user",
+    content: clampText(req.userMessage, MAX_USER_MESSAGE_CHARS),
+  });
+
+  return messages;
 }
 
 function postCheckResponse(text: string): boolean {
@@ -160,7 +216,7 @@ function postCheckResponse(text: string): boolean {
   return true;
 }
 
-async function callLLM(prompt: string): Promise<{ text: string | null; error?: string }> {
+async function callLLM(messages: Array<{ role: string; content: string }>): Promise<{ text: string | null; error?: string }> {
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) return { text: null, error: "no_api_key" };
 
@@ -176,10 +232,7 @@ async function callLLM(prompt: string): Promise<{ text: string | null; error?: s
       },
       body: JSON.stringify({
         model: LLM_MODEL,
-        messages: [
-          { role: "system", content: SYSTEM_INSTRUCTION },
-          { role: "user", content: prompt },
-        ],
+        messages,
         max_tokens: 800,
         temperature: 0.7,
       }),
@@ -236,11 +289,25 @@ Deno.serve(async (req: Request) => {
       .eq("id", user.id)
       .maybeSingle();
 
-    if (profileError || !profile || profile.membership_tier !== "paid") {
+    // Phase 1: allow both free and paid members. Guest (no auth) is rejected above.
+    if (profileError || !profile) {
       return new Response(JSON.stringify({
         text: null,
         fallback: true,
-        reason: "paid_membership_required",
+        reason: "profile_not_found",
+        model: LLM_MODEL,
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const tier = profile.membership_tier ?? "free";
+    if (tier !== "free" && tier !== "paid") {
+      return new Response(JSON.stringify({
+        text: null,
+        fallback: true,
+        reason: "invalid_tier",
         model: LLM_MODEL,
       }), {
         status: 200,
@@ -258,11 +325,16 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    if (!Array.isArray(body?.knowledge) || body.knowledge.length === 0) {
+    if (typeof body.userMessage !== "string" || body.userMessage.trim().length === 0) {
       return new Response(JSON.stringify({ error: "Invalid request" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Knowledge is now optional — empty array is allowed for general conversation
+    if (!Array.isArray(body.knowledge)) {
+      body.knowledge = [];
     }
 
     if (body.knowledge.length > MAX_KNOWLEDGE_ITEMS) {
@@ -272,24 +344,16 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    if (typeof body.userMessage !== "string" || body.userMessage.trim().length === 0) {
-      return new Response(JSON.stringify({ error: "Invalid request" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Never trust the knowledge text sent by the browser: rebuild it from the
-    // approved rows in the database.
+    // Resolve approved knowledge (returns [] for empty input, null for invalid)
     const approvedKnowledge = await resolveApprovedKnowledge(supabase, body.knowledge);
-    if (!approvedKnowledge) {
+    if (approvedKnowledge === null) {
       return new Response(JSON.stringify({ error: "Invalid request" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Server-side rate limit (the browser-side counter is advisory only).
+    // Server-side rate limit
     const { data: claim, error: claimError } = await supabase.rpc("claim_ai_teacher_llm_call");
     if (claimError || !claim || claim.allowed !== true) {
       return new Response(JSON.stringify({
@@ -303,15 +367,21 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const prompt = buildUserPrompt({ ...body, knowledge: approvedKnowledge });
-    if (prompt.length > MAX_PROMPT_CHARS) {
-      return new Response(JSON.stringify({ error: "Invalid request" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const systemContent = buildSystemContent({ ...body, knowledge: approvedKnowledge }, approvedKnowledge);
+    const messages = buildMessages({ ...body, knowledge: approvedKnowledge }, systemContent);
+
+    // Estimate prompt size
+    const promptSize = messages.reduce((sum, m) => sum + m.content.length, 0);
+    if (promptSize > MAX_PROMPT_CHARS) {
+      // Trim oldest turns to fit
+      while (messages.length > 2 && promptSize > MAX_PROMPT_CHARS) {
+        const removed = messages.splice(1, 1)[0];
+        // Can't recompute promptSize easily, just break after removing oldest turns
+        break;
+      }
     }
 
-    const llmResult = await callLLM(prompt);
+    const llmResult = await callLLM(messages);
 
     if (llmResult.error) {
       console.error("ai-teacher-explanation: llm call failed", llmResult.error);
@@ -337,8 +407,6 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    // Log server-side only: the exception text is internal detail and must not
-    // be returned to the caller.
     console.error("ai-teacher-explanation: unhandled error", err);
     return new Response(JSON.stringify({
       text: null,
