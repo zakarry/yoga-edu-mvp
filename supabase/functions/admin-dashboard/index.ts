@@ -1,0 +1,380 @@
+import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
+};
+
+const CURRENT_TERMS_VERSION = "1.0";
+const CURRENT_PRIVACY_VERSION = "1.0";
+const DEFAULT_PAGE_SIZE = 50;
+const MAX_PAGE_SIZE = 200;
+
+interface AdminRequest {
+  action: "summary" | "members";
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  membershipTier?: "all" | "free" | "paid";
+  lineLinked?: boolean;
+}
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 200, headers: corsHeaders });
+  }
+
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  try {
+    // 1. JWT確認 — anon key + user's Authorization header
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      {
+        global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
+      },
+    );
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 2. profiles.is_admin 確認
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profileError || !profile || profile.is_admin !== true) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 3. Parse request body
+    let body: AdminRequest;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid request" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 4. service_role client for privileged queries
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!serviceKey) {
+      return new Response(JSON.stringify({ error: "Server config error" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      serviceKey,
+      { auth: { autoRefreshToken: false, persistSession: false } },
+    );
+
+    if (body.action === "summary") {
+      return handleSummary(admin, corsHeaders);
+    } else if (body.action === "members") {
+      return handleMembers(admin, corsHeaders, body);
+    } else {
+      return new Response(JSON.stringify({ error: "Unknown action" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  } catch (err) {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
+
+async function handleSummary(
+  // deno-lint-ignore no-explicit-any
+  admin: any,
+  corsHeaders: Record<string, string>,
+): Promise<Response> {
+  // Yoga AI会員 = user_consents with current version
+  const { data: consentUsers, error: consentError } = await admin
+    .from("user_consents")
+    .select("user_id")
+    .eq("terms_version", CURRENT_TERMS_VERSION)
+    .eq("privacy_version", CURRENT_PRIVACY_VERSION);
+
+  if (consentError) {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const memberUserIds = (consentUsers ?? []).map((r: { user_id: string }) => r.user_id);
+  const totalMembers = memberUserIds.length;
+
+  // Get profiles for these members
+  let freeCount = 0;
+  let paidCount = 0;
+  let todayCount = 0;
+  let weekCount = 0;
+  let monthCount = 0;
+  let lineLinkedCount = 0;
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const weekStart = new Date(now);
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+  weekStart.setHours(0, 0, 0, 0);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+  if (memberUserIds.length > 0) {
+    const { data: memberProfiles } = await admin
+      .from("profiles")
+      .select("id, membership_tier, created_at")
+      .in("id", memberUserIds);
+
+    if (memberProfiles) {
+      for (const p of memberProfiles) {
+        if (p.membership_tier === "paid") paidCount++;
+        else freeCount++;
+        if (p.created_at >= todayStart) todayCount++;
+        if (p.created_at >= weekStart.toISOString()) weekCount++;
+        if (p.created_at >= monthStart) monthCount++;
+      }
+    }
+
+    // LINE連携会員数
+    const { count: lineCount } = await admin
+      .from("line_identities")
+      .select("user_id", { count: "exact", head: true })
+      .in("user_id", memberUserIds);
+
+    lineLinkedCount = lineCount ?? 0;
+  }
+
+  // AI診断利用者数
+  const { count: diagnosisUsers } = await admin
+    .from("diagnoses")
+    .select("user_id", { count: "exact", head: true })
+    .in("user_id", memberUserIds.length > 0 ? memberUserIds : ["00000000-0000-0000-0000-000000000000"]);
+
+  // AI先生利用者数
+  const { count: aiTeacherUsers } = await admin
+    .from("ai_teacher_memory")
+    .select("user_id", { count: "exact", head: true })
+    .in("user_id", memberUserIds.length > 0 ? memberUserIds : ["00000000-0000-0000-0000-000000000000"]);
+
+  // 実践利用者数
+  const { count: practiceUsers } = await admin
+    .from("practice_logs")
+    .select("user_id", { count: "exact", head: true })
+    .in("user_id", memberUserIds.length > 0 ? memberUserIds : ["00000000-0000-0000-0000-000000000000"]);
+
+  const summary = {
+    totalMembers,
+    freeMembers: freeCount,
+    paidMembers: paidCount,
+    todayNew: todayCount,
+    weekNew: weekCount,
+    monthNew: monthCount,
+    lineLinkedMembers: lineLinkedCount,
+    diagnosisUsers: diagnosisUsers ?? 0,
+    aiTeacherUsers: aiTeacherUsers ?? 0,
+    practiceUsers: practiceUsers ?? 0,
+  };
+
+  return new Response(JSON.stringify({ summary }), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+async function handleMembers(
+  // deno-lint-ignore no-explicit-any
+  admin: any,
+  corsHeaders: Record<string, string>,
+  body: AdminRequest,
+): Promise<Response> {
+  const page = Math.max(1, body.page ?? 1);
+  const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, body.pageSize ?? DEFAULT_PAGE_SIZE));
+  const search = (body.search ?? "").trim();
+  const tier = body.membershipTier ?? "all";
+  const lineLinked = body.lineLinked ?? false;
+
+  // 1. Get consented user IDs (Yoga AI会員)
+  const { data: consentRows } = await admin
+    .from("user_consents")
+    .select("user_id, terms_version, privacy_version, terms_accepted_at")
+    .eq("terms_version", CURRENT_TERMS_VERSION)
+    .eq("privacy_version", CURRENT_PRIVACY_VERSION);
+
+  const consentMap = new Map<string, string>();
+  for (const r of consentRows ?? []) {
+    consentMap.set(r.user_id, r.terms_accepted_at);
+  }
+
+  const memberIds = Array.from(consentMap.keys());
+  if (memberIds.length === 0) {
+    return new Response(JSON.stringify({ members: [], total: 0, page, pageSize }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // 2. Query profiles with filters
+  let query = admin
+    .from("profiles")
+    .select("id, display_name, membership_tier, role, area, created_at", { count: "exact" })
+    .in("id", memberIds);
+
+  if (tier === "free" || tier === "paid") {
+    query = query.eq("membership_tier", tier);
+  }
+
+  if (search) {
+    query = query.ilike("display_name", `%${search}%`);
+  }
+
+  // 3. Get total count first (head request)
+  const { count: totalCount } = await admin
+    .from("profiles")
+    .select("id", { count: "exact", head: true })
+    .in("id", memberIds)
+    .eq("membership_tier", tier === "free" || tier === "paid" ? tier : undefined as unknown as string)
+    .ilike("display_name", search ? `%${search}%` : "%%");
+
+  // Rebuild query for actual data
+  let dataQuery = admin
+    .from("profiles")
+    .select("id, display_name, membership_tier, role, area, created_at")
+    .in("id", memberIds);
+
+  if (tier === "free" || tier === "paid") {
+    dataQuery = dataQuery.eq("membership_tier", tier);
+  }
+  if (search) {
+    dataQuery = dataQuery.ilike("display_name", `%${search}%`);
+  }
+
+  dataQuery = dataQuery
+    .order("created_at", { ascending: false })
+    .range((page - 1) * pageSize, page * pageSize - 1);
+
+  const { data: profiles, error: profilesError } = await dataQuery;
+
+  if (profilesError) {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  if (!profiles || profiles.length === 0) {
+    return new Response(JSON.stringify({ members: [], total: 0, page, pageSize }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const profileIds = profiles.map((p: { id: string }) => p.id);
+
+  // 4. LINE連携確認
+  const { data: lineRows } = await admin
+    .from("line_identities")
+    .select("user_id")
+    .in("user_id", profileIds);
+
+  const lineSet = new Set((lineRows ?? []).map((r: { user_id: string }) => r.user_id));
+
+  // 5. AI診断回数
+  const { data: diagCounts } = await admin
+    .from("diagnoses")
+    .select("user_id")
+    .in("user_id", profileIds);
+
+  const diagMap = new Map<string, number>();
+  for (const r of diagCounts ?? []) {
+    diagMap.set(r.user_id, (diagMap.get(r.user_id) ?? 0) + 1);
+  }
+
+  // 6. 実践回数
+  const { data: practiceCounts } = await admin
+    .from("practice_logs")
+    .select("user_id")
+    .in("user_id", profileIds);
+
+  const practiceMap = new Map<string, number>();
+  for (const r of practiceCounts ?? []) {
+    practiceMap.set(r.user_id, (practiceMap.get(r.user_id) ?? 0) + 1);
+  }
+
+  // 7. AI先生利用有無
+  const { data: memoryRows } = await admin
+    .from("ai_teacher_memory")
+    .select("user_id")
+    .in("user_id", profileIds);
+
+  const memorySet = new Set((memoryRows ?? []).map((r: { user_id: string }) => r.user_id));
+
+  // 8. Assemble member list
+  let members = profiles.map((p: {
+    id: string;
+    display_name: string | null;
+    membership_tier: string;
+    role: string;
+    area: string | null;
+    created_at: string;
+  }) => ({
+    id: p.id.slice(0, 8),
+    displayName: p.display_name ?? "(未設定)",
+    membershipTier: p.membership_tier,
+    role: p.role,
+    area: p.area ?? "-",
+    createdAt: p.created_at,
+    lineLinked: lineSet.has(p.id),
+    consentVerified: consentMap.has(p.id),
+    consentDate: consentMap.get(p.id) ?? null,
+    diagnosisCount: diagMap.get(p.id) ?? 0,
+    practiceCount: practiceMap.get(p.id) ?? 0,
+    aiTeacherUsed: memorySet.has(p.id),
+  }));
+
+  // Filter by LINE連携 if requested
+  if (lineLinked) {
+    members = members.filter((m: { lineLinked: boolean }) => m.lineLinked);
+  }
+
+  // Get accurate total count
+  let total = totalCount ?? 0;
+  if (lineLinked) {
+    // Need to count LINE-linked members separately
+    const { count: lineTotal } = await admin
+      .from("line_identities")
+      .select("user_id", { count: "exact", head: true })
+      .in("user_id", memberIds);
+    total = lineTotal ?? 0;
+  }
+
+  return new Response(JSON.stringify({ members, total, page, pageSize }), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}

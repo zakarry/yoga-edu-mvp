@@ -38,6 +38,7 @@ import { AITeacherMemorySection } from './components/AITeacherMemorySection';
 import { MyAITeacherPage } from './components/MyAITeacherPage';
 import { SiteMapPage } from './components/SiteMapPage';
 import { BM5AdminPage } from './components/BM5AdminPage';
+import AdminDashboardPage from './components/AdminDashboardPage';
 import { useAuth, getLastAuthEvent } from './lib/auth';
 import { getDictionaryAccess } from './lib/dictionaryAccess';
 import { ConsentGate } from './components/ConsentGate';
@@ -50,7 +51,7 @@ import { MeditationExperience } from './components/MeditationExperience';
 import { SuryaNamaskarExperience } from './components/SuryaNamaskarExperience';
 import { getActiveSequences } from './lib/sequenceCatalog';
 
-type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map' | 'box-breathing' | 'breathing-meditation' | 'breathwork-practice' | 'meditation' | 'learn' | 'surya-namaskar' | 'bm5-admin' | 'breathwork-dictionary' | 'dict-gate';
+type PageKey = 'home' | 'diagnosis' | 'results' | 'search' | 'my-page' | 'teacher-diagnosis' | 'listing-select' | 'teacher-register' | 'school-register' | 'event-register' | 'club-register' | 'pro-yoga' | 'pro-drill' | 'sacred-sites' | 'terms' | 'privacy' | 'diagnosis-v2' | 'ai-teacher' | 'site-map' | 'box-breathing' | 'breathing-meditation' | 'breathwork-practice' | 'meditation' | 'learn' | 'surya-namaskar' | 'bm5-admin' | 'breathwork-dictionary' | 'dict-gate' | 'admin';
 
 type FilterType = SearchItem['type'] | 'all';
 
@@ -2453,6 +2454,9 @@ export default function App() {
         {page === 'bm5-admin' && (
           <BM5AdminPage onBackHome={() => moveTo('home')} />
         )}
+        {page === 'admin' && (
+          <AdminDashboardPage onBackHome={() => moveTo('home')} />
+        )}
       </main>
 
       <footer className="site-footer">
@@ -2491,6 +2495,9 @@ export default function App() {
           <div className="footer-legal-links">
             <button type="button" className="footer-link" onClick={() => moveTo('terms')}>利用規約</button>
             <button type="button" className="footer-link" onClick={() => moveTo('privacy')}>プライバシーポリシー</button>
+            {auth.profile?.is_admin && (
+              <button type="button" className="footer-link" onClick={() => moveTo('admin')} style={{ fontSize: 11, opacity: 0.5 }}>管理</button>
+            )}
             {auth.profile?.is_admin && (
               <button type="button" className="footer-link" onClick={() => moveTo('bm5-admin')} style={{ fontSize: 11, opacity: 0.5 }}>BM5</button>
             )}
