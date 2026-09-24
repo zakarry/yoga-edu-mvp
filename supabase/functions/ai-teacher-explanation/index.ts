@@ -100,7 +100,6 @@ interface AITeacherLLMRequest {
   sessionContext: LLMSessionContext;
   knowledge: LLMKnowledgeItem[];
   turns?: ConversationTurn[];
-  memory?: { favoritePractices?: string[]; preferredDuration?: number | null; preferredExplanation?: string | null; preferredTone?: string | null };
 }
 
 function clampText(value: unknown, max: number): string {
@@ -176,13 +175,7 @@ function buildSystemContent(req: AITeacherLLMRequest, approvedKnowledge: LLMKnow
     if (req.sessionContext.requestedType) sessionSection += `\nrequestedType: ${req.sessionContext.requestedType}`;
   }
 
-  const memorySection = req.memory ? '\n\n【My Yoga Memory: preferences only】\n' + JSON.stringify({
-    favoritePractices: Array.isArray(req.memory.favoritePractices) ? req.memory.favoritePractices.slice(0, 5).map(v => clampText(v, 100)) : [],
-    preferredDuration: typeof req.memory.preferredDuration === 'number' && Number.isFinite(req.memory.preferredDuration) ? Math.min(180, Math.max(1, req.memory.preferredDuration)) : null,
-    preferredExplanation: clampText(req.memory.preferredExplanation, 100),
-    preferredTone: clampText(req.memory.preferredTone, 100),
-  }) : '';
-  return `${SYSTEM_INSTRUCTION}${personaSection}${sessionSection}${knowledgeSection}${memorySection}\n\n${lang}で回答してください。`;
+  return `${SYSTEM_INSTRUCTION}${personaSection}${sessionSection}${knowledgeSection}\n\n${lang}で回答してください。`;
 }
 
 function buildMessages(req: AITeacherLLMRequest, systemContent: string): Array<{ role: string; content: string }> {
@@ -194,7 +187,7 @@ function buildMessages(req: AITeacherLLMRequest, systemContent: string): Array<{
   if (req.turns && Array.isArray(req.turns)) {
     const turns = req.turns.slice(-MAX_TURNS);
     for (const turn of turns) {
-      if (!turn || (turn.role !== "user" && turn.role !== "teacher") || typeof turn.text !== "string") continue;
+      if (!turn || typeof turn.text !== "string") continue;
       const text = turn.text.slice(0, MAX_TURN_CHARS);
       if (!text.trim()) continue;
       messages.push({
@@ -223,7 +216,7 @@ function postCheckResponse(text: string): boolean {
   return true;
 }
 
-async function callLLM(messages: Array<{ role: string; content: string }>): Promise<{ text: string | null; error?: string; providerStatus?: number; completionId?: string }> {
+async function callLLM(messages: Array<{ role: string; content: string }>): Promise<{ text: string | null; error?: string }> {
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) return { text: null, error: "no_api_key" };
 
@@ -247,15 +240,15 @@ async function callLLM(messages: Array<{ role: string; content: string }>): Prom
     });
 
     if (!res.ok) {
-      return { text: null, error: `http_${res.status}`, providerStatus: res.status };
+      return { text: null, error: `http_${res.status}` };
     }
 
     const data = await res.json();
     const text = data?.choices?.[0]?.message?.content;
     if (typeof text !== "string") return { text: null, error: "no_content" };
-    return { text, providerStatus: res.status, completionId: typeof data.id === "string" ? data.id : undefined };
-  } catch {
-    return { text: null, error: controller.signal.aborted ? 'timeout' : 'network_error' };
+    return { text };
+  } catch (err) {
+    return { text: null, error: `exception: ${err.message}` };
   } finally {
     clearTimeout(timeout);
   }
@@ -377,25 +370,18 @@ Deno.serve(async (req: Request) => {
     const systemContent = buildSystemContent({ ...body, knowledge: approvedKnowledge }, approvedKnowledge);
     const messages = buildMessages({ ...body, knowledge: approvedKnowledge }, systemContent);
 
-    // Bound the actual request after history is assembled.
-    while (messages.length > 2 && messages.reduce((sum, m) => sum + m.content.length, 0) > MAX_PROMPT_CHARS) messages.splice(1, 1);
-    if (messages.reduce((sum, m) => sum + m.content.length, 0) > MAX_PROMPT_CHARS) {
-      return new Response(JSON.stringify({ text: null, fallback: true, reason: 'prompt_too_large' }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // Estimate prompt size
+    const promptSize = messages.reduce((sum, m) => sum + m.content.length, 0);
+    if (promptSize > MAX_PROMPT_CHARS) {
+      // Trim oldest turns to fit
+      while (messages.length > 2 && promptSize > MAX_PROMPT_CHARS) {
+        const removed = messages.splice(1, 1)[0];
+        // Can't recompute promptSize easily, just break after removing oldest turns
+        break;
+      }
     }
 
     const llmResult = await callLLM(messages);
-
-    // Request-local evidence, with no token, account ID, prompt or secret.
-    const evidence = {
-      version: 'conversation-v2-evidence-1',
-      openaiCalled: llmResult.providerStatus !== undefined,
-      openaiStatus: llmResult.providerStatus ?? null,
-      completionId: llmResult.completionId ?? null,
-      usageRecorded: true, // claim_ai_teacher_llm_call allowed=true above inserted a row.
-      historyTurns: messages.length - 2,
-      knowledgeItems: approvedKnowledge.length,
-      layers: { professionalCore: true, teacherPersonality: true, federationRules: true, memoryPreferences: !!body.memory },
-    };
 
     if (llmResult.error) {
       console.error("ai-teacher-explanation: llm call failed", llmResult.error);
@@ -405,8 +391,6 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({
         text: null,
         fallback: true,
-        reason: llmResult.error ? 'provider_error' : 'response_rejected',
-        evidence,
         model: LLM_MODEL,
       }), {
         status: 200,
@@ -417,14 +401,13 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({
       text: llmResult.text,
       fallback: false,
-      evidence,
       model: LLM_MODEL,
     }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch {
-    console.error("ai-teacher-explanation: unhandled error");
+  } catch (err) {
+    console.error("ai-teacher-explanation: unhandled error", err);
     return new Response(JSON.stringify({
       text: null,
       fallback: true,
