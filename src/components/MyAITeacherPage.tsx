@@ -321,7 +321,7 @@ interface ChatMessage {
   action?: TeacherResponseAction;
 }
 
-function buildLocalContextFast(growth: AITeacherGrowth, sessionIntent?: ConversationContext, todayContext?: TodayContext): TeacherContext {
+function buildLocalContextFast(growth: AITeacherGrowth, sessionIntent?: ConversationContext, todayContext?: TodayContext, userId?: string): TeacherContext {
   const persona = loadPersona();
   const localLogs = loadLocalPracticeLogs();
   const records = localLogs.map((l) => ({
@@ -368,6 +368,7 @@ function buildLocalContextFast(growth: AITeacherGrowth, sessionIntent?: Conversa
     } : undefined,
     memorySummary: summarizeMemory(loadLocalMemory()),
     todayContext: todayContext ?? emptyTodayContext(),
+    userId,
   };
 }
 
@@ -879,7 +880,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setChatTyping(true);
     const delay = 150 + Math.random() * 150;
     setTimeout(async () => {
-      const ctx = teacherContext ?? buildLocalContextFast(growth, conversationContext, todayContext);
+      const ctx = teacherContext ?? buildLocalContextFast(growth, conversationContext, todayContext, auth.user?.id);
       try {
         const contextWithSafety: ConversationContext = {
           ...conversationContext,
@@ -928,7 +929,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         setChatTyping(false);
       }
     }, delay);
-  }, [chatInput, persona, teacherContext, growth, conversationContext, sessionSafetyBlocked]);
+  }, [chatInput, persona, teacherContext, growth, conversationContext, sessionSafetyBlocked, auth.user]);
 
   const handlePracticeAction = useCallback((action: TeacherResponseAction) => {
     if (!action.targetId) return;
@@ -1286,7 +1287,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setLocalLogs(loadLocalPracticeLogs());
 
     // Generate next practice suggestion (non-sensitive)
-    const ctx = teacherContext ?? buildLocalContextFast(newGrowth, conversationContext);
+    const ctx = teacherContext ?? buildLocalContextFast(newGrowth, conversationContext, undefined, auth.user?.id);
     const suggestion = generateNextSuggestion(ctx, practiceType, practiceDuration);
     const nextSug: NextSuggestion = {
       text: suggestion.text,

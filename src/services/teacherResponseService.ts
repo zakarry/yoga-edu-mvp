@@ -1435,10 +1435,10 @@ export async function generateTeacherResponse(
   // When turns are provided (STEP 5 chat), route through the conversation engine.
   // Guest users (no userId) also fall through to the old path since they can't
   // authenticate with the Edge Function.
-  if (turns && turns.length > 0 && context.userId) {
+  if (context.userId) {
     try {
       const { generateConversationResponse } = await import('./conversationEngine');
-      const result = await generateConversationResponse(context, userMessage, turns, prevContext);
+      const result = await generateConversationResponse(context, userMessage, turns ?? [], prevContext);
       return stripActionIfSafety(result, prevContext);
     } catch {
       // Fall through to old path on any error
