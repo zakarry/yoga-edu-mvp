@@ -1,3 +1,5 @@
+import { useDirectoryDemo } from '../lib/DirectoryDemoContext';
+import { visibleDirectoryItems, isDemoDirectoryItem, DIRECTORY_EMPTY_MESSAGE } from '../lib/directoryVisibility';
 import { SearchItem } from '../data';
 
 interface CardListProps {
@@ -131,7 +133,7 @@ const isAdminRecommendedSchool = (item: SearchItem): item is Extract<SearchItem,
 
 export function CardList({
   title,
-  items,
+  items: suppliedItems,
   onDetail,
   onAddTeacher,
   emptyMessage = '該当データがありません。',
@@ -139,6 +141,8 @@ export function CardList({
   stepLabel,
   description,
 }: CardListProps) {
+  const includeDemo = useDirectoryDemo();
+  const items = visibleDirectoryItems(suppliedItems, includeDemo);
   const isPrioritySchool = variant === 'prioritySchool';
   const defaultDescription = isPrioritySchool
     ? 'まずここを確認すればOKです。継続しやすさ・学びやすさ・国際対応を踏まえた最優先候補を並べています。'
@@ -161,6 +165,7 @@ export function CardList({
         <div className="entity-topline">
           <span className={`type-pill ${item.type}`}>{typeLabel[item.type]}</span>
           <div className="entity-badge-group">
+            {isDemoDirectoryItem(item) && <span className="directory-demo-badge">DEMO / サンプル</span>}
             {item.type === 'event' && isPastEvent(item) && <span className="badge-ended-event">終了</span>}
             {isPrioritySchool && index === 0 && <span className="badge-priority">まず見る</span>}
             {isAdminRecommendedSchool(item) && <span className="badge-admin-recommendation">運営おすすめ</span>}
@@ -197,7 +202,7 @@ export function CardList({
             {detailLabel(item)}
           </button>
         )}
-        {item.type === 'teacher' && onAddTeacher && (
+        {item.type === 'teacher' && onAddTeacher && !isDemoDirectoryItem(item) && (
           <button className="secondary-button teacher-relationship-button" onClick={() => onAddTeacher(item)} type="button">
             この先生をMy Teacherに登録
           </button>
@@ -219,7 +224,7 @@ export function CardList({
         <span>{items.length}件</span>
       </div>
       {items.length === 0 ? (
-        <div className="empty-box">{emptyMessage}</div>
+        <div className="empty-box">{includeDemo ? emptyMessage : DIRECTORY_EMPTY_MESSAGE}</div>
       ) : isPrioritySchool && featuredItem ? (
         <div className="priority-stack">
           {renderCard(featuredItem, 0, true)}
