@@ -39,6 +39,8 @@ The exact original Android error and real-camera recovery remain open. Do not ca
 
 ## Device acceptance remaining
 
+Follow-up: the user supplied a localhost screenshot showing a real camera image, confirming local image display on their tested environment (not proof of Android/public release acceptance). The screenshot also exposed the camera toolbar extending beyond the video's right edge. The video container now shares the video's 480px maximum width, and the toolbar can wrap. Browser DOM measurements after the CSS fix: desktop video 480px / toolbar 460px; 390px viewport video 252px / toolbar 232px; both have 10px left/right insets. No camera lifecycle logic changed in this follow-up.
+
 Use a reviewed branch preview or, only after separately authorized release, yogai.net. On Android Chrome test normal and event-demo independently: allow permission, confirm moving front-camera image, switch/back, close/reopen, exit the screen and verify camera indicator stops. Repeat with permission denied and confirm the explanation. If it fails, expand camera connection/error details and record permission, API call count, error.name and error.message (no IDs/tokens needed).
 
 Then repeat from the LINE official-account entry; if direct access is restricted, verify the external-browser action and the manual menu alternative. Confirm no assumption that LINE cannot use a camera on all devices.
