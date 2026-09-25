@@ -1,3 +1,4 @@
+import { CameraMirrorStatus, useCameraMirror } from './CameraMirrorStatus';
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '../lib/auth';
 import { savePracticeLog, getPracticeLogs, syncPendingLog, type PracticeLog } from '../services/practiceLogService';
@@ -403,8 +404,6 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [growth, setGrowth] = useState<AITeacherGrowth>(loadGrowth());
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
-  const [cameraOn, setCameraOn] = useState(false);
-  const [cameraFacingMode, setCameraFacingMode] = useState<'user' | 'environment'>('user');
   const [practiceActive, setPracticeActive] = useState(false);
   const [practiceType, setPracticeType] = useState<'asana' | 'pranayama' | 'dhyana' | 'sequence' | 'program' | null>(null);
   const [activePracticeName, setActivePracticeName] = useState<string | null>(null);
@@ -471,9 +470,6 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const [dryRunResult, setDryRunResult] = useState<DryRunResult | null>(null);
   const [dryRunLoading, setDryRunLoading] = useState(false);
   const dryRunMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('testPlan') === 'llm-dry-run';
-  const guideVideoRef = useRef<HTMLVideoElement>(null);
-  const practiceVideoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     if (auth.user) {
@@ -621,75 +617,6 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     saveTodayContextSession(todayContext, todayCheckResult);
   }, [todayContext, todayCheckResult]);
 
-  // Demo feedback rotation during active practice (adapted by prefs)
-  useEffect(() => {
-    if (!cameraOn || !practiceActive) return;
-    const lang = persona?.teachingLanguage ?? 'ja';
-    let msgs = [...(DEMO_FEEDBACK[lang] ?? DEMO_FEEDBACK.ja)];
-    if (growth.prefs.cue === 'minimal') {
-      msgs = msgs.filter((_, i) => i % 2 === 0);
-    }
-    if (growth.prefs.cue === 'more') {
-      msgs = [...msgs, 'その調子です', 'ゆっくり深く'];
-    }
-    if (msgs.length === 0) msgs = [DEMO_FEEDBACK.ja[0]];
-    const intervalMs = growth.prefs.cue === 'minimal' ? 8000 : growth.prefs.cue === 'more' ? 3500 : 5000;
-    const interval = setInterval(() => {
-      setDemoMsgIdx((prev) => (prev + 1) % msgs.length);
-    }, intervalMs);
-    return () => clearInterval(interval);
-  }, [cameraOn, practiceActive, persona, growth.prefs.cue]);
-
-  // Camera stream acquisition — only on cameraOn toggle or facing mode switch
-  useEffect(() => {
-    if (!cameraOn) {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((t) => t.stop());
-        streamRef.current = null;
-      }
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraFacingMode }, audio: false });
-        if (cancelled) {
-          stream.getTracks().forEach((t) => t.stop());
-          return;
-        }
-        streamRef.current = stream;
-        const target = practicePhase === 'active' ? practiceVideoRef.current : guideVideoRef.current;
-        if (target) {
-          target.srcObject = stream;
-          target.play().catch(() => {});
-        }
-      } catch {
-        if (!cancelled) setCameraOn(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [cameraOn, cameraFacingMode]);
-
-  // Re-attach stream when phase changes (video element swaps)
-  useEffect(() => {
-    if (!streamRef.current) return;
-    const target = practicePhase === 'active' ? practiceVideoRef.current : guideVideoRef.current;
-    if (target && target.srcObject !== streamRef.current) {
-      target.srcObject = streamRef.current;
-      target.play().catch(() => {});
-    }
-  }, [practicePhase]);
-
-  // Stop stream on unmount
-  useEffect(() => {
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((t) => t.stop());
-        streamRef.current = null;
-      }
-    };
-  }, []);
-
   const safetyBlocked = isSafetyBlocked(latestDiagnosis?.safety_state) || sessionSafetyBlocked;
   const safetyCautioned = isSafetyCautioned(latestDiagnosis?.safety_state);
 
@@ -713,6 +640,36 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   });
 
   const practiceEntryBlocked = !practiceEntryAllows(practiceEntryVerdict);
+
+  const cameraAvailable = step === 'step6' && !safetyBlocked && !practiceEntryBlocked && (
+    (posePhase === 'guide' && practicePhase === 'guide' && !!concretePoses[currentPoseIdx]) ||
+    (practicePhase === 'active' && posePhase !== 'done' &&
+      !(practiceType === 'dhyana' && selectedMeditationId) &&
+      !(practiceType === 'pranayama' && selectedBreathworkId))
+  );
+  const camera = useCameraMirror(cameraAvailable);
+  const cameraOn = camera.on;
+  const cameraFacingMode = camera.state.facing;
+
+  // Demo feedback rotation during active practice (adapted by prefs)
+  useEffect(() => {
+    if (!cameraOn || !practiceActive) return;
+    const lang = persona?.teachingLanguage ?? 'ja';
+    let msgs = [...(DEMO_FEEDBACK[lang] ?? DEMO_FEEDBACK.ja)];
+    if (growth.prefs.cue === 'minimal') {
+      msgs = msgs.filter((_, i) => i % 2 === 0);
+    }
+    if (growth.prefs.cue === 'more') {
+      msgs = [...msgs, 'その調子です', 'ゆっくり深く'];
+    }
+    if (msgs.length === 0) msgs = [DEMO_FEEDBACK.ja[0]];
+    const intervalMs = growth.prefs.cue === 'minimal' ? 8000 : growth.prefs.cue === 'more' ? 3500 : 5000;
+    const interval = setInterval(() => {
+      setDemoMsgIdx((prev) => (prev + 1) % msgs.length);
+    }, intervalMs);
+    return () => clearInterval(interval);
+  }, [cameraOn, practiceActive, persona, growth.prefs.cue]);
+
 
   const todayContextSignature = computeTodayContextSignature({
     todayCheckResult,
@@ -2581,10 +2538,11 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 })()}
 
                 {/* Camera mirror — available before and during practice */}
+                <CameraMirrorStatus camera={camera} />
                 <div className="ai-teacher-camera-section ai-teacher-camera-section--guide">
                   <button
                     className={cameraOn ? 'secondary-button' : 'primary-button'}
-                    onClick={() => setCameraOn((v) => !v)}
+                    onClick={() => cameraOn ? camera.controller.stop() : camera.start()}
                   >
                     {cameraOn ? 'カメラを閉じる' : 'カメラを鏡として使う'}
                   </button>
@@ -2592,12 +2550,13 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   {cameraOn && (
                     <div className="ai-teacher-video-wrap">
                       <div className="ai-teacher-video-container">
-                        <video ref={guideVideoRef} autoPlay muted playsInline className="ai-teacher-video ai-teacher-video-mirror" />
+                        <video ref={camera.controller.attach} autoPlay muted playsInline className="ai-teacher-video ai-teacher-video-mirror" />
                         <div className="ai-teacher-camera-overlay">
-                          <span className="ai-teacher-overlay-text">自分の動きを確認中</span>
+                          <span className="ai-teacher-overlay-text">{camera.state.status === 'playing' ? '自分の動きを確認中' : 'カメラを準備中'}</span>
                           <button
                             className="ghost-button ai-teacher-camera-switch-btn"
-                            onClick={() => setCameraFacingMode((m) => m === 'user' ? 'environment' : 'user')}
+                            disabled={camera.state.status === 'requesting'}
+                        onClick={() => void camera.controller.start(cameraFacingMode === 'user' ? 'environment' : 'user')}
                           >
                             {cameraFacingMode === 'user' ? '背面へ切替' : '前面へ切替'}
                           </button>
@@ -2699,16 +2658,19 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 </div>
               </div>
 
+              <CameraMirrorStatus camera={camera} />
+              {cameraOn && <button type="button" className="secondary-button" onClick={camera.controller.stop}>カメラを閉じる</button>}
               {/* Sticky camera + mini guide during practice */}
               {cameraOn && (
                 <div className="practice-sticky-camera">
                   <div className="ai-teacher-video-container">
-                    <video ref={practiceVideoRef} autoPlay muted playsInline className="ai-teacher-video ai-teacher-video-mirror" />
+                    <video ref={camera.controller.attach} autoPlay muted playsInline className="ai-teacher-video ai-teacher-video-mirror" />
                     <div className="ai-teacher-camera-overlay">
-                      <span className="ai-teacher-overlay-text">自分の動きを確認中</span>
+                      <span className="ai-teacher-overlay-text">{camera.state.status === 'playing' ? '自分の動きを確認中' : 'カメラを準備中'}</span>
                       <button
                         className="ghost-button ai-teacher-camera-switch-btn"
-                        onClick={() => setCameraFacingMode((m) => m === 'user' ? 'environment' : 'user')}
+                        disabled={camera.state.status === 'requesting'}
+                        onClick={() => void camera.controller.start(cameraFacingMode === 'user' ? 'environment' : 'user')}
                       >
                         {cameraFacingMode === 'user' ? '背面へ切替' : '前面へ切替'}
                       </button>
@@ -2794,7 +2756,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 <div className="ai-teacher-camera-section">
                   <button
                     className="primary-button"
-                    onClick={() => setCameraOn(true)}
+                    onClick={camera.start}
                   >
                     カメラを鏡として使う
                   </button>

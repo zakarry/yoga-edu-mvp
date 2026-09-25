@@ -6576,6 +6576,9 @@ button:disabled {
 /* === P2: Camera, chat typing === */
 .ai-teacher-video-container {
   position: relative;
+  width: 100%;
+  max-width: 480px;
+  min-width: 0;
   display: grid;
   gap: 0;
 }
@@ -6588,6 +6591,7 @@ button:disabled {
   left: 10px;
   right: 10px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
