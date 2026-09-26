@@ -1,0 +1,23 @@
+{
+  "base": "2ea54e3d213049a4b2540d845b6862ecccf71b60",
+  "encoding": "UTF-8 LF",
+  "sha256": {
+    "src/services/conversationEngine.ts": "830ccdb05a67acecad691d32be2db138b710a44dc81175f308d71143c5f5802c",
+    "src/services/conversationKnowledge.ts": "9db4a965d655781dd442cb49be64a51cb4bef6202d09fb475857da14b3ac26bc",
+    "src/services/conversationTrace.ts": "48ab0602bca2b28b348b1a4050678543fb753c7241dfbe0698d12ac596b6a767",
+    "supabase/functions/_shared/currentTurnPolicy.ts": "b5a021a994e472229c1045208abb71af0919770431cf87ba85ca0c7a2c933ea4",
+    "supabase/functions/ai-teacher-explanation/index.ts": "41348a66012af8d945d770b5733389e0696142b1e1a7e4b87f6e92d75fb30f61",
+    "supabase/functions/ai-teacher-explanation-preview/index.ts": "41348a66012af8d945d770b5733389e0696142b1e1a7e4b87f6e92d75fb30f61"
+  },
+  "gates": {
+    "frontendTypescript": "PASS",
+    "viteBuild": "PASS",
+    "denoCheckBothEdgeEntrypoints": "PASS",
+    "safetyClassification": "20/20 PASS",
+    "actualEdgeImportAndSafetyNoProvider": "2/2 PASS",
+    "denoVersion": "2.9.6",
+    "markerUse": false,
+    "protectedScopeChanges": false
+  },
+  "warning": "Vite existing bundle-size and mixed-import warnings; live LLM not yet evaluated"
+}
