@@ -1,0 +1,474 @@
+{
+  "observedAt": "2026-09-26",
+  "rpc": "lookup_teacher_explanation",
+  "candidateCount": 31,
+  "error": null,
+  "before": [
+    {
+      "query": "太陽礼拝について教えてください",
+      "matches": 0
+    },
+    {
+      "query": "太陽礼拝",
+      "matches": 1
+    },
+    {
+      "query": "側面を伸ばすポーズ",
+      "matches": 0
+    }
+  ],
+  "after": [
+    {
+      "query": "太陽礼拝について教えてください",
+      "contextQuery": "",
+      "candidates": [
+        {
+          "masterId": "YK-0263",
+          "title": "スーリヤ・ナマスカーラ（太陽礼拝）序論",
+          "score": 95,
+          "selected": true,
+          "reason": "adopted:knowledge_title_or_alias_in_current_turn"
+        },
+        {
+          "masterId": "YK-0288",
+          "title": "ガーヤトリー・マントラ（gāyatrī-mantra）",
+          "score": 66,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:content_terms:太陽"
+        },
+        {
+          "masterId": "YK-0029",
+          "title": "プラーナーヤーマ",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0044",
+          "title": "ヨガの歴史",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0046",
+          "title": "ヨガの発展",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0049",
+          "title": "ヨガの起源",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0141",
+          "title": "呼吸器系",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0252",
+          "title": "アルダ・マッツェンドラーサナ（ardha-matsyendrāsana 半分のアルダ・マッツェンドラのポーズ、半分の背骨をねじるポーズ）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0259",
+          "title": "シャラバーサナ（śalabhāsana バッタのポーズ）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0264",
+          "title": "タダーサナ（tāḍāsana）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0265",
+          "title": "ダヌラーサナ（dhnurāsana 弓のポーズ）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0267",
+          "title": "トリコーナーサナ（trikoṇāsana 三角形のポーズ）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0270",
+          "title": "パスチモッタナーサナ（paścimottānāsana 座位前屈ポーズ）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0272",
+          "title": "パーダハスターサナ（pādahastāsana 立ちながら前方に曲げる）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0273",
+          "title": "ブジャンガーサナ（bhujaṅgāsana コブラのポーズ）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0274",
+          "title": "マツヤーサナ（matsyāsana 魚のポーズ）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0277",
+          "title": "ヴルクシャーサナ（vṛkṣāsana 木のポーズ）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0285",
+          "title": "アヌローマ・ヴィローマ／ナーディー・ショーダナ",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0290",
+          "title": "シッダーサナ（siddhāsana 達人座）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0294",
+          "title": "ジャパ",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0306",
+          "title": "プラーナーヤーマ（呼吸法）への導入",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0307",
+          "title": "マインドフルネス瞑想",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0308",
+          "title": "マントラ",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0309",
+          "title": "マントラ・チャクラ（mantra-cakra 真言輪筒）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0312",
+          "title": "初心者の簡単な瞑想技法",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0313",
+          "title": "完全なヨガ呼吸－理解と実演能力",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0316",
+          "title": "瞑想の概念",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0317",
+          "title": "胸郭または胸式呼吸",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0318",
+          "title": "腹式呼吸",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0319",
+          "title": "鎖骨呼吸",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0320",
+          "title": "集中瞑想",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        }
+      ],
+      "sources": [
+        "YK-0263"
+      ]
+    },
+    {
+      "query": "側面を伸ばすポーズがよいです",
+      "contextQuery": "",
+      "candidates": [
+        {
+          "masterId": "YK-0267",
+          "title": "トリコーナーサナ（trikoṇāsana 三角形のポーズ）",
+          "score": 66,
+          "selected": true,
+          "reason": "adopted:content_terms:側面"
+        },
+        {
+          "masterId": "YK-0029",
+          "title": "プラーナーヤーマ",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0044",
+          "title": "ヨガの歴史",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0046",
+          "title": "ヨガの発展",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0049",
+          "title": "ヨガの起源",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0141",
+          "title": "呼吸器系",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0252",
+          "title": "アルダ・マッツェンドラーサナ（ardha-matsyendrāsana 半分のアルダ・マッツェンドラのポーズ、半分の背骨をねじるポーズ）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0259",
+          "title": "シャラバーサナ（śalabhāsana バッタのポーズ）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0263",
+          "title": "スーリヤ・ナマスカーラ（太陽礼拝）序論",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0264",
+          "title": "タダーサナ（tāḍāsana）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0265",
+          "title": "ダヌラーサナ（dhnurāsana 弓のポーズ）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0270",
+          "title": "パスチモッタナーサナ（paścimottānāsana 座位前屈ポーズ）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0272",
+          "title": "パーダハスターサナ（pādahastāsana 立ちながら前方に曲げる）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0273",
+          "title": "ブジャンガーサナ（bhujaṅgāsana コブラのポーズ）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0274",
+          "title": "マツヤーサナ（matsyāsana 魚のポーズ）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0277",
+          "title": "ヴルクシャーサナ（vṛkṣāsana 木のポーズ）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0285",
+          "title": "アヌローマ・ヴィローマ／ナーディー・ショーダナ",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0288",
+          "title": "ガーヤトリー・マントラ（gāyatrī-mantra）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0290",
+          "title": "シッダーサナ（siddhāsana 達人座）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0294",
+          "title": "ジャパ",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0306",
+          "title": "プラーナーヤーマ（呼吸法）への導入",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0307",
+          "title": "マインドフルネス瞑想",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0308",
+          "title": "マントラ",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0309",
+          "title": "マントラ・チャクラ（mantra-cakra 真言輪筒）",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0312",
+          "title": "初心者の簡単な瞑想技法",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0313",
+          "title": "完全なヨガ呼吸－理解と実演能力",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0316",
+          "title": "瞑想の概念",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0317",
+          "title": "胸郭または胸式呼吸",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0318",
+          "title": "腹式呼吸",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0319",
+          "title": "鎖骨呼吸",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        },
+        {
+          "masterId": "YK-0320",
+          "title": "集中瞑想",
+          "score": 0,
+          "selected": false,
+          "reason": "rejected:below_query_threshold:no_relevant_match"
+        }
+      ],
+      "sources": [
+        "YK-0267"
+      ]
+    }
+  ]
+}
