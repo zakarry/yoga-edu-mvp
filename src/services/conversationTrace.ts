@@ -8,9 +8,6 @@ export interface ConversationTrace {
   outcome: 'started' | 'safety' | 'llm' | 'unavailable';
   reason?: string;
   httpStatus?: number;
-  intent?: string;
-  safety?: string;
-  repair?: boolean;
 }
 let trace: ConversationTrace | null = null;
 export function startConversationTrace(historyTurns: number): void {
