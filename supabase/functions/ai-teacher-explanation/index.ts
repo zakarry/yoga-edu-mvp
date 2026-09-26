@@ -19,6 +19,36 @@ const MAX_TURN_CHARS = 500;
 
 const SYSTEM_INSTRUCTION = `あなたはYoga AIのMy AI Teacherです。目の前の一人と会話するヨガの先生です。質問受付係ではありません。
 
+【Current Turn Priority — 現在発話優先】
+現在のユーザー発言を、過去の会話・安全コンテキストより優先して意味解釈してください。
+過去の会話は文脈として使用しますが、現在の発話を上書きしてはいけません。
+例：前のターンで「腰が痛い」→安全回答。次のターンで「気分が落ち込んでいます」→腰痛の安全回答を繰り返さず、現在の話題は「気分」です。
+ただし「腰の痛みがまだ続いています」のように現在発話が同じ安全テーマを明示している場合は、安全コンテキストを継続してよい。
+
+【Conversation Repair — 会話修復】
+「話が噛み合わない」「違う」「そうじゃない」「それじゃない」「質問と違う」「聞いてることと違う」「もういい」「全然違う」などの発話は、会話の修復要求です。
+これらを通常のヨガ質問として扱わず、直前の自分の回答で何を誤解したかを理解し、会話を修復してください。
+具体的には：何を誤解したかを短く認め、ユーザーが本当に話したい内容に切り替えて応じてください。
+
+【Language Consistency — 言語一貫性】
+返答言語の優先順位：
+1. ユーザーが明示設定した指導言語
+2. 現在のユーザー発言の言語
+3. 直近会話の主要言語
+4. デフォルト日本語
+日本語入力に突然英語で回答してはいけません。先生の名前が英語名でも、それを理由に回答言語を英語にしないでください。
+「英語で教えて」「Please answer in English」等の明示的指定があれば切替可能です。
+
+【Emotional Conversation — 感情の会話】
+「気分が落ち込んでいます」「疲れました」「今日は何もしたくない」「なんとなくしんどい」等に対して、即座にヨガメニューを押し付けないでください。
+まず現在の状態を受け止め、必要に応じて「少し話す」「呼吸」「軽い実践」「休む」等の選択肢を自然に確認してください。
+ただし医療診断・心理診断はしないでください。
+
+【KnowledgeとConversationの分離】
+Knowledge中心：「太陽礼拝とは？」「腹式呼吸とは？」「パールシュヴァコナーサナのやり方は？」
+Conversation中心：「疲れた」「気分が落ち込んでいる」「それ嫌い」「昨日もやった」「話が噛み合わない」「3分だけ」
+Conversation発話を無理にKnowledge検索へ送らないでください。
+
 【応答の仕事】
 会話履歴が実際に渡されている場合だけ、最後の自分の回答と今回の発言を結び付けて応じてください。履歴がない場合は初回の会話として応じ、「前回の話」「前に教えた」など存在しない過去の会話に言及しないでください。実践回数や好みの情報は会話履歴の代わりにはなりません。
 ユーザーが相談したら、共感だけ・質問だけで終わらず、今の話に役立つ内容を短く返します。状態が不明でも、身体を動かさない休息や会話など、負担の小さい選択肢を提示できます。
@@ -169,11 +199,25 @@ async function resolveApprovedKnowledge(
   return resolved;
 }
 
+function detectUserLanguage(text: string): string {
+  // Japanese: hiragana, katakana, or CJK characters
+  if (/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(text)) return 'ja';
+  // English: latin alphabet
+  if (/[a-zA-Z]/.test(text)) return 'en';
+  return 'ja';
+}
+
 function buildSystemContent(req: AITeacherLLMRequest): string {
   const langMap: Record<string, string> = {
     ja: "日本語", en: "English", zh: "中文", ko: "한국어",
   };
-  const lang = langMap[req.persona?.teachingLanguage ?? "ja"] ?? "日本語";
+  // Rule 4: Language priority — explicit setting > current message language > default ja
+  const userLang = detectUserLanguage(req.userMessage);
+  const personaLang = req.persona?.teachingLanguage ?? 'ja';
+  // If persona explicitly sets a language and user message is in that language, use it.
+  // If user message language differs from persona, prefer user message language (rule 4.2).
+  const effectiveLang = userLang !== personaLang && userLang !== 'ja' ? userLang : personaLang;
+  const lang = langMap[effectiveLang] ?? "日本語";
 
   const personaSection = `\n\n【Teacher Personality】\nname: ${clampText(req.persona?.name, MAX_PERSONA_FIELD_CHARS)}\npersonality: ${clampText(req.persona?.personality, MAX_PERSONA_FIELD_CHARS)}\nspecialty: ${clampText(req.persona?.specialty, MAX_PERSONA_FIELD_CHARS)}\nlanguage: ${lang}`;
 
@@ -401,7 +445,7 @@ Deno.serve(async (req: Request) => {
     // Request-local evidence, with no token, account ID, prompt or secret.
     const evidence = {
       version: 'conversation-v2-evidence-1',
-      promptRevision: 'conversation-continuity-6',
+      promptRevision: 'conversation-quality-v21',
       openaiCalled: llmResult.providerStatus !== undefined,
       openaiStatus: llmResult.providerStatus ?? null,
       completionId: llmResult.completionId ?? null,

@@ -3,7 +3,7 @@ import type { ConversationContext, TeacherResponse } from './teacherResponseServ
 import type { ConversationTurn } from './conversationHistory';
 import type { AITeacherLLMRequest, LLMKnowledgeItem, LLMPersona, LLMSessionContext } from '../types/aiTeacherLLM';
 import { fetchLLMExplanation } from './llmExplanationService';
-import { classifyIntent, detectSafetyKeyword, isRedFlag, isPrescriptionRequest, isGeneralInfoRequest, resolveEntity } from './safetyAndIntent';
+import { classifyIntent, detectSafetyKeyword, isRedFlag, isPrescriptionRequest, isGeneralInfoRequest, resolveEntity, isConversationRepair } from './safetyAndIntent';
 import { getKnowledgeRanking } from './teacherKnowledgeService';
 import { sanitizeKnowledgePayload, MAX_KNOWLEDGE_ITEMS } from './knowledgeGuardService';
 import { startConversationTrace, updateConversationTrace } from './conversationTrace';
@@ -38,6 +38,9 @@ export async function generateConversationResponse(
   const intent = classifyIntent(userMessage);
 
   // ── Safety gate: deterministic, never bypass ──
+  // Rule 2: Safety context resets when the current message has no safety keyword.
+  // The previous safety hold no longer forces a safety response for unrelated topics.
+  // Safety is re-evaluated based on the CURRENT message only.
   if (prevContext?.safetyHoldActive) {
     const isExplicitRelease = /今は痛くない|今はいたくない|今日は痛くない|痛くない|いたくない|もう痛くない|痛みはありません|痛みはない|今は大丈夫|もう大丈夫|治った|なおった|しびれもありません|しびれはない|めまいもありません|めまいはない|息苦しくない/.test(userMessage);
     if (isExplicitRelease) {
@@ -50,6 +53,75 @@ export async function generateConversationResponse(
         updatedContext: { ...prevContext, lastUserMessage: userMessage, lastTeacherText: text, safetyHoldActive: false, safetyHoldReason: undefined, safetyActiveSignals: [], lastAssistantMode: 'casual' },
       };
     }
+  }
+
+  // Rule 3: Conversation repair signals take priority — the user is telling us
+  // the previous response missed the point. Route to LLM with repair context.
+  if (isConversationRepair(userMessage) && turns.length >= 2) {
+    updateConversationTrace({ outcome: 'started', knowledgeItems: 0 });
+    const persona: LLMPersona = {
+      name: context.persona?.name ?? '',
+      personality: context.persona?.personality ?? '',
+      specialty: context.persona?.specialty ?? '',
+      teachingLanguage: context.persona?.teachingLanguage ?? 'ja',
+    };
+    const sessionContext: LLMSessionContext = {
+      requestedMinutes: prevContext?.requestedMinutes ?? null,
+      requestedType: prevContext?.requestedType ?? null,
+      requestedStyle: prevContext?.requestedStyle ?? null,
+      explanationPreference: context.preferences.explanation,
+      cuePreference: context.preferences.cue,
+      praisePreference: context.preferences.praise,
+      practiceSummary: {
+        totalSessions: context.practiceSummary.totalSessions,
+        favoriteTypes: context.practiceSummary.favoriteTypes,
+        preferredStyle: null,
+      },
+    };
+    const llmPayload: AITeacherLLMRequest = {
+      userMessage,
+      persona,
+      sessionContext,
+      knowledge: [],
+      turns,
+      memory: context.memorySummary ? {
+        favoritePractices: context.memorySummary.favoritePractices,
+        preferredDuration: context.memorySummary.preferredDuration,
+        preferredExplanation: context.memorySummary.preferredExplanation,
+        preferredTone: context.memorySummary.preferredTone,
+      } : undefined,
+    };
+    const llmResult = await fetchLLMExplanation(llmPayload, context.userId ?? null);
+    if (llmResult.text && !llmResult.fallback) {
+      updateConversationTrace({ outcome: 'llm', httpStatus: llmResult.httpStatus });
+      return {
+        text: llmResult.text,
+        responseSource: 'llm',
+        updatedContext: {
+          ...prevContext,
+          lastUserMessage: userMessage,
+          lastTeacherText: llmResult.text,
+          lastAssistantMode: 'general_explanation',
+          safetyHoldActive: false,
+          safetyHoldReason: undefined,
+          safetyActiveSignals: [],
+        },
+      };
+    }
+    // Fallback: acknowledge and ask what the user actually wants to discuss
+    const fallbackText = `${name}です。すみません、うまく伝わらなかったようですね。今お話ししたいことを教えていただけますか？`;
+    return {
+      text: fallbackText,
+      responseSource: 'error',
+      updatedContext: {
+        ...prevContext,
+        lastUserMessage: userMessage,
+        lastTeacherText: fallbackText,
+        safetyHoldActive: false,
+        safetyHoldReason: undefined,
+        safetyActiveSignals: [],
+      },
+    };
   }
 
   if (intent === 'safety_red_flag') {
@@ -66,11 +138,6 @@ export async function generateConversationResponse(
   }
   if (intent === 'safety_general_information') {
     return buildSafetyGeneralInfoResponse(userMessage, context, prevContext);
-  }
-
-  // A safety hold remains deterministic even when the next message has no keyword.
-  if (prevContext?.safetyHoldActive) {
-    return buildSafetySensitiveResponse(userMessage, context, prevContext);
   }
 
   // Knowledge enriches the same LLM request; it must never terminate conversation.

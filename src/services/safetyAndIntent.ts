@@ -146,6 +146,22 @@ export type ConversationIntent =
   | 'contextual_followup'
   | 'unknown';
 
+const CONVERSATION_REPAIR_PATTERNS = [
+  '話が噛み合わない', '噛み合わない',
+  '違う', 'そうじゃない', 'それじゃない',
+  '質問と違う', '聞いてることと違う',
+  'もういい', '全然違う',
+  '違います', 'ちがう',
+  '話がずれて', 'ずれている',
+  'そうじゃなくて',
+  '見当違い',
+];
+
+export function isConversationRepair(text: string): boolean {
+  const normalized = normalizeForSafety(text.trim());
+  return CONVERSATION_REPAIR_PATTERNS.some((pat) => normalized.includes(pat));
+}
+
 const GREETINGS = ['こんにちは', 'こんばんは', 'おはよう', 'ありがとう', 'よろしく'];
 
 const CLARIFICATION_PATTERNS = [
