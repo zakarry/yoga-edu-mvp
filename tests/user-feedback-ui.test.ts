@@ -24,8 +24,8 @@ test('Actual chat component focuses, reports pending response and scrolls latest
         export const useAuth=()=>useSyncExternalStore(f=>{listeners.add(f);return()=>listeners.delete(f);},()=>state);
       `, loader: 'ts' }));
       builder.onLoad({ filter: /aiTeacherPersonaService\.ts$/ }, () => ({ contents: `
-        const accounts=new Map(); export const getSavedTeacher=async id=>accounts.get(id)??null;
-        export const persistTeacher=async(id,p)=>{accounts.set(id,p);};
+        const accounts=new Map(); export const getSavedTeacher=async id=>{if(window.failTeacherRead)throw new Error('storage unavailable');return accounts.get(id)??null;};
+        export const persistTeacher=async(id,p)=>{window.teacherWrites=(window.teacherWrites??0)+1;accounts.set(id,p);};
       `, loader: 'ts' }));
       builder.onLoad({ filter: /teacherResponseService\.ts$/ }, () => ({ contents: `
         export const generateTeacherResponse=(...args)=>{window.receivedContext=args[0];return new Promise(resolve=>window.resolveReply=()=>resolve({text:'UI検証用の回答です。',updatedContext:{},knowledgeUsed:false}));};
@@ -71,5 +71,15 @@ test('Actual chat component focuses, reports pending response and scrolls latest
     const primary = win.document.querySelectorAll('.result-hero-actions .primary-button');
     assert.equal(primary.length, 1);
     assert.equal(primary[0].disabled, false); primary[0].click(); assert.equal(win.openedTeacher, true);
+    const writesBeforeFailure = win.teacherWrites;
+    win.failTeacherRead = true;
+    win.testLogin('unavailable-account'); win.mountChat();
+    await wait(() => win.document.body.textContent.includes('先生設定を読み込めませんでした'));
+    button('AI先生をつくる').click(); await wait(() => !!button('保存する'));
+    assert.equal(button('保存する').disabled, true);
+    button('保存する').click();
+    assert.equal(win.teacherWrites, writesBeforeFailure, 'Missing migration/load failure must never overwrite a saved teacher');
+    button('話しかける').click(); await wait(() => !!button('送信'));
+    assert.equal(button('送信').disabled, true);
   } finally { win.unmount(); dom.window.close(); }
 });

@@ -114,3 +114,11 @@ main merge、Bolt Publish、production/preview Edge deploy、本番migrationは�
 | 既存公開講師の直接編集 | 未実装 | 所有権を推測で付与しない。今回の保存・編集対象は本人の登録下書き |
 
 Conversation Engine / Safety / Intent / Knowledge / Repair / prompt、Auth、LINE、MFA、Admin、Camera、DEMO分離、既存会員/DB/RLSの製品ソースは変更なし。personaを読み込むstorage adapterのみ変更。新規2テーブルのmigrationはレビュー用ソースだけで、本番未適用です。
+
+## 検証環境の追加確認（2026-10-07）
+
+Boltへ実際にアクセスし、Yoga AIプロジェクトのGitHub状態がmain Activeで、Feedback作業ブランチが一覧にあることを確認しました。Previewは「No preview available」です。Duplicate画面は「Database will be cloned」「Custom domain won't be transferred」「GitHub will be disconnected」と表示し、DBを複製せず進む選択肢はありませんでした。Duplicateは実行せずCancelしました。本番会員データ・設定は変更していません。
+
+この端末ではDocker/Supabase CLIが見つからず、このリポジトリにもpreview用GitHub Actionsはありません。現時点で実Google/LINE認証を持つ独立検証環境とスマホ用URLは用意できていません。ローカルの模擬ログインを実OAuthのPASSに置き換えません。
+
+未適用migrationやDB障害で先生設定の読み込みが失敗したとき、保存と対話を無効にし、既存先生を上書きしない回帰条件も追加しました。migrationが未適用のままフロントだけPublishすることは受入未完了です。
