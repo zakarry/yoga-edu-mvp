@@ -9,6 +9,7 @@ export function OwnedTeacherRegistration({ sections }: { sections: FormSectionCo
   const auth = useAuth();
   const ownerRef = useRef(auth.user?.id);
   ownerRef.current = auth.user?.id;
+  const [loadedOwner, setLoadedOwner] = useState<string | undefined>();
   const [values, setValues] = useState<Values | null>(null);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState('');
@@ -18,16 +19,22 @@ export function OwnedTeacherRegistration({ sections }: { sections: FormSectionCo
     let cancelled = false;
     setValues(null); setBusy(true); setError(''); setSaved(false);
     if (!auth.user || !supabase) { setBusy(false); return; }
-    supabase.from('teacher_registration_drafts').select('values').eq('user_id', auth.user.id).maybeSingle()
+    Promise.resolve(supabase.from('teacher_registration_drafts').select('values').eq('user_id', auth.user.id).maybeSingle())
       .then(({ data, error }) => {
         if (cancelled) return;
+        setLoadedOwner(auth.user?.id);
         if (error) setError('登録情報を読み込めませんでした。再試行してください。');
         else setValues((data?.values as Values | undefined) ?? {});
+        setBusy(false);
+      }).catch(() => {
+        if (cancelled) return;
+        setLoadedOwner(auth.user?.id);
+        setError('登録情報を読み込めませんでした。再試行してください。');
         setBusy(false);
       });
     return () => { cancelled = true; };
   }, [auth.user?.id, version]);
-  if (auth.loading || !auth.authReady || busy && !values) return <p role="status">登録情報を確認しています…</p>;
+  if (auth.loading || !auth.authReady || (auth.user && loadedOwner !== auth.user.id) || busy && !values) return <p role="status">登録情報を確認しています…</p>;
   if (!auth.user) return <section className="panel"><h2>先生登録・登録内容を編集</h2><p>ログインすると、自分の登録情報を保存して後から編集できます。上部の「ログイン / 無料会員登録」から進んでください。</p></section>;
   return <>
     <section className="panel">
@@ -41,11 +48,16 @@ export function OwnedTeacherRegistration({ sections }: { sections: FormSectionCo
       if (busy || !supabase || !auth.user) return;
       const owner = auth.user.id;
       setBusy(true); setError(''); setSaved(false);
-      const { error } = await supabase.from('teacher_registration_drafts').upsert({ user_id: owner, values: next, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
-      if (ownerRef.current !== owner) return;
-      if (error) setError('保存できませんでした。入力内容を保ったまま再試行できます。');
-      else { setValues(next); setSaved(true); }
-      setBusy(false);
+      try {
+        const { error } = await supabase.from('teacher_registration_drafts').upsert({ user_id: owner, values: next, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+        if (ownerRef.current !== owner) return;
+        if (error) setError('保存できませんでした。入力内容を保ったまま再試行できます。');
+        else { setValues(next); setSaved(true); }
+      } catch {
+        if (ownerRef.current === owner) setError('保存できませんでした。入力内容を保ったまま再試行できます。');
+      } finally {
+        if (ownerRef.current === owner) setBusy(false);
+      }
     }} />}
   </>;
 }

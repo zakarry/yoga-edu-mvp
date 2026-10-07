@@ -122,3 +122,7 @@ Boltへ実際にアクセスし、Yoga AIプロジェクトのGitHub状態がmai
 この端末ではDocker/Supabase CLIが見つからず、このリポジトリにもpreview用GitHub Actionsはありません。現時点で実Google/LINE認証を持つ独立検証環境とスマホ用URLは用意できていません。ローカルの模擬ログインを実OAuthのPASSに置き換えません。
 
 未適用migrationやDB障害で先生設定の読み込みが失敗したとき、保存と対話を無効にし、既存先生を上書きしない回帰条件も追加しました。migrationが未適用のままフロントだけPublishすることは受入未完了です。
+
+## 2026-10-08 additional registration regression
+
+The actual registration component test found stale input after switching accounts. Rendering now waits for the selected owner’s load result. Rejected read/save promises show retry guidance; failed saves retain input and release the busy state. Controlled transport UI tests cover restore, edit, failed save/retry, owner switching, failed read/retry. Regression suite: 6/6 PASS. This is local integration evidence, not a production OAuth or smartphone cloud test. No merge, Publish, production Edge or database migration was performed.

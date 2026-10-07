@@ -83,3 +83,45 @@ test('Actual chat component focuses, reports pending response and scrolls latest
     assert.equal(button('送信').disabled, true);
   } finally { win.unmount(); dom.window.close(); }
 });
+
+test('Teacher registration restores own draft, edits it and recovers from network rejection', async () => {
+  const dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost/', runScripts: 'outside-only' });
+  const win = dom.window as any;
+  const bundle = await build({
+    stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';
+      import {OwnedTeacherRegistration} from './src/components/OwnedTeacherRegistration';
+      const root=createRoot(document.getElementById('root'));window.mount=()=>root.render(<OwnedTeacherRegistration sections={[{title:'基本情報',fields:[{name:'name',label:'先生名',type:'text'}]}]}/>);window.unmount=()=>root.unmount();`, resolveDir: process.cwd(), loader: 'tsx' },
+    bundle: true, write: false, format: 'iife', platform: 'browser', jsx: 'automatic',
+    define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"test"' },
+    plugins: [{ name: 'registration-test-transport', setup(builder) {
+      builder.onLoad({ filter: /[/\\]lib[/\\]auth\.ts$/ }, () => ({ contents: `import {useSyncExternalStore} from 'react';let state={user:{id:'owner-a'},authReady:true,loading:false};const listeners=new Set();window.login=id=>{state={...state,user:{id}};listeners.forEach(f=>f());};export const useAuth=()=>useSyncExternalStore(f=>{listeners.add(f);return()=>listeners.delete(f)},()=>state);`, loader: 'ts' }));
+      builder.onLoad({ filter: /[/\\]lib[/\\]supabase\.ts$/ }, () => ({ contents: `
+        const rows=new Map([['owner-a',{name:'保存済み講師'}]]);window.rows=rows;
+        export const supabase={from:()=>({select:()=>({eq:(_,id)=>({maybeSingle:async()=>{if(window.failRead)throw new Error('offline');return {data:rows.has(id)?{values:rows.get(id)}:null,error:null};}})}),upsert:async row=>{if(window.failSave)throw new Error('offline');rows.set(row.user_id,row.values);return {error:null};}})};`, loader: 'ts' }));
+    } }],
+  });
+  win.eval(bundle.outputFiles[0].text);
+  const wait = async (check: () => boolean) => { for (let i = 0; i < 100; i++) { if (check()) return; await new Promise(r => setTimeout(r, 20)); } throw new Error('Registration UI condition timed out'); };
+  const button = (name: string) => [...win.document.querySelectorAll('button')].find((b: any) => b.textContent === name) as HTMLButtonElement;
+  try {
+    win.mount(); await wait(() => !!win.document.querySelector('input'));
+    assert.equal(win.document.querySelector('input').value, '保存済み講師');
+    const input = win.document.querySelector('input');
+    Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, 'value')!.set!.call(input, '編集後の講師');
+    input.dispatchEvent(new win.Event('input', { bubbles: true }));
+    await new Promise(r => setTimeout(r, 20));
+    win.failSave = true; button('登録内容を保存する').click();
+    await wait(() => win.document.body.textContent.includes('保存できませんでした'));
+    assert.equal(input.value, '編集後の講師'); assert.equal(button('登録内容を保存する').disabled, false);
+    assert.equal(win.rows.get('owner-a').name, '保存済み講師');
+    win.failSave = false; button('登録内容を保存する').click();
+    await wait(() => win.document.body.textContent.includes('登録内容を保存しました'));
+    assert.equal(win.rows.get('owner-a').name, '編集後の講師');
+    win.login('owner-b'); await wait(() => win.document.querySelector('input')?.value === '');
+    win.login('owner-a'); await wait(() => win.document.querySelector('input')?.value === '編集後の講師');
+    win.failRead = true; win.login('unavailable-owner');
+    await wait(() => win.document.body.textContent.includes('登録情報を読み込めませんでした'));
+    assert.equal(win.document.querySelector('input'), null);
+    win.failRead = false; button('再試行').click(); await wait(() => !!win.document.querySelector('input'));
+  } finally { win.unmount(); dom.window.close(); }
+});
