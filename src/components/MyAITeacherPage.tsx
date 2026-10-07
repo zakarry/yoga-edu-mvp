@@ -1,6 +1,7 @@
 import { CameraMirrorStatus, useCameraMirror } from './CameraMirrorStatus';
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '../lib/auth';
+import { getSavedTeacher, persistTeacher } from '../services/aiTeacherPersonaService';
 import { savePracticeLog, getPracticeLogs, syncPendingLog, type PracticeLog } from '../services/practiceLogService';
 import {
   loadPersona, savePersona, clearPersona,
@@ -322,8 +323,8 @@ interface ChatMessage {
   action?: TeacherResponseAction;
 }
 
-function buildLocalContextFast(growth: AITeacherGrowth, sessionIntent?: ConversationContext, todayContext?: TodayContext, userId?: string): TeacherContext {
-  const persona = loadPersona();
+function buildLocalContextFast(growth: AITeacherGrowth, sessionIntent?: ConversationContext, todayContext?: TodayContext, userId?: string, resolvedPersona?: AITeacherPersona | null): TeacherContext {
+  const persona = resolvedPersona !== undefined ? resolvedPersona : (userId ? null : loadPersona());
   const localLogs = loadLocalPracticeLogs();
   const records = localLogs.map((l) => ({
     practice_type: l.practice_type,
@@ -400,6 +401,13 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const auth = useAuth();
   const [step, setStep] = useState<StepId>('home');
   const [persona, setPersona] = useState<AITeacherPersona | null>(null);
+  const [personaBusy, setPersonaBusy] = useState(false);
+  const [personaError, setPersonaError] = useState('');
+  const [personaLoadFailed, setPersonaLoadFailed] = useState(false);
+  const personaOwner = useRef<string | null>(null);
+  const chatPanelRef = useRef<HTMLElement>(null);
+  const chatInputRef = useRef<HTMLInputElement>(null);
+  const chatLatestRef = useRef<HTMLDivElement>(null);
   const [program, setProgram] = useState<TodayProgram | null>(null);
   const [growth, setGrowth] = useState<AITeacherGrowth>(loadGrowth());
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -576,16 +584,6 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   }, []);
 
   useEffect(() => {
-    const p = loadPersona();
-    setPersona(p);
-    if (p) {
-      setFormName(p.name);
-      setFormAvatar(p.avatar);
-      setFormPersonality(p.personality);
-      setFormSpecialty(p.specialty);
-      setFormUiLang(p.uiLanguage);
-      setFormTeachingLang(p.teachingLanguage);
-    }
     const savedSession = loadTodayContextSession<TodayContext>();
     const savedTodayCtx = savedSession?.todayContext ?? null;
     const restoredCheckResult = savedSession?.todayCheckResult ?? null;
@@ -722,7 +720,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       selectionResolved: effectiveToday.selectionResolved,
     });
     if (!gateVerdictAllowsGeneration(verdict)) return;
-    const ctx = await buildTeacherContext(auth.user?.id ?? null, growth, conversationContext, effectiveToday);
+    const ctx = await buildTeacherContext(auth.user?.id ?? null, growth, conversationContext, effectiveToday, persona);
     setTeacherContext(ctx);
     let plan;
     if (testPlanMode) {
@@ -777,9 +775,50 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setCurrentPoseIdx(0);
     setPosePhase('list');
     setStep('step2');
-  }, [safetyBlocked, auth.user, growth, conversationContext, testPlanMode, testPlanCompositeMode, todayContext, todayCheckResult]);
+  }, [safetyBlocked, auth.user, growth, conversationContext, testPlanMode, testPlanCompositeMode, todayContext, todayCheckResult, persona]);
 
-  const handleSavePersona = useCallback(() => {
+  useEffect(() => {
+    if (!auth.authReady || auth.loading) return;
+    let cancelled = false;
+    const owner = auth.user?.id ?? null;
+    personaOwner.current = owner;
+    setPersona(null);
+    setFormName('');
+    setPersonaError('');
+    setPersonaLoadFailed(false);
+    setPersonaBusy(true);
+    const apply = (p: AITeacherPersona | null) => {
+      if (cancelled) return;
+      setPersona(p);
+      setFormName(p?.name ?? '');
+      setFormAvatar(p?.avatar ?? '🧘‍♀️');
+      setFormPersonality(p?.personality ?? 'gentle');
+      setFormSpecialty(p?.specialty ?? 'pranayama');
+      setFormUiLang(p?.uiLanguage ?? 'ja');
+      setFormTeachingLang(p?.teachingLanguage ?? 'ja');
+    };
+    (owner ? getSavedTeacher(owner) : Promise.resolve(loadPersona()))
+      .then(apply)
+      .catch(() => { if (!cancelled) { setPersonaLoadFailed(true); setPersonaError('先生設定を読み込めませんでした。再読み込みしてお試しください。'); } })
+      .finally(() => { if (!cancelled) setPersonaBusy(false); });
+    return () => { cancelled = true; };
+  }, [auth.user?.id, auth.authReady, auth.loading]);
+
+  useEffect(() => {
+    if (step !== 'step5') return;
+    chatPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    chatInputRef.current?.focus({ preventScroll: true });
+  }, [step]);
+
+  useEffect(() => {
+    if (step === 'step5' && (chatMessages.length > 0 || chatTyping)) {
+      chatLatestRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [step, chatMessages, chatTyping]);
+
+  const handleSavePersona = useCallback(async () => {
+    if (personaBusy || personaLoadFailed || !auth.authReady || auth.loading) return;
+    const owner = auth.user?.id ?? null;
     const newPersona: AITeacherPersona = {
       name: formName || 'MAYA',
       avatar: formAvatar,
@@ -789,10 +828,18 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       teachingLanguage: formTeachingLang,
       createdAt: persona?.createdAt ?? new Date().toISOString(),
     };
-    savePersona(newPersona);
-    setPersona(newPersona);
-    setEditingPersona(false);
-  }, [formName, formAvatar, formPersonality, formSpecialty, formUiLang, formTeachingLang, persona]);
+    setPersonaBusy(true);
+    setPersonaError('');
+    try {
+      if (owner) await persistTeacher(owner, newPersona);
+      else savePersona(newPersona);
+      if (personaOwner.current !== owner) return;
+      setPersona(newPersona);
+      setEditingPersona(false);
+    } catch {
+      if (personaOwner.current === owner) setPersonaError('保存できませんでした。入力内容を保ったまま、もう一度お試しください。');
+    } finally { if (personaOwner.current === owner) setPersonaBusy(false); }
+  }, [formName, formAvatar, formPersonality, formSpecialty, formUiLang, formTeachingLang, persona, personaBusy, personaLoadFailed, auth.user?.id, auth.authReady, auth.loading]);
 
   const handleDryRun = useCallback(async () => {
     if (!dryRunInput.trim()) return;
@@ -828,7 +875,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   }, [dryRunInput, auth.user, persona, growth, conversationContext]);
 
   const handleSendChat = useCallback(() => {
-    if (!chatInput.trim() || chatTyping) return;
+    if (!chatInput.trim() || chatTyping || personaBusy || personaLoadFailed) return;
     const userMsg: ChatMessage = { role: 'user', text: chatInput };
     // Build conversation turns from existing chat history (before adding new message)
     const turns = buildConversationTurns(chatMessages);
@@ -838,9 +885,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     const delay = 150 + Math.random() * 150;
     setTimeout(async () => {
       // Never reuse a context made before login or for a previous account.
-      const ctx = teacherContext?.userId === auth.user?.id
-        ? (teacherContext ?? buildLocalContextFast(growth, conversationContext, todayContext, auth.user?.id))
-        : buildLocalContextFast(growth, conversationContext, todayContext, auth.user?.id);
+      const candidateContext = teacherContext?.userId === auth.user?.id
+        ? (teacherContext ?? buildLocalContextFast(growth, conversationContext, todayContext, auth.user?.id, persona))
+        : buildLocalContextFast(growth, conversationContext, todayContext, auth.user?.id, persona);
+      const ctx = { ...candidateContext, persona: persona ? { name: persona.name, personality: persona.personality, specialty: persona.specialty, teachingLanguage: persona.teachingLanguage } : null };
       try {
         const contextWithSafety: ConversationContext = {
           ...conversationContext,
@@ -889,7 +937,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         setChatTyping(false);
       }
     }, delay);
-  }, [chatInput, chatTyping, chatMessages, persona, teacherContext, growth, conversationContext, todayContext, sessionSafetyBlocked, auth.user, auth.profile?.is_admin]);
+  }, [chatInput, chatTyping, chatMessages, persona, personaBusy, personaLoadFailed, teacherContext, growth, conversationContext, todayContext, sessionSafetyBlocked, auth.user, auth.profile?.is_admin]);
 
   const handlePracticeAction = useCallback((action: TeacherResponseAction) => {
     if (!action.targetId) return;
@@ -950,6 +998,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       const remaining = Math.max(0, simpleTimerTotalRef.current - elapsed);
       setSimpleTimerRemaining(Math.ceil(remaining));
       const currentPose = concretePoses[currentPoseIdx];
+      if (currentPose?.id === 'vrksasana' && asanaRuntimeRef.current) {
+        setSimpleTimerRemaining(asanaRuntimeRef.current.holdRemainingSeconds);
+        return;
+      }
       if (currentPose?.bilateral) {
         setBilateralSide(remaining <= currentPose.bilateral.switchAtRemainingSec ? 'left' : 'right');
       }
@@ -1153,8 +1205,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     const handleAsanaEvent = (event: RuntimeEvent) => {
       if (event.type === 'subtitle') {
         setCurrentSubtitle(event.subtitle ?? '');
+      } else if (event.type === 'phaseChange' && (event.phase === 'right' || event.phase === 'left')) {
+        setBilateralSide(event.phase);
       } else if (event.type === 'complete') {
-        const poseDurationSec = pose.defaultMinutes * 60;
+        const poseDurationSec = pose.id === 'vrksasana' ? Math.round(asanaRuntimeRef.current?.elapsedSeconds ?? pose.defaultMinutes * 60) : pose.defaultMinutes * 60;
         setPoseElapsedTotal((t) => t + poseDurationSec);
         setPracticeDuration(Math.max(1, Math.round(poseDurationSec / 60)));
         setPracticePhase('done');
@@ -1247,7 +1301,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setLocalLogs(loadLocalPracticeLogs());
 
     // Generate next practice suggestion (non-sensitive)
-    const ctx = teacherContext ?? buildLocalContextFast(newGrowth, conversationContext, undefined, auth.user?.id);
+    const ctx = teacherContext ?? buildLocalContextFast(newGrowth, conversationContext, undefined, auth.user?.id, persona);
     const suggestion = generateNextSuggestion(ctx, practiceType, practiceDuration);
     const nextSug: NextSuggestion = {
       text: suggestion.text,
@@ -1259,7 +1313,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setNextSuggestion(nextSug);
 
     // Rebuild context for next session
-    const updatedCtx = await buildTeacherContext(auth.user?.id ?? null, newGrowth, {});
+    const updatedCtx = await buildTeacherContext(auth.user?.id ?? null, newGrowth, {}, undefined, persona);
     setTeacherContext(updatedCtx);
     setConversationContext({});
 
@@ -1297,7 +1351,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setPracticeMode('program');
     setIsSavingPractice(false);
     setStep('step7');
-  }, [practiceType, program, practiceDuration, moodBefore, moodAfter, practiceNote, auth, growth, formSpecialty, teacherContext, conversationContext, selectedGuide, practicePhase, practiceAborted, sessionStartedAt, isSavingPractice, practiceSessionId]);
+  }, [practiceType, program, practiceDuration, moodBefore, moodAfter, practiceNote, auth, growth, formSpecialty, teacherContext, conversationContext, selectedGuide, practicePhase, practiceAborted, sessionStartedAt, isSavingPractice, practiceSessionId, persona]);
 
   const handleRetrySync = useCallback(async () => {
     if (!auth.user || syncInProgressRef.current) return;
@@ -1402,6 +1456,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
   return (
     <div className="page-shell ai-teacher-shell">
+      {personaBusy && <p role="status">先生設定を確認・保存しています…</p>}
+      {personaError && <p role="alert">{personaError}</p>}
       {isEventDemo && step === 'home' && (
         <section className="panel event-demo-hero">
           <span className="eyebrow">Yoga AI / イベント体験</span>
@@ -1917,8 +1973,17 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               </div>
               <div className="ai-teacher-persona-actions">
                 <button className="secondary-button" onClick={() => setEditingPersona(true)}>変更する</button>
-                <button className="ghost-button" onClick={() => {
-                  clearPersona();
+                <button className="ghost-button" disabled={personaBusy} onClick={async () => {
+                  const owner = auth.user?.id ?? null;
+                  setPersonaBusy(true);
+                  try {
+                    if (owner) await persistTeacher(owner, null);
+                    else clearPersona();
+                  } catch {
+                    if (personaOwner.current === owner) setPersonaError('削除できませんでした。先生設定は残っています。');
+                    return;
+                  } finally { if (personaOwner.current === owner) setPersonaBusy(false); }
+                  if (personaOwner.current !== owner) return;
                   setPersona(null);
                   setEditingPersona(true);
                   setFormName('');
@@ -1933,6 +1998,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             </div>
           ) : (
             <div className="ai-teacher-persona-form">
+              {auth.user && !persona && !personaBusy && !personaLoadFailed && loadPersona() && <button className="secondary-button" onClick={() => {
+                const legacy = loadPersona();
+                if (!legacy) return;
+                setFormName(legacy.name); setFormAvatar(legacy.avatar); setFormPersonality(legacy.personality);
+                setFormSpecialty(legacy.specialty); setFormUiLang(legacy.uiLanguage); setFormTeachingLang(legacy.teachingLanguage);
+              }}>このブラウザの以前の先生設定を入力欄へ読み込む</button>}
               <div className="field">
                 <label>先生の名前</label>
                 <input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="MAYA" />
@@ -1971,7 +2042,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   </select>
                 </div>
               </div>
-              <button className="primary-button" onClick={handleSavePersona}>保存する</button>
+              <p>{auth.user ? '同じアカウントでログインすると、この先生設定を復元できます。' : '未ログインの設定はこのブラウザ内に保存されます。'}</p>
+              <button className="primary-button" disabled={personaBusy || personaLoadFailed || auth.loading || !auth.authReady} onClick={handleSavePersona}>{personaBusy ? '保存中…' : '保存する'}</button>
             </div>
           )}
         </section>
@@ -1979,7 +2051,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
       {/* STEP 5: Chat */}
       {step === 'step5' && (
-        <section className="panel ai-teacher-step-panel">
+        <section ref={chatPanelRef} style={{ scrollMarginTop: 100 }} className="panel ai-teacher-step-panel">
           <h3>STEP 5 — 先生と対話</h3>
           <div className="ai-teacher-chat">
             <div className="ai-teacher-chat-messages">
@@ -2018,18 +2090,21 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               {chatTyping && (
                 <div className="chat-message teacher chat-typing">
                   <span className="chat-role">{persona?.name ?? 'AI先生'}</span>
-                  <p className="chat-typing-dots"><span /><span /><span /></p>
+                  <p role="status">考えています…</p>
                 </div>
               )}
+              <div ref={chatLatestRef} />
             </div>
             <div className="ai-teacher-chat-input-row">
               <input
+                ref={chatInputRef}
+                aria-label="AI先生へのメッセージ"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleSendChat(); }}
                 placeholder="メッセージを入力…"
               />
-              <button className="primary-button" onClick={handleSendChat} disabled={chatTyping}>{chatTyping ? '…' : '送信'}</button>
+              <button className="primary-button" onClick={handleSendChat} disabled={chatTyping || personaBusy || personaLoadFailed}>{chatTyping ? '…' : '送信'}</button>
             </div>
             <p className="ai-teacher-safety-note">
               痛み・怪我・妊娠・既往症などについては個別提案を行いません。専門家にご相談ください。
@@ -2300,7 +2375,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                             {pose.sanskrit && (
                               <span className="today-plan-pose-sanskrit">{pose.sanskrit}</span>
                             )}
-                            <span className="today-plan-pose-duration">目安：{pose.defaultMinutes}分</span>
+                            <span className="today-plan-pose-duration">{pose.id === 'vrksasana' ? `左右各${Math.floor(pose.defaultMinutes * 30)}秒＋準備・切替ガイド` : `目安：${pose.defaultMinutes}分`}</span>
                           </div>
                         </div>
                         <button
@@ -2451,7 +2526,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   </div>
                   <div className="pose-guide-detail-row">
                     <strong>目安時間</strong>
-                    <p>{concretePoses[currentPoseIdx].defaultMinutes}分</p>
+                    <p>{concretePoses[currentPoseIdx].id === 'vrksasana' ? `左右各${Math.floor(concretePoses[currentPoseIdx].defaultMinutes * 30)}秒。準備・切替ガイドを含む時間は別途かかります。` : `${concretePoses[currentPoseIdx].defaultMinutes}分`}</p>
                   </div>
                   <div className="pose-guide-detail-row pose-caution-row">
                     <strong>注意</strong>
@@ -2736,7 +2811,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     <div className="breathing-circle is-running" aria-live="polite">
                       <div className="breathing-circle-content">
                         <strong>{practiceFinishing ? '仕上げのガイド中' : '実践中'}</strong>
-                        <span>{practiceFinishing ? '最後の説明です' : `${Math.floor(simpleTimerRemaining / 60)}:${String(simpleTimerRemaining % 60).padStart(2, '0')}`}</span>
+                        <span>{practiceFinishing ? '最後の説明です' : concretePoses[currentPoseIdx]?.id === 'vrksasana' && simpleTimerRemaining === 0 ? '準備・切替の案内' : `${Math.floor(simpleTimerRemaining / 60)}:${String(simpleTimerRemaining % 60).padStart(2, '0')}`}</span>
                       </div>
                     </div>
                   </div>

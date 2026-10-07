@@ -288,7 +288,7 @@ function getAudioContext(): AudioContext | null {
 
 function getAudioFilePath(key: string): string {
   if (key === 'susokukan-intro-full') return '/voice/susokukan-intro-full-v2.wav';
-  return `/voice/${key}.mp3`;
+  return `/voice/${key}.${key.startsWith('voice-tree-v2-') ? 'wav' : 'mp3'}`;
 }
 
 async function fetchAndDecode(key: string): Promise<AudioBuffer | null> {

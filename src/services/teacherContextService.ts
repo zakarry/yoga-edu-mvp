@@ -140,8 +140,9 @@ export async function buildTeacherContext(
   growth: AITeacherGrowth,
   sessionIntent?: TeacherContext['sessionIntent'],
   todayContext?: TodayContext,
+  resolvedPersona?: AITeacherPersona | null,
 ): Promise<TeacherContext> {
-  const persona = loadPersona();
+  const persona = resolvedPersona !== undefined ? resolvedPersona : (userId ? null : loadPersona());
   const prefs = growth.prefs;
 
   let practiceRecords: PracticeRecord[];
