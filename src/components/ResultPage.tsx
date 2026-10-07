@@ -444,11 +444,9 @@ export function ResultPage({ result, scoreSummary = [], onRestart, onOpenSearch,
           </div>
 
           <div className="hero-actions result-hero-actions">
-            <button className="gold-button" onClick={() => onOpenAITeacher(resolution.catalogId ?? pose.poseId ?? null)} disabled={!poseAvailable}>今日の実践へ — My AI Teacherと始める</button>
-            {hasKnowledge && !poseAvailable && (
-              <button className="secondary-button" onClick={() => onOpenAITeacher(null)}>詳しく知る</button>
-            )}
-            <button className="secondary-button" onClick={onOpenMyPage}>マイページを見る</button>
+            <p>次はAI先生と、今日のYogaを作りましょう。</p>
+            <button className="primary-button" onClick={() => onOpenAITeacher(resolution.catalogId ?? pose.poseId ?? null)}>AI先生と今日のYogaを作る →</button>
+            <button className="ghost-button" onClick={onOpenMyPage}>診断結果をカルテで見る</button>
           </div>
         </div>
       </section>
