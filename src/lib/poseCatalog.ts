@@ -182,12 +182,12 @@ export const POSE_CATALOG: PoseCatalogEntry[] = [
     nameJa: 'やさしい前屈',
     nameSanskrit: 'Uttanasana',
     nameEn: 'Standing Forward Bend',
-    image: '/pose-uttanasana-stage3.webp',
-    stageImages: ['/pose-uttanasana-stage1.webp', '/pose-uttanasana-stage2.webp', '/pose-uttanasana-stage3.webp'],
+    image: '/pose-uttanasana-gentle-v2.png',
+    stageImages: ['/pose-uttanasana-stage1.webp', '/pose-uttanasana-stage2.webp', '/pose-uttanasana-gentle-v2.png'],
     stages: [
       { image: '/pose-tadasana.webp', label: '段階1：まっすぐ立つ', description: '足を腰幅に開き、背すじを伸ばして立つ。腕は自然に下へ。ここからゆっくり始める' },
       { image: '/pose-uttanasana-stage2.webp', label: '段階2：股関節から前に倒す', description: '息を吐きながら股関節からゆっくり前に倒す。膝は少し曲げてもよい' },
-      { image: '/pose-uttanasana-stage3.webp', label: '段階3：無理のない位置で止まる', description: '手は床またはすねにおく。床に手をつける必要はない。無理な深さを求めない' },
+      { image: '/pose-uttanasana-gentle-v2.png', label: '段階3：無理のない位置で止まる', description: '腕を自然に下ろす。必要なら手をすねに添えてもよい。床に手をつける必要はない。無理な深さを求めない' },
     ],
     defaultDurationMin: 1,
     beginnerInstructions: [
