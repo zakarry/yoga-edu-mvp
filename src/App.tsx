@@ -1,4 +1,5 @@
 import { DirectoryDemoContext } from './lib/DirectoryDemoContext';
+import { OwnedTeacherRegistration } from './components/OwnedTeacherRegistration';
 import { visibleDirectoryItems, isDemoDirectoryItem } from './lib/directoryVisibility';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -1581,9 +1582,10 @@ export default function App() {
                       <p className="hero-subcopy top-hero-subcopy">レッスン探しから習慣化まで、AIがサポート。</p>
                     </div>
                     <div className="hero-actions wrap top-hero-actions">
-                      <button className="primary-button hero-primary-cta top-hero-primary" onClick={() => moveTo('diagnosis')}>無料AI診断を始める</button>
-                      <button className="ghost-button hero-secondary-cta top-hero-secondary" onClick={() => moveTo('ai-teacher')}>AI先生を体験する</button>
+                      <button className="primary-button hero-primary-cta top-hero-primary" onClick={() => moveTo('diagnosis')}>無料AI診断を始める →</button>
+                      <button className="ghost-button hero-secondary-cta top-hero-secondary" onClick={() => moveTo('ai-teacher')}>AI先生を体験する →</button>
                     </div>
+                    <p className="hero-subcopy">初めての方は無料AI診断から。↓ 下へスクロールすると、実践・検索・学びも選べます。</p>
                   </div>
                   <div className="top-hero-visual" aria-hidden="true">
                     <img className="top-hero-visual-img" src="/Codex_画像_2026年9月23日_14_53_34.png" alt="" />
@@ -2087,8 +2089,8 @@ export default function App() {
             <section className="panel listing-select-panel">
               <div className="listing-option-grid">
                 <button className="listing-option-card" onClick={() => moveTo('teacher-register')}>
-                  <strong>先生として登録</strong>
-                  <span>プロフィールや得意分野、外国語対応を掲載する</span>
+                  <strong>先生登録・登録内容を編集</strong>
+                  <span>自分のプロフィール・得意分野・外国語対応を保存・編集する</span>
                 </button>
                 <button className="listing-option-card" onClick={() => moveTo('school-register')}>
                   <strong>スクールを登録</strong>
@@ -2108,7 +2110,7 @@ export default function App() {
         )}
 
         {page === 'teacher-register' && (
-          <RegisterForm title="先生登録ページ" subtitle="先生プロフィールを登録し、一覧とおすすめに反映します。" sections={teacherSections} onSubmit={(values) => { setTeacherList((prev) => [buildTeacherFromForm(values), ...prev]); moveTo('search'); setSearchType('teacher'); }} />
+          <OwnedTeacherRegistration sections={teacherSections} />
         )}
         {page === 'school-register' && (
           <RegisterForm title="スクール登録ページ" subtitle="スクール情報を登録し、スクール最優先の推薦導線に反映します。" sections={schoolSections} onSubmit={(values) => { setSchoolList((prev) => [buildSchoolFromForm(values), ...prev]); moveTo('search'); setSearchType('school'); }} />

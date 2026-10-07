@@ -20,6 +20,9 @@ interface RegisterFormProps {
   subtitle: string;
   sections: FormSectionConfig[];
   onSubmit: (values: Record<string, string | string[]>) => void;
+  initialValues?: Record<string, string | string[]>;
+  submitLabel?: string;
+  busy?: boolean;
 }
 
 function getDefaultValue(field: FieldConfig) {
@@ -28,13 +31,13 @@ function getDefaultValue(field: FieldConfig) {
   return '';
 }
 
-export function RegisterForm({ title, subtitle, sections, onSubmit }: RegisterFormProps) {
+export function RegisterForm({ title, subtitle, sections, onSubmit, initialValues, submitLabel, busy }: RegisterFormProps) {
   const initialState = useMemo(() => {
     return sections.reduce<Record<string, string | string[]>>((acc, section) => {
       section.fields.forEach((field) => {
         acc[field.name] = getDefaultValue(field);
       });
-      return acc;
+      return { ...acc, ...initialValues };
     }, {});
   }, [sections]);
 
@@ -57,7 +60,7 @@ export function RegisterForm({ title, subtitle, sections, onSubmit }: RegisterFo
           <h2>{title}</h2>
           <p>{subtitle}</p>
         </div>
-        {submitted && (
+        {submitted && !submitLabel && (
           <div className="status-card soft-green">
             <strong>フロント内ダミー登録を保存しました</strong>
             <p>一覧・地図・おすすめに反映されます。ログインやDB接続はまだ不要です。</p>
@@ -77,7 +80,7 @@ export function RegisterForm({ title, subtitle, sections, onSubmit }: RegisterFo
       ))}
 
       <div className="cta-bar">
-        <button type="submit" className="primary-button">登録内容を反映する</button>
+        <button type="submit" disabled={busy} className="primary-button">{busy ? '保存中…' : submitLabel ?? '登録内容を反映する'}</button>
       </div>
     </form>
   );

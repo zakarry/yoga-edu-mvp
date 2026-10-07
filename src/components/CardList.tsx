@@ -1,6 +1,7 @@
 import { useDirectoryDemo } from '../lib/DirectoryDemoContext';
 import { visibleDirectoryItems, isDemoDirectoryItem, DIRECTORY_EMPTY_MESSAGE } from '../lib/directoryVisibility';
 import { SearchItem } from '../data';
+import { hasProYogaQualification } from '../lib/proYogaQualification';
 
 interface CardListProps {
   title: string;
@@ -39,7 +40,7 @@ const tagsOf = (item: SearchItem) => {
 };
 
 const isProYoga = (item: SearchItem) => {
-  if (item.type === 'teacher') return item.proYogaStatus.includes('取得');
+  if (item.type === 'teacher') return hasProYogaQualification(item.proYogaStatus);
   if (item.type === 'school') return item.proYogaSupported;
   if (item.type === 'event') return item.contentTags.includes('プロYoga');
   return item.activities.some((value) => value.includes('プロYoga'));
@@ -72,7 +73,7 @@ const supportsCertification = (item: SearchItem) => {
 const badgesOf = (item: SearchItem): CardBadge[] => {
   const badges: CardBadge[] = [];
 
-  if (isProYoga(item)) badges.push({ key: 'pro', label: 'プロYoga対応', tone: 'gold' });
+  if (isProYoga(item)) badges.push({ key: 'pro', label: item.type === 'teacher' ? 'Professional Yoga取得' : 'プロYoga対応', tone: 'gold' });
   if (isForeignFriendly(item)) badges.push({ key: 'foreign', label: '外国人対応', tone: 'blue' });
   if (supportsEnglish(item)) badges.push({ key: 'english', label: '英語対応', tone: 'navy' });
   if (isBeginnerFriendly(item)) badges.push({ key: 'beginner', label: '初心者歓迎', tone: 'green' });

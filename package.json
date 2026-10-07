@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:user-feedback": "tsx --test tests/user-feedback-batch.test.ts tests/user-feedback-ui.test.ts"
   },
   "dependencies": {
     "@line/liff": "^2.31.0",
@@ -15,9 +16,12 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react-swc": "^3.7.0",
+    "jsdom": "^26.1.0",
+    "tsx": "^4.23.15",
     "typescript": "^5.6.3",
     "vite": "^5.4.10"
   }
