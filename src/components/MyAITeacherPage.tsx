@@ -2742,7 +2742,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     <div className="breathing-circle is-running" aria-live="polite">
                       <div className="breathing-circle-content">
                         <strong>{practiceFinishing ? '仕上げのガイド中' : '実践中'}</strong>
-                        <span>{practiceFinishing ? '最後の説明です' : `${Math.floor(simpleTimerRemaining / 60)}:${String(simpleTimerRemaining % 60).padStart(2, '0')}`}</span>
+                        <span>{practiceFinishing ? '最後の説明です' : concretePoses[currentPoseIdx]?.id === 'vrksasana' && simpleTimerRemaining === 0 ? '準備・切替の案内' : `${Math.floor(simpleTimerRemaining / 60)}:${String(simpleTimerRemaining % 60).padStart(2, '0')}`}</span>
                       </div>
                     </div>
                   </div>
