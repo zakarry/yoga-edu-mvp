@@ -950,6 +950,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       const remaining = Math.max(0, simpleTimerTotalRef.current - elapsed);
       setSimpleTimerRemaining(Math.ceil(remaining));
       const currentPose = concretePoses[currentPoseIdx];
+      if (currentPose?.id === 'vrksasana' && asanaRuntimeRef.current) {
+        setSimpleTimerRemaining(asanaRuntimeRef.current.holdRemainingSeconds);
+        return;
+      }
       if (currentPose?.bilateral) {
         setBilateralSide(remaining <= currentPose.bilateral.switchAtRemainingSec ? 'left' : 'right');
       }
@@ -1153,8 +1157,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     const handleAsanaEvent = (event: RuntimeEvent) => {
       if (event.type === 'subtitle') {
         setCurrentSubtitle(event.subtitle ?? '');
+      } else if (event.type === 'phaseChange' && (event.phase === 'right' || event.phase === 'left')) {
+        setBilateralSide(event.phase);
       } else if (event.type === 'complete') {
-        const poseDurationSec = pose.defaultMinutes * 60;
+        const poseDurationSec = pose.id === 'vrksasana' ? Math.round(asanaRuntimeRef.current?.elapsedSeconds ?? pose.defaultMinutes * 60) : pose.defaultMinutes * 60;
         setPoseElapsedTotal((t) => t + poseDurationSec);
         setPracticeDuration(Math.max(1, Math.round(poseDurationSec / 60)));
         setPracticePhase('done');
@@ -2300,7 +2306,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                             {pose.sanskrit && (
                               <span className="today-plan-pose-sanskrit">{pose.sanskrit}</span>
                             )}
-                            <span className="today-plan-pose-duration">目安：{pose.defaultMinutes}分</span>
+                            <span className="today-plan-pose-duration">{pose.id === 'vrksasana' ? '左右各' + Math.floor(pose.defaultMinutes * 30) + '秒＋準備・切替ガイド' : '目安：' + pose.defaultMinutes + '分'}</span>
                           </div>
                         </div>
                         <button
@@ -2451,7 +2457,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                   </div>
                   <div className="pose-guide-detail-row">
                     <strong>目安時間</strong>
-                    <p>{concretePoses[currentPoseIdx].defaultMinutes}分</p>
+                    <p>{concretePoses[currentPoseIdx].id === 'vrksasana' ? '左右各' + Math.floor(concretePoses[currentPoseIdx].defaultMinutes * 30) + '秒。準備・切替ガイドの時間は別途かかります。' : concretePoses[currentPoseIdx].defaultMinutes + '分'}</p>
                   </div>
                   <div className="pose-guide-detail-row pose-caution-row">
                     <strong>注意</strong>

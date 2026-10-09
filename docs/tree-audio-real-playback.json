@@ -1,0 +1,244 @@
+{
+  "environment": "Local browser, actual product AudioFileEngine and WAV assets; not Android human listening",
+  "events": [
+    {
+      "seconds": 0,
+      "type": "stateChange",
+      "state": "idle"
+    },
+    {
+      "seconds": 0,
+      "type": "stateChange",
+      "state": "running"
+    },
+    {
+      "seconds": 0,
+      "type": "cueStart",
+      "cueIndex": 0,
+      "cueId": "asana-vrksasana-0",
+      "round": 0
+    },
+    {
+      "seconds": 0,
+      "type": "subtitle",
+      "subtitle": "立ち木のポーズを始めます。壁や椅子に手を添えても構いません。"
+    },
+    {
+      "seconds": 5.7,
+      "type": "cueEnd",
+      "cueIndex": 0,
+      "cueId": "asana-vrksasana-0"
+    },
+    {
+      "seconds": 5.7,
+      "type": "cueStart",
+      "cueIndex": 1,
+      "cueId": "asana-vrksasana-1",
+      "round": 0
+    },
+    {
+      "seconds": 5.7,
+      "type": "subtitle",
+      "subtitle": "両足で床を感じ、右足へゆっくり体重を移します。視線は正面の動かない一点へ。"
+    },
+    {
+      "seconds": 13.7,
+      "type": "cueEnd",
+      "cueIndex": 1,
+      "cueId": "asana-vrksasana-1"
+    },
+    {
+      "seconds": 13.7,
+      "type": "cueStart",
+      "cueIndex": 2,
+      "cueId": "asana-vrksasana-2",
+      "round": 0
+    },
+    {
+      "seconds": 13.7,
+      "type": "subtitle",
+      "subtitle": "左足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。"
+    },
+    {
+      "seconds": 27,
+      "type": "cueEnd",
+      "cueIndex": 2,
+      "cueId": "asana-vrksasana-2"
+    },
+    {
+      "seconds": 27,
+      "type": "cueStart",
+      "cueIndex": 3,
+      "cueId": "asana-vrksasana-3",
+      "round": 0
+    },
+    {
+      "seconds": 27,
+      "type": "subtitle",
+      "subtitle": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸って吐きます。"
+    },
+    {
+      "seconds": 39.9,
+      "type": "cueEnd",
+      "cueIndex": 3,
+      "cueId": "asana-vrksasana-3"
+    },
+    {
+      "seconds": 39.9,
+      "type": "cueStart",
+      "cueIndex": 4,
+      "cueId": "asana-vrksasana-4",
+      "round": 0
+    },
+    {
+      "seconds": 39.9,
+      "type": "phaseChange",
+      "phase": "right"
+    },
+    {
+      "seconds": 39.9,
+      "type": "subtitle",
+      "subtitle": "右足を軸に、無理のない範囲で30秒。自然な呼吸を続けましょう。"
+    },
+    {
+      "seconds": 69.9,
+      "type": "cueEnd",
+      "cueIndex": 4,
+      "cueId": "asana-vrksasana-4"
+    },
+    {
+      "seconds": 69.9,
+      "type": "cueStart",
+      "cueIndex": 5,
+      "cueId": "asana-vrksasana-5",
+      "round": 0
+    },
+    {
+      "seconds": 69.9,
+      "type": "subtitle",
+      "subtitle": "足を床へ戻して、両足で楽に立ちましょう。落ち着いてから反対側へ変えます。"
+    },
+    {
+      "seconds": 77.4,
+      "type": "cueEnd",
+      "cueIndex": 5,
+      "cueId": "asana-vrksasana-5"
+    },
+    {
+      "seconds": 77.4,
+      "type": "cueStart",
+      "cueIndex": 6,
+      "cueId": "asana-vrksasana-6",
+      "round": 0
+    },
+    {
+      "seconds": 77.4,
+      "type": "subtitle",
+      "subtitle": "両足で床を感じ、左足へゆっくり体重を移します。視線は正面の動かない一点へ。"
+    },
+    {
+      "seconds": 85.5,
+      "type": "cueEnd",
+      "cueIndex": 6,
+      "cueId": "asana-vrksasana-6"
+    },
+    {
+      "seconds": 85.5,
+      "type": "cueStart",
+      "cueIndex": 7,
+      "cueId": "asana-vrksasana-7",
+      "round": 0
+    },
+    {
+      "seconds": 85.5,
+      "type": "subtitle",
+      "subtitle": "右足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。"
+    },
+    {
+      "seconds": 98.6,
+      "type": "cueEnd",
+      "cueIndex": 7,
+      "cueId": "asana-vrksasana-7"
+    },
+    {
+      "seconds": 98.6,
+      "type": "cueStart",
+      "cueIndex": 8,
+      "cueId": "asana-vrksasana-8",
+      "round": 0
+    },
+    {
+      "seconds": 98.6,
+      "type": "subtitle",
+      "subtitle": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸って吐きます。"
+    },
+    {
+      "seconds": 111.5,
+      "type": "cueEnd",
+      "cueIndex": 8,
+      "cueId": "asana-vrksasana-8"
+    },
+    {
+      "seconds": 111.5,
+      "type": "cueStart",
+      "cueIndex": 9,
+      "cueId": "asana-vrksasana-9",
+      "round": 0
+    },
+    {
+      "seconds": 111.5,
+      "type": "phaseChange",
+      "phase": "left"
+    },
+    {
+      "seconds": 111.5,
+      "type": "subtitle",
+      "subtitle": "左足を軸に、無理のない範囲で30秒。自然な呼吸を続けましょう。"
+    },
+    {
+      "seconds": 141.5,
+      "type": "cueEnd",
+      "cueIndex": 9,
+      "cueId": "asana-vrksasana-9"
+    },
+    {
+      "seconds": 141.5,
+      "type": "cueStart",
+      "cueIndex": 10,
+      "cueId": "asana-vrksasana-10",
+      "round": 0
+    },
+    {
+      "seconds": 141.5,
+      "type": "subtitle",
+      "subtitle": "両足を床へ戻しましょう。お疲れさまでした。"
+    },
+    {
+      "seconds": 146.3,
+      "type": "cueEnd",
+      "cueIndex": 10,
+      "cueId": "asana-vrksasana-10"
+    },
+    {
+      "seconds": 146.3,
+      "type": "cueStart",
+      "cueIndex": 11,
+      "cueId": "asana-vrksasana-11",
+      "round": 0
+    },
+    {
+      "seconds": 146.3,
+      "type": "subtitle",
+      "subtitle": "左右の実践が完了しました。"
+    },
+    {
+      "seconds": 146.3,
+      "type": "stateChange",
+      "state": "completed"
+    },
+    {
+      "seconds": 146.3,
+      "type": "complete"
+    }
+  ]
+}
