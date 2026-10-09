@@ -1,4 +1,5 @@
 import { CameraMirrorStatus, useCameraMirror } from './CameraMirrorStatus';
+import { TreeHoldTimer } from './TreeHoldTimer';
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '../lib/auth';
 import { savePracticeLog, getPracticeLogs, syncPendingLog, type PracticeLog } from '../services/practiceLogService';
@@ -2613,7 +2614,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                         setTimerRunning(true);
                         setSelectedGuide(null);
                         const totalSec = pose.defaultMinutes * 60;
-                        setSimpleTimerRemaining(totalSec);
+                        setSimpleTimerRemaining(pose.id === 'vrksasana' ? 0 : totalSec);
                         simpleTimerTotalRef.current = totalSec;
                         simpleTimerStartRef.current = Date.now();
                         startVoiceGuide(pose);
@@ -2741,8 +2742,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                     <div className="breathing-orb-halo" />
                     <div className="breathing-circle is-running" aria-live="polite">
                       <div className="breathing-circle-content">
-                        <strong>{practiceFinishing ? '仕上げのガイド中' : '実践中'}</strong>
-                        <span>{practiceFinishing ? '最後の説明です' : concretePoses[currentPoseIdx]?.id === 'vrksasana' && simpleTimerRemaining === 0 ? '準備・切替の案内' : `${Math.floor(simpleTimerRemaining / 60)}:${String(simpleTimerRemaining % 60).padStart(2, '0')}`}</span>
+                        {concretePoses[currentPoseIdx]?.id === 'vrksasana' ? (
+                          <TreeHoldTimer remaining={simpleTimerRemaining} holdSeconds={Math.floor(concretePoses[currentPoseIdx].defaultMinutes * 30)} />
+                        ) : <>
+                          <strong>{practiceFinishing ? '仕上げのガイド中' : '実践中'}</strong>
+                          <span>{practiceFinishing ? '最後の説明です' : `${Math.floor(simpleTimerRemaining / 60)}:${String(simpleTimerRemaining % 60).padStart(2, '0')}`}</span>
+                        </>}
                       </div>
                     </div>
                   </div>

@@ -7,6 +7,10 @@ import { buildAsanaCues } from '../src/lib/asanaCueBuilder';
 import { getCatalogEntry } from '../src/lib/poseCatalog';
 
 import type { VoiceGuideEngine } from '../src/lib/voiceGuide';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { TreeHoldTimer } from '../src/components/TreeHoldTimer';
+import pronunciation from '../src/lib/voicePronunciation.json';
 
 function audio() {
   let end: (() => void) | null = null;
@@ -51,7 +55,7 @@ test('Tree waits for setup and transition audio, gives identical holds, complete
   const cues = buildAsanaCues(getCatalogEntry('vrksasana')!, 1);
   const transcripts = JSON.parse(readFileSync(new URL('../public/voice/tree-v2-transcripts.json', import.meta.url), 'utf8'));
   for (const cue of cues.filter(c => c.audioKey)) {
-    assert.equal(transcripts[cue.audioKey!], cue.speechText);
+    assert.equal(cue.audioKey === pronunciation.treeStability.audioKey ? pronunciation.treeStability.speechText : transcripts[cue.audioKey!], cue.speechText);
     const wave = readFileSync(new URL(`../public/voice/${cue.audioKey}.wav`, import.meta.url));
     assert.equal(wave.toString('ascii', 0, 4), 'RIFF');
     assert.equal(wave.toString('ascii', 8, 12), 'WAVE');
@@ -79,4 +83,24 @@ test('Tree waits for setup and transition audio, gives identical holds, complete
   assert.equal(a.interruptions, 0);
   assert.ok(a.spoken.some(s => s.includes('膝に直接')));
   runtime.dispose();
+});
+
+test('吐きます uses the explicit はきます reading in recorded and fallback speech', () => {
+  const cues = buildAsanaCues(getCatalogEntry('vrksasana')!, 1);
+  const breathing = cues.filter(cue => cue.displayText?.includes('吸って吐きます'));
+  assert.equal(breathing.length, 2);
+  for (const cue of breathing) {
+    assert.match(cue.speechText!, /吸ってはきます。$/);
+    assert.doesNotMatch(cue.speechText!, /吐きます|つきます/);
+    assert.equal(cue.audioKey, 'voice-tree-v2-stability-hakimasu-v3');
+  }
+});
+
+test('Tree timer stays numeric during instructions and counts down during each hold', () => {
+  for (const remaining of [0, 30, 29, 1, 0]) {
+    const html = renderToStaticMarkup(React.createElement(TreeHoldTimer, { remaining, holdSeconds: 30 }));
+    assert.match(html, new RegExp('<span>0:' + String(remaining || 30).padStart(2, '0') + '</span>'));
+    assert.ok(html.includes(remaining ? '保持中' : '案内中'));
+    assert.ok(!html.includes('準備・切替の案内'));
+  }
 });
