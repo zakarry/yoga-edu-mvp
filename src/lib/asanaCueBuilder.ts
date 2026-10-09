@@ -11,6 +11,22 @@ export function buildAsanaCues(entry: PoseCatalogEntry, totalMinutes: number): P
     cues.push({ ...cue, id: `asana-${entry.id}-${idx++}` });
   };
 
+  if (entry.id === 'vrksasana') {
+    const holdSeconds = Math.max(1, Math.floor(totalSeconds / 2));
+    const voice = (key: string, text: string) => add({ type: 'voice', displayText: text, speechText: text, audioKey: `voice-tree-v2-${key}` });
+    voice('intro', '立ち木のポーズを始めます。壁や椅子に手を添えても構いません。');
+    for (const [side, standing, lifted] of [['right', '右', '左'], ['left', '左', '右']] as const) {
+      if (side === 'left') voice('switch', '足を床へ戻して、両足で楽に立ちましょう。落ち着いてから反対側へ変えます。');
+      voice(`${side}-setup`, `両足で床を感じ、${standing}足へゆっくり体重を移します。視線は正面の動かない一点へ。`);
+      voice(`${side}-foot`, `${lifted}足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。`);
+      voice('stability', '安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸って吐きます。');
+      add({ type: 'silence', side, durationSec: holdSeconds, displayText: `${standing}足を軸に、無理のない範囲で${holdSeconds}秒。自然な呼吸を続けましょう。` });
+    }
+    voice('complete', '両足を床へ戻しましょう。お疲れさまでした。');
+    add({ type: 'complete', displayText: '左右の実践が完了しました。' });
+    return cues;
+  }
+
   add({ type: 'voice', displayText: vg.intro, speechText: vg.intro, audioKey: vg.introAudioKey });
 
   if (bilateral && totalSeconds >= 60) {

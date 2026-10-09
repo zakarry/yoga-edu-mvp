@@ -13,6 +13,7 @@ export interface PracticeCue {
   isFinalCue?: boolean;
   displayRound?: number;
   scheduledAtSec?: number;
+  side?: 'right' | 'left';
 }
 
 export type RuntimeSource =
@@ -81,6 +82,10 @@ export class PracticeAudioRuntime {
   get currentCueIndex(): number { return this.cueIndex; }
   get currentRoundNumber(): number { return this.currentRound; }
   get source(): RuntimeSource { return this.runtimeSource; }
+  get elapsedSeconds(): number { return this.getElapsedMs() / 1000; }
+  get holdRemainingSeconds(): number {
+    return Math.ceil(Math.max(0, this.silenceRemainingMs - (this.state === 'running' && this.silenceTimer ? Date.now() - this.silenceStartedAt : 0)) / 1000);
+  }
 
   setSource(source: RuntimeSource): void {
     this.runtimeSource = source;
@@ -294,6 +299,7 @@ export class PracticeAudioRuntime {
     this.watchdogTimer = setTimeout(() => {
       if (this.state !== 'running') return;
       if (this.cueIndex !== myCueIndex) return;
+      if (this.engine.isPlaying()) { this.startWatchdog(cue, _cueKey); return; }
       this.engine.stop();
       this.engine.setOnCueEnd(null);
       this.emit({ type: 'cueEnd', cueIndex: this.cueIndex, cueId: cue.id });
@@ -381,6 +387,7 @@ export class PracticeAudioRuntime {
     this.engine.setOnCueEnd(null);
 
     const duration = cue.durationSec ?? 30;
+    if (cue.side) this.emit({ type: 'phaseChange', phase: cue.side });
     if (cue.displayText) {
       this.emit({ type: 'subtitle', subtitle: cue.displayText });
     }
@@ -433,12 +440,19 @@ export class PracticeAudioRuntime {
   private checkScheduledCues(): void {
     if (this.scheduledCues.length === 0) return;
     if (this.scheduledCuePlaying) return;
+    // A clock cue must never replace an unfinished sequential instruction.
+    if (this.isAdvancing || this.engine.isPlaying()) return;
     const remainingSec = this.getRemainingSec();
 
     for (const sc of this.scheduledCues) {
       if (sc.fired) continue;
       const fireAtSec = sc.cue.scheduledAtSec!;
       if (remainingSec <= fireAtSec) {
+        // Late countdowns no longer describe the current practice time.
+        if (fireAtSec > 0 && remainingSec <= 0) {
+          sc.fired = true;
+          continue;
+        }
         sc.fired = true;
         this.fireScheduledCue(sc);
         return;
@@ -481,12 +495,14 @@ export class PracticeAudioRuntime {
     }
 
     const fallbackMs = this.estimateCueMs(cue);
-    this.watchdogTimer = setTimeout(() => {
+    const check = () => {
       if (this.state !== 'running') { this.scheduledCuePlaying = false; return; }
+      if (this.engine.isPlaying()) { this.watchdogTimer = setTimeout(check, fallbackMs); return; }
       this.engine.stop();
       this.scheduledCuePlaying = false;
       this.emit({ type: 'cueEnd', cueIndex: sc.index, cueId: cue.id });
-    }, fallbackMs);
+    };
+    this.watchdogTimer = setTimeout(check, fallbackMs);
   }
 
   pause(): void {
