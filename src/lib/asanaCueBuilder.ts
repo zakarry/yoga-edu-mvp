@@ -1,5 +1,6 @@
 import type { PoseCatalogEntry } from './poseCatalog';
 import type { PracticeCue } from './practiceAudioRuntime';
+import pronunciation from './voicePronunciation.json';
 
 export function buildAsanaCues(entry: PoseCatalogEntry, totalMinutes: number): PracticeCue[] {
   const cues: PracticeCue[] = [];
@@ -19,7 +20,7 @@ export function buildAsanaCues(entry: PoseCatalogEntry, totalMinutes: number): P
       if (side === 'left') voice('switch', '足を床へ戻して、両足で楽に立ちましょう。落ち着いてから反対側へ変えます。');
       voice(`${side}-setup`, `両足で床を感じ、${standing}足へゆっくり体重を移します。視線は正面の動かない一点へ。`);
       voice(`${side}-foot`, `${lifted}足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。`);
-      voice('stability', '安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸って吐きます。');
+      add({ type: 'voice', ...pronunciation.treeStability });
       add({ type: 'silence', side, durationSec: holdSeconds, displayText: `${standing}足を軸に、無理のない範囲で${holdSeconds}秒。自然な呼吸を続けましょう。` });
     }
     voice('complete', '両足を床へ戻しましょう。お疲れさまでした。');
