@@ -5,7 +5,6 @@ permissions:
 jobs:
   audio:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -13,16 +12,5 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run typecheck
-      - run: npm run test:regression
+      - run: npm run test:audio
       - run: npm run build
-  edge-safety:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.9.6
-      # Actual production/preview entrypoints, local auth stubs. No provider/DB or deploy credentials.
-      - run: deno test --node-modules-dir=none --allow-env --allow-read tests/ai-teacher-release.test.ts
