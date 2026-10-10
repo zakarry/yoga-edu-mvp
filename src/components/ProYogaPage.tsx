@@ -30,28 +30,29 @@ export function ProYogaPage({ onStartDiagnosis, onBackHome, onOpenDrill }: ProYo
         <div>
           <TopBackLink onBackHome={onBackHome} />
           <span className="eyebrow">Professional Yoga Certification</span>
-          <h2>プロフェッショナルYoga検定とは</h2>
+          <h2>プロフェッショナル<wbr /><span className="pro-yoga-title-tail">Yoga検定とは</span></h2>
           <p>
-            指導品質・教育理解・現場実装力を可視化するための認定イメージページです。MVPでは、先生・スクール向けの信頼向上導線として、取得者・対応スクールを検索優遇や認定バッジ表示で表現しています。
+            ヨガ指導者や指導者を目指す方のための学び・検定です。ヨガの知識を学び、指導に生かすための理解を深めましょう。
           </p>
         </div>
       </section>
 
       <div className="feature-showcase pro-yoga-benefits">
         <section className="panel">
-          <h3>先生・スクールにとってのメリット</h3>
+          <h3>学びを指導に生かす</h3>
           <ul className="check-list">
-            <li>検索・おすすめ結果での優遇表示</li>
-            <li>認定バッジ風UIでの信頼強化</li>
-            <li>イベント登壇候補としての訴求強化</li>
-            <li>教育プラットフォーム上での専門性の見える化</li>
+            <li>ヨガの知識を体系的に学ぶ</li>
+            <li>指導に必要な理解を深める</li>
+            <li>学んだ内容をドリルで復習する</li>
+            <li>資格情報を確認して次の学びを選ぶ</li>
           </ul>
         </section>
         <section className="panel">
-          <h3>取得後の見せ方</h3>
+          <h3>検定について知る・学ぶ</h3>
           <div className="status-card gold-accent">
-            <strong>検索優遇 / 認定バッジ / イベント登壇優先</strong>
-            <p>MVP上では、Pro Yoga 対応をゴールドの認定ラベルで表現しています。</p>
+            <strong>公式の検定情報を確認する</strong>
+            <p>受験条件や資格の詳細は、プロフェッショナルYoga検定の公式サイトをご確認ください。</p>
+          <a className="secondary-button" href="https://proyogakentei.com/" target="_blank" rel="noopener noreferrer">公式サイトを見る</a>
           </div>
           <div className="status-card soft-green">
             <strong>公式ガイドブックで学ぶ</strong>
@@ -66,7 +67,7 @@ export function ProYogaPage({ onStartDiagnosis, onBackHome, onOpenDrill }: ProYo
       <section className="panel pro-yoga-cta-panel">
         <div className="pro-yoga-cta-copy">
           <h3>次の一歩を確認する</h3>
-          <p>スマホでも見やすい形で、診断導線と受験導線をまとめています。興味があればここから次のアクションに進めます。</p>
+          <p>自分に合うヨガを知りたい方はAI診断へ。指導者向けの学習を続けたい方は、学習を始めましょう。</p>
         </div>
         <div className="hero-actions pro-yoga-mobile-actions">
           <button className="secondary-button" onClick={onStartDiagnosis}>無料診断を始める</button>
