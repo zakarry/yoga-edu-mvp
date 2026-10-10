@@ -158,7 +158,9 @@ export function buildBreathworkCues(entry: BreathworkCatalogEntry): PracticeCue[
 
   let idx = 0;
   const add = (cue: Omit<PracticeCue, 'id'>) => {
-    cues.push({ ...cue, id: `bw-${entry.id}-${idx++}` });
+    // Keep written Japanese in subtitles; explicitly disambiguate breathing speech.
+    const speechText = cue.speechText?.replace(/吐きます/g, 'はきます').replace(/吐いて/g, 'はいて').replace(/吐く/g, 'はく');
+    cues.push({ ...cue, speechText, id: `bw-${entry.id}-${idx++}` });
   };
 
   if (isSequence) {
