@@ -30,3 +30,6 @@ Home4入口「今日何をしたいですか」: 今すぐYoga/AI先生相談/�
 ## Batch #1の受入境界
 A〜Dは原指示書の永続化/音声/対話等。E診断CTA、F立ち木、G前屈、H本人講師編集、IHome、JProfessional表示を上表で管理。P0/P1/P2・監査のみを混同しない。変更は独立rollback可能なPR単位。DB/RLS追加が必要なDraft #10はレビューと統合確認の工程を別途通す。
 本書は公開済みと未公開を区別する記録であり、未確認項目を完成と報告しない。
+
+## Q-02/Q-03 修復状態（2026-10-10、作業ブランチのみ）
+Q-02: 9/21 cffce97の文言/専用asset変更に旧期待値が追随せず、Node smokeにもwindow不足。初回/反復/肩弛緩を厳密に検査し、4/6秒×6周、明示読み、音声終了待ちを保持。Q-03: 9/18 2148a92のSession削除と別時計化。PR #3の60秒media時計＋240秒静寂の専用経路へ復元し、旧全assertionを保持。修復後scriptと追加2件PASS。mainは未修正、公開/人のAndroid試聴は未実施。履歴/証拠は[監査](BREATHWORK_SUSOKUKAN_REGRESSION_FIX.md)参照。

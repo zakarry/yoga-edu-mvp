@@ -51,8 +51,17 @@ try {
   const abVoiceTexts = abCues.filter(c => c.type === 'voice').map(c => c.displayText);
   assert.ok(abVoiceTexts.includes('鼻からゆっくり吸います。'), 'abdominal should contain inhale cue');
   assert.ok(abVoiceTexts.includes('お腹の広がりを感じましょう。'), 'abdominal should contain belly expansion cue');
-  assert.ok(abVoiceTexts.includes('鼻からゆっくり吐きます。'), 'abdominal should contain exhale cue');
-  assert.ok(abVoiceTexts.includes('肩の力を抜きましょう。'), 'abdominal should contain relax cue');
+  // fddc9ec retained the pre-cffce97 generic exhale text. The actual catalogue
+  // and phase builder now provide first-round belly return and repeated relaxation.
+  assert.ok(abVoiceTexts.includes('鼻からゆっくり吐いて、お腹がやさしく戻ります。'), 'abdominal first exhale returns the belly');
+  assert.ok(abVoiceTexts.includes('鼻からゆっくり吐いて、力を抜きます。'), 'abdominal repeated exhale relaxes');
+  assert.ok(abVoiceTexts.includes('腹式呼吸を始めます。肩の力を抜いて、楽な姿勢をとりましょう。'), 'abdominal introduction retains shoulder relaxation');
+  assert.deepEqual(abdominal.pattern, { inhaleSec: 4, holdAfterInhaleSec: 0, exhaleSec: 6, holdAfterExhaleSec: 0, rounds: 6 });
+  assert.deepEqual(abCues.filter(c => c.type === 'silence').map(c => c.durationSec), Array.from({length: 6}, () => [4, 6]).flat(), 'all six rounds preserve inhale/exhale timing');
+  for (const cue of abCues.filter(c => /吐/.test(c.displayText ?? ''))) {
+    assert.ok(/はきます|はいて|はく/.test(cue.speechText), 'explicit exhalation pronunciation');
+    assert.ok(!/吐/.test(cue.speechText), 'ambiguous written reading is not spoken');
+  }
 
   // Spot-check box-breathing cue order
   const box = getBreathworkEntry('box-breathing');
@@ -92,8 +101,21 @@ try {
   }
 
   // PracticeAudioRuntime smoke test: start, receive events, complete
-  const { createPracticeAudioRuntime } = require(join(dir, 'practiceAudioRuntime.cjs'));
-  const runtime = createPracticeAudioRuntime();
+  const { PracticeAudioRuntime } = require(join(dir, 'practiceAudioRuntime.cjs'));
+  let cueEnd = null;
+  let playing = false;
+  const spoken = [];
+  const engine = {
+    type: 'audio-file', available: true,
+    speak(text) { assert.equal(playing, false, 'no overlapping narration'); playing = true; spoken.push(text); },
+    speakByKey(_key, text) { this.speak(text); },
+    stop() { playing = false; }, pause() {}, resume() {}, unlock() {},
+    getAudioDuration() { return null; }, isPlaying() { return playing; },
+    setOnCueEnd(cb) { cueEnd = cb; },
+    getStatus() { return { status: playing ? 'playing' : 'stopped', voiceName: null, error: null }; },
+  };
+  // Node has no browser AudioContext. Inject only transport, never copy runtime logic.
+  const runtime = new PracticeAudioRuntime(engine);
   const events = [];
   runtime.addListener(e => events.push(e));
   const testCues = [
@@ -106,6 +128,14 @@ try {
   assert.ok(events.some(e => e.type === 'stateChange' && e.state === 'running'), 'should enter running state');
   await new Promise(resolve => setTimeout(resolve, 200));
   assert.ok(events.some(e => e.type === 'subtitle' && e.subtitle === 'intro'), 'should emit intro subtitle');
+  assert.equal(runtime.holdRemainingSeconds, 0, 'holding cannot start before intro ends');
+  assert.equal(runtime.currentState, 'running');
+  playing = false; cueEnd();
+  assert.equal(runtime.holdRemainingSeconds, 1);
+  await new Promise(resolve => setTimeout(resolve, 1100));
+  assert.equal(runtime.currentState, 'completed');
+  assert.equal(events.filter(e => e.type === 'complete').length, 1);
+  assert.deepEqual(spoken, ['intro']);
   runtime.dispose();
 
   console.log('PASS: cue builder for all 6 practices, audio key files, MP3 frame durations, PracticeAudioRuntime smoke test.');

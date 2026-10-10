@@ -27,3 +27,6 @@ PR CIは上記を実行する。ブランチ保護/required checksのGitHub設�
 
 ## 結果記録
 各確認に基準commit、環境、入力/操作、期待/実測、PASS/FAIL/未確認、証拠、制約を付ける。テストの緑だけで「完成」としない。修正は失敗ケースを残して同一suite再実行。公開承認後は公開asset hashと表示を検証し、重大障害時rollback。今回merge/Publishしない。
+
+## Q-02/Q-03 修復PR（2026-10-10、未merge）
+履歴追跡と[修復記録](BREATHWORK_SUSOKUKAN_REGRESSION_FIX.md)に基づき旧scriptの失敗を解決。元FAIL記録は上に維持。`test:breathwork` / `test:susokukan` / `test:practice-sessions`をCIのtest:regressionへ追加。数息観の全旧assertionは保持。人のAndroid試聴は未確認。
