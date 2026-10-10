@@ -10846,3 +10846,24 @@ html, body {
     gap: 13px;
   }
 }
+
+/* Pro Yoga: keep navigation and all page copy within the available width. */
+.top-learning-item { text-align: left; text-decoration: underline; }
+.top-learning-item-disabled { text-decoration: none; }
+.pro-yoga-hero { grid-template-columns: minmax(0, 1fr); }
+.pro-yoga-hero > div { display: grid; gap: 16px; min-width: 0; }
+.pro-yoga-page .eyebrow { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.pro-yoga-page h2, .pro-yoga-page h3, .pro-yoga-page p,
+.pro-yoga-page li, .pro-yoga-page strong { min-width: 0; overflow-wrap: anywhere; }
+.pro-yoga-page .status-card { min-width: 0; }
+@media (max-width: 768px) {
+  .pro-yoga-page .hero-panel, .pro-yoga-page .panel { padding: 20px 16px; }
+  .pro-yoga-page h2 { font-size: 26px; line-height: 1.4; }
+  .pro-yoga-page h3 { font-size: 20px; line-height: 1.5; }
+  .pro-yoga-page .eyebrow { font-size: 11px; letter-spacing: .04em; }
+  .pro-yoga-page .secondary-button { max-width: 100%; white-space: normal; }
+}
+
+button.top-learning-item { text-align: left !important; justify-content: flex-start; }
+
+.pro-yoga-title-tail { white-space: nowrap; }
