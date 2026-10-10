@@ -30,3 +30,7 @@ PR CIは上記を実行する。ブランチ保護/required checksのGitHub設�
 
 ## Q-02/Q-03 修復PR（2026-10-10、未merge）
 履歴追跡と[修復記録](BREATHWORK_SUSOKUKAN_REGRESSION_FIX.md)に基づき旧scriptの失敗を解決。元FAIL記録は上に維持。`test:breathwork` / `test:susokukan` / `test:practice-sessions`をCIのtest:regressionへ追加。数息観の全旧assertionは保持。人のAndroid試聴は未確認。
+
+
+## PR #17 merge後の最新状態（2026-10-10）
+main `c4ffbcc9e4c1d3b4aacad1b73813b747a604ebd0` に修復をmerge済み。上の未merge/旧FAIL記録は履歴。Q-02/Q-03の既存scriptと追加回帰、型、Build、CIはPASS。本番反映はBolt実ソース不一致により保留、Android発音試聴は未確認。数息観はPR #3の60秒media時計＋240秒静寂の専用Sessionを維持する。

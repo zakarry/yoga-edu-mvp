@@ -35,3 +35,7 @@ A〜Dは原指示書の永続化/音声/対話等。E診断CTA、F立ち木、G�
 Q-02/Q-03はmain a770b129で再実行してともにexit 1を確認。両script/期待値は変更・削除せず保持。次の最優先調査として、実経路・原稿/音声/字幕・時間意味・履歴を照合する。旧期待値を単に現状へ置換してPASSにしない。調査項目と受入条件は[段階計画](PRACTICE_CORE_IMPLEMENTATION_PLAN.md)を参照。
 ## Q-02/Q-03 修復状態（2026-10-10、作業ブランチのみ）
 Q-02: 9/21 cffce97の文言/専用asset変更に旧期待値が追随せず、Node smokeにもwindow不足。初回/反復/肩弛緩を厳密に検査し、4/6秒×6周、明示読み、音声終了待ちを保持。Q-03: 9/18 2148a92のSession削除と別時計化。PR #3の60秒media時計＋240秒静寂の専用経路へ復元し、旧全assertionを保持。修復後scriptと追加2件PASS。mainは未修正、公開/人のAndroid試聴は未実施。履歴/証拠は[監査](BREATHWORK_SUSOKUKAN_REGRESSION_FIX.md)参照。
+
+
+## PR #17 merge後の最新状態（2026-10-10）
+main `c4ffbcc9e4c1d3b4aacad1b73813b747a604ebd0` に修復をmerge済み。上の未merge/旧FAIL記録は履歴。Q-02/Q-03の既存scriptと追加回帰、型、Build、CIはPASS。本番反映はBolt実ソース不一致により保留、Android発音試聴は未確認。数息観はPR #3の60秒media時計＋240秒静寂の専用Sessionを維持する。
