@@ -32,3 +32,9 @@ Phase3: 全対象が実測等価になってから重複定義を削減。Conten
 
 ## 未決事項
 実音声長と予定実践時間をUIでどう説明するか、全種のmetadata不足、Knowledge sourceの実在/審査、alias同義性、SpeechSynthesis端末差、既存音声全件の読み/品質、クラウド統合テスト環境。ユーザー合意前に勝手に動作変更しない。
+
+
+## PR #17との整合（2026-10-10）
+上のSession欠落は旧基準の監査履歴。最新main c4ffbccは数息観専用Sessionを復元済み。Coreでは `media_narration_then_silence` を独立契約とし、60秒録音のaudio.currentTime字幕/時計→ended→240秒静寂を保持する。汎用wall clockへ統合しない。
+腹式呼吸はvoice ended後の4秒吸気/6秒呼気×6周、字幕とかな原稿の分離を維持。Androidの発音は未確認。
+棚卸しと1実践ずつの移行/自動検品/実機ゲートは[段階計画](PRACTICE_CORE_IMPLEMENTATION_PLAN.md)に具体化。本書の採用は大規模runtime置換や新規アーサナ追加の承認を意味しない。

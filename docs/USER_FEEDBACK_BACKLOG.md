@@ -16,7 +16,7 @@
 | FB-10 監査 | 初見Homeで最初の行動/クリック可能性が不明 | 監査/改善仮説、全面改修未実装。3秒理解はユーザーテスト必要 |
 | FB-11 監査 | Pro Yogaだけリンク形式が違い、遷移先がスマホで切れる | PR #14 merged、左寄せ下線/390・320px/公開文言を修正。資格判定はPR #11、実資格/失効照合は別設計 |
 | FB-12 次期 | 精度低い/英語が自然/予防を患者扱い/話が噛み合わない/ポーズ説明曖昧 | v2.2のSafety優先/文脈/Knowledge回帰を維持。実LLM E2Eが必要。品質基盤PRでEngineを変更しない |
-| Q-01 最優先 | 仕様引継漏れ/完成後退行/未検証公開 | 本PR: 開始手順/仕様ID/PR gate/CI。main merge・Publish未実施 |
+| Q-01 最優先 | 仕様引継漏れ/完成後退行/未検証公開 | PR #15: 開始手順/仕様ID/PR gate/CIをmain a770b129へ正式採用。Publish未実施 |
 | Q-02 P1 | 呼吸法旧suite失敗 | 実測: 腹式exhale旧字幕と現行差異。意味契約を新testで追加。旧suite全項目移植未完了、製品bugと断定しない |
 | Q-03 P1 | 数息観旧suite起動不能 | 参照Sessionファイルなし。現行meditation経路へ移植要。旧fileの復活はしない |
 | Q-04 P1 | 先生永続化・編集・chat・診断CTA統合のmain CI不足 | PR #10検証を製品採用時に移植。Draftを勝手にmerge/DB適用しない |
@@ -31,5 +31,11 @@ Home4入口「今日何をしたいですか」: 今すぐYoga/AI先生相談/�
 A〜Dは原指示書の永続化/音声/対話等。E診断CTA、F立ち木、G前屈、H本人講師編集、IHome、JProfessional表示を上表で管理。P0/P1/P2・監査のみを混同しない。変更は独立rollback可能なPR単位。DB/RLS追加が必要なDraft #10はレビューと統合確認の工程を別途通す。
 本書は公開済みと未公開を区別する記録であり、未確認項目を完成と報告しない。
 
+## 採用後の優先調査（2026-10-10）
+Q-02/Q-03はmain a770b129で再実行してともにexit 1を確認。両script/期待値は変更・削除せず保持。次の最優先調査として、実経路・原稿/音声/字幕・時間意味・履歴を照合する。旧期待値を単に現状へ置換してPASSにしない。調査項目と受入条件は[段階計画](PRACTICE_CORE_IMPLEMENTATION_PLAN.md)を参照。
 ## Q-02/Q-03 修復状態（2026-10-10、作業ブランチのみ）
 Q-02: 9/21 cffce97の文言/専用asset変更に旧期待値が追随せず、Node smokeにもwindow不足。初回/反復/肩弛緩を厳密に検査し、4/6秒×6周、明示読み、音声終了待ちを保持。Q-03: 9/18 2148a92のSession削除と別時計化。PR #3の60秒media時計＋240秒静寂の専用経路へ復元し、旧全assertionを保持。修復後scriptと追加2件PASS。mainは未修正、公開/人のAndroid試聴は未実施。履歴/証拠は[監査](BREATHWORK_SUSOKUKAN_REGRESSION_FIX.md)参照。
+
+
+## PR #17 merge後の最新状態（2026-10-10）
+main `c4ffbcc9e4c1d3b4aacad1b73813b747a604ebd0` に修復をmerge済み。上の未merge/旧FAIL記録は履歴。Q-02/Q-03の既存scriptと追加回帰、型、Build、CIはPASS。本番反映はBolt実ソース不一致により保留、Android発音試聴は未確認。数息観はPR #3の60秒media時計＋240秒静寂の専用Sessionを維持する。
