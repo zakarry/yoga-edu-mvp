@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test:audio": "tsx --test tests/tree-audio-regression.test.ts"
+    "test:audio": "tsx --test tests/tree-audio-regression.test.ts",
+    "typecheck": "tsc -b",
+    "test:contracts": "tsx --test tests/quality-contracts.test.ts",
+    "test:regression": "npm run test:audio && npm run test:contracts && node scripts/test-camera-mirror.mjs && node scripts/test-directory-demo.mjs"
   },
   "dependencies": {
     "@line/liff": "^2.31.0",
