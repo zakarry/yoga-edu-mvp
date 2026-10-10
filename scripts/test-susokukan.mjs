@@ -4,11 +4,19 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 const dir = await mkdtemp(join(tmpdir(), 'yoga-susokukan-'));
 const require = createRequire(import.meta.url);
 try {
   await build({ entryPoints: ['src/lib/susokukanSession.ts'], bundle: true, platform: 'node', format: 'cjs', outfile: join(dir, 'session.cjs') });
+  await build({ entryPoints: ['src/components/SusokukanExperience.tsx'], jsx: 'automatic', bundle: true, external: ['react','react/jsx-runtime'], platform: 'node', format: 'cjs', outfile: join(dir, 'component.cjs') });
+  process.env.NODE_PATH = join(process.cwd(), 'node_modules');
+  require('node:module').Module._initPaths();
+  const { SusokukanExperience } = require(join(dir, 'component.cjs'));
+  const html = renderToStaticMarkup(createElement(SusokukanExperience));
+  assert.ok(html.includes('5:00') && html.includes('瞑想を始める') && html.includes('その後4分は静寂'));
   const { SusokukanSession, susokukanSubtitle } = require(join(dir, 'session.cjs'));
   const captions = JSON.parse(await readFile('src/lib/susokukanNarration.json', 'utf8'));
   const text = captions.map(c => c.text).join('');
