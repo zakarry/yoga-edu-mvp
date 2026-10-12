@@ -3,7 +3,8 @@
   "git": {
     "deploymentEnabled": {
       "main": false,
-      "qa/practice-browser-regression": false
+      "qa/practice-browser-regression": false,
+      "qa/staging-feedback-plan": false
     }
   }
 }
