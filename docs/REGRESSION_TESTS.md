@@ -40,3 +40,7 @@ main `c4ffbcc9e4c1d3b4aacad1b73813b747a604ebd0` に修復をmerge済み。上の
 最新main `e6e3958654ce9e01587023fa5ce1427dc82771a4` と照合。PR #17の製品ソースを維持し、公開更新を確認済み。添付689件の内容は改行正規化後にmainと一致（平坦な添付から元のディレクトリ構造まで証明したものではない）。
 ユーザーがAndroid（Galaxy）で数息観を最後まで実践し、5分間の完走を確認したため、**数息観の5分完走のみPASS（ユーザー実測）**と更新する。音声・字幕の完全同期、「はきます」の発音、LINE内蔵ブラウザ、全端末等価性は未確認のまま。端末型番・OS・ブラウザ版・時刻付き録画は未提供。完走確認を発音や同期のPASSへ拡張しない。
 数息観専用Session（60秒audio.currentTime→ended→240秒静寂）、5:00の初期表示、案内終了待ち、字幕/読み分離、左右均等保持、Safety基準を維持する。ユーザーはPR #16の正式採用と、別作業ブランチで1実践の共通データ契約の実装・テスト・PR作成を明示承認。本設計採用PRは文書のみ。新規大量追加、DB変更、Edge deploy、Bolt Publishは今回行わない。
+
+
+## 共通データ契約pilot（2026-10-12、作業ブランチ）
+`test:practice-core`を`test:regression`末尾へ追加。24定義のmain before/after出力、太陽礼拝3tempo、25保護ソース（数息観Session・数値UI・読み・Safety含む）、211 asset hash、腹式の実runtime trace等価性を保護。登録validatorの拒否ケースも検査。fixture基準 `05666f44134f5116998dc31d622e0830ef5ed599`。mock/ソース検査は人のAndroid/音声完全同期の代替ではない。実装PRのmerge/公開は未実施。

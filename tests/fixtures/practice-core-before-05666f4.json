@@ -1,0 +1,694 @@
+{
+  "basis": "05666f44134f5116998dc31d622e0830ef5ed599",
+  "outputs": [
+    {
+      "practiceId": "tadasana",
+      "sha256": "185daf3d3a848de6691d4ea0d9f2e36a6aa26eac8db8fcb2fc864371dd369006"
+    },
+    {
+      "practiceId": "vrksasana",
+      "sha256": "0b854f157e409defd1cba43237d2cb70928c0baba410801854f1ed4a59bc5fdd"
+    },
+    {
+      "practiceId": "uttanasana",
+      "sha256": "74cbb7de84c5ddd8cfe530ac0237d7b6a789a26185bd614c37b6b21e07c60186"
+    },
+    {
+      "practiceId": "balasana",
+      "sha256": "c5d20405052dd5c84c349bb8ef13c17d4eda3abbba0dab10f0967c662794dea1"
+    },
+    {
+      "practiceId": "catcow",
+      "sha256": "6134f5d7ca6ccd82da2fc90c0a8c3a02c82df7452649632c5901153efc34a71e"
+    },
+    {
+      "practiceId": "paschimottanasana",
+      "sha256": "99f87b41331b6f04a1e8f830ef4891d3cc4e448973e227dd91e04ec86f9e4b67"
+    },
+    {
+      "practiceId": "savasana",
+      "sha256": "d400a28157365040fe75a98544373fb6a1a123bbf5086b05f3e69cc7bd877b07"
+    },
+    {
+      "practiceId": "setu-bandhasana",
+      "sha256": "d67d2e9b8cb5a71a2f88844cec62386aacbbe68957d8cd311b207cdcbb6ba88e"
+    },
+    {
+      "practiceId": "bhujangasana",
+      "sha256": "25abe0882de5b1a6a67d07de5c48c398ed8838ecb8ec66f14c0d83e7a3a8a3a7"
+    },
+    {
+      "practiceId": "test-pose",
+      "sha256": "5abab449ebb77aa2521539b0d0a0ab62b442154456392f8271f8142e11621256"
+    },
+    {
+      "practiceId": "trikonasana",
+      "sha256": "e5b9782739bb08774ba51045639396cb375b8ac8346a4b26270345e48d897977"
+    },
+    {
+      "practiceId": "vajrasana",
+      "sha256": "56c0a571f30a7286a71cea6fb410ffb2c926e7a8259453f37001635a6896a027"
+    },
+    {
+      "practiceId": "box-breathing",
+      "sha256": "261e7230a8ba3076a778bc5bb49ce8c4b5e834759029746cdc409632c015204b"
+    },
+    {
+      "practiceId": "abdominal-breathing",
+      "sha256": "f604122338736ae8131c21689e0f5b5c478248b1867e8af2b829295753dd305e"
+    },
+    {
+      "practiceId": "thoracic-breathing",
+      "sha256": "eed5ace61efdf46aa43972b68f40c01990e63b1257e54527595caba42c59d54f"
+    },
+    {
+      "practiceId": "complete-yoga-breathing",
+      "sha256": "869dbc22e338b2b42029ffad25d1af307d6d8dd7ddd723a92b0b2399cfa049df"
+    },
+    {
+      "practiceId": "brahmari",
+      "sha256": "8949a66e66c09ee004f8c57ba8eec24ccc356495fdff07022731415f0a465e28"
+    },
+    {
+      "practiceId": "anuloma-viloma",
+      "sha256": "dd7f56478a5a7d9ec5943fe0f4b4c3108b55d9115a76c7114d2a47fca82c46de"
+    },
+    {
+      "practiceId": "test-breathwork",
+      "sha256": "fe15da2b729d19a73e74496f6cb3a5d159521d01d48effab5108776042ccc181"
+    },
+    {
+      "practiceId": "susokukan-5min",
+      "sha256": "ac8eca733963ee662186424165ea5675b5c5c0dd8acb38ccdc6d225775d7fa5f"
+    },
+    {
+      "practiceId": "mindfulness-5min",
+      "sha256": "826bac72c5920993ccda446318845f3c333012c7030982bc66625634e41132d0"
+    },
+    {
+      "practiceId": "yoga-nidra-3m30s",
+      "sha256": "7c5694be5b020e6b4b6b4e695170354357980a8d37dba4ba856cc9cba2572419"
+    },
+    {
+      "practiceId": "yoga-nidra-10min",
+      "sha256": "785b710e249f5e33086fb7096678ef7b186153b1160fb51c77ec7a0cd6631151"
+    },
+    {
+      "practiceId": "mindfulness-1min",
+      "sha256": "3ee4b9cc9d6d52f2ecc70d5908ad12927bfbf6b3cf68a78e8d58787fb3589e7a"
+    }
+  ],
+  "abdominal": {
+    "kind": "breath",
+    "entry": {
+      "id": "abdominal-breathing",
+      "nameJa": "腹式呼吸",
+      "nameSanskrit": "Diaphragmatic Breathing",
+      "nameEn": "Abdominal Breathing",
+      "category": "pranayama",
+      "defaultDurationMin": 3,
+      "pattern": {
+        "inhaleSec": 4,
+        "holdAfterInhaleSec": 0,
+        "exhaleSec": 6,
+        "holdAfterExhaleSec": 0,
+        "rounds": 6
+      },
+      "visual": {
+        "type": "body_breathing",
+        "bodyFocus": "belly",
+        "handPlacement": [
+          "belly"
+        ],
+        "highlightZones": [
+          "belly"
+        ],
+        "arrowDirection": {
+          "inhale": [
+            "out"
+          ],
+          "exhale": [
+            "in"
+          ]
+        }
+      },
+      "instructions": {
+        "intro": [
+          "仰向けまたは椅子に座り、片手をお腹に置く",
+          "鼻から吸い、お腹が膨らむのを感じる。ゆっくり鼻から吐き、お腹が戻るのを感じる"
+        ],
+        "firstRound": [
+          "肩の力を抜きましょう",
+          "苦しくなければ、鼻からゆっくり吸って、鼻から吐きます",
+          "お腹が膨らむのを感じながら吸います",
+          "ゆっくり吐いて、お腹が戻るのを感じます"
+        ],
+        "repeatRound": [
+          "もう一度、お腹の膨らみを感じながら吸います",
+          "ゆっくり吐いて、お腹を戻しましょう"
+        ],
+        "completion": [
+          "お疲れさまでした"
+        ]
+      },
+      "breathing": {
+        "recommendNasalBreathing": true,
+        "nasalCue": "苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。"
+      },
+      "safety": {
+        "beginnerFriendly": true,
+        "gentleAllowed": true
+      },
+      "knowledge": {
+        "knowledgeMasterId": "YK-0318",
+        "zukanSlug": "yk-0318",
+        "verified": true,
+        "professionalYogaRelated": null
+      },
+      "voiceGuide": {
+        "intro": [
+          {
+            "at": 0,
+            "text": "腹式呼吸を始めます。肩の力を抜いて、楽な姿勢をとりましょう。",
+            "audioKey": "voice-abdominal-intro-1"
+          },
+          {
+            "at": 6,
+            "text": "苦しくなければ、鼻からゆっくり吸います。",
+            "audioKey": "voice-abdominal-intro-2"
+          },
+          {
+            "at": 12,
+            "text": "お腹がやさしく広がる感覚を感じます。",
+            "audioKey": "voice-abdominal-intro-3"
+          },
+          {
+            "at": 18,
+            "text": "鼻からゆっくり吐いて、お腹がやさしく戻ります。",
+            "audioKey": "voice-abdominal-intro-4"
+          }
+        ],
+        "phaseCues": {
+          "吸う": "鼻からゆっくり吸います。",
+          "吐く": "鼻からゆっくり吐いて、力を抜きます。"
+        },
+        "phaseAudioKeys": {
+          "吸う": "voice-abdominal-r1",
+          "吐く": "voice-abdominal-r2"
+        },
+        "repeatCues": [
+          {
+            "at": 0,
+            "text": "もう一度、鼻からゆっくり吸います。"
+          },
+          {
+            "at": 6,
+            "text": "お腹の広がりを感じましょう。"
+          },
+          {
+            "at": 12,
+            "text": "鼻からゆっくり吐いて、力を抜きます。"
+          }
+        ],
+        "completion": [
+          {
+            "at": 0,
+            "text": "最後の呼吸です。"
+          },
+          {
+            "at": 3,
+            "text": "自然な呼吸に戻しましょう。"
+          }
+        ]
+      },
+      "status": "active"
+    },
+    "guide": [
+      {
+        "type": "voice",
+        "displayText": "腹式呼吸を始めます。肩の力を抜いて、楽な姿勢をとりましょう。",
+        "speechText": "腹式呼吸を始めます。肩の力を抜いて、楽な姿勢をとりましょう。",
+        "audioKey": "voice-abdominal-intro-1",
+        "id": "bw-abdominal-breathing-0"
+      },
+      {
+        "type": "voice",
+        "displayText": "苦しくなければ、鼻からゆっくり吸います。",
+        "speechText": "苦しくなければ、鼻からゆっくり吸います。",
+        "audioKey": "voice-abdominal-intro-2",
+        "id": "bw-abdominal-breathing-1"
+      },
+      {
+        "type": "voice",
+        "displayText": "お腹がやさしく広がる感覚を感じます。",
+        "speechText": "お腹がやさしく広がる感覚を感じます。",
+        "audioKey": "voice-abdominal-intro-3",
+        "id": "bw-abdominal-breathing-2"
+      },
+      {
+        "type": "silence",
+        "durationSec": 4,
+        "id": "bw-abdominal-breathing-3"
+      },
+      {
+        "type": "voice",
+        "displayText": "鼻からゆっくり吐いて、お腹がやさしく戻ります。",
+        "speechText": "鼻からゆっくりはいて、お腹がやさしく戻ります。",
+        "audioKey": "voice-abdominal-intro-4",
+        "id": "bw-abdominal-breathing-4"
+      },
+      {
+        "type": "silence",
+        "durationSec": 6,
+        "id": "bw-abdominal-breathing-5"
+      },
+      {
+        "type": "voice",
+        "displayText": "もう一度、鼻からゆっくり吸います。",
+        "speechText": "もう一度、鼻からゆっくり吸います。",
+        "audioKey": "voice-abdominal-r3",
+        "id": "bw-abdominal-breathing-6"
+      },
+      {
+        "type": "voice",
+        "displayText": "お腹の広がりを感じましょう。",
+        "speechText": "お腹の広がりを感じましょう。",
+        "audioKey": "voice-abdominal-r4",
+        "id": "bw-abdominal-breathing-7"
+      },
+      {
+        "type": "silence",
+        "durationSec": 4,
+        "id": "bw-abdominal-breathing-8"
+      },
+      {
+        "type": "voice",
+        "displayText": "鼻からゆっくり吐いて、力を抜きます。",
+        "speechText": "鼻からゆっくりはいて、力を抜きます。",
+        "audioKey": "voice-abdominal-r2",
+        "id": "bw-abdominal-breathing-9"
+      },
+      {
+        "type": "silence",
+        "durationSec": 6,
+        "id": "bw-abdominal-breathing-10"
+      },
+      {
+        "type": "voice",
+        "displayText": "鼻からゆっくり吸います。",
+        "speechText": "鼻からゆっくり吸います。",
+        "audioKey": "voice-abdominal-r1",
+        "id": "bw-abdominal-breathing-11"
+      },
+      {
+        "type": "silence",
+        "durationSec": 4,
+        "id": "bw-abdominal-breathing-12"
+      },
+      {
+        "type": "voice",
+        "displayText": "鼻からゆっくり吐いて、力を抜きます。",
+        "speechText": "鼻からゆっくりはいて、力を抜きます。",
+        "audioKey": "voice-abdominal-r2",
+        "id": "bw-abdominal-breathing-13"
+      },
+      {
+        "type": "silence",
+        "durationSec": 6,
+        "id": "bw-abdominal-breathing-14"
+      },
+      {
+        "type": "voice",
+        "displayText": "鼻からゆっくり吸います。",
+        "speechText": "鼻からゆっくり吸います。",
+        "audioKey": "voice-abdominal-r1",
+        "id": "bw-abdominal-breathing-15"
+      },
+      {
+        "type": "silence",
+        "durationSec": 4,
+        "id": "bw-abdominal-breathing-16"
+      },
+      {
+        "type": "voice",
+        "displayText": "鼻からゆっくり吐いて、力を抜きます。",
+        "speechText": "鼻からゆっくりはいて、力を抜きます。",
+        "audioKey": "voice-abdominal-r2",
+        "id": "bw-abdominal-breathing-17"
+      },
+      {
+        "type": "silence",
+        "durationSec": 6,
+        "id": "bw-abdominal-breathing-18"
+      },
+      {
+        "type": "voice",
+        "displayText": "鼻からゆっくり吸います。",
+        "speechText": "鼻からゆっくり吸います。",
+        "audioKey": "voice-abdominal-r1",
+        "id": "bw-abdominal-breathing-19"
+      },
+      {
+        "type": "silence",
+        "durationSec": 4,
+        "id": "bw-abdominal-breathing-20"
+      },
+      {
+        "type": "voice",
+        "displayText": "鼻からゆっくり吐いて、力を抜きます。",
+        "speechText": "鼻からゆっくりはいて、力を抜きます。",
+        "audioKey": "voice-abdominal-r2",
+        "id": "bw-abdominal-breathing-21"
+      },
+      {
+        "type": "silence",
+        "durationSec": 6,
+        "id": "bw-abdominal-breathing-22"
+      },
+      {
+        "type": "voice",
+        "displayText": "最後の呼吸です。",
+        "speechText": "最後の呼吸です。",
+        "displayRound": 6,
+        "id": "bw-abdominal-breathing-23"
+      },
+      {
+        "type": "voice",
+        "displayText": "鼻からゆっくり吸います。",
+        "speechText": "鼻からゆっくり吸います。",
+        "audioKey": "voice-abdominal-r1",
+        "id": "bw-abdominal-breathing-24"
+      },
+      {
+        "type": "silence",
+        "durationSec": 4,
+        "id": "bw-abdominal-breathing-25"
+      },
+      {
+        "type": "voice",
+        "displayText": "鼻からゆっくり吐いて、力を抜きます。",
+        "speechText": "鼻からゆっくりはいて、力を抜きます。",
+        "audioKey": "voice-abdominal-r2",
+        "id": "bw-abdominal-breathing-26"
+      },
+      {
+        "type": "silence",
+        "durationSec": 6,
+        "id": "bw-abdominal-breathing-27"
+      },
+      {
+        "type": "voice",
+        "displayText": "自然な呼吸に戻しましょう。",
+        "speechText": "自然な呼吸に戻しましょう。",
+        "isFinalCue": true,
+        "id": "bw-abdominal-breathing-28"
+      },
+      {
+        "type": "complete",
+        "displayText": "お疲れさまでした。",
+        "isFinalCue": true,
+        "id": "bw-abdominal-breathing-29"
+      }
+    ],
+    "phases": [
+      {
+        "key": "inhale",
+        "label": "吸う",
+        "seconds": 4
+      },
+      {
+        "key": "exhale",
+        "label": "吐く",
+        "seconds": 6
+      }
+    ],
+    "concrete": {
+      "id": "abdominal-breathing",
+      "name": "腹式呼吸",
+      "sanskrit": "Diaphragmatic Breathing",
+      "type": "pranayama",
+      "image": "",
+      "startPose": "仰向けまたは椅子に座り、片手をお腹に置く",
+      "movement": "鼻から吸い、お腹が膨らむのを感じる。ゆっくり鼻から吐き、お腹が戻るのを感じる",
+      "breathing": "苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。",
+      "durationLabel": "3分",
+      "caution": "",
+      "defaultMinutes": 3,
+      "knowledgeEntryId": null,
+      "knowledgeMasterId": "YK-0318",
+      "zukanSlug": "yk-0318",
+      "zukanUrl": null,
+      "professionalYogaRelated": null,
+      "professionalYogaSourceLabel": null,
+      "knowledgeVerified": true
+    },
+    "runtime": "PracticeAudioRuntime",
+    "timingMode": "narration_then_silence"
+  },
+  "protectedSourceHashes": {
+    "src/lib/susokukanSession.ts": "d89c3122c260077d26ba709f03868cdc09e7a7e3de6f3155fe770dded77dba78",
+    "src/lib/susokukanNarration.json": "bb956ba8c2ad6be3b713b8271c31eaacfb9393e69c9f2cc4cbfc5e27d72922b7",
+    "src/components/SusokukanExperience.tsx": "49c0fb354ae6cd19358d45e03c4f594b0518445c197822ecbc4128cdff09529d",
+    "src/components/MeditationExperience.tsx": "d41f31521abe752bea967b0cd9488cc5e700d396c6250c36f95247deb80143df",
+    "src/lib/practiceAudioRuntime.ts": "c8890cbc56731cd385a140846794757859026baf921aa4a6330d039de35a6b3e",
+    "src/lib/asanaClockRuntime.ts": "24eaebd5a0c52d28b37fdf411700c2243dc0c5153e0288db60a73e990609076d",
+    "src/lib/asanaClockTimeline.ts": "41355ede878f9f93bf843602697ad27df3266642e5166af9e26ba4c6df4fb831",
+    "src/lib/asanaCueBuilder.ts": "6f8aaf6928ff8a5053532db51fdac74b32740a67b799e6bc491c5315c77353ca",
+    "src/lib/voiceGuide.ts": "bddad181507c039b2680b991ea3f1de4a3640aec7a5e6436f1b6cb3b8c744df7",
+    "src/lib/voicePronunciation.json": "ee72bc0033a8898eac6bebc7f897fbe9fb3143eab8ba522cbd320711ecc16cd9",
+    "src/components/TreeHoldTimer.tsx": "fe774542eb4ac8d46ce84cdc667bdfbe4925147b8b52cd7493bee5950d7ffdbd",
+    "src/components/BreathworkVisual.tsx": "fbdef69d8ef6e4f3e5b15b1e23ea456180961d267efc228db4edf33b5eb558c0",
+    "src/components/ResultPage.tsx": "12d0dd7bc07bf56437dd775a2cddf6ac86f1d3aec528807397b3fcc43576d425",
+    "src/components/MyAITeacherPage.tsx": "2297b085bd3f85b935dbb2cd0c531935f6e395143df5e9dd82dba13e32c77461",
+    "src/lib/poseCatalog.ts": "2b37c6d202ad1d3147f30520b9e625314a4c3da6c02b2e8b20c72b6da6721bfe",
+    "src/lib/poseLibrary.ts": "4edede6d41a2bd8b19694fcb779410ed79e2e31b79029f38098c94dd0538efc8",
+    "src/lib/breathworkCatalog.ts": "8cd723bd24eaa0cf0cbd1769efe217c57d67f57c371c5ec6c25013703746f262",
+    "src/lib/meditationCatalog.ts": "86cc13f3392d690c582d496c1c66f784c39376c2b6ace1d70c4e5d7f3356a06c",
+    "src/lib/meditationCueBuilder.ts": "06b48dc91fe4286c75b1ca091f866bd818206a151317be87f38c156a5789dcca",
+    "src/services/safetyAndIntent.ts": "f090b0e6e71f8748d86d31d13870bc5ca312fee3d5ca3ca854b608354515864a",
+    "src/services/planGate.ts": "bf81dcedfe676687c57937cc1b543bd2bb00c02825880cb62ba96ce8f0c757f0",
+    "src/services/todayPlannerService.ts": "999ef2edc7c000a4daf7b0f1f22b35f7c9f48f63301e25331049fd5687c0508b",
+    "src/lib/sequenceCatalog.ts": "8c08a9292cac44655d2f7b2e09bc2dc85b2352df898bbd37605f1eeb975ec1a9",
+    "src/lib/suryaCueBuilder.ts": "c43d0714781641647075df15030bbf5429a50552c809708e528636da6a05a0d3",
+    "src/components/SuryaNamaskarExperience.tsx": "3a1b15d45833012445dcd4c098154fb0d9c9b8ce16e019e2552bc6fda290233d"
+  },
+  "assetHashes": {
+    "/voice/voice-start-tadasana.mp3": "204d00d237bef9c5dfc68ae28e4a872788836e0fa2bdf6dcd7f9d2b35fed2ffc",
+    "/voice/voice-tadasana-1.mp3": "c2e76b410515ea064f9ffac57a22c3299a2833406b89db06e3de67f5daf5f830",
+    "/voice/voice-tadasana-2.mp3": "335d153e0d86d0e3b6abae68c73885af4821f0489b13f600f979fd5d7f21513f",
+    "/voice/voice-nose-breath-v2.mp3": "6657b1a09109382e65fac6fa338dea776aa21ebec0a2ec25db7df7036148f6c2",
+    "/voice/voice-15s.mp3": "09284d49de6da50e7b02b29773708914eaf48ac765cb340a3fe0e3257ef4c74f",
+    "/voice/voice-almost-done.mp3": "5ab1536eff3c05760514f8b496bf09ecd1baf967612edf7cf12392a1889bdea5",
+    "/voice/voice-good-job.mp3": "08cad0b3bb64fde068f4713eb4d361ce75391af544a99a7e2d8ff00ae29ad667",
+    "/pose-tadasana-v4.webp": "2bb2daea1f42baa190b1910891179c86c7095ccf49401fef88dd61506b22f10e",
+    "/voice/voice-tree-v2-intro.wav": "549123617ec659faf84ecfae417455148f73d9fc865198a962b5c4e030a3953f",
+    "/voice/voice-tree-v2-right-setup.wav": "be5ad1f422c89c6e2632e8b82a81c8bead19ddc71b5329bb99daff83566a5d5f",
+    "/voice/voice-tree-v2-right-foot.wav": "1b76839dadd776dc941e815000c91dd1fee0d2afdb6f06c058f36de005c7a95b",
+    "/voice/voice-tree-v2-stability-hakimasu-v3.wav": "2e3055c562db824d4903a24cf5f6370e13bbe3b6adc5467b2f5c943a9dc7463f",
+    "/voice/voice-tree-v2-switch.wav": "1b128f04aa40dbf0fb9e8900e573f9638a2b22c1a2b3673658362137ac784787",
+    "/voice/voice-tree-v2-left-setup.wav": "c384c1dd862e1a63764502f98a67cee3364eecbfcfbb405ae558b2f3ffe8fbfb",
+    "/voice/voice-tree-v2-left-foot.wav": "8a19e3ed254a5dd91fa5a9ba3e469dabf6fea6c5405895025a3a510e2c2bc62b",
+    "/voice/voice-tree-v2-complete.wav": "db1a5d8905834f802041a477ef96fa7c7a2223aa4ebc898eeeb013259d10053c",
+    "/pose-vrksasana.webp": "9dbbbdc470758250735fda7ac42ce0d31d82cc633d9be14718cb90678b23eed8",
+    "/voice/voice-start-uttanasana-v2.mp3": "61390035c2c2050847acf39f87222903dc8753eb49a34992ba3421afc3c906c2",
+    "/voice/voice-uttanasana-2-v2.mp3": "341aa22f8e53d1c82eb12c4e85003d8da83b20aeb1e80d45fd5a70c257739dd5",
+    "/pose-uttanasana-gentle-v2.png": "99062c15f65c54a4a7bfff68e8c79681261ec0a36d02fa7e66162f48c6f8876b",
+    "/pose-uttanasana-stage1.webp": "ab0d9b72e0972f70a1d5db22d04492c110647c4058a2f6a67130facbb605f86f",
+    "/pose-uttanasana-stage2.webp": "ad53e8af8354a5f13f436da56d5edfd3901a6ef58a3fe216ac610f01edd1444c",
+    "/pose-tadasana.webp": "4d27dbed4a351cc536290e571ce85fba8b94e6c0c3cf63c8d36b4ecf00fe7b64",
+    "/voice/voice-start-balasana-v2.mp3": "1c583515b7b585bcea03bdb2d1e50dd570f116f695c2d7899c6b421a5f89f673",
+    "/voice/voice-balasana-1-v2.mp3": "4950ed48ba7bda581b0c3aaf963c19620c49b56fe4a8513336511016f05bf063",
+    "/pose-balasana.webp": "726c28cf5ebcf9febca7a95a9e8c02a133743de1380d2cb9797ffcf89d6ec413",
+    "/voice/voice-start-catcow-v2.mp3": "cb930cce4f365dc4c6f36ae90d4f64ddaea357e3ced4f8c23cac7640106b271e",
+    "/voice/voice-catcow-1-v2.mp3": "2d1dd72506a06461b6db1ca007f8b66a629799d00c7e795cc454e0195efcd210",
+    "/voice/voice-catcow-2-v2.mp3": "9bafc9d536bfa0f8f4f470fee846830c739f1ba3dbb272ea70107a249c3f799d",
+    "/voice/voice-catcow-3-v2.mp3": "16ded9a77cabdf9c1edd88d9e765706a5ba2684f48f9d134977648fd96bd2a09",
+    "/voice/voice-catcow-r1-v2.mp3": "c88e956329745c5f01dc8b776d8a2cdf167debe1eea2fda06c5fa43d5a3e14a1",
+    "/voice/voice-catcow-r2-v2.mp3": "3626b9b2d8046dffd6d5683eb3686413173feb3035ba9a7d8248c4e721910e9a",
+    "/voice/voice-30s.mp3": "26bd8f63006fd4d98e25fa1908beef20452a79568425582ff98510f2bf297476",
+    "/pose-cow.webp": "c3e68414e9ea12268b09b66bd468181b54a593e74f4e97c2753d0e82ae6ca65f",
+    "/pose-cat.webp": "177288bcbc3ed76014628b47e5ead36d3744b1cd46909528d37da77bcc7fb62f",
+    "/voice/voice-start-paschi-v2.mp3": "4a1577f72b636d3a8ddead6107bbcaf444708d4fa471820478ea487db787e9ae",
+    "/voice/voice-paschi-1-v2.mp3": "1f134a10c863e5fbdf38eee0a33af0923ec1024e304c9fb6a6ad4803caab29ae",
+    "/voice/voice-paschi-2-v2.mp3": "341aa22f8e53d1c82eb12c4e85003d8da83b20aeb1e80d45fd5a70c257739dd5",
+    "/voice/voice-paschi-3-v2.mp3": "3d6b7d304618085950430b0f39155f7e55dbd3e9a6b81530854449a271aeeaae",
+    "/pose-paschimottanasana.webp": "d982c98380a1e252283e777970d7c87f27b2e5977b8046efc4aa4a6955beb843",
+    "/voice/voice-start-savasana.mp3": "fb8bbfca32331c6adc1384423adb022fc2c61a8ff1793a8d41c627b198b7af58",
+    "/pose-savasana.webp": "3e4d4dd3ee899b8fafd2deeaafc2f95f737f6ed337f63eb42d7d871819ed9f95",
+    "/voice/voice-start-setu.mp3": "987bccdd34b1321b79d0ba69436811b624280d415e00a79ea7a3741811b68997",
+    "/voice/voice-setu-1.mp3": "2dda60ab68b81128dd9b726ad4c5a3c3d073619116c7288e15423e07b691033a",
+    "/voice/voice-setu-2.mp3": "057d02449e9c9c39e04470dabd3f73ce3c18d32caf1b3b1818fc934008c2164f",
+    "/voice/voice-setu-3.mp3": "ffdfc77ca995d5e7351367f20b676b589fe8898685e0f9b754d7cb3947a5a277",
+    "/pose-setu-bandhasana.webp": "1937c960c8d62019441649362cb0862b4971d8c6c91b8ea95d5ec99f44d74231",
+    "/voice/voice-start-bhujanga.mp3": "e2d2a13d8cc836b226205f10712ea82c074fa364c1bf2d86148dcdffd8e2fdf7",
+    "/voice/voice-bhujanga-1.mp3": "14fcb4b1f151a7e4aeb0188897d5bba469bf4773f35a748e311ea8a75b6a7fbe",
+    "/voice/voice-bhujanga-2.mp3": "3c97a076baa08f6f266d1f12611d35287b0ceca156f316b791a9c30519541d17",
+    "/pose-bhujangasana.webp": "129d68091a0b6e2bf49f6f8f47591f5948352999ddc1dc578cef96463aa2aedc",
+    "/voice/voice-start-trikona.mp3": "a5854c11af1f46446792842ea0b5b38295126f07d11e3fd974182c84effbc3b8",
+    "/voice/voice-trikona-1.mp3": "ac0c4a2a9bdf7bbcad4fbe4097793fcec301e64cf4c9a9ca6d787002af18dd27",
+    "/voice/voice-trikona-2.mp3": "0966935f7da383a66582f6814a7a7d7d6460445f07459dfe33afca0b24c7b7c7",
+    "/voice/voice-trikona-r1.mp3": "a08340016265d02342cb7449972e6fecf6328289b035d0cd6ce3fa984567bc51",
+    "/voice/voice-trikona-r2.mp3": "45ffd27e23f5bbe9f3bda7a34954575564cba74bc429ee606f36360ae823ea69",
+    "/pose-trikonasana-new.webp": "4de43c47bca2a2afbf334c171df70b922b86bca7d34d6a01762b883fe01b4271",
+    "/voice/voice-start-vajra.mp3": "b88a4478955c6aec3aa3636368d2fcbc1eb1c93559a5a0506f8cd8f058862cf7",
+    "/voice/voice-vajra-1.mp3": "7d0daa82ad502108b91724b679ae96227a0ebc8894e6e561cca8fdbedcabf0a3",
+    "/voice/voice-vajra-2.mp3": "7c8d495e9296ded575e4f67b622509ce55ad86a79ec679737e89707da2149337",
+    "/voice/voice-vajra-3.mp3": "c18122455ab46ccaf598dde2f2157e1ef683872229cc3db35cd63e42e27a0278",
+    "/voice/voice-vajra-r1.mp3": "45b979f78f3b3a1e1babd32d8b98dd97bf9ef9ffae334c288f388d9b3c9872e9",
+    "/voice/voice-vajra-r2.mp3": "c88e51027b79c1cca0a262aea4f4a8188679694ad0536eaf494162a9c4a0859b",
+    "/pose-vajrasana-new.webp": "9cd61e494d86bbdd2b703f8b275896797b6467c326bb9b7e52ad46cf1136c574",
+    "/voice/voice-box-intro.mp3": "fb355c697670e6a6516ff0c4d39d68dec23165d6f6c8741402bf6488700615e3",
+    "/voice/voice-box-intro-2.mp3": "0c18e055d2013f649454ab1ba407772d0aafc783454e4b35f94b11af5efbcdce",
+    "/voice/voice-box-inhale.mp3": "a70745e1139ba900578d6b03e29734a80ae56762b863c1a84af91858b47fa59c",
+    "/voice/voice-box-hold.mp3": "390b6ab83ffd78daa8afd363c3a2d043537ebd20129729a475410f3c04d1956a",
+    "/voice/voice-box-exhale.mp3": "0b7cf939391d39debef37f4efc634bd2ace4633741fbd453ff88f97073249ab5",
+    "/voice/voice-box-hold2.mp3": "04b5400377ca6dbed23df7b4e3cf917eab6c38d196c7cf6603448579b8a5a935",
+    "/voice/voice-inhale.mp3": "6b1cb7a22a3ef6b380f6a8ff7190d54239b2d89694c7d1c2b972a0342b01692c",
+    "/voice/voice-hold.mp3": "c19525e4b08e94656aaee4956622f46ca33417ae4cd05e1de2e5f20ab3d4a98d",
+    "/voice/voice-box-final.mp3": "1631dd5ec6333909f76e4d7253aa459b2d29deb99a924d6c7ba5921a7a37693a",
+    "/voice/voice-box-end.mp3": "b5fb556b6b9509d5cce2c669e2d4477021c2ace838792762aec138340d44471a",
+    "/voice/voice-abdominal-intro-1.mp3": "0ffa313f251d1a34172f131f1a30987292d43ac37c879088186c38120d62cb10",
+    "/voice/voice-abdominal-intro-2.mp3": "7d0cbb21eb6471285b66bb9dadcd457698db9adc17ae8fdea6a0ccf1599a045f",
+    "/voice/voice-abdominal-intro-3.mp3": "fac57ed95e2eaafd052d725ab8da6772997c9040ab11aaf9c2556c0f46f01a64",
+    "/voice/voice-abdominal-intro-4.mp3": "40a4f85ea37042f041b1f1d75b9138686dd4125add5fc2e8c3e71c768a22f76c",
+    "/voice/voice-abdominal-r3.mp3": "b6ddedc4871248180a8a7abb254728f705d65fd30a2f9eee0223d81f44a34427",
+    "/voice/voice-abdominal-r4.mp3": "25923a216fc21e6ce2c88dedc7e0183590dcd53f148e456d61d32acb3ba8986a",
+    "/voice/voice-abdominal-r2.mp3": "034496d011a915706faab1acd25ce249d61067ec1b555d8227fdfe92b60ce8f6",
+    "/voice/voice-abdominal-r1.mp3": "24fcbb18d06a7222ef7706ccb321f0ab8c218461b7f08eaa61cbf4173002ed6c",
+    "/voice/voice-thoracic-intro-1.mp3": "c9d0a132817145c09fa52622ae6fa7d329b3079dd38dea2e311508a79a410c1e",
+    "/voice/voice-thoracic-intro-2.mp3": "c5918b1d3c59f19af77c711550bcabbddb2e0892c89d78833b77a4cf471ccfa7",
+    "/voice/voice-thoracic-intro-3.mp3": "9f45b54eba8438497e607502a829be0688d77f9bd2b29084878f1d767a4d7f72",
+    "/voice/voice-thoracic-intro-4.mp3": "4fd9dbdab9413f1b9826ec3d91abaebdebcfc920a9ac70a6000f58f24c67e4d4",
+    "/voice/voice-thoracic-r1.mp3": "83fe9d9a8f1f5f478779f8e8db68f55844f0ffbfaf85b231c38a5c0fe3d06363",
+    "/voice/voice-thoracic-r4.mp3": "0c775381df3063d61445c78844b518976bdc1051f20d516414070809bdbc5d27",
+    "/voice/voice-thoracic-r2.mp3": "fff09e9c95541be5069935b35eced3e2d0ef95c0a2886fb4f660472028e2f4f9",
+    "/voice/voice-start-complete-breathing.mp3": "7f267a4b10048c423731d94c59fbc04c460851d10c8b11c02c5827a40932ef41",
+    "/voice/voice-relax-shoulders.mp3": "a8fecf97babae6096833ac0dba2f90226c8fcdbee1b73587d5b99f06b87befde",
+    "/voice/voice-complete-breathing-3.mp3": "07da62eb02ee1c5ffe944cafc9cdc56801029b54f1bde5df2b34ff948d4cc88a",
+    "/voice/voice-complete-breathing-4.mp3": "c243946e3e58016523c5449a08e3d699da4a9830c27ba950deebd57aa0f74582",
+    "/voice/voice-complete-inhale-r0.mp3": "87089b5558398b0e470abccc6e2b9e5bf5cb3d4b7e635f15f673f1ed03dc29c6",
+    "/voice/voice-complete-exhale-r0.mp3": "4ee2ca0aa260786d26c8613465135e666ea1e4eaee277b13befb547e4ff7ade1",
+    "/voice/voice-complete-inhale-r1.mp3": "57aa252adeb5774e5201666a25d5013878ac8de284124acdb4c67626621dc5e7",
+    "/voice/voice-complete-exhale-r1.mp3": "286afb8a0f1b34c6f739c186fb2888b61cab3152ab81952237c790a81325ba7f",
+    "/voice/voice-complete-inhale-r2.mp3": "c7cab6ac221af73953e87ff1331a4dc0b7280b612bbafad02e63763fa11d3f40",
+    "/voice/voice-complete-exhale-r2.mp3": "775f72593bf8fded6c111415aba860bda56f0b977fa182e9cbbdea58e24d32cd",
+    "/voice/voice-complete-final.mp3": "b7570c3c07d4a2d1430d40840abbc792f4f586297d0d52785a0db8637bc90bb2",
+    "/voice/voice-complete-inhale-r3.mp3": "f6c4b9501d68e3b014f25506acb2e07e0e3e4d6de53eb1c61a78619d8f98b2a2",
+    "/voice/voice-complete-exhale-r3.mp3": "d094f6fd183e5c546ed6b2fd0d3cf623f46fe39aa3e21627ee54916b7f1ff832",
+    "/voice/voice-complete-outro.mp3": "6f666de64fba35b85ff6fc1bf9c5607fcac8b46474ec3e8df69713b8a26e8e44",
+    "/voice/voice-bhramari-intro.mp3": "08f0d0c414979e1383bcac2598c718c83b4c7e6d0632808f8e6054915d7f9f82",
+    "/voice/voice-bhramari-inhale.mp3": "a61c95c06653cdb6a4f6ca2d967c397a8b6dc06d40d460072fa62383a1c79d33",
+    "/voice/voice-bhramari-hum.mp3": "c37f41af73b568853d7570c8c59f7f311a9f96cdbd4399566961a90fd810c2de",
+    "/voice/voice-bhramari-repeat.mp3": "da64f982a361536ade9d6fa860512af2c0b4d5fafb64ea7b43bbffc85bec1b2f",
+    "/voice/voice-bhramari-r1.mp3": "de10e3c1131fee26d91571f2c84aca654c45413d965c055b6cbb2a4de79c0929",
+    "/voice/voice-bhramari-r2.mp3": "6942f5cd603cc2010c89832dd6361e916fee8ffc900af8df93adda98e7327221",
+    "/voice/voice-bhramari-end.mp3": "31817ede84e7c37ae6792211a86b09449125b65ff458aad85b657ba5f64b477f",
+    "/voice/voice-bhramari-outro.mp3": "e3384ab6ecfc32e57dba7d4d6275d4052c3276b1276b0e1c337fb8f5580c35b6",
+    "/voice/voice-nadi-intro.mp3": "54f91a0e7009d56aa067ee7cf41b2c906e4c5fa37ce2fa6722a323cfec7d966c",
+    "/voice/voice-nadi-1-close-right-inhale-left.mp3": "53c01889cdc9a04ca50d1ec7f750a372db4ad71384a42fecd4aa82dfaadeb83f",
+    "/voice/voice-nadi-2-switch-exhale-right.mp3": "b8a1e30df40266644f9d92dd11f10a66e22dbb3d802804e52899de4a1705a968",
+    "/voice/voice-nadi-3-inhale-right.mp3": "940204f46fa585ecf3e1d9bda1f62697327280e65b9956115d0aba2d6cda62a1",
+    "/voice/voice-nadi-4-switch-exhale-left.mp3": "f6908ffaa3f9947415dd011d1558cfbe60f5f83b8a2137f4dce021b7daeb6b12",
+    "/voice/voice-nadi-5-inhale-left.mp3": "fb5fef414a22cd320cf0a92011d1e63179339219c38f5e98d67df2bca5a4af4c",
+    "/voice/voice-nadi-6-repeat-switch.mp3": "ddc414028fb3b6106fc611b17f560787827a0a51e4131b43079e4701b7750486",
+    "/voice/voice-nadi-r-inhale-left.mp3": "8e704c0c2fc9b3403a5c8782f98b48274f2b7b04a5be4e09ca68b8deb0ca3953",
+    "/voice/voice-nadi-r-exhale-left.mp3": "a533959e3cbe4e4a1c4a4d72faab93873b8dd1019211917a5bf3a3e727e08e1d",
+    "/voice/voice-nadi-repeat-guide.mp3": "0750c74c0f03955fca42f1f459479297facfc351bfeb690bd8e52409f7c1c983",
+    "/voice/voice-nadi-continue.mp3": "0d8effb75a227e66ff63b572b9ceb4df891c1d055cad1fb82e07374480b711e7",
+    "/voice/voice-nadi-end.mp3": "6363af618b57a4975c35e61e24451d6e1362c449f9cb3d85dfb1f82760ec6083",
+    "/voice/voice-nadi-outro.mp3": "9359ce72794251f5dbc80a3ade9df2f932db373e2dc0b4d9d58f2be83d8a6082",
+    "/voice/voice-susokukan-1.mp3": "a2306a60422701347e1c1617dab5152bda1e942822d1361f3203288a5be868de",
+    "/voice/voice-susokukan-2.mp3": "572b8f06b2f6e477ee9af3ed7c16b4a4199d7cae85b532fec56aa919cf27a483",
+    "/voice/voice-susokukan-3.mp3": "128b06eb3bd11b5912c0684f684c0d63833228bf0219e17719eef918969942fc",
+    "/voice/voice-susokukan-4.mp3": "e23b43e1775d98c928f9a98b5400885759d898faeaf2ba42f100a0cef06ae7d4",
+    "/voice/voice-susokukan-5.mp3": "a1ffbaf89ed5d6ed7f365e58d1e51840e6b2bc8c0315f1827c3405ed397d3a4b",
+    "/voice/voice-susokukan-6.mp3": "874c2388db6f34c432c55dc3c1567f0e741bca66350c51cfa03e12b44ed2d0f3",
+    "/voice/voice-susokukan-7.mp3": "ebbd4882ace0bd5aa11da4c0ba784bfb5a8f3f94a003e7cd8364f7b053610b47",
+    "/voice/voice-susokukan-8.mp3": "2beb041b646e3dc3292c49925f10437ae44c33083b104c8ad86874f31e82c34d",
+    "/voice/susokukan-intro-full-v2.wav": "acbc14d4f6c9dda9eb887517701ff7f0e090d3217241bc8c894ddf39ea4451c9",
+    "/voice/voice-mindfulness-1.mp3": "7029382c51a1ee480eda189d0033832c95adf8a6716b720b94c916c424e7efd0",
+    "/voice/voice-mindfulness-2.mp3": "50457c08c219d417ac2f918522d9d8e9fb3593a30b1f07f07f8639729a741897",
+    "/voice/voice-mindfulness-3.mp3": "1be7dd86d6eb8d8b4a1451599b686e28208cafe8dbd2deb957e4358838a80234",
+    "/voice/voice-mindfulness-4.mp3": "3a36cbdc343b3ad1ac274558341aff7fd639346026a5f93269d7c4d0b91ebf0d",
+    "/voice/voice-mindfulness-5.mp3": "6dad61ea570e1cd34310e7ec842309d16ff4569128dbbf899afcbc0e919889c4",
+    "/voice/voice-mindfulness-6.mp3": "2df8d076008a1495361359985403750e9231455b5abd6f57a00603a77900b46b",
+    "/voice/voice-mindfulness-7.mp3": "b4e95f2f4c5b72a4fefdd76aa510fe1532d31aedbb2af93563fb0c5b3c7e59ed",
+    "/voice/voice-mindfulness-8.mp3": "1a0ec24ce5d35a2ab5da867b724ad3743437e0e852d5f62f3b0947b0dbd0ce07",
+    "/voice/voice-mindfulness-9.mp3": "83ea612a2469c39e8b7234f7bc8fa5855ad7bd3bfcaf1a5796fb4518c41e4ce2",
+    "/voice/voice-mindfulness-10.mp3": "8a12b8c37f06c3622840114fbbfde8535dd7620e4872879dacb4818a0366f7ee",
+    "/voice/voice-mindfulness-11.mp3": "ee2218d0aa5621e5f36e53a8c5ae3fa1df94d7b0b0111297f644020325fd5140",
+    "/voice/voice-mindfulness-12.mp3": "71c0696a07f3c11301a8373e7935ab10b06eb9417ab9b7e79fbbb82d7062b1e0",
+    "/voice/voice-mindfulness-13.mp3": "b2c63c99f4f28a8fb2de413a3790d063b578961c31be7dbd6d95c1592b233935",
+    "/voice/voice-mindfulness-14.mp3": "7b6c011600f9bc7717d7df0ec101a2030e3220c24a96804dea321274a205101d",
+    "/voice/voice-mindfulness-15.mp3": "4d1acecb0c6003aef85f617a2a7a28a416bffa3eb7e4363b97cd28aeadee9c91",
+    "/voice/voice-mindfulness-16.mp3": "4729e84f0729d9d221f3ae6d2d95bc5c12ca2927c90f7ebc7a62d950a8baca71",
+    "/voice/voice-mindfulness-end-1.mp3": "5165b89ca2ae50e6a30dfa31ba9fd8c01d5cf39bfc11260dafdba0bc45555af7",
+    "/voice/voice-mindfulness-end-2.mp3": "4d0f8d0dcb89659e459138c4e2f07c8a8ad428a200db56d22224414981284d8f",
+    "/voice/voice-mindfulness-end-3.mp3": "10a3ae713533480a66773ba8aebff72c48b812b2b09eda6c1de122064089f31e",
+    "/voice/voice-nidra350-intro.mp3": "65804577642ea1df6869c11488f7bfb0b9aa700a20aa91f839aa5f98ce223bf9",
+    "/voice/voice-nidra350-posture.mp3": "8d58ae2fd57a8a5008a8ad14159f506768028cb3669fa522c9d54a63af83b574",
+    "/voice/voice-nidra350-breath.mp3": "667d8c22caadefd826cb1068ffb4c45184df9df0f061d48e43cd1ab23fbcdf5e",
+    "/voice/voice-nidra350-stay-awake.mp3": "df3b13212bb92b15e9cc73dcf6329221e4767230e3792fc5e5eaed8a4597e0a2",
+    "/voice/voice-nidra350-body-right.mp3": "94a283de71f5eb50a3a6eaf521a832f61c8f050224a5a7508e9e8ba021ff8bb1",
+    "/voice/voice-nidra350-body-left.mp3": "37ef484ea80a01187390e091d8254b53cb7efa3dfa5e7183798089b03b6b2965",
+    "/voice/voice-nidra350-body-back-front.mp3": "f3ba255f17b5e0672286491c64030061641bb8ad37300c8dc3d49835e1e6ec07",
+    "/voice/voice-nidra350-whole-body.mp3": "5d5b07fd148145ea1e91cc4216d8b724255e17407fd7c0eaaba89c75bf98231a",
+    "/voice/voice-nidra350-observe-breath.mp3": "e99eaa0c4196c22843f612acad9ef6599fd90edc37060f3c52c55a884ce62f6d",
+    "/voice/voice-nidra350-deep-relax.mp3": "c0ce1320b5e23ea0c57b3bf130d9ffaf380b33a7f761e108a804da78d36f44b6",
+    "/voice/voice-nidra350-return.mp3": "25e2125d3b964d5903bb5c0d5a208e04ff15c604986363bfbaf44c088bce5e5e",
+    "/voice/voice-nidra10-intro.mp3": "fec683dafebf7b4a02a4e17288d745bda63942f60663e1eb7ae71b5665e73fa9",
+    "/voice/voice-nidra10-posture.mp3": "2a1f4bddac840846748c90fbf2e796504d8ea48a426298b4d3cb6f57b4fbda23",
+    "/voice/voice-nidra10-intention.mp3": "986e84dc7da2dfd7c54357e33a4552fc197f4226ed2e3b031be0e053b6126bd3",
+    "/voice/voice-nidra10-distant-sounds.mp3": "9416e62406eeadf4432fdd06ad5b5903125f428d077e0ff582f3251c53208ba4",
+    "/voice/voice-nidra10-observe-breath.mp3": "66e9df7086aeb2d033c9733463e0b12d67464d3e0ae40d6ef27b46a3525e0fe6",
+    "/voice/voice-nidra10-sankalpa.mp3": "e0163af89a0813ab49af69e1aa56f56b5af280c6deb8d554fb57750447f0bfd1",
+    "/voice/voice-nidra10-body-scan-intro.mp3": "91c61f4d80d64e025020833d7933a7485cda8c4d76101c85c09cb5655ac6549a",
+    "/voice/voice-nidra10-body-right.mp3": "d871ee500e4d23287e1b4d44f4d73720f69f8a3bf2a571d56825bfd89b88dcbf",
+    "/voice/voice-nidra10-body-left.mp3": "21cc047ec3d14fa431b4bd6abc560278a5f7250767bf6609c92b33f1d90cd6a5",
+    "/voice/voice-nidra10-body-back-front.mp3": "5aecb6798e782012e25862615e01344dfdb1b12c36daf9bf9e286b5c870e35bf",
+    "/voice/voice-nidra10-whole-body.mp3": "23664b8a8669433efd1adef5ce31c3ffb2309edd086a88fdd607a7bae6ae90d1",
+    "/voice/voice-nidra10-breath-count.mp3": "a3deb170b1fe85fa57002c5caadfcc16b820a579fe47dab6bbdde062da1008ec",
+    "/voice/voice-nidra10-imagery-1.mp3": "f98665e533ce700dc3bb7a4737b26eee370ff42270689171b3b418710ddc6f36",
+    "/voice/voice-nidra10-imagery-2.mp3": "de7655396d6cf8f461e8b2c1551e71eb5ae9fcd054f6bc02b55edda3509f5781",
+    "/voice/voice-nidra10-sankalpa-repeat.mp3": "65364713b18f986684da393fbd194651ab5266f941b88f3a30df7916bbe80322",
+    "/voice/voice-nidra10-return-awareness.mp3": "d9a155ebf9cbdf9e0ef81281c3b8be186c1efd5112695e01641f203c42087418",
+    "/voice/voice-nidra10-deep-rest.mp3": "2b88ae61363be2896767b32e16cf29ca36d44dba08d63ec21b4007c7ebd2d414",
+    "/voice/voice-nidra10-return.mp3": "945832a38a7b18463b0f93a1500e7460bd672aabf8b971431ced0193f0eb2e7c",
+    "/voice/voice-nidra10-ending.mp3": "e784dec94bc412f8370ab690d7803b0ee17f91eda650b90e08f043a2a844aab4",
+    "/voice/voice-mindfulness-1min-intro.mp3": "4b8369ae842bee8dc1dd00e950c410b172b2d0b7ebfc39923021289e3567533b",
+    "/voice/voice-mindfulness-1min-outro.mp3": "646399b40a77d9d816139a82749bbe570536f28be1b01a9b1071bba717d03d4b",
+    "/voice/voice-surya-01.mp3": "0e1a81ad27ca8b56a0441820ce4d8169bef08ae660ee2c0eb5128fa8337e8900",
+    "/voice/voice-surya-02.mp3": "a90528874bcba01ec1558ca62c89e3bd169b372af16cbea2932e04afa6e660cb",
+    "/voice/voice-surya-03.mp3": "97f47c171bcce514c444bfbb87b25a3187e3c08cb9d708216c2cefe1e53b9e95",
+    "/voice/voice-surya-04-right.mp3": "68a61db87972cb7a8cea7506ab13b5abe17e947b26ec6d8424312680a9740cef",
+    "/voice/voice-surya-05.mp3": "a0ce0e7abd5e154b012ade6724b9063e1af7843e5680a2a0318e1cb5ba26f2b0",
+    "/voice/voice-surya-06.mp3": "719de821738536d483fbba1d35759855e789c0be131432074d9e96edd0a2cf42",
+    "/voice/voice-surya-07.mp3": "584fc487af9d939e67e5dcdd001b9ae157dc4e2ba41f61e583387f80bc6cabef",
+    "/voice/voice-surya-08.mp3": "a0ce0e7abd5e154b012ade6724b9063e1af7843e5680a2a0318e1cb5ba26f2b0",
+    "/voice/voice-surya-09-right.mp3": "99521c168ec80f7163852fd1b8ea657fd2a683440060ff44226ad4825eed0157",
+    "/voice/voice-surya-10.mp3": "97f47c171bcce514c444bfbb87b25a3187e3c08cb9d708216c2cefe1e53b9e95",
+    "/voice/voice-surya-11.mp3": "a90528874bcba01ec1558ca62c89e3bd169b372af16cbea2932e04afa6e660cb",
+    "/voice/voice-surya-12.mp3": "0df548ed657b5b1e49cc157e7de43e64c7f81d1723ff8a02f21693ec5ce8d176",
+    "/voice/voice-surya-transition.mp3": "d6fd149f8a0a6e3b47ca924cd5a1446156f1222c74815f7ab813d523d884f116",
+    "/voice/voice-surya-04-left.mp3": "db6b1d420269c86e8d2c59a5050909c9066d53a019b6f79fe5d4d728f0080cdf",
+    "/voice/voice-surya-09-left.mp3": "bd97358301d8678db9873c140a624e8904cd96de411c228df9d8faa5b8f6b76c",
+    "/surya-namaskar/01-pranamasana.webp": "640971d57cc5e2e1feb0b4cfdc8a2337703075808d5277af49e3da99955cd4ab",
+    "/surya-namaskar/02-hastottanasana.webp": "12e322c1ef103b66e23ecfc9dac1255bc217fb9dbb721ac99713ff8c809caa1e",
+    "/surya-namaskar/03-padahastasana.webp": "dfa677b9d9c43cfe0692594c2dc4ce4059c7eff1b7bcd5862dc558e6df23e633",
+    "/surya-namaskar/04-ashva-sanchalanasana.webp": "a705c450312544650a81b50d3f0a7f5193fcd85fe416a753f5e710b457fe74f9",
+    "/surya-namaskar/05-parvatasana.webp": "90c318f807a8919f63740d64c12f08046d36a6763b0a2e5591a90d67d08d29ab",
+    "/surya-namaskar/06-ashtanga-namaskara.webp": "924df81a89df8757478bd777f9bf6f68d036afbc9a9acf630637d126e3250a69",
+    "/surya-namaskar/07-bhujangasana.webp": "1de8566bf7427ce69417b84c909eb457a604d3edb8148f8233f85dba090ff55d",
+    "/surya-namaskar/08-parvatasana.webp": "1a31e8a4b4f58b1c39bbd165083c391a6467b3c91ca505afea649dc342676cb1",
+    "/surya-namaskar/09-ashva-sanchalanasana.webp": "f4742abf332f46d824bbed93b323f3694e854435de0cc51b80ead2c250aa4f4e",
+    "/surya-namaskar/10-padahastasana.webp": "cfab17830f8733edd40127182cfbe510e6f476c3c4a939df0001eb81243e3ef0",
+    "/surya-namaskar/11-hastottanasana.webp": "3065dbd0ada2c60bd586a823a51b1354bfa7b7a77c1e203385003029f86cc4f6",
+    "/surya-namaskar/12-pranamasana.webp": "2514066257da8fd664d88ac3e1cc86e79dc99fd433b6e9b1c6fec713cc86ad4c"
+  },
+  "sequenceOutputs": [
+    {
+      "practiceId": "surya-namaskar-ayush",
+      "sha256": "d8bde65448beb8ed98a313edac61b60c491f9bf5e3b623adb7a6b7f5ec62aec5"
+    }
+  ]
+}

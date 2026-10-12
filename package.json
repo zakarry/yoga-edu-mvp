@@ -10,10 +10,12 @@
     "test:audio": "tsx --test tests/tree-audio-regression.test.ts",
     "typecheck": "tsc -b",
     "test:contracts": "tsx --test tests/quality-contracts.test.ts",
-    "test:regression": "npm run test:audio && npm run test:contracts && node scripts/test-camera-mirror.mjs && node scripts/test-directory-demo.mjs && npm run test:practice-sessions && npm run test:breathwork && npm run test:susokukan",
+    "test:regression": "npm run test:audio && npm run test:contracts && node scripts/test-camera-mirror.mjs && node scripts/test-directory-demo.mjs && npm run test:practice-sessions && npm run test:breathwork && npm run test:susokukan && npm run test:practice-core",
     "test:practice-sessions": "tsx --test tests/breathwork-susokukan-regression.test.ts",
     "test:breathwork": "node scripts/test-breathwork.mjs",
-    "test:susokukan": "node scripts/test-susokukan.mjs"
+    "test:susokukan": "node scripts/test-susokukan.mjs",
+    "test:practice-core": "tsc -p tsconfig.practice-core.json && tsx --test tests/practice-core-contract.test.ts",
+    "audit:practice-core": "tsx scripts/audit-practice-core.ts --write"
   },
   "dependencies": {
     "@line/liff": "^2.31.0",

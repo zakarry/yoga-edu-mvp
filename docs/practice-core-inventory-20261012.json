@@ -1,0 +1,2949 @@
+{
+  "basis": "05666f44134f5116998dc31d622e0830ef5ed599",
+  "scope": "Local catalogs and effective default outputs only; catalog verified is not independently verified Knowledge or medical safety",
+  "rows": [
+    {
+      "practiceId": "tadasana",
+      "kind": "asana",
+      "nameJa": "山のポーズ",
+      "status": "active",
+      "runtime": "AsanaClockRuntime",
+      "timingMode": "wall_clock_with_voice_drain",
+      "source": "src/lib/poseCatalog.ts",
+      "uiEntry": "MyAITeacherPage / event-demo (selected IDs only)",
+      "outputSha256": "185daf3d3a848de6691d4ea0d9f2e36a6aa26eac8db8fcb2fc864371dd369006",
+      "planned": {
+        "minutes": 1,
+        "bilateral": null
+      },
+      "visual": {
+        "images": [
+          "/pose-tadasana-v4.webp"
+        ]
+      },
+      "knowledge": {
+        "catalog": {
+          "knowledgeMasterId": "YK-0264",
+          "zukanSlug": "yk-0264",
+          "verified": true,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": [
+          "膝を反らさず、足首に均等に体重をかける。めまいがあるときは座って行う"
+        ],
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 7,
+      "reading": {
+        "explicitSpeechText": false,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-start-tadasana.mp3",
+          "exists": true,
+          "sha256": "204d00d237bef9c5dfc68ae28e4a872788836e0fa2bdf6dcd7f9d2b35fed2ffc",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-tadasana-1.mp3",
+          "exists": true,
+          "sha256": "c2e76b410515ea064f9ffac57a22c3299a2833406b89db06e3de67f5daf5f830",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-tadasana-2.mp3",
+          "exists": true,
+          "sha256": "335d153e0d86d0e3b6abae68c73885af4821f0489b13f600f979fd5d7f21513f",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nose-breath-v2.mp3",
+          "exists": true,
+          "sha256": "6657b1a09109382e65fac6fa338dea776aa21ebec0a2ec25db7df7036148f6c2",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-15s.mp3",
+          "exists": true,
+          "sha256": "09284d49de6da50e7b02b29773708914eaf48ac765cb340a3fe0e3257ef4c74f",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-almost-done.mp3",
+          "exists": true,
+          "sha256": "5ab1536eff3c05760514f8b496bf09ecd1baf967612edf7cf12392a1889bdea5",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-good-job.mp3",
+          "exists": true,
+          "sha256": "08cad0b3bb64fde068f4713eb4d361ce75391af544a99a7e2d8ff00ae29ad667",
+          "durationSec": null
+        },
+        {
+          "path": "/pose-tadasana-v4.webp",
+          "exists": true,
+          "sha256": "2bb2daea1f42baa190b1910891179c86c7095ccf49401fef88dd61506b22f10e",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:audio (tree)",
+        "test:contracts (partial coverage)"
+      ]
+    },
+    {
+      "practiceId": "vrksasana",
+      "kind": "asana",
+      "nameJa": "立ち木のポーズ",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "narration_then_hold",
+      "source": "src/lib/poseCatalog.ts",
+      "uiEntry": "MyAITeacherPage / event-demo (selected IDs only)",
+      "outputSha256": "0b854f157e409defd1cba43237d2cb70928c0baba410801854f1ed4a59bc5fdd",
+      "planned": {
+        "minutes": 1,
+        "bilateral": {
+          "sides": [
+            "right",
+            "left"
+          ],
+          "switchAtRemainingSec": 30
+        }
+      },
+      "visual": {
+        "images": [
+          "/pose-vrksasana.webp"
+        ]
+      },
+      "knowledge": {
+        "catalog": {
+          "knowledgeMasterId": "YK-0277",
+          "zukanSlug": "yk-0277",
+          "verified": true,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": [
+          "膝には足を直接当てない。バランスが崩れたら一度足をおろして再開する"
+        ],
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 12,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-tree-v2-intro.wav",
+          "exists": true,
+          "sha256": "549123617ec659faf84ecfae417455148f73d9fc865198a962b5c4e030a3953f",
+          "durationSec": 5.632562358276644
+        },
+        {
+          "path": "/voice/voice-tree-v2-right-setup.wav",
+          "exists": true,
+          "sha256": "be5ad1f422c89c6e2632e8b82a81c8bead19ddc71b5329bb99daff83566a5d5f",
+          "durationSec": 7.976507936507937
+        },
+        {
+          "path": "/voice/voice-tree-v2-right-foot.wav",
+          "exists": true,
+          "sha256": "1b76839dadd776dc941e815000c91dd1fee0d2afdb6f06c058f36de005c7a95b",
+          "durationSec": 13.174331065759636
+        },
+        {
+          "path": "/voice/voice-tree-v2-stability-hakimasu-v3.wav",
+          "exists": true,
+          "sha256": "2e3055c562db824d4903a24cf5f6370e13bbe3b6adc5467b2f5c943a9dc7463f",
+          "durationSec": 12.894875283446712
+        },
+        {
+          "path": "/voice/voice-tree-v2-switch.wav",
+          "exists": true,
+          "sha256": "1b128f04aa40dbf0fb9e8900e573f9638a2b22c1a2b3673658362137ac784787",
+          "durationSec": 7.431882086167801
+        },
+        {
+          "path": "/voice/voice-tree-v2-left-setup.wav",
+          "exists": true,
+          "sha256": "c384c1dd862e1a63764502f98a67cee3364eecbfcfbb405ae558b2f3ffe8fbfb",
+          "durationSec": 8.09156462585034
+        },
+        {
+          "path": "/voice/voice-tree-v2-left-foot.wav",
+          "exists": true,
+          "sha256": "8a19e3ed254a5dd91fa5a9ba3e469dabf6fea6c5405895025a3a510e2c2bc62b",
+          "durationSec": 13.074331065759637
+        },
+        {
+          "path": "/voice/voice-tree-v2-complete.wav",
+          "exists": true,
+          "sha256": "db1a5d8905834f802041a477ef96fa7c7a2223aa4ebc898eeeb013259d10053c",
+          "durationSec": 4.71795918367347
+        },
+        {
+          "path": "/pose-vrksasana.webp",
+          "exists": true,
+          "sha256": "9dbbbdc470758250735fda7ac42ce0d31d82cc633d9be14718cb90678b23eed8",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:audio (tree)",
+        "test:contracts (partial coverage)"
+      ]
+    },
+    {
+      "practiceId": "uttanasana",
+      "kind": "asana",
+      "nameJa": "やさしい前屈",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "narration_then_hold",
+      "source": "src/lib/poseCatalog.ts",
+      "uiEntry": "MyAITeacherPage / event-demo (selected IDs only)",
+      "outputSha256": "74cbb7de84c5ddd8cfe530ac0237d7b6a789a26185bd614c37b6b21e07c60186",
+      "planned": {
+        "minutes": 1,
+        "bilateral": null
+      },
+      "visual": {
+        "images": [
+          "/pose-uttanasana-gentle-v2.png",
+          "/pose-uttanasana-stage1.webp",
+          "/pose-uttanasana-stage2.webp",
+          "/pose-uttanasana-gentle-v2.png",
+          "/pose-tadasana.webp",
+          "/pose-uttanasana-stage2.webp",
+          "/pose-uttanasana-gentle-v2.png"
+        ]
+      },
+      "knowledge": {
+        "catalog": {
+          "verified": false,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": [
+          "腰を丸めない。膝を曲げてもよいので無理な深さを求めない。床に手をつける必要はない。めまいがあるときはゆっくり戻る"
+        ],
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 10,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-start-uttanasana-v2.mp3",
+          "exists": true,
+          "sha256": "61390035c2c2050847acf39f87222903dc8753eb49a34992ba3421afc3c906c2",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-uttanasana-2-v2.mp3",
+          "exists": true,
+          "sha256": "341aa22f8e53d1c82eb12c4e85003d8da83b20aeb1e80d45fd5a70c257739dd5",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nose-breath-v2.mp3",
+          "exists": true,
+          "sha256": "6657b1a09109382e65fac6fa338dea776aa21ebec0a2ec25db7df7036148f6c2",
+          "durationSec": null
+        },
+        {
+          "path": "/pose-uttanasana-gentle-v2.png",
+          "exists": true,
+          "sha256": "99062c15f65c54a4a7bfff68e8c79681261ec0a36d02fa7e66162f48c6f8876b",
+          "durationSec": null
+        },
+        {
+          "path": "/pose-uttanasana-stage1.webp",
+          "exists": true,
+          "sha256": "ab0d9b72e0972f70a1d5db22d04492c110647c4058a2f6a67130facbb605f86f",
+          "durationSec": null
+        },
+        {
+          "path": "/pose-uttanasana-stage2.webp",
+          "exists": true,
+          "sha256": "ad53e8af8354a5f13f436da56d5edfd3901a6ef58a3fe216ac610f01edd1444c",
+          "durationSec": null
+        },
+        {
+          "path": "/pose-tadasana.webp",
+          "exists": true,
+          "sha256": "4d27dbed4a351cc536290e571ce85fba8b94e6c0c3cf63c8d36b4ecf00fe7b64",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:audio (tree)",
+        "test:contracts (partial coverage)"
+      ]
+    },
+    {
+      "practiceId": "balasana",
+      "kind": "asana",
+      "nameJa": "チャイルドポーズ",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "narration_then_hold",
+      "source": "src/lib/poseCatalog.ts",
+      "uiEntry": "MyAITeacherPage / event-demo (selected IDs only)",
+      "outputSha256": "c5d20405052dd5c84c349bb8ef13c17d4eda3abbba0dab10f0967c662794dea1",
+      "planned": {
+        "minutes": 2,
+        "bilateral": null
+      },
+      "visual": {
+        "images": [
+          "/pose-balasana.webp"
+        ]
+      },
+      "knowledge": {
+        "catalog": {
+          "verified": false,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": [
+          "膝が痛いときは折り畳んだ毛布を膝のうしろに入れる。食後は避ける"
+        ],
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 13,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-start-balasana-v2.mp3",
+          "exists": true,
+          "sha256": "1c583515b7b585bcea03bdb2d1e50dd570f116f695c2d7899c6b421a5f89f673",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-balasana-1-v2.mp3",
+          "exists": true,
+          "sha256": "4950ed48ba7bda581b0c3aaf963c19620c49b56fe4a8513336511016f05bf063",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nose-breath-v2.mp3",
+          "exists": true,
+          "sha256": "6657b1a09109382e65fac6fa338dea776aa21ebec0a2ec25db7df7036148f6c2",
+          "durationSec": null
+        },
+        {
+          "path": "/pose-balasana.webp",
+          "exists": true,
+          "sha256": "726c28cf5ebcf9febca7a95a9e8c02a133743de1380d2cb9797ffcf89d6ec413",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:audio (tree)",
+        "test:contracts (partial coverage)"
+      ]
+    },
+    {
+      "practiceId": "catcow",
+      "kind": "asana",
+      "nameJa": "猫と牛のポーズ",
+      "status": "active",
+      "runtime": "AsanaClockRuntime",
+      "timingMode": "wall_clock_with_voice_drain",
+      "source": "src/lib/poseCatalog.ts",
+      "uiEntry": "MyAITeacherPage / event-demo (selected IDs only)",
+      "outputSha256": "6134f5d7ca6ccd82da2fc90c0a8c3a02c82df7452649632c5901153efc34a71e",
+      "planned": {
+        "minutes": 2,
+        "bilateral": null
+      },
+      "visual": {
+        "images": [
+          "/pose-cow.webp",
+          "/pose-cow.webp",
+          "/pose-cat.webp",
+          "/pose-cow.webp",
+          "/pose-cat.webp"
+        ]
+      },
+      "knowledge": {
+        "catalog": {
+          "verified": false,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": [
+          "手首が痛いときは拳を作るか前腕をつく。首を無理に動かさない"
+        ],
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 11,
+      "reading": {
+        "explicitSpeechText": false,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-start-catcow-v2.mp3",
+          "exists": true,
+          "sha256": "cb930cce4f365dc4c6f36ae90d4f64ddaea357e3ced4f8c23cac7640106b271e",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-catcow-1-v2.mp3",
+          "exists": true,
+          "sha256": "2d1dd72506a06461b6db1ca007f8b66a629799d00c7e795cc454e0195efcd210",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-catcow-2-v2.mp3",
+          "exists": true,
+          "sha256": "9bafc9d536bfa0f8f4f470fee846830c739f1ba3dbb272ea70107a249c3f799d",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-catcow-3-v2.mp3",
+          "exists": true,
+          "sha256": "16ded9a77cabdf9c1edd88d9e765706a5ba2684f48f9d134977648fd96bd2a09",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-catcow-r1-v2.mp3",
+          "exists": true,
+          "sha256": "c88e956329745c5f01dc8b776d8a2cdf167debe1eea2fda06c5fa43d5a3e14a1",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-catcow-r2-v2.mp3",
+          "exists": true,
+          "sha256": "3626b9b2d8046dffd6d5683eb3686413173feb3035ba9a7d8248c4e721910e9a",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nose-breath-v2.mp3",
+          "exists": true,
+          "sha256": "6657b1a09109382e65fac6fa338dea776aa21ebec0a2ec25db7df7036148f6c2",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-30s.mp3",
+          "exists": true,
+          "sha256": "26bd8f63006fd4d98e25fa1908beef20452a79568425582ff98510f2bf297476",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-15s.mp3",
+          "exists": true,
+          "sha256": "09284d49de6da50e7b02b29773708914eaf48ac765cb340a3fe0e3257ef4c74f",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-almost-done.mp3",
+          "exists": true,
+          "sha256": "5ab1536eff3c05760514f8b496bf09ecd1baf967612edf7cf12392a1889bdea5",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-good-job.mp3",
+          "exists": true,
+          "sha256": "08cad0b3bb64fde068f4713eb4d361ce75391af544a99a7e2d8ff00ae29ad667",
+          "durationSec": null
+        },
+        {
+          "path": "/pose-cow.webp",
+          "exists": true,
+          "sha256": "c3e68414e9ea12268b09b66bd468181b54a593e74f4e97c2753d0e82ae6ca65f",
+          "durationSec": null
+        },
+        {
+          "path": "/pose-cat.webp",
+          "exists": true,
+          "sha256": "177288bcbc3ed76014628b47e5ead36d3744b1cd46909528d37da77bcc7fb62f",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:audio (tree)",
+        "test:contracts (partial coverage)"
+      ]
+    },
+    {
+      "practiceId": "paschimottanasana",
+      "kind": "asana",
+      "nameJa": "座って前屈",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "narration_then_hold",
+      "source": "src/lib/poseCatalog.ts",
+      "uiEntry": "MyAITeacherPage / event-demo (selected IDs only)",
+      "outputSha256": "99f87b41331b6f04a1e8f830ef4891d3cc4e448973e227dd91e04ec86f9e4b67",
+      "planned": {
+        "minutes": 2,
+        "bilateral": null
+      },
+      "visual": {
+        "images": [
+          "/pose-paschimottanasana.webp"
+        ]
+      },
+      "knowledge": {
+        "catalog": {
+          "knowledgeMasterId": "YK-0270",
+          "zukanSlug": "yk-0270",
+          "verified": true,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": [
+          "膝を少し曲げてもよい。腰を丸めず股関節から倒れる。坐骨が床から離れないようにする"
+        ],
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 12,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-start-paschi-v2.mp3",
+          "exists": true,
+          "sha256": "4a1577f72b636d3a8ddead6107bbcaf444708d4fa471820478ea487db787e9ae",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-paschi-1-v2.mp3",
+          "exists": true,
+          "sha256": "1f134a10c863e5fbdf38eee0a33af0923ec1024e304c9fb6a6ad4803caab29ae",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-paschi-2-v2.mp3",
+          "exists": true,
+          "sha256": "341aa22f8e53d1c82eb12c4e85003d8da83b20aeb1e80d45fd5a70c257739dd5",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-paschi-3-v2.mp3",
+          "exists": true,
+          "sha256": "3d6b7d304618085950430b0f39155f7e55dbd3e9a6b81530854449a271aeeaae",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nose-breath-v2.mp3",
+          "exists": true,
+          "sha256": "6657b1a09109382e65fac6fa338dea776aa21ebec0a2ec25db7df7036148f6c2",
+          "durationSec": null
+        },
+        {
+          "path": "/pose-paschimottanasana.webp",
+          "exists": true,
+          "sha256": "d982c98380a1e252283e777970d7c87f27b2e5977b8046efc4aa4a6955beb843",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:audio (tree)",
+        "test:contracts (partial coverage)"
+      ]
+    },
+    {
+      "practiceId": "savasana",
+      "kind": "asana",
+      "nameJa": "休息のポーズ",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "narration_then_hold",
+      "source": "src/lib/poseCatalog.ts",
+      "uiEntry": "MyAITeacherPage / event-demo (selected IDs only)",
+      "outputSha256": "d400a28157365040fe75a98544373fb6a1a123bbf5086b05f3e69cc7bd877b07",
+      "planned": {
+        "minutes": 3,
+        "bilateral": null
+      },
+      "visual": {
+        "images": [
+          "/pose-savasana.webp"
+        ]
+      },
+      "knowledge": {
+        "catalog": {
+          "knowledgeMasterId": "YK-0260",
+          "zukanSlug": "yk-0260",
+          "verified": true,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": [
+          "腰が浮くときは膝の下に丸めた毛布を入れる。眠ってしまってもよい"
+        ],
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 12,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-start-savasana.mp3",
+          "exists": true,
+          "sha256": "fb8bbfca32331c6adc1384423adb022fc2c61a8ff1793a8d41c627b198b7af58",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nose-breath-v2.mp3",
+          "exists": true,
+          "sha256": "6657b1a09109382e65fac6fa338dea776aa21ebec0a2ec25db7df7036148f6c2",
+          "durationSec": null
+        },
+        {
+          "path": "/pose-savasana.webp",
+          "exists": true,
+          "sha256": "3e4d4dd3ee899b8fafd2deeaafc2f95f737f6ed337f63eb42d7d871819ed9f95",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:audio (tree)",
+        "test:contracts (partial coverage)"
+      ]
+    },
+    {
+      "practiceId": "setu-bandhasana",
+      "kind": "asana",
+      "nameJa": "セツ・バンダーサナ（橋のポーズ）",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "narration_then_hold",
+      "source": "src/lib/poseCatalog.ts",
+      "uiEntry": "MyAITeacherPage / event-demo (selected IDs only)",
+      "outputSha256": "d67d2e9b8cb5a71a2f88844cec62386aacbbe68957d8cd311b207cdcbb6ba88e",
+      "planned": {
+        "minutes": 1,
+        "bilateral": null
+      },
+      "visual": {
+        "images": [
+          "/pose-setu-bandhasana.webp"
+        ]
+      },
+      "knowledge": {
+        "catalog": {
+          "verified": false,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": [
+          "首を無理に回さない。腰が痛いときは無理に持ち上げない。膝の下に毛布を入れてもよい"
+        ],
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 11,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-start-setu.mp3",
+          "exists": true,
+          "sha256": "987bccdd34b1321b79d0ba69436811b624280d415e00a79ea7a3741811b68997",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-setu-1.mp3",
+          "exists": true,
+          "sha256": "2dda60ab68b81128dd9b726ad4c5a3c3d073619116c7288e15423e07b691033a",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-setu-2.mp3",
+          "exists": true,
+          "sha256": "057d02449e9c9c39e04470dabd3f73ce3c18d32caf1b3b1818fc934008c2164f",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-setu-3.mp3",
+          "exists": true,
+          "sha256": "ffdfc77ca995d5e7351367f20b676b589fe8898685e0f9b754d7cb3947a5a277",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nose-breath-v2.mp3",
+          "exists": true,
+          "sha256": "6657b1a09109382e65fac6fa338dea776aa21ebec0a2ec25db7df7036148f6c2",
+          "durationSec": null
+        },
+        {
+          "path": "/pose-setu-bandhasana.webp",
+          "exists": true,
+          "sha256": "1937c960c8d62019441649362cb0862b4971d8c6c91b8ea95d5ec99f44d74231",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:audio (tree)",
+        "test:contracts (partial coverage)"
+      ]
+    },
+    {
+      "practiceId": "bhujangasana",
+      "kind": "asana",
+      "nameJa": "ブジャンガーサナ（コブラのポーズ）",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "narration_then_hold",
+      "source": "src/lib/poseCatalog.ts",
+      "uiEntry": "MyAITeacherPage / event-demo (selected IDs only)",
+      "outputSha256": "25abe0882de5b1a6a67d07de5c48c398ed8838ecb8ec66f14c0d83e7a3a8a3a7",
+      "planned": {
+        "minutes": 1,
+        "bilateral": null
+      },
+      "visual": {
+        "images": [
+          "/pose-bhujangasana.webp"
+        ]
+      },
+      "knowledge": {
+        "catalog": {
+          "verified": false,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": [
+          "腰に痛みがあるときは無理をしない。ひじを伸ばしきらず、少し曲げたまま行う。手首が痛いときは拳を作る"
+        ],
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 10,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-start-bhujanga.mp3",
+          "exists": true,
+          "sha256": "e2d2a13d8cc836b226205f10712ea82c074fa364c1bf2d86148dcdffd8e2fdf7",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-bhujanga-1.mp3",
+          "exists": true,
+          "sha256": "14fcb4b1f151a7e4aeb0188897d5bba469bf4773f35a748e311ea8a75b6a7fbe",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-bhujanga-2.mp3",
+          "exists": true,
+          "sha256": "3c97a076baa08f6f266d1f12611d35287b0ceca156f316b791a9c30519541d17",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nose-breath-v2.mp3",
+          "exists": true,
+          "sha256": "6657b1a09109382e65fac6fa338dea776aa21ebec0a2ec25db7df7036148f6c2",
+          "durationSec": null
+        },
+        {
+          "path": "/pose-bhujangasana.webp",
+          "exists": true,
+          "sha256": "129d68091a0b6e2bf49f6f8f47591f5948352999ddc1dc578cef96463aa2aedc",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:audio (tree)",
+        "test:contracts (partial coverage)"
+      ]
+    },
+    {
+      "practiceId": "test-pose",
+      "kind": "asana",
+      "nameJa": "テストポーズ",
+      "status": "draft",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "narration_then_hold",
+      "source": "src/lib/poseCatalog.ts",
+      "uiEntry": "MyAITeacherPage / event-demo (selected IDs only)",
+      "outputSha256": "5abab449ebb77aa2521539b0d0a0ab62b442154456392f8271f8142e11621256",
+      "planned": {
+        "minutes": 1,
+        "bilateral": null
+      },
+      "visual": {
+        "images": [
+          "/pose-tadasana.webp"
+        ]
+      },
+      "knowledge": {
+        "catalog": {
+          "verified": false,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": [
+          "無理のない範囲で行う"
+        ],
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 10,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-nose-breath-v2.mp3",
+          "exists": true,
+          "sha256": "6657b1a09109382e65fac6fa338dea776aa21ebec0a2ec25db7df7036148f6c2",
+          "durationSec": null
+        },
+        {
+          "path": "/pose-tadasana.webp",
+          "exists": true,
+          "sha256": "4d27dbed4a351cc536290e571ce85fba8b94e6c0c3cf63c8d36b4ecf00fe7b64",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:audio (tree)",
+        "test:contracts (partial coverage)"
+      ]
+    },
+    {
+      "practiceId": "trikonasana",
+      "kind": "asana",
+      "nameJa": "三角のポーズ",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "narration_then_hold",
+      "source": "src/lib/poseCatalog.ts",
+      "uiEntry": "MyAITeacherPage / event-demo (selected IDs only)",
+      "outputSha256": "e5b9782739bb08774ba51045639396cb375b8ac8346a4b26270345e48d897977",
+      "planned": {
+        "minutes": 1,
+        "bilateral": {
+          "sides": [
+            "right",
+            "left"
+          ],
+          "switchAtRemainingSec": 30
+        }
+      },
+      "visual": {
+        "images": [
+          "/pose-trikonasana-new.webp"
+        ]
+      },
+      "knowledge": {
+        "catalog": {
+          "knowledgeMasterId": "YK-0267",
+          "zukanSlug": "yk-0267",
+          "verified": true,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": [
+          "腰を丸めない。膝を少し曲げてもよい。めまいがあるときはゆっくり戻る"
+        ],
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 13,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-start-trikona.mp3",
+          "exists": true,
+          "sha256": "a5854c11af1f46446792842ea0b5b38295126f07d11e3fd974182c84effbc3b8",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-trikona-1.mp3",
+          "exists": true,
+          "sha256": "ac0c4a2a9bdf7bbcad4fbe4097793fcec301e64cf4c9a9ca6d787002af18dd27",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-trikona-2.mp3",
+          "exists": true,
+          "sha256": "0966935f7da383a66582f6814a7a7d7d6460445f07459dfe33afca0b24c7b7c7",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nose-breath-v2.mp3",
+          "exists": true,
+          "sha256": "6657b1a09109382e65fac6fa338dea776aa21ebec0a2ec25db7df7036148f6c2",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-trikona-r1.mp3",
+          "exists": true,
+          "sha256": "a08340016265d02342cb7449972e6fecf6328289b035d0cd6ce3fa984567bc51",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-trikona-r2.mp3",
+          "exists": true,
+          "sha256": "45ffd27e23f5bbe9f3bda7a34954575564cba74bc429ee606f36360ae823ea69",
+          "durationSec": null
+        },
+        {
+          "path": "/pose-trikonasana-new.webp",
+          "exists": true,
+          "sha256": "4de43c47bca2a2afbf334c171df70b922b86bca7d34d6a01762b883fe01b4271",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:audio (tree)",
+        "test:contracts (partial coverage)"
+      ]
+    },
+    {
+      "practiceId": "vajrasana",
+      "kind": "asana",
+      "nameJa": "金剛座（正座）",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "narration_then_hold",
+      "source": "src/lib/poseCatalog.ts",
+      "uiEntry": "MyAITeacherPage / event-demo (selected IDs only)",
+      "outputSha256": "56c0a571f30a7286a71cea6fb410ffb2c926e7a8259453f37001635a6896a027",
+      "planned": {
+        "minutes": 2,
+        "bilateral": null
+      },
+      "visual": {
+        "images": [
+          "/pose-vajrasana-new.webp"
+        ]
+      },
+      "knowledge": {
+        "catalog": {
+          "knowledgeMasterId": "YK-0311",
+          "zukanSlug": "yk-0311",
+          "verified": true,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": [
+          "膝が痛いときは折り畳んだ毛布を膝のうしろに入れる。足首が痛いときは膝の下に毛布を敷く"
+        ],
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 14,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-start-vajra.mp3",
+          "exists": true,
+          "sha256": "b88a4478955c6aec3aa3636368d2fcbc1eb1c93559a5a0506f8cd8f058862cf7",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-vajra-1.mp3",
+          "exists": true,
+          "sha256": "7d0daa82ad502108b91724b679ae96227a0ebc8894e6e561cca8fdbedcabf0a3",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-vajra-2.mp3",
+          "exists": true,
+          "sha256": "7c8d495e9296ded575e4f67b622509ce55ad86a79ec679737e89707da2149337",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-vajra-3.mp3",
+          "exists": true,
+          "sha256": "c18122455ab46ccaf598dde2f2157e1ef683872229cc3db35cd63e42e27a0278",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nose-breath-v2.mp3",
+          "exists": true,
+          "sha256": "6657b1a09109382e65fac6fa338dea776aa21ebec0a2ec25db7df7036148f6c2",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-vajra-r1.mp3",
+          "exists": true,
+          "sha256": "45b979f78f3b3a1e1babd32d8b98dd97bf9ef9ffae334c288f388d9b3c9872e9",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-vajra-r2.mp3",
+          "exists": true,
+          "sha256": "c88e51027b79c1cca0a262aea4f4a8188679694ad0536eaf494162a9c4a0859b",
+          "durationSec": null
+        },
+        {
+          "path": "/pose-vajrasana-new.webp",
+          "exists": true,
+          "sha256": "9cd61e494d86bbdd2b703f8b275896797b6467c326bb9b7e52ad46cf1136c574",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:audio (tree)",
+        "test:contracts (partial coverage)"
+      ]
+    },
+    {
+      "practiceId": "box-breathing",
+      "kind": "breath",
+      "nameJa": "Box Breathing",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "phase_minimum_and_voice_end",
+      "source": "src/lib/breathworkCatalog.ts",
+      "uiEntry": "MyAITeacherPage / ResultPage",
+      "outputSha256": "261e7230a8ba3076a778bc5bb49ce8c4b5e834759029746cdc409632c015204b",
+      "planned": {
+        "inhaleSec": 4,
+        "holdAfterInhaleSec": 4,
+        "exhaleSec": 4,
+        "holdAfterExhaleSec": 4,
+        "rounds": 4
+      },
+      "visual": {
+        "type": "phase_animation",
+        "highlightZones": [
+          "belly"
+        ],
+        "arrowDirection": {
+          "inhale": [
+            "expand"
+          ],
+          "exhale": [
+            "contract"
+          ]
+        }
+      },
+      "knowledge": {
+        "catalog": {
+          "knowledgeEntryId": "b4dbb7d1-f1c5-4141-8f6d-398cde68bc8c",
+          "zukanSlug": "box-breathing",
+          "verified": true,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": {
+          "beginnerFriendly": true,
+          "gentleAllowed": true
+        },
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 21,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-box-intro.mp3",
+          "exists": true,
+          "sha256": "fb355c697670e6a6516ff0c4d39d68dec23165d6f6c8741402bf6488700615e3",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-box-intro-2.mp3",
+          "exists": true,
+          "sha256": "0c18e055d2013f649454ab1ba407772d0aafc783454e4b35f94b11af5efbcdce",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-box-inhale.mp3",
+          "exists": true,
+          "sha256": "a70745e1139ba900578d6b03e29734a80ae56762b863c1a84af91858b47fa59c",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-box-hold.mp3",
+          "exists": true,
+          "sha256": "390b6ab83ffd78daa8afd363c3a2d043537ebd20129729a475410f3c04d1956a",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-box-exhale.mp3",
+          "exists": true,
+          "sha256": "0b7cf939391d39debef37f4efc634bd2ace4633741fbd453ff88f97073249ab5",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-box-hold2.mp3",
+          "exists": true,
+          "sha256": "04b5400377ca6dbed23df7b4e3cf917eab6c38d196c7cf6603448579b8a5a935",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-inhale.mp3",
+          "exists": true,
+          "sha256": "6b1cb7a22a3ef6b380f6a8ff7190d54239b2d89694c7d1c2b972a0342b01692c",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-hold.mp3",
+          "exists": true,
+          "sha256": "c19525e4b08e94656aaee4956622f46ca33417ae4cd05e1de2e5f20ab3d4a98d",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-box-final.mp3",
+          "exists": true,
+          "sha256": "1631dd5ec6333909f76e4d7253aa459b2d29deb99a924d6c7ba5921a7a37693a",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-box-end.mp3",
+          "exists": true,
+          "sha256": "b5fb556b6b9509d5cce2c669e2d4477021c2ace838792762aec138340d44471a",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:breathwork",
+        "test:practice-sessions",
+        "test:contracts"
+      ]
+    },
+    {
+      "practiceId": "abdominal-breathing",
+      "kind": "breath",
+      "nameJa": "腹式呼吸",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "narration_then_silence",
+      "source": "src/lib/breathworkCatalog.ts",
+      "uiEntry": "MyAITeacherPage / ResultPage",
+      "outputSha256": "f604122338736ae8131c21689e0f5b5c478248b1867e8af2b829295753dd305e",
+      "planned": {
+        "inhaleSec": 4,
+        "holdAfterInhaleSec": 0,
+        "exhaleSec": 6,
+        "holdAfterExhaleSec": 0,
+        "rounds": 6
+      },
+      "visual": {
+        "type": "body_breathing",
+        "bodyFocus": "belly",
+        "handPlacement": [
+          "belly"
+        ],
+        "highlightZones": [
+          "belly"
+        ],
+        "arrowDirection": {
+          "inhale": [
+            "out"
+          ],
+          "exhale": [
+            "in"
+          ]
+        }
+      },
+      "knowledge": {
+        "catalog": {
+          "knowledgeMasterId": "YK-0318",
+          "zukanSlug": "yk-0318",
+          "verified": true,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": {
+          "beginnerFriendly": true,
+          "gentleAllowed": true
+        },
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 30,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-abdominal-intro-1.mp3",
+          "exists": true,
+          "sha256": "0ffa313f251d1a34172f131f1a30987292d43ac37c879088186c38120d62cb10",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-abdominal-intro-2.mp3",
+          "exists": true,
+          "sha256": "7d0cbb21eb6471285b66bb9dadcd457698db9adc17ae8fdea6a0ccf1599a045f",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-abdominal-intro-3.mp3",
+          "exists": true,
+          "sha256": "fac57ed95e2eaafd052d725ab8da6772997c9040ab11aaf9c2556c0f46f01a64",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-abdominal-intro-4.mp3",
+          "exists": true,
+          "sha256": "40a4f85ea37042f041b1f1d75b9138686dd4125add5fc2e8c3e71c768a22f76c",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-abdominal-r3.mp3",
+          "exists": true,
+          "sha256": "b6ddedc4871248180a8a7abb254728f705d65fd30a2f9eee0223d81f44a34427",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-abdominal-r4.mp3",
+          "exists": true,
+          "sha256": "25923a216fc21e6ce2c88dedc7e0183590dcd53f148e456d61d32acb3ba8986a",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-abdominal-r2.mp3",
+          "exists": true,
+          "sha256": "034496d011a915706faab1acd25ce249d61067ec1b555d8227fdfe92b60ce8f6",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-abdominal-r1.mp3",
+          "exists": true,
+          "sha256": "24fcbb18d06a7222ef7706ccb321f0ab8c218461b7f08eaa61cbf4173002ed6c",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:breathwork",
+        "test:practice-sessions",
+        "test:contracts"
+      ]
+    },
+    {
+      "practiceId": "thoracic-breathing",
+      "kind": "breath",
+      "nameJa": "胸式呼吸",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "narration_then_silence",
+      "source": "src/lib/breathworkCatalog.ts",
+      "uiEntry": "MyAITeacherPage / ResultPage",
+      "outputSha256": "eed5ace61efdf46aa43972b68f40c01990e63b1257e54527595caba42c59d54f",
+      "planned": {
+        "inhaleSec": 4,
+        "holdAfterInhaleSec": 0,
+        "exhaleSec": 6,
+        "holdAfterExhaleSec": 0,
+        "rounds": 6
+      },
+      "visual": {
+        "type": "body_breathing",
+        "bodyFocus": "chest",
+        "handPlacement": [
+          "lower_ribs"
+        ],
+        "highlightZones": [
+          "chest"
+        ],
+        "arrowDirection": {
+          "inhale": [
+            "out",
+            "front"
+          ],
+          "exhale": [
+            "in"
+          ]
+        }
+      },
+      "knowledge": {
+        "catalog": {
+          "knowledgeMasterId": "YK-0317",
+          "zukanSlug": "yk-0317",
+          "verified": true,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": {
+          "beginnerFriendly": true,
+          "gentleAllowed": true
+        },
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 30,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-thoracic-intro-1.mp3",
+          "exists": true,
+          "sha256": "c9d0a132817145c09fa52622ae6fa7d329b3079dd38dea2e311508a79a410c1e",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-thoracic-intro-2.mp3",
+          "exists": true,
+          "sha256": "c5918b1d3c59f19af77c711550bcabbddb2e0892c89d78833b77a4cf471ccfa7",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-thoracic-intro-3.mp3",
+          "exists": true,
+          "sha256": "9f45b54eba8438497e607502a829be0688d77f9bd2b29084878f1d767a4d7f72",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-thoracic-intro-4.mp3",
+          "exists": true,
+          "sha256": "4fd9dbdab9413f1b9826ec3d91abaebdebcfc920a9ac70a6000f58f24c67e4d4",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-thoracic-r1.mp3",
+          "exists": true,
+          "sha256": "83fe9d9a8f1f5f478779f8e8db68f55844f0ffbfaf85b231c38a5c0fe3d06363",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-thoracic-r4.mp3",
+          "exists": true,
+          "sha256": "0c775381df3063d61445c78844b518976bdc1051f20d516414070809bdbc5d27",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-thoracic-r2.mp3",
+          "exists": true,
+          "sha256": "fff09e9c95541be5069935b35eced3e2d0ef95c0a2886fb4f660472028e2f4f9",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:breathwork",
+        "test:practice-sessions",
+        "test:contracts"
+      ]
+    },
+    {
+      "practiceId": "complete-yoga-breathing",
+      "kind": "breath",
+      "nameJa": "完全なヨガ呼吸",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "phase_minimum_and_voice_end",
+      "source": "src/lib/breathworkCatalog.ts",
+      "uiEntry": "MyAITeacherPage / ResultPage",
+      "outputSha256": "869dbc22e338b2b42029ffad25d1af307d6d8dd7ddd723a92b0b2399cfa049df",
+      "planned": {
+        "inhaleSec": 6,
+        "holdAfterInhaleSec": 0,
+        "exhaleSec": 8,
+        "holdAfterExhaleSec": 0,
+        "rounds": 4
+      },
+      "visual": {
+        "type": "layered_breathing",
+        "layers": [
+          "belly",
+          "chest",
+          "clavicle"
+        ],
+        "handPlacement": [
+          "belly",
+          "chest"
+        ],
+        "highlightZones": [
+          "belly",
+          "chest",
+          "clavicle"
+        ],
+        "arrowDirection": {
+          "inhale": [
+            "up"
+          ],
+          "exhale": [
+            "down"
+          ]
+        }
+      },
+      "knowledge": {
+        "catalog": {
+          "knowledgeMasterId": "YK-0313",
+          "zukanSlug": "yk-0313",
+          "verified": true,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": {
+          "beginnerFriendly": true,
+          "gentleAllowed": true
+        },
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 15,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-start-complete-breathing.mp3",
+          "exists": true,
+          "sha256": "7f267a4b10048c423731d94c59fbc04c460851d10c8b11c02c5827a40932ef41",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-relax-shoulders.mp3",
+          "exists": true,
+          "sha256": "a8fecf97babae6096833ac0dba2f90226c8fcdbee1b73587d5b99f06b87befde",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-complete-breathing-3.mp3",
+          "exists": true,
+          "sha256": "07da62eb02ee1c5ffe944cafc9cdc56801029b54f1bde5df2b34ff948d4cc88a",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-complete-breathing-4.mp3",
+          "exists": true,
+          "sha256": "c243946e3e58016523c5449a08e3d699da4a9830c27ba950deebd57aa0f74582",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-complete-inhale-r0.mp3",
+          "exists": true,
+          "sha256": "87089b5558398b0e470abccc6e2b9e5bf5cb3d4b7e635f15f673f1ed03dc29c6",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-complete-exhale-r0.mp3",
+          "exists": true,
+          "sha256": "4ee2ca0aa260786d26c8613465135e666ea1e4eaee277b13befb547e4ff7ade1",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-complete-inhale-r1.mp3",
+          "exists": true,
+          "sha256": "57aa252adeb5774e5201666a25d5013878ac8de284124acdb4c67626621dc5e7",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-complete-exhale-r1.mp3",
+          "exists": true,
+          "sha256": "286afb8a0f1b34c6f739c186fb2888b61cab3152ab81952237c790a81325ba7f",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-complete-inhale-r2.mp3",
+          "exists": true,
+          "sha256": "c7cab6ac221af73953e87ff1331a4dc0b7280b612bbafad02e63763fa11d3f40",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-complete-exhale-r2.mp3",
+          "exists": true,
+          "sha256": "775f72593bf8fded6c111415aba860bda56f0b977fa182e9cbbdea58e24d32cd",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-complete-final.mp3",
+          "exists": true,
+          "sha256": "b7570c3c07d4a2d1430d40840abbc792f4f586297d0d52785a0db8637bc90bb2",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-complete-inhale-r3.mp3",
+          "exists": true,
+          "sha256": "f6c4b9501d68e3b014f25506acb2e07e0e3e4d6de53eb1c61a78619d8f98b2a2",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-complete-exhale-r3.mp3",
+          "exists": true,
+          "sha256": "d094f6fd183e5c546ed6b2fd0d3cf623f46fe39aa3e21627ee54916b7f1ff832",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-complete-outro.mp3",
+          "exists": true,
+          "sha256": "6f666de64fba35b85ff6fc1bf9c5607fcac8b46474ec3e8df69713b8a26e8e44",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:breathwork",
+        "test:practice-sessions",
+        "test:contracts"
+      ]
+    },
+    {
+      "practiceId": "brahmari",
+      "kind": "breath",
+      "nameJa": "ブラーマリー（ハチの呼吸）",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "narration_then_silence",
+      "source": "src/lib/breathworkCatalog.ts",
+      "uiEntry": "MyAITeacherPage / ResultPage",
+      "outputSha256": "8949a66e66c09ee004f8c57ba8eec24ccc356495fdff07022731415f0a465e28",
+      "planned": {
+        "inhaleSec": 4,
+        "holdAfterInhaleSec": 0,
+        "exhaleSec": 8,
+        "holdAfterExhaleSec": 0,
+        "rounds": 3
+      },
+      "visual": {
+        "type": "body_breathing",
+        "bodyFocus": "chest"
+      },
+      "knowledge": {
+        "catalog": {
+          "verified": false,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": {
+          "beginnerFriendly": true,
+          "gentleAllowed": true
+        },
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 19,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-bhramari-intro.mp3",
+          "exists": true,
+          "sha256": "08f0d0c414979e1383bcac2598c718c83b4c7e6d0632808f8e6054915d7f9f82",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-bhramari-inhale.mp3",
+          "exists": true,
+          "sha256": "a61c95c06653cdb6a4f6ca2d967c397a8b6dc06d40d460072fa62383a1c79d33",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-bhramari-hum.mp3",
+          "exists": true,
+          "sha256": "c37f41af73b568853d7570c8c59f7f311a9f96cdbd4399566961a90fd810c2de",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-bhramari-repeat.mp3",
+          "exists": true,
+          "sha256": "da64f982a361536ade9d6fa860512af2c0b4d5fafb64ea7b43bbffc85bec1b2f",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-bhramari-r1.mp3",
+          "exists": true,
+          "sha256": "de10e3c1131fee26d91571f2c84aca654c45413d965c055b6cbb2a4de79c0929",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-bhramari-r2.mp3",
+          "exists": true,
+          "sha256": "6942f5cd603cc2010c89832dd6361e916fee8ffc900af8df93adda98e7327221",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-bhramari-end.mp3",
+          "exists": true,
+          "sha256": "31817ede84e7c37ae6792211a86b09449125b65ff458aad85b657ba5f64b477f",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-bhramari-outro.mp3",
+          "exists": true,
+          "sha256": "e3384ab6ecfc32e57dba7d4d6275d4052c3276b1276b0e1c337fb8f5580c35b6",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:breathwork",
+        "test:practice-sessions",
+        "test:contracts"
+      ]
+    },
+    {
+      "practiceId": "anuloma-viloma",
+      "kind": "breath",
+      "nameJa": "ナディー・ショーダナ",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "narration_then_silence",
+      "source": "src/lib/breathworkCatalog.ts",
+      "uiEntry": "MyAITeacherPage / ResultPage",
+      "outputSha256": "dd7f56478a5a7d9ec5943fe0f4b4c3108b55d9115a76c7114d2a47fca82c46de",
+      "planned": {
+        "inhaleSec": 4,
+        "holdAfterInhaleSec": 0,
+        "exhaleSec": 6,
+        "holdAfterExhaleSec": 0,
+        "rounds": 6
+      },
+      "visual": {
+        "type": "body_breathing",
+        "bodyFocus": "chest"
+      },
+      "knowledge": {
+        "catalog": {
+          "knowledgeMasterId": "YK-0285",
+          "zukanSlug": "yk-0285",
+          "verified": true,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": {
+          "beginnerFriendly": true,
+          "gentleAllowed": true
+        },
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 44,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-nadi-intro.mp3",
+          "exists": true,
+          "sha256": "54f91a0e7009d56aa067ee7cf41b2c906e4c5fa37ce2fa6722a323cfec7d966c",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nadi-1-close-right-inhale-left.mp3",
+          "exists": true,
+          "sha256": "53c01889cdc9a04ca50d1ec7f750a372db4ad71384a42fecd4aa82dfaadeb83f",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nadi-2-switch-exhale-right.mp3",
+          "exists": true,
+          "sha256": "b8a1e30df40266644f9d92dd11f10a66e22dbb3d802804e52899de4a1705a968",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nadi-3-inhale-right.mp3",
+          "exists": true,
+          "sha256": "940204f46fa585ecf3e1d9bda1f62697327280e65b9956115d0aba2d6cda62a1",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nadi-4-switch-exhale-left.mp3",
+          "exists": true,
+          "sha256": "f6908ffaa3f9947415dd011d1558cfbe60f5f83b8a2137f4dce021b7daeb6b12",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nadi-5-inhale-left.mp3",
+          "exists": true,
+          "sha256": "fb5fef414a22cd320cf0a92011d1e63179339219c38f5e98d67df2bca5a4af4c",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nadi-6-repeat-switch.mp3",
+          "exists": true,
+          "sha256": "ddc414028fb3b6106fc611b17f560787827a0a51e4131b43079e4701b7750486",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nadi-r-inhale-left.mp3",
+          "exists": true,
+          "sha256": "8e704c0c2fc9b3403a5c8782f98b48274f2b7b04a5be4e09ca68b8deb0ca3953",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nadi-r-exhale-left.mp3",
+          "exists": true,
+          "sha256": "a533959e3cbe4e4a1c4a4d72faab93873b8dd1019211917a5bf3a3e727e08e1d",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nadi-repeat-guide.mp3",
+          "exists": true,
+          "sha256": "0750c74c0f03955fca42f1f459479297facfc351bfeb690bd8e52409f7c1c983",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nadi-continue.mp3",
+          "exists": true,
+          "sha256": "0d8effb75a227e66ff63b572b9ceb4df891c1d055cad1fb82e07374480b711e7",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nadi-end.mp3",
+          "exists": true,
+          "sha256": "6363af618b57a4975c35e61e24451d6e1362c449f9cb3d85dfb1f82760ec6083",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nadi-outro.mp3",
+          "exists": true,
+          "sha256": "9359ce72794251f5dbc80a3ade9df2f932db373e2dc0b4d9d58f2be83d8a6082",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:breathwork",
+        "test:practice-sessions",
+        "test:contracts"
+      ]
+    },
+    {
+      "practiceId": "test-breathwork",
+      "kind": "breath",
+      "nameJa": "テスト呼吸法",
+      "status": "draft",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "narration_then_silence",
+      "source": "src/lib/breathworkCatalog.ts",
+      "uiEntry": "MyAITeacherPage / ResultPage",
+      "outputSha256": "fe15da2b729d19a73e74496f6cb3a5d159521d01d48effab5108776042ccc181",
+      "planned": {
+        "minutes": 2,
+        "bilateral": null
+      },
+      "visual": {
+        "type": "static",
+        "asset": "/pose-abdominal-breathing.webp"
+      },
+      "knowledge": {
+        "catalog": {
+          "verified": false,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": {
+          "beginnerFriendly": true,
+          "gentleAllowed": true
+        },
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 0,
+      "reading": {
+        "explicitSpeechText": false,
+        "containsWrittenExhale": false,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/pose-abdominal-breathing.webp",
+          "exists": true,
+          "sha256": "b0055588628a00521edc18f5c2ef5badf086aa650d05fb6f98dbe881dbfe64bb",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "test:breathwork",
+        "test:practice-sessions",
+        "test:contracts"
+      ]
+    },
+    {
+      "practiceId": "susokukan-5min",
+      "kind": "meditation",
+      "nameJa": "数息観",
+      "status": "active",
+      "runtime": "SusokukanSession",
+      "timingMode": "media_narration_then_silence",
+      "source": "src/lib/meditationCatalog.ts",
+      "uiEntry": "MyAITeacherPage / MeditationExperience",
+      "outputSha256": "ac8eca733963ee662186424165ea5675b5c5c0dd8acb38ccdc6d225775d7fa5f",
+      "planned": {
+        "durationSec": 300
+      },
+      "visual": {
+        "type": "minimal"
+      },
+      "knowledge": {
+        "catalog": {
+          "knowledgeEntryId": null,
+          "verified": false,
+          "professionalYogaRelated": null
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": null,
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 11,
+      "reading": {
+        "explicitSpeechText": false,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-susokukan-1.mp3",
+          "exists": true,
+          "sha256": "a2306a60422701347e1c1617dab5152bda1e942822d1361f3203288a5be868de",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-susokukan-2.mp3",
+          "exists": true,
+          "sha256": "572b8f06b2f6e477ee9af3ed7c16b4a4199d7cae85b532fec56aa919cf27a483",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-susokukan-3.mp3",
+          "exists": true,
+          "sha256": "128b06eb3bd11b5912c0684f684c0d63833228bf0219e17719eef918969942fc",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-susokukan-4.mp3",
+          "exists": true,
+          "sha256": "e23b43e1775d98c928f9a98b5400885759d898faeaf2ba42f100a0cef06ae7d4",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-susokukan-5.mp3",
+          "exists": true,
+          "sha256": "a1ffbaf89ed5d6ed7f365e58d1e51840e6b2bc8c0315f1827c3405ed397d3a4b",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-susokukan-6.mp3",
+          "exists": true,
+          "sha256": "874c2388db6f34c432c55dc3c1567f0e741bca66350c51cfa03e12b44ed2d0f3",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-susokukan-7.mp3",
+          "exists": true,
+          "sha256": "ebbd4882ace0bd5aa11da4c0ba784bfb5a8f3f94a003e7cd8364f7b053610b47",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-susokukan-8.mp3",
+          "exists": true,
+          "sha256": "2beb041b646e3dc3292c49925f10437ae44c33083b104c8ad86874f31e82c34d",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/susokukan-intro-full-v2.wav",
+          "exists": true,
+          "sha256": "acbc14d4f6c9dda9eb887517701ff7f0e090d3217241bc8c894ddf39ea4451c9",
+          "durationSec": 60
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "galaxyFiveMinuteCompletion": "PASS (user report 2026-10-12)",
+        "fullAudioCaptionSync": "unconfirmed",
+        "pronunciation": "unconfirmed"
+      },
+      "tests": [
+        "test:susokukan",
+        "test:practice-sessions"
+      ]
+    },
+    {
+      "practiceId": "mindfulness-5min",
+      "kind": "meditation",
+      "nameJa": "マインドフルネス瞑想",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "legacy_meditation_sequence_with_display_clock",
+      "source": "src/lib/meditationCatalog.ts",
+      "uiEntry": "MyAITeacherPage / MeditationExperience",
+      "outputSha256": "826bac72c5920993ccda446318845f3c333012c7030982bc66625634e41132d0",
+      "planned": {
+        "durationSec": 300
+      },
+      "visual": {
+        "type": "minimal"
+      },
+      "knowledge": {
+        "catalog": {
+          "knowledgeEntryId": null,
+          "verified": true,
+          "professionalYogaRelated": false
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": null,
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 24,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-mindfulness-1.mp3",
+          "exists": true,
+          "sha256": "7029382c51a1ee480eda189d0033832c95adf8a6716b720b94c916c424e7efd0",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-2.mp3",
+          "exists": true,
+          "sha256": "50457c08c219d417ac2f918522d9d8e9fb3593a30b1f07f07f8639729a741897",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-3.mp3",
+          "exists": true,
+          "sha256": "1be7dd86d6eb8d8b4a1451599b686e28208cafe8dbd2deb957e4358838a80234",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-4.mp3",
+          "exists": true,
+          "sha256": "3a36cbdc343b3ad1ac274558341aff7fd639346026a5f93269d7c4d0b91ebf0d",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-5.mp3",
+          "exists": true,
+          "sha256": "6dad61ea570e1cd34310e7ec842309d16ff4569128dbbf899afcbc0e919889c4",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-6.mp3",
+          "exists": true,
+          "sha256": "2df8d076008a1495361359985403750e9231455b5abd6f57a00603a77900b46b",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-7.mp3",
+          "exists": true,
+          "sha256": "b4e95f2f4c5b72a4fefdd76aa510fe1532d31aedbb2af93563fb0c5b3c7e59ed",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-8.mp3",
+          "exists": true,
+          "sha256": "1a0ec24ce5d35a2ab5da867b724ad3743437e0e852d5f62f3b0947b0dbd0ce07",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-9.mp3",
+          "exists": true,
+          "sha256": "83ea612a2469c39e8b7234f7bc8fa5855ad7bd3bfcaf1a5796fb4518c41e4ce2",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-10.mp3",
+          "exists": true,
+          "sha256": "8a12b8c37f06c3622840114fbbfde8535dd7620e4872879dacb4818a0366f7ee",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-11.mp3",
+          "exists": true,
+          "sha256": "ee2218d0aa5621e5f36e53a8c5ae3fa1df94d7b0b0111297f644020325fd5140",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-12.mp3",
+          "exists": true,
+          "sha256": "71c0696a07f3c11301a8373e7935ab10b06eb9417ab9b7e79fbbb82d7062b1e0",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-13.mp3",
+          "exists": true,
+          "sha256": "b2c63c99f4f28a8fb2de413a3790d063b578961c31be7dbd6d95c1592b233935",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-14.mp3",
+          "exists": true,
+          "sha256": "7b6c011600f9bc7717d7df0ec101a2030e3220c24a96804dea321274a205101d",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-15.mp3",
+          "exists": true,
+          "sha256": "4d1acecb0c6003aef85f617a2a7a28a416bffa3eb7e4363b97cd28aeadee9c91",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-16.mp3",
+          "exists": true,
+          "sha256": "4729e84f0729d9d221f3ae6d2d95bc5c12ca2927c90f7ebc7a62d950a8baca71",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-end-1.mp3",
+          "exists": true,
+          "sha256": "5165b89ca2ae50e6a30dfa31ba9fd8c01d5cf39bfc11260dafdba0bc45555af7",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-end-2.mp3",
+          "exists": true,
+          "sha256": "4d0f8d0dcb89659e459138c4e2f07c8a8ad428a200db56d22224414981284d8f",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-end-3.mp3",
+          "exists": true,
+          "sha256": "10a3ae713533480a66773ba8aebff72c48b812b2b09eda6c1de122064089f31e",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "no per-practice lifecycle suite identified"
+      ]
+    },
+    {
+      "practiceId": "yoga-nidra-3m30s",
+      "kind": "meditation",
+      "nameJa": "Yoga Nidra｜3分30秒リラクゼーション",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "legacy_meditation_sequence_with_display_clock",
+      "source": "src/lib/meditationCatalog.ts",
+      "uiEntry": "MyAITeacherPage / MeditationExperience",
+      "outputSha256": "7c5694be5b020e6b4b6b4e695170354357980a8d37dba4ba856cc9cba2572419",
+      "planned": {
+        "durationSec": 210
+      },
+      "visual": {
+        "type": "minimal"
+      },
+      "knowledge": {
+        "catalog": {
+          "knowledgeEntryId": null,
+          "verified": false,
+          "professionalYogaRelated": false
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": null,
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 13,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-nidra350-intro.mp3",
+          "exists": true,
+          "sha256": "65804577642ea1df6869c11488f7bfb0b9aa700a20aa91f839aa5f98ce223bf9",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra350-posture.mp3",
+          "exists": true,
+          "sha256": "8d58ae2fd57a8a5008a8ad14159f506768028cb3669fa522c9d54a63af83b574",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra350-breath.mp3",
+          "exists": true,
+          "sha256": "667d8c22caadefd826cb1068ffb4c45184df9df0f061d48e43cd1ab23fbcdf5e",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra350-stay-awake.mp3",
+          "exists": true,
+          "sha256": "df3b13212bb92b15e9cc73dcf6329221e4767230e3792fc5e5eaed8a4597e0a2",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra350-body-right.mp3",
+          "exists": true,
+          "sha256": "94a283de71f5eb50a3a6eaf521a832f61c8f050224a5a7508e9e8ba021ff8bb1",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra350-body-left.mp3",
+          "exists": true,
+          "sha256": "37ef484ea80a01187390e091d8254b53cb7efa3dfa5e7183798089b03b6b2965",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra350-body-back-front.mp3",
+          "exists": true,
+          "sha256": "f3ba255f17b5e0672286491c64030061641bb8ad37300c8dc3d49835e1e6ec07",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra350-whole-body.mp3",
+          "exists": true,
+          "sha256": "5d5b07fd148145ea1e91cc4216d8b724255e17407fd7c0eaaba89c75bf98231a",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra350-observe-breath.mp3",
+          "exists": true,
+          "sha256": "e99eaa0c4196c22843f612acad9ef6599fd90edc37060f3c52c55a884ce62f6d",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra350-deep-relax.mp3",
+          "exists": true,
+          "sha256": "c0ce1320b5e23ea0c57b3bf130d9ffaf380b33a7f761e108a804da78d36f44b6",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra350-return.mp3",
+          "exists": true,
+          "sha256": "25e2125d3b964d5903bb5c0d5a208e04ff15c604986363bfbaf44c088bce5e5e",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "no per-practice lifecycle suite identified"
+      ]
+    },
+    {
+      "practiceId": "yoga-nidra-10min",
+      "kind": "meditation",
+      "nameJa": "Yoga Nidra｜10分 深いリラクゼーション",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "legacy_meditation_sequence_with_display_clock",
+      "source": "src/lib/meditationCatalog.ts",
+      "uiEntry": "MyAITeacherPage / MeditationExperience",
+      "outputSha256": "785b710e249f5e33086fb7096678ef7b186153b1160fb51c77ec7a0cd6631151",
+      "planned": {
+        "durationSec": 600
+      },
+      "visual": {
+        "type": "minimal"
+      },
+      "knowledge": {
+        "catalog": {
+          "knowledgeEntryId": null,
+          "verified": false,
+          "professionalYogaRelated": false
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": null,
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 22,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": true,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-nidra10-intro.mp3",
+          "exists": true,
+          "sha256": "fec683dafebf7b4a02a4e17288d745bda63942f60663e1eb7ae71b5665e73fa9",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra10-posture.mp3",
+          "exists": true,
+          "sha256": "2a1f4bddac840846748c90fbf2e796504d8ea48a426298b4d3cb6f57b4fbda23",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra10-intention.mp3",
+          "exists": true,
+          "sha256": "986e84dc7da2dfd7c54357e33a4552fc197f4226ed2e3b031be0e053b6126bd3",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra10-distant-sounds.mp3",
+          "exists": true,
+          "sha256": "9416e62406eeadf4432fdd06ad5b5903125f428d077e0ff582f3251c53208ba4",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra10-observe-breath.mp3",
+          "exists": true,
+          "sha256": "66e9df7086aeb2d033c9733463e0b12d67464d3e0ae40d6ef27b46a3525e0fe6",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra10-sankalpa.mp3",
+          "exists": true,
+          "sha256": "e0163af89a0813ab49af69e1aa56f56b5af280c6deb8d554fb57750447f0bfd1",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra10-body-scan-intro.mp3",
+          "exists": true,
+          "sha256": "91c61f4d80d64e025020833d7933a7485cda8c4d76101c85c09cb5655ac6549a",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra10-body-right.mp3",
+          "exists": true,
+          "sha256": "d871ee500e4d23287e1b4d44f4d73720f69f8a3bf2a571d56825bfd89b88dcbf",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra10-body-left.mp3",
+          "exists": true,
+          "sha256": "21cc047ec3d14fa431b4bd6abc560278a5f7250767bf6609c92b33f1d90cd6a5",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra10-body-back-front.mp3",
+          "exists": true,
+          "sha256": "5aecb6798e782012e25862615e01344dfdb1b12c36daf9bf9e286b5c870e35bf",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra10-whole-body.mp3",
+          "exists": true,
+          "sha256": "23664b8a8669433efd1adef5ce31c3ffb2309edd086a88fdd607a7bae6ae90d1",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra10-breath-count.mp3",
+          "exists": true,
+          "sha256": "a3deb170b1fe85fa57002c5caadfcc16b820a579fe47dab6bbdde062da1008ec",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra10-imagery-1.mp3",
+          "exists": true,
+          "sha256": "f98665e533ce700dc3bb7a4737b26eee370ff42270689171b3b418710ddc6f36",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra10-imagery-2.mp3",
+          "exists": true,
+          "sha256": "de7655396d6cf8f461e8b2c1551e71eb5ae9fcd054f6bc02b55edda3509f5781",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra10-sankalpa-repeat.mp3",
+          "exists": true,
+          "sha256": "65364713b18f986684da393fbd194651ab5266f941b88f3a30df7916bbe80322",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra10-return-awareness.mp3",
+          "exists": true,
+          "sha256": "d9a155ebf9cbdf9e0ef81281c3b8be186c1efd5112695e01641f203c42087418",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra10-deep-rest.mp3",
+          "exists": true,
+          "sha256": "2b88ae61363be2896767b32e16cf29ca36d44dba08d63ec21b4007c7ebd2d414",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra10-return.mp3",
+          "exists": true,
+          "sha256": "945832a38a7b18463b0f93a1500e7460bd672aabf8b971431ced0193f0eb2e7c",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-nidra10-ending.mp3",
+          "exists": true,
+          "sha256": "e784dec94bc412f8370ab690d7803b0ee17f91eda650b90e08f043a2a844aab4",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "no per-practice lifecycle suite identified"
+      ]
+    },
+    {
+      "practiceId": "mindfulness-1min",
+      "kind": "meditation",
+      "nameJa": "1分マインドフルネス",
+      "status": "active",
+      "runtime": "PracticeAudioRuntime",
+      "timingMode": "legacy_meditation_sequence_with_display_clock",
+      "source": "src/lib/meditationCatalog.ts",
+      "uiEntry": "MyAITeacherPage / MeditationExperience",
+      "outputSha256": "3ee4b9cc9d6d52f2ecc70d5908ad12927bfbf6b3cf68a78e8d58787fb3589e7a",
+      "planned": {
+        "durationSec": 60
+      },
+      "visual": {
+        "type": "minimal"
+      },
+      "knowledge": {
+        "catalog": {
+          "knowledgeEntryId": null,
+          "knowledgeMasterId": "YK-0307",
+          "zukanSlug": "yk-0307",
+          "verified": true,
+          "professionalYogaRelated": false
+        },
+        "sourceLookup": "unconfirmed; no database queries",
+        "review": "unconfirmed"
+      },
+      "safety": {
+        "catalog": null,
+        "independentReview": "unconfirmed"
+      },
+      "guideCueCount": 4,
+      "reading": {
+        "explicitSpeechText": true,
+        "containsWrittenExhale": false,
+        "humanPronunciation": "unconfirmed"
+      },
+      "assets": [
+        {
+          "path": "/voice/voice-mindfulness-1min-intro.mp3",
+          "exists": true,
+          "sha256": "4b8369ae842bee8dc1dd00e950c410b172b2d0b7ebfc39923021289e3567533b",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-mindfulness-1min-outro.mp3",
+          "exists": true,
+          "sha256": "646399b40a77d9d816139a82749bbe570536f28be1b01a9b1071bba717d03d4b",
+          "durationSec": null
+        }
+      ],
+      "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
+      "acceptance": {
+        "device": "unconfirmed by this inventory"
+      },
+      "tests": [
+        "no per-practice lifecycle suite identified"
+      ]
+    }
+  ],
+  "sequences": [
+    {
+      "practiceId": "surya-namaskar-ayush",
+      "nameJa": "インド政府AYUSH省 公認 太陽礼拝",
+      "status": "active",
+      "stepCount": 12,
+      "defaultRounds": 1,
+      "runtime": "SuryaNamaskarExperience / PracticeAudioRuntime",
+      "timing": "voice ended then per-step silence; right/left and tempo preserved",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "nameJa": "プラナーマーサナ",
+          "nameSanskrit": "Pranamasana",
+          "instruction": [
+            "マットの端に立ち、両手を胸の前で合掌する。"
+          ],
+          "breathing": "normal",
+          "voiceGuide": [
+            "プラナーマーサナ。胸の前で合掌します。"
+          ],
+          "audioKey": "voice-surya-01",
+          "image": "/surya-namaskar/01-pranamasana.webp"
+        },
+        {
+          "stepNumber": 2,
+          "nameJa": "ハストーッターナーサナ",
+          "nameSanskrit": "Hastottanasana",
+          "instruction": [
+            "合掌した手を頭上へ上げ、無理のない範囲で上体を後方へ伸ばす。"
+          ],
+          "breathing": "inhale",
+          "voiceGuide": [
+            "吸いながら、両腕を頭上へ伸ばします。"
+          ],
+          "audioKey": "voice-surya-02",
+          "image": "/surya-namaskar/02-hastottanasana.webp"
+        },
+        {
+          "stepNumber": 3,
+          "nameJa": "パーダハスターサナ",
+          "nameSanskrit": "Padahastasana",
+          "instruction": [
+            "上体を前へ倒す。初心者は無理に膝を伸ばし切らなくてよい。"
+          ],
+          "breathing": "exhale",
+          "voiceGuide": [
+            "吐きながら、上体を前へ倒します。"
+          ],
+          "audioKey": "voice-surya-03",
+          "image": "/surya-namaskar/03-padahastasana.webp"
+        },
+        {
+          "stepNumber": 4,
+          "nameJa": "アシュヴァ・サンチャラナーサナ",
+          "nameSanskrit": "Ashva Sanchalanasana",
+          "instruction": [
+            "右脚を後方へ引き、右膝を床へ下ろす。"
+          ],
+          "instructionLeft": [
+            "左脚を後方へ引き、左膝を床へ下ろす。"
+          ],
+          "breathing": "inhale",
+          "voiceGuide": [
+            "吸いながら、右脚を後ろへ引き、右膝を床につきます。"
+          ],
+          "voiceGuideLeft": [
+            "吸いながら、左脚を後ろへ引き、左膝を床につきます。"
+          ],
+          "audioKey": "voice-surya-04-right",
+          "audioKeyLeft": "voice-surya-04-left",
+          "image": "/surya-namaskar/04-ashva-sanchalanasana.webp",
+          "mirrorImageLeft": true
+        },
+        {
+          "stepNumber": 5,
+          "nameJa": "パルヴァターサナ",
+          "nameSanskrit": "Parvatasana",
+          "instruction": [
+            "腰と尾骨を上げ、身体を逆V字にする。"
+          ],
+          "breathing": "exhale",
+          "voiceGuide": [
+            "吐きながら、腰を持ち上げます。"
+          ],
+          "audioKey": "voice-surya-05",
+          "image": "/surya-namaskar/05-parvatasana.webp"
+        },
+        {
+          "stepNumber": 6,
+          "nameJa": "アシュタンガーサナ",
+          "nameSanskrit": "Ashtanga Namaskara",
+          "instruction": [
+            "両つま先、両膝、両手、胸、顎を床へ近づける。"
+          ],
+          "breathing": "hold",
+          "voiceGuide": [
+            "ゆっくり身体を下ろします。"
+          ],
+          "audioKey": "voice-surya-06",
+          "image": "/surya-namaskar/06-ashtanga-namaskara.webp"
+        },
+        {
+          "stepNumber": 7,
+          "nameJa": "ブジャンガーサナ",
+          "nameSanskrit": "Bhujangasana",
+          "instruction": [
+            "頭と上体をゆっくり起こし、無理のない範囲で背骨を後方へ伸ばす。"
+          ],
+          "breathing": "inhale",
+          "voiceGuide": [
+            "吸いながら、胸を起こします。"
+          ],
+          "audioKey": "voice-surya-07",
+          "image": "/surya-namaskar/07-bhujangasana.webp"
+        },
+        {
+          "stepNumber": 8,
+          "nameJa": "パルヴァターサナ",
+          "nameSanskrit": "Parvatasana",
+          "instruction": [
+            "再び逆V字へ戻る。"
+          ],
+          "breathing": "exhale",
+          "voiceGuide": [
+            "吐きながら、腰を持ち上げます。"
+          ],
+          "audioKey": "voice-surya-08",
+          "image": "/surya-namaskar/08-parvatasana.webp"
+        },
+        {
+          "stepNumber": 9,
+          "nameJa": "アシュヴァ・サンチャラナーサナ（反対側）",
+          "nameSanskrit": "Ashva Sanchalanasana",
+          "instruction": [
+            "右脚を両手の間へ踏み込み、左膝を床へ下ろす。"
+          ],
+          "instructionLeft": [
+            "左脚を両手の間へ踏み込み、右膝を床へ下ろす。"
+          ],
+          "breathing": "inhale",
+          "voiceGuide": [
+            "吸いながら、右脚を両手の間へ踏み込み、左膝を床につきます。"
+          ],
+          "voiceGuideLeft": [
+            "吸いながら、左脚を両手の間へ踏み込み、右膝を床につきます。"
+          ],
+          "audioKey": "voice-surya-09-right",
+          "audioKeyLeft": "voice-surya-09-left",
+          "image": "/surya-namaskar/09-ashva-sanchalanasana.webp",
+          "mirrorImageLeft": true
+        },
+        {
+          "stepNumber": 10,
+          "nameJa": "パーダハスターサナ",
+          "nameSanskrit": "Padahastasana",
+          "instruction": [
+            "前屈へ戻る。"
+          ],
+          "breathing": "exhale",
+          "voiceGuide": [
+            "吐きながら、上体を前へ倒します。"
+          ],
+          "audioKey": "voice-surya-10",
+          "image": "/surya-namaskar/10-padahastasana.webp"
+        },
+        {
+          "stepNumber": 11,
+          "nameJa": "ハストーッターナーサナ",
+          "nameSanskrit": "Hastottanasana",
+          "instruction": [
+            "両腕を頭上へ上げ、上体を伸ばす。"
+          ],
+          "breathing": "inhale",
+          "voiceGuide": [
+            "吸いながら、両腕を頭上へ伸ばします。"
+          ],
+          "audioKey": "voice-surya-11",
+          "image": "/surya-namaskar/11-hastottanasana.webp"
+        },
+        {
+          "stepNumber": 12,
+          "nameJa": "プラナーマーサナ",
+          "nameSanskrit": "Pranamasana",
+          "instruction": [
+            "合掌し、開始姿勢へ戻る。"
+          ],
+          "breathing": "normal",
+          "voiceGuide": [
+            "自然な呼吸に戻り、胸の前で合掌します。"
+          ],
+          "audioKey": "voice-surya-12",
+          "image": "/surya-namaskar/12-pranamasana.webp"
+        }
+      ],
+      "tempoHoldSec": {
+        "beginner": [
+          7,
+          7,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          7,
+          7
+        ],
+        "standard": [
+          5,
+          5,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          5,
+          5
+        ],
+        "experienced": [
+          4,
+          4,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          4,
+          4
+        ]
+      },
+      "outputSha256": "d8bde65448beb8ed98a313edac61b60c491f9bf5e3b623adb7a6b7f5ec62aec5",
+      "assets": [
+        {
+          "path": "/voice/voice-surya-01.mp3",
+          "exists": true,
+          "sha256": "0e1a81ad27ca8b56a0441820ce4d8169bef08ae660ee2c0eb5128fa8337e8900",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-surya-02.mp3",
+          "exists": true,
+          "sha256": "a90528874bcba01ec1558ca62c89e3bd169b372af16cbea2932e04afa6e660cb",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-surya-03.mp3",
+          "exists": true,
+          "sha256": "97f47c171bcce514c444bfbb87b25a3187e3c08cb9d708216c2cefe1e53b9e95",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-surya-04-right.mp3",
+          "exists": true,
+          "sha256": "68a61db87972cb7a8cea7506ab13b5abe17e947b26ec6d8424312680a9740cef",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-surya-05.mp3",
+          "exists": true,
+          "sha256": "a0ce0e7abd5e154b012ade6724b9063e1af7843e5680a2a0318e1cb5ba26f2b0",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-surya-06.mp3",
+          "exists": true,
+          "sha256": "719de821738536d483fbba1d35759855e789c0be131432074d9e96edd0a2cf42",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-surya-07.mp3",
+          "exists": true,
+          "sha256": "584fc487af9d939e67e5dcdd001b9ae157dc4e2ba41f61e583387f80bc6cabef",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-surya-08.mp3",
+          "exists": true,
+          "sha256": "a0ce0e7abd5e154b012ade6724b9063e1af7843e5680a2a0318e1cb5ba26f2b0",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-surya-09-right.mp3",
+          "exists": true,
+          "sha256": "99521c168ec80f7163852fd1b8ea657fd2a683440060ff44226ad4825eed0157",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-surya-10.mp3",
+          "exists": true,
+          "sha256": "97f47c171bcce514c444bfbb87b25a3187e3c08cb9d708216c2cefe1e53b9e95",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-surya-11.mp3",
+          "exists": true,
+          "sha256": "a90528874bcba01ec1558ca62c89e3bd169b372af16cbea2932e04afa6e660cb",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-surya-12.mp3",
+          "exists": true,
+          "sha256": "0df548ed657b5b1e49cc157e7de43e64c7f81d1723ff8a02f21693ec5ce8d176",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-surya-transition.mp3",
+          "exists": true,
+          "sha256": "d6fd149f8a0a6e3b47ca924cd5a1446156f1222c74815f7ab813d523d884f116",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-surya-04-left.mp3",
+          "exists": true,
+          "sha256": "db6b1d420269c86e8d2c59a5050909c9066d53a019b6f79fe5d4d728f0080cdf",
+          "durationSec": null
+        },
+        {
+          "path": "/voice/voice-surya-09-left.mp3",
+          "exists": true,
+          "sha256": "bd97358301d8678db9873c140a624e8904cd96de411c228df9d8faa5b8f6b76c",
+          "durationSec": null
+        },
+        {
+          "path": "/surya-namaskar/01-pranamasana.webp",
+          "exists": true,
+          "sha256": "640971d57cc5e2e1feb0b4cfdc8a2337703075808d5277af49e3da99955cd4ab",
+          "durationSec": null
+        },
+        {
+          "path": "/surya-namaskar/02-hastottanasana.webp",
+          "exists": true,
+          "sha256": "12e322c1ef103b66e23ecfc9dac1255bc217fb9dbb721ac99713ff8c809caa1e",
+          "durationSec": null
+        },
+        {
+          "path": "/surya-namaskar/03-padahastasana.webp",
+          "exists": true,
+          "sha256": "dfa677b9d9c43cfe0692594c2dc4ce4059c7eff1b7bcd5862dc558e6df23e633",
+          "durationSec": null
+        },
+        {
+          "path": "/surya-namaskar/04-ashva-sanchalanasana.webp",
+          "exists": true,
+          "sha256": "a705c450312544650a81b50d3f0a7f5193fcd85fe416a753f5e710b457fe74f9",
+          "durationSec": null
+        },
+        {
+          "path": "/surya-namaskar/05-parvatasana.webp",
+          "exists": true,
+          "sha256": "90c318f807a8919f63740d64c12f08046d36a6763b0a2e5591a90d67d08d29ab",
+          "durationSec": null
+        },
+        {
+          "path": "/surya-namaskar/06-ashtanga-namaskara.webp",
+          "exists": true,
+          "sha256": "924df81a89df8757478bd777f9bf6f68d036afbc9a9acf630637d126e3250a69",
+          "durationSec": null
+        },
+        {
+          "path": "/surya-namaskar/07-bhujangasana.webp",
+          "exists": true,
+          "sha256": "1de8566bf7427ce69417b84c909eb457a604d3edb8148f8233f85dba090ff55d",
+          "durationSec": null
+        },
+        {
+          "path": "/surya-namaskar/08-parvatasana.webp",
+          "exists": true,
+          "sha256": "1a31e8a4b4f58b1c39bbd165083c391a6467b3c91ca505afea649dc342676cb1",
+          "durationSec": null
+        },
+        {
+          "path": "/surya-namaskar/09-ashva-sanchalanasana.webp",
+          "exists": true,
+          "sha256": "f4742abf332f46d824bbed93b323f3694e854435de0cc51b80ead2c250aa4f4e",
+          "durationSec": null
+        },
+        {
+          "path": "/surya-namaskar/10-padahastasana.webp",
+          "exists": true,
+          "sha256": "cfab17830f8733edd40127182cfbe510e6f476c3c4a939df0001eb81243e3ef0",
+          "durationSec": null
+        },
+        {
+          "path": "/surya-namaskar/11-hastottanasana.webp",
+          "exists": true,
+          "sha256": "3065dbd0ada2c60bd586a823a51b1354bfa7b7a77c1e203385003029f86cc4f6",
+          "durationSec": null
+        },
+        {
+          "path": "/surya-namaskar/12-pranamasana.webp",
+          "exists": true,
+          "sha256": "2514066257da8fd664d88ac3e1cc86e79dc99fd433b6e9b1c6fec713cc86ad4c",
+          "durationSec": null
+        }
+      ],
+      "knowledge": {
+        "catalog": {
+          "sourceTitle": "第9章「スーリヤ・ナマスカーラとアーサナ」",
+          "verified": true,
+          "officialReference": "Yoga Certification Board / Ministry of AYUSH"
+        },
+        "independentVerification": "unconfirmed"
+      },
+      "safetyAndDeviceAcceptance": "unconfirmed by this inventory"
+    }
+  ],
+  "summary": {
+    "asana": {
+      "total": 12,
+      "active": 11
+    },
+    "breath": {
+      "total": 7,
+      "active": 6
+    },
+    "meditation": {
+      "total": 5,
+      "active": 5
+    }
+  },
+  "missingAssets": [],
+  "preservedExceptions": [
+    "Susokukan dedicated Session overrides legacy catalog 230-second silence and end voice timeline",
+    "poseLibrary alias 交替鼻呼吸 -> abdominal-breathing remains unaudited",
+    "Standalone Surya Namaskar 12-step and legacy engines are outside the three catalog counts"
+  ],
+  "eventDemoIds": [
+    "tadasana",
+    "catcow",
+    "balasana"
+  ]
+}
