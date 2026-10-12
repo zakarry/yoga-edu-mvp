@@ -1,5 +1,5 @@
 import type { BreathworkCatalogEntry, BreathworkPattern } from './breathworkCatalog';
-import type { KnowledgeLink } from './poseCatalog';
+import type { KnowledgeLink, PoseCatalogEntry } from './poseCatalog';
 import type { PracticeCue } from './practiceAudioRuntime';
 
 export type PracticeTiming =
@@ -41,6 +41,20 @@ export function defineAbdominalPractice(entry: BreathworkCatalogEntry, cues: Pra
 
 export interface ContractIssue { practiceId: string; code: string; detail: string }
 
+/** Second pilot: retain the already-built tree guide and catalog by reference. */
+export function defineTreePractice(entry: PoseCatalogEntry, cues: PracticeCue[]): PracticeDefinition<PoseCatalogEntry> {
+  if (entry.id !== 'vrksasana') throw new Error('Tree contract requires the existing vrksasana catalog');
+  return {
+    schemaVersion: 1, practiceId: entry.id, kind: 'asana', contentRevision: 'tree-existing-v1',
+    source: { catalogPath: 'src/lib/poseCatalog.ts', baselineCommit: 'cabf5e00490758477c83846d661475cdca59748b' },
+    content: entry,
+    timing: { mode: 'narration_then_hold', holds: cues.filter(c => c.type === 'silence').map(c => ({ side: c.side!, seconds: c.durationSec! })), narrationConsumesHold: false },
+    guide: { cues, completion: 'required_audio_ended', reading: 'separate_display_and_speech' },
+    knowledge: { catalogReference: entry.knowledge, sourceVerification: 'unconfirmed' },
+    review: { fullAudioCaptionSync: 'unconfirmed', pronunciation: 'unconfirmed', independentSafety: 'unconfirmed' },
+  };
+}
+
 /** Used by registration tooling/tests, never changes the running session or its safety gate. */
 export function validatePracticeDefinitions(definitions: PracticeDefinition[]): ContractIssue[] {
   const issues: ContractIssue[] = [], ids = new Set<string>();
@@ -76,6 +90,8 @@ export function validatePracticeDefinitions(definitions: PracticeDefinition[]): 
     if (d.timing.mode === 'narration_then_hold') {
       const holds = d.timing.holds;
       if (holds.length !== 2 || holds[0].side !== 'right' || holds[1].side !== 'left' || holds.some(h => !Number.isFinite(h.seconds) || h.seconds <= 0) || holds[0].seconds !== holds[1].seconds || d.timing.narrationConsumesHold !== false) add('bilateral', 'Right and left holds must be equal and exclude guidance');
+      const actual = d.guide.cues.filter(c => c.type === 'silence').map(c => ({ side: c.side, seconds: c.durationSec }));
+      if (JSON.stringify(actual) !== JSON.stringify(holds)) add('bilateral-guide', 'Declared holds must match the existing right/left guide');
     }
     if (d.practiceId === 'susokukan-5min' && (d.timing.mode !== 'media_narration_then_silence' || d.timing.narrationSec !== 60 || d.timing.silenceSec !== 240 || d.timing.clock !== 'audio.currentTime_then_performance' || d.timing.audioPath !== '/voice/susokukan-intro-full-v2.wav')) add('susokukan-clock', 'Keep the dedicated 60-second media clock and 240-second silence');
   }

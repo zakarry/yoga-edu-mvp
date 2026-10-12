@@ -2009,8 +2009,8 @@
       "assetDurationLimits": "WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed",
       "acceptance": {
         "galaxyFiveMinuteCompletion": "PASS (user report 2026-10-12)",
-        "fullAudioCaptionSync": "unconfirmed",
-        "pronunciation": "unconfirmed"
+        "fullAudioCaptionSync": "PASS (user confirmation in follow-up; existing PR #17 publication only)",
+        "pronunciation": "PASS (user confirmation in follow-up; existing PR #17 publication only)"
       },
       "tests": [
         "test:susokukan",

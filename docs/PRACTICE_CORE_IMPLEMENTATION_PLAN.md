@@ -179,3 +179,12 @@ rollback: 新規 `practiceDefinition.ts`、腹式builder末尾の契約読取、
 ### このpilotの実行結果
 Windows / Node v24.15.0で`npm ci`成功、`npm run typecheck` / `npm run test:regression` / `npm run build`はすべてexit 0。`test:practice-core`はstrict TypeScriptチェック＋5テストPASS（skip 0）。従来のaudio/quality/camera/directory/breathwork-susokukan/呼吸script/数息観scriptをすべて実行した。Buildの大きいchunk・静的/動的import混在警告は既存のまま、エラーなし。
 今回Edgeソースは変更せず、ローカルDenoはPATHにないためEdge専用suiteのローカル実行は未確認。既存GitHub CIのedge-safety結果を独立確認する。新pilotのAndroid/LINE実機比較・完全同期/発音は未確認、公開していない。Galaxyでの既存数息観5分完走PASSのみ維持する。
+
+
+## 2026-10-12 次工程の確認と検品境界
+PR #20は型・Build・全回帰の再実行、24出力/211 asset/保護ソース比較とGitHub Actions成功を確認し、main `cabf5e00490758477c83846d661475cdca59748b` へmerge済み。対象は腹式の読取契約だけで、scheduler/UI/Safety/Knowledge動作の変更なし。
+ユーザーは前報告の「音声・字幕の完全同期と『はきます』の発音は未確認」を選択し「確認したよ」と報告。既存PR #17公開版の数息観に関する同期・発音をユーザー確認済みPASSとして記録する。端末型番/OS/ブラウザ版/音声hash/録画は未提供。これは新しい共通化後の腹式・立ち木、tree-v3音声、LINEや全端末への確認ではない。過去の未確認記録は履歴として残す。
+検品バックログ: 腹式共通化後のGalaxy実聴/完全同期、立ち木共通化後のtree-v3「はきます」/末尾/左右全行程/数値UI/Visual/390px、LINE内蔵ブラウザ、Knowledge出典の独立照合、クラウド保存受入は未確認。模擬再生/SSR/ソース比較を実機PASSにしない。
+今回の次対象は立ち木 `vrksasana` 一件。既存cue配列をそのまま返す読取契約。左右各30秒（1分設定）、案内・切替では保持を消費せず音声ended後に開始。予定数値0:30と保持0:30→0:29、pause/stop/遅延callbackを保護。新PRは未merge、DB/Edge/Bolt公開なし。
+
+立ち木移行baselineはmain cabf5e0。変更前に0.1/1/2/3/5/10分のガイドを採取し `tree-before-cabf5e0.json` に保存。新規3テスト: 全時間設定/cueとcatalog/Visual/Safety/Knowledge参照等価、左右guideと契約時間の不一致拒否、実production runtimeのbefore/after時刻付きtraceとSSR数値UI比較（音声は模擬transport）。既存05666f4 fixtureは変更せず、asana builderは承認されたimport/returnのみを除去して元hashと比較。他24保護ソース/211asset/24出力は従来通り固定。独立rollbackは新PR全体のrevertで腹式契約を残す。

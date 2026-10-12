@@ -1,0 +1,613 @@
+{
+  "basis": "cabf5e00490758477c83846d661475cdca59748b",
+  "entry": {
+    "id": "vrksasana",
+    "type": "asana",
+    "nameJa": "立ち木のポーズ",
+    "nameSanskrit": "Vrksasana",
+    "nameEn": "Tree Pose",
+    "image": "/pose-vrksasana.webp",
+    "defaultDurationMin": 1,
+    "beginnerInstructions": [
+      "山のポーズで立ち、体重を右足にのせる",
+      "左足の裏を右足の内側（ふくらはぎまたは太もも）に当てる。両手を胸の前で合わせる"
+    ],
+    "breathingInstructions": [
+      "鼻からゆっくり呼吸。バランスを取りながら呼吸を続ける"
+    ],
+    "generalCautions": [
+      "膝には足を直接当てない。バランスが崩れたら一度足をおろして再開する"
+    ],
+    "voiceGuide": {
+      "intro": "立ち木のポーズを始めます。",
+      "introAudioKey": "voice-start-vrksasana",
+      "firstRound": [
+        {
+          "at": 5,
+          "text": "軸足にゆっくり体重を乗せます。"
+        },
+        {
+          "at": 15,
+          "text": "視線を一点に置くと、バランスを取りやすくなります。"
+        },
+        {
+          "at": 25,
+          "text": "ふらついたら無理せず足を下ろして大丈夫です。"
+        }
+      ],
+      "secondRound": [
+        {
+          "at": 0,
+          "text": "もう一度、軸足を安定させましょう。"
+        },
+        {
+          "at": 10,
+          "text": "視線を一点に置いて、無理のない範囲で続けます。"
+        }
+      ],
+      "breathingCue": "苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。",
+      "breathingCueAudioKey": "voice-nose-breath-v2",
+      "breathingReminderCue": "呼吸は止めず、無理のない範囲で鼻呼吸を続けましょう。",
+      "completion": "お疲れさまでした。"
+    },
+    "bilateral": {
+      "sides": [
+        "right",
+        "left"
+      ],
+      "switchAtRemainingSec": 30
+    },
+    "planner": {
+      "beginnerFriendly": true,
+      "gentleAllowed": false,
+      "intensity": "medium",
+      "advancedBalance": true,
+      "deepRange": false,
+      "highLoad": false,
+      "transitionComplexity": "medium"
+    },
+    "knowledge": {
+      "knowledgeMasterId": "YK-0277",
+      "zukanSlug": "yk-0277",
+      "verified": true,
+      "professionalYogaRelated": null
+    },
+    "status": "active"
+  },
+  "guides": [
+    {
+      "minutes": 0.1,
+      "cues": [
+        {
+          "type": "voice",
+          "displayText": "立ち木のポーズを始めます。壁や椅子に手を添えても構いません。",
+          "speechText": "立ち木のポーズを始めます。壁や椅子に手を添えても構いません。",
+          "audioKey": "voice-tree-v2-intro",
+          "id": "asana-vrksasana-0"
+        },
+        {
+          "type": "voice",
+          "displayText": "両足で床を感じ、右足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "speechText": "両足で床を感じ、右足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "audioKey": "voice-tree-v2-right-setup",
+          "id": "asana-vrksasana-1"
+        },
+        {
+          "type": "voice",
+          "displayText": "左足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "speechText": "左足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "audioKey": "voice-tree-v2-right-foot",
+          "id": "asana-vrksasana-2"
+        },
+        {
+          "type": "voice",
+          "audioKey": "voice-tree-v2-stability-hakimasu-v3",
+          "voice": "Microsoft Haruka Desktop",
+          "displayText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸って吐きます。",
+          "speechText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸ってはきます。",
+          "id": "asana-vrksasana-3"
+        },
+        {
+          "type": "silence",
+          "side": "right",
+          "durationSec": 3,
+          "displayText": "右足を軸に、無理のない範囲で3秒。自然な呼吸を続けましょう。",
+          "id": "asana-vrksasana-4"
+        },
+        {
+          "type": "voice",
+          "displayText": "足を床へ戻して、両足で楽に立ちましょう。落ち着いてから反対側へ変えます。",
+          "speechText": "足を床へ戻して、両足で楽に立ちましょう。落ち着いてから反対側へ変えます。",
+          "audioKey": "voice-tree-v2-switch",
+          "id": "asana-vrksasana-5"
+        },
+        {
+          "type": "voice",
+          "displayText": "両足で床を感じ、左足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "speechText": "両足で床を感じ、左足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "audioKey": "voice-tree-v2-left-setup",
+          "id": "asana-vrksasana-6"
+        },
+        {
+          "type": "voice",
+          "displayText": "右足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "speechText": "右足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "audioKey": "voice-tree-v2-left-foot",
+          "id": "asana-vrksasana-7"
+        },
+        {
+          "type": "voice",
+          "audioKey": "voice-tree-v2-stability-hakimasu-v3",
+          "voice": "Microsoft Haruka Desktop",
+          "displayText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸って吐きます。",
+          "speechText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸ってはきます。",
+          "id": "asana-vrksasana-8"
+        },
+        {
+          "type": "silence",
+          "side": "left",
+          "durationSec": 3,
+          "displayText": "左足を軸に、無理のない範囲で3秒。自然な呼吸を続けましょう。",
+          "id": "asana-vrksasana-9"
+        },
+        {
+          "type": "voice",
+          "displayText": "両足を床へ戻しましょう。お疲れさまでした。",
+          "speechText": "両足を床へ戻しましょう。お疲れさまでした。",
+          "audioKey": "voice-tree-v2-complete",
+          "id": "asana-vrksasana-10"
+        },
+        {
+          "type": "complete",
+          "displayText": "左右の実践が完了しました。",
+          "id": "asana-vrksasana-11"
+        }
+      ]
+    },
+    {
+      "minutes": 1,
+      "cues": [
+        {
+          "type": "voice",
+          "displayText": "立ち木のポーズを始めます。壁や椅子に手を添えても構いません。",
+          "speechText": "立ち木のポーズを始めます。壁や椅子に手を添えても構いません。",
+          "audioKey": "voice-tree-v2-intro",
+          "id": "asana-vrksasana-0"
+        },
+        {
+          "type": "voice",
+          "displayText": "両足で床を感じ、右足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "speechText": "両足で床を感じ、右足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "audioKey": "voice-tree-v2-right-setup",
+          "id": "asana-vrksasana-1"
+        },
+        {
+          "type": "voice",
+          "displayText": "左足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "speechText": "左足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "audioKey": "voice-tree-v2-right-foot",
+          "id": "asana-vrksasana-2"
+        },
+        {
+          "type": "voice",
+          "audioKey": "voice-tree-v2-stability-hakimasu-v3",
+          "voice": "Microsoft Haruka Desktop",
+          "displayText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸って吐きます。",
+          "speechText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸ってはきます。",
+          "id": "asana-vrksasana-3"
+        },
+        {
+          "type": "silence",
+          "side": "right",
+          "durationSec": 30,
+          "displayText": "右足を軸に、無理のない範囲で30秒。自然な呼吸を続けましょう。",
+          "id": "asana-vrksasana-4"
+        },
+        {
+          "type": "voice",
+          "displayText": "足を床へ戻して、両足で楽に立ちましょう。落ち着いてから反対側へ変えます。",
+          "speechText": "足を床へ戻して、両足で楽に立ちましょう。落ち着いてから反対側へ変えます。",
+          "audioKey": "voice-tree-v2-switch",
+          "id": "asana-vrksasana-5"
+        },
+        {
+          "type": "voice",
+          "displayText": "両足で床を感じ、左足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "speechText": "両足で床を感じ、左足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "audioKey": "voice-tree-v2-left-setup",
+          "id": "asana-vrksasana-6"
+        },
+        {
+          "type": "voice",
+          "displayText": "右足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "speechText": "右足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "audioKey": "voice-tree-v2-left-foot",
+          "id": "asana-vrksasana-7"
+        },
+        {
+          "type": "voice",
+          "audioKey": "voice-tree-v2-stability-hakimasu-v3",
+          "voice": "Microsoft Haruka Desktop",
+          "displayText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸って吐きます。",
+          "speechText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸ってはきます。",
+          "id": "asana-vrksasana-8"
+        },
+        {
+          "type": "silence",
+          "side": "left",
+          "durationSec": 30,
+          "displayText": "左足を軸に、無理のない範囲で30秒。自然な呼吸を続けましょう。",
+          "id": "asana-vrksasana-9"
+        },
+        {
+          "type": "voice",
+          "displayText": "両足を床へ戻しましょう。お疲れさまでした。",
+          "speechText": "両足を床へ戻しましょう。お疲れさまでした。",
+          "audioKey": "voice-tree-v2-complete",
+          "id": "asana-vrksasana-10"
+        },
+        {
+          "type": "complete",
+          "displayText": "左右の実践が完了しました。",
+          "id": "asana-vrksasana-11"
+        }
+      ]
+    },
+    {
+      "minutes": 2,
+      "cues": [
+        {
+          "type": "voice",
+          "displayText": "立ち木のポーズを始めます。壁や椅子に手を添えても構いません。",
+          "speechText": "立ち木のポーズを始めます。壁や椅子に手を添えても構いません。",
+          "audioKey": "voice-tree-v2-intro",
+          "id": "asana-vrksasana-0"
+        },
+        {
+          "type": "voice",
+          "displayText": "両足で床を感じ、右足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "speechText": "両足で床を感じ、右足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "audioKey": "voice-tree-v2-right-setup",
+          "id": "asana-vrksasana-1"
+        },
+        {
+          "type": "voice",
+          "displayText": "左足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "speechText": "左足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "audioKey": "voice-tree-v2-right-foot",
+          "id": "asana-vrksasana-2"
+        },
+        {
+          "type": "voice",
+          "audioKey": "voice-tree-v2-stability-hakimasu-v3",
+          "voice": "Microsoft Haruka Desktop",
+          "displayText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸って吐きます。",
+          "speechText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸ってはきます。",
+          "id": "asana-vrksasana-3"
+        },
+        {
+          "type": "silence",
+          "side": "right",
+          "durationSec": 60,
+          "displayText": "右足を軸に、無理のない範囲で60秒。自然な呼吸を続けましょう。",
+          "id": "asana-vrksasana-4"
+        },
+        {
+          "type": "voice",
+          "displayText": "足を床へ戻して、両足で楽に立ちましょう。落ち着いてから反対側へ変えます。",
+          "speechText": "足を床へ戻して、両足で楽に立ちましょう。落ち着いてから反対側へ変えます。",
+          "audioKey": "voice-tree-v2-switch",
+          "id": "asana-vrksasana-5"
+        },
+        {
+          "type": "voice",
+          "displayText": "両足で床を感じ、左足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "speechText": "両足で床を感じ、左足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "audioKey": "voice-tree-v2-left-setup",
+          "id": "asana-vrksasana-6"
+        },
+        {
+          "type": "voice",
+          "displayText": "右足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "speechText": "右足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "audioKey": "voice-tree-v2-left-foot",
+          "id": "asana-vrksasana-7"
+        },
+        {
+          "type": "voice",
+          "audioKey": "voice-tree-v2-stability-hakimasu-v3",
+          "voice": "Microsoft Haruka Desktop",
+          "displayText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸って吐きます。",
+          "speechText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸ってはきます。",
+          "id": "asana-vrksasana-8"
+        },
+        {
+          "type": "silence",
+          "side": "left",
+          "durationSec": 60,
+          "displayText": "左足を軸に、無理のない範囲で60秒。自然な呼吸を続けましょう。",
+          "id": "asana-vrksasana-9"
+        },
+        {
+          "type": "voice",
+          "displayText": "両足を床へ戻しましょう。お疲れさまでした。",
+          "speechText": "両足を床へ戻しましょう。お疲れさまでした。",
+          "audioKey": "voice-tree-v2-complete",
+          "id": "asana-vrksasana-10"
+        },
+        {
+          "type": "complete",
+          "displayText": "左右の実践が完了しました。",
+          "id": "asana-vrksasana-11"
+        }
+      ]
+    },
+    {
+      "minutes": 3,
+      "cues": [
+        {
+          "type": "voice",
+          "displayText": "立ち木のポーズを始めます。壁や椅子に手を添えても構いません。",
+          "speechText": "立ち木のポーズを始めます。壁や椅子に手を添えても構いません。",
+          "audioKey": "voice-tree-v2-intro",
+          "id": "asana-vrksasana-0"
+        },
+        {
+          "type": "voice",
+          "displayText": "両足で床を感じ、右足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "speechText": "両足で床を感じ、右足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "audioKey": "voice-tree-v2-right-setup",
+          "id": "asana-vrksasana-1"
+        },
+        {
+          "type": "voice",
+          "displayText": "左足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "speechText": "左足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "audioKey": "voice-tree-v2-right-foot",
+          "id": "asana-vrksasana-2"
+        },
+        {
+          "type": "voice",
+          "audioKey": "voice-tree-v2-stability-hakimasu-v3",
+          "voice": "Microsoft Haruka Desktop",
+          "displayText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸って吐きます。",
+          "speechText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸ってはきます。",
+          "id": "asana-vrksasana-3"
+        },
+        {
+          "type": "silence",
+          "side": "right",
+          "durationSec": 90,
+          "displayText": "右足を軸に、無理のない範囲で90秒。自然な呼吸を続けましょう。",
+          "id": "asana-vrksasana-4"
+        },
+        {
+          "type": "voice",
+          "displayText": "足を床へ戻して、両足で楽に立ちましょう。落ち着いてから反対側へ変えます。",
+          "speechText": "足を床へ戻して、両足で楽に立ちましょう。落ち着いてから反対側へ変えます。",
+          "audioKey": "voice-tree-v2-switch",
+          "id": "asana-vrksasana-5"
+        },
+        {
+          "type": "voice",
+          "displayText": "両足で床を感じ、左足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "speechText": "両足で床を感じ、左足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "audioKey": "voice-tree-v2-left-setup",
+          "id": "asana-vrksasana-6"
+        },
+        {
+          "type": "voice",
+          "displayText": "右足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "speechText": "右足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "audioKey": "voice-tree-v2-left-foot",
+          "id": "asana-vrksasana-7"
+        },
+        {
+          "type": "voice",
+          "audioKey": "voice-tree-v2-stability-hakimasu-v3",
+          "voice": "Microsoft Haruka Desktop",
+          "displayText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸って吐きます。",
+          "speechText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸ってはきます。",
+          "id": "asana-vrksasana-8"
+        },
+        {
+          "type": "silence",
+          "side": "left",
+          "durationSec": 90,
+          "displayText": "左足を軸に、無理のない範囲で90秒。自然な呼吸を続けましょう。",
+          "id": "asana-vrksasana-9"
+        },
+        {
+          "type": "voice",
+          "displayText": "両足を床へ戻しましょう。お疲れさまでした。",
+          "speechText": "両足を床へ戻しましょう。お疲れさまでした。",
+          "audioKey": "voice-tree-v2-complete",
+          "id": "asana-vrksasana-10"
+        },
+        {
+          "type": "complete",
+          "displayText": "左右の実践が完了しました。",
+          "id": "asana-vrksasana-11"
+        }
+      ]
+    },
+    {
+      "minutes": 5,
+      "cues": [
+        {
+          "type": "voice",
+          "displayText": "立ち木のポーズを始めます。壁や椅子に手を添えても構いません。",
+          "speechText": "立ち木のポーズを始めます。壁や椅子に手を添えても構いません。",
+          "audioKey": "voice-tree-v2-intro",
+          "id": "asana-vrksasana-0"
+        },
+        {
+          "type": "voice",
+          "displayText": "両足で床を感じ、右足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "speechText": "両足で床を感じ、右足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "audioKey": "voice-tree-v2-right-setup",
+          "id": "asana-vrksasana-1"
+        },
+        {
+          "type": "voice",
+          "displayText": "左足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "speechText": "左足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "audioKey": "voice-tree-v2-right-foot",
+          "id": "asana-vrksasana-2"
+        },
+        {
+          "type": "voice",
+          "audioKey": "voice-tree-v2-stability-hakimasu-v3",
+          "voice": "Microsoft Haruka Desktop",
+          "displayText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸って吐きます。",
+          "speechText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸ってはきます。",
+          "id": "asana-vrksasana-3"
+        },
+        {
+          "type": "silence",
+          "side": "right",
+          "durationSec": 150,
+          "displayText": "右足を軸に、無理のない範囲で150秒。自然な呼吸を続けましょう。",
+          "id": "asana-vrksasana-4"
+        },
+        {
+          "type": "voice",
+          "displayText": "足を床へ戻して、両足で楽に立ちましょう。落ち着いてから反対側へ変えます。",
+          "speechText": "足を床へ戻して、両足で楽に立ちましょう。落ち着いてから反対側へ変えます。",
+          "audioKey": "voice-tree-v2-switch",
+          "id": "asana-vrksasana-5"
+        },
+        {
+          "type": "voice",
+          "displayText": "両足で床を感じ、左足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "speechText": "両足で床を感じ、左足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "audioKey": "voice-tree-v2-left-setup",
+          "id": "asana-vrksasana-6"
+        },
+        {
+          "type": "voice",
+          "displayText": "右足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "speechText": "右足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "audioKey": "voice-tree-v2-left-foot",
+          "id": "asana-vrksasana-7"
+        },
+        {
+          "type": "voice",
+          "audioKey": "voice-tree-v2-stability-hakimasu-v3",
+          "voice": "Microsoft Haruka Desktop",
+          "displayText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸って吐きます。",
+          "speechText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸ってはきます。",
+          "id": "asana-vrksasana-8"
+        },
+        {
+          "type": "silence",
+          "side": "left",
+          "durationSec": 150,
+          "displayText": "左足を軸に、無理のない範囲で150秒。自然な呼吸を続けましょう。",
+          "id": "asana-vrksasana-9"
+        },
+        {
+          "type": "voice",
+          "displayText": "両足を床へ戻しましょう。お疲れさまでした。",
+          "speechText": "両足を床へ戻しましょう。お疲れさまでした。",
+          "audioKey": "voice-tree-v2-complete",
+          "id": "asana-vrksasana-10"
+        },
+        {
+          "type": "complete",
+          "displayText": "左右の実践が完了しました。",
+          "id": "asana-vrksasana-11"
+        }
+      ]
+    },
+    {
+      "minutes": 10,
+      "cues": [
+        {
+          "type": "voice",
+          "displayText": "立ち木のポーズを始めます。壁や椅子に手を添えても構いません。",
+          "speechText": "立ち木のポーズを始めます。壁や椅子に手を添えても構いません。",
+          "audioKey": "voice-tree-v2-intro",
+          "id": "asana-vrksasana-0"
+        },
+        {
+          "type": "voice",
+          "displayText": "両足で床を感じ、右足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "speechText": "両足で床を感じ、右足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "audioKey": "voice-tree-v2-right-setup",
+          "id": "asana-vrksasana-1"
+        },
+        {
+          "type": "voice",
+          "displayText": "左足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "speechText": "左足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "audioKey": "voice-tree-v2-right-foot",
+          "id": "asana-vrksasana-2"
+        },
+        {
+          "type": "voice",
+          "audioKey": "voice-tree-v2-stability-hakimasu-v3",
+          "voice": "Microsoft Haruka Desktop",
+          "displayText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸って吐きます。",
+          "speechText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸ってはきます。",
+          "id": "asana-vrksasana-3"
+        },
+        {
+          "type": "silence",
+          "side": "right",
+          "durationSec": 300,
+          "displayText": "右足を軸に、無理のない範囲で300秒。自然な呼吸を続けましょう。",
+          "id": "asana-vrksasana-4"
+        },
+        {
+          "type": "voice",
+          "displayText": "足を床へ戻して、両足で楽に立ちましょう。落ち着いてから反対側へ変えます。",
+          "speechText": "足を床へ戻して、両足で楽に立ちましょう。落ち着いてから反対側へ変えます。",
+          "audioKey": "voice-tree-v2-switch",
+          "id": "asana-vrksasana-5"
+        },
+        {
+          "type": "voice",
+          "displayText": "両足で床を感じ、左足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "speechText": "両足で床を感じ、左足へゆっくり体重を移します。視線は正面の動かない一点へ。",
+          "audioKey": "voice-tree-v2-left-setup",
+          "id": "asana-vrksasana-6"
+        },
+        {
+          "type": "voice",
+          "displayText": "右足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "speechText": "右足の裏を軸足のふくらはぎ、または無理がなければ太ももの内側へ添えます。膝に直接押し当てないでください。つま先を床に残しても大丈夫です。",
+          "audioKey": "voice-tree-v2-left-foot",
+          "id": "asana-vrksasana-7"
+        },
+        {
+          "type": "voice",
+          "audioKey": "voice-tree-v2-stability-hakimasu-v3",
+          "voice": "Microsoft Haruka Desktop",
+          "displayText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸って吐きます。",
+          "speechText": "安定したら胸の前で手を合わせ、肩の力を抜きます。ふらついたら足を下ろしましょう。呼吸は止めず、苦しくなければ鼻からゆっくり吸ってはきます。",
+          "id": "asana-vrksasana-8"
+        },
+        {
+          "type": "silence",
+          "side": "left",
+          "durationSec": 300,
+          "displayText": "左足を軸に、無理のない範囲で300秒。自然な呼吸を続けましょう。",
+          "id": "asana-vrksasana-9"
+        },
+        {
+          "type": "voice",
+          "displayText": "両足を床へ戻しましょう。お疲れさまでした。",
+          "speechText": "両足を床へ戻しましょう。お疲れさまでした。",
+          "audioKey": "voice-tree-v2-complete",
+          "id": "asana-vrksasana-10"
+        },
+        {
+          "type": "complete",
+          "displayText": "左右の実践が完了しました。",
+          "id": "asana-vrksasana-11"
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 import type { PoseCatalogEntry } from './poseCatalog';
 import type { PracticeCue } from './practiceAudioRuntime';
 import pronunciation from './voicePronunciation.json';
+import { defineTreePractice } from './practiceDefinition';
 
 export function buildAsanaCues(entry: PoseCatalogEntry, totalMinutes: number): PracticeCue[] {
   const cues: PracticeCue[] = [];
@@ -25,7 +26,7 @@ export function buildAsanaCues(entry: PoseCatalogEntry, totalMinutes: number): P
     }
     voice('complete', '両足を床へ戻しましょう。お疲れさまでした。');
     add({ type: 'complete', displayText: '左右の実践が完了しました。' });
-    return cues;
+    return defineTreePractice(entry, cues).guide.cues;
   }
 
   add({ type: 'voice', displayText: vg.intro, speechText: vg.intro, audioKey: vg.introAudioKey });

@@ -44,3 +44,10 @@ main `c4ffbcc9e4c1d3b4aacad1b73813b747a604ebd0` に修復をmerge済み。上の
 
 ## 共通データ契約pilot（2026-10-12、作業ブランチ）
 `test:practice-core`を`test:regression`末尾へ追加。24定義のmain before/after出力、太陽礼拝3tempo、25保護ソース（数息観Session・数値UI・読み・Safety含む）、211 asset hash、腹式の実runtime trace等価性を保護。登録validatorの拒否ケースも検査。fixture基準 `05666f44134f5116998dc31d622e0830ef5ed599`。mock/ソース検査は人のAndroid/音声完全同期の代替ではない。実装PRのmerge/公開は未実施。
+
+
+## 2026-10-12 次工程の確認と検品境界
+PR #20は型・Build・全回帰の再実行、24出力/211 asset/保護ソース比較とGitHub Actions成功を確認し、main `cabf5e00490758477c83846d661475cdca59748b` へmerge済み。対象は腹式の読取契約だけで、scheduler/UI/Safety/Knowledge動作の変更なし。
+ユーザーは前報告の「音声・字幕の完全同期と『はきます』の発音は未確認」を選択し「確認したよ」と報告。既存PR #17公開版の数息観に関する同期・発音をユーザー確認済みPASSとして記録する。端末型番/OS/ブラウザ版/音声hash/録画は未提供。これは新しい共通化後の腹式・立ち木、tree-v3音声、LINEや全端末への確認ではない。過去の未確認記録は履歴として残す。
+検品バックログ: 腹式共通化後のGalaxy実聴/完全同期、立ち木共通化後のtree-v3「はきます」/末尾/左右全行程/数値UI/Visual/390px、LINE内蔵ブラウザ、Knowledge出典の独立照合、クラウド保存受入は未確認。模擬再生/SSR/ソース比較を実機PASSにしない。
+今回の次対象は立ち木 `vrksasana` 一件。既存cue配列をそのまま返す読取契約。左右各30秒（1分設定）、案内・切替では保持を消費せず音声ended後に開始。予定数値0:30と保持0:30→0:29、pause/stop/遅延callbackを保護。新PRは未merge、DB/Edge/Bolt公開なし。

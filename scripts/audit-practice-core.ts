@@ -77,7 +77,7 @@ export function collectPracticeInventory() {
       guideCueCount: Array.isArray(row.guide) ? row.guide.length : narration.length,
       reading: { explicitSpeechText: guide.includes('"speechText"'), containsWrittenExhale: /吐きます|吐いて|吐く/.test(guide), humanPronunciation: 'unconfirmed' },
       assets, assetDurationLimits: 'WAV header duration only; MP3 duration, audible ending, transcript/generation provenance and device listening remain unconfirmed',
-      acceptance: entry.id === 'susokukan-5min' ? { galaxyFiveMinuteCompletion: 'PASS (user report 2026-10-12)', fullAudioCaptionSync: 'unconfirmed', pronunciation: 'unconfirmed' } : { device: 'unconfirmed by this inventory' },
+      acceptance: entry.id === 'susokukan-5min' ? { galaxyFiveMinuteCompletion: 'PASS (user report 2026-10-12)', fullAudioCaptionSync: 'PASS (user confirmation in follow-up; existing PR #17 publication only)', pronunciation: 'PASS (user confirmation in follow-up; existing PR #17 publication only)' } : { device: 'unconfirmed by this inventory' },
       tests: row.kind === 'breath' ? ['test:breathwork', 'test:practice-sessions', 'test:contracts'] : entry.id === 'susokukan-5min' ? ['test:susokukan', 'test:practice-sessions'] : row.kind === 'asana' ? ['test:audio (tree)', 'test:contracts (partial coverage)'] : ['no per-practice lifecycle suite identified'],
     };
   });
