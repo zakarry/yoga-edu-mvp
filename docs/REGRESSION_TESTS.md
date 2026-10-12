@@ -59,3 +59,6 @@ main `1cbe4e4b7ff1c4728b26c852258bbf0e6b49eb9b` にPR #21を採用。最終head 
 ## PR #22採用とBox読取契約（2026-10-12）
 PR #22の名称/難易度/読み/字幕/時計/左右/Visual/安全/Knowledge/公開検品と個別時計を確認し、main `b7448f0fcddf3d103b279c9efd2ae61d4ddab27c` に正式採用。Box一件の契約を別ブランチで実装、まだ未merge。既存21cue/4秒×4フェーズ×4周、catalog/Knowledge/Safety/Visualと同じ配列を保持。runtime/画面/音声/画像の変更なし。
 新5テストでmain baselineの全出力/20 SSR Visual状態/entrypointソース比較、契約identity/phase拒否、実runtime短長音声・pause・16phase・完了・stop trace等価、既存Q-05の同一再現を検証。全24出力/211asset/数息観専用Sessionの従来fixtureは変更なし。Q-05の等価再現テストPASSは音声品質FAILの解決ではない。[検品票](ANDROID_PRACTICE_QA_ABDOMINAL_TREE_BOX.md)で未実測を別記録。今回は追加content/DB/Edge/Bolt公開なし。
+
+## Q-05 共通音声制御回帰（2026-10-12）
+全回帰のtest:practice-coreにQ-05 runtime9件と実エンジン非同期1件を追加。長音声のphase時間AND音声ended条件、停止中終了、反復pause/resume、next/離脱/再開始/古い終了、final400ms、stop済み非同期再開/読込、最大同時音源1を検査する。[証拠と実機未確認](Q05_AUDIO_CONTROL_FIX.md)を参照。24出力・211assetの元fixtureは保持、3修復ソースの限定hashのみ別fixture。Mock PASSをGalaxy/LINE実機PASSとしない。

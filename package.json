@@ -14,7 +14,7 @@
     "test:practice-sessions": "tsx --test tests/breathwork-susokukan-regression.test.ts",
     "test:breathwork": "node scripts/test-breathwork.mjs",
     "test:susokukan": "node scripts/test-susokukan.mjs",
-    "test:practice-core": "tsc -p tsconfig.practice-core.json && tsx --test tests/practice-core-contract.test.ts tests/tree-practice-contract.test.ts tests/box-practice-contract.test.ts",
+    "test:practice-core": "tsc -p tsconfig.practice-core.json && tsx --test tests/practice-core-contract.test.ts tests/tree-practice-contract.test.ts tests/q05-audio-control.test.ts tests/voice-guide-lifecycle.test.ts tests/box-practice-contract.test.ts",
     "audit:practice-core": "tsx scripts/audit-practice-core.ts --write"
   },
   "dependencies": {

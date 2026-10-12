@@ -66,3 +66,6 @@ PR #21はmain `1cbe4e4b7ff1c4728b26c852258bbf0e6b49eb9b` に採用済み。登�
 優先P1、未修復。main `b7448f0fcddf3d103b279c9efd2ae61d4ddab27c` のproduction PracticeAudioRuntimeで模擬時計/transportによる再現。4秒フェーズの声を未終了にし、1秒経過→pause→9秒待機→resume→3秒経過でnext cueへ進み重複1件。resume()の再設定タイマーは直接advanceし、handlePhaseVoiceCueのvoiceEnded/timerFired合流条件を使わない。変更前/Box契約後で同じ結果。音声品質条件は模擬FAIL、等価性はPASS、実機は未確認。今回の共通化ではruntimeを変更しない。
 修復は別PRで、短い声/長い声、pause前後のended、最小時間、複数pause、stop/restart/stale callbackを検証し、音声末尾と残秒を両立させる。新等価テストの既存不具合観測値を、新仕様の基準へ無断変更しない。
 3実践の実機未確認は[Android検品票](ANDROID_PRACTICE_QA_ABDOMINAL_TREE_BOX.md)D01〜12で管理。FB-13/14（立ち木ガイド丁寧化/左右時間改善）は独立未実装のまま維持。
+
+## Q-05（2026-10-12、修復PR用）
+Boxの長音声pause/resumeで次音声要求が先行する原因を特定。再開timeoutの音声ended待ち欠落と、停止後の非同期context.resume再発行を修復。PR #23共通化とは別PR。通常周期/字幕/音声asset/左右時間/数息観時計を維持。自動再現・回帰の証拠と検品境界は[Q-05修復記録](Q05_AUDIO_CONTROL_FIX.md)。修復後Galaxy/390px/LINE/完全同期/発音は未確認。mainへのmerge・Bolt Publish・Edge deploy・DB変更なし。
