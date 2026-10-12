@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import before from './fixtures/practice-core-before-05666f4.json';
+import q05Approved from './fixtures/q05-approved-source-hashes.json';
 import { collectPracticeOutputs, collectPracticeInventory } from '../scripts/audit-practice-core';
 import { defineAbdominalPractice, validatePracticeDefinitions, type PracticeDefinition } from '../src/lib/practiceDefinition';
 import { getBreathworkEntry } from '../src/lib/breathworkCatalog';
@@ -23,14 +24,14 @@ test('all 24 effective catalog outputs equal the pre-change main baseline, inclu
   assert.deepEqual(collectPracticeInventory().summary, { asana: { total: 12, active: 11 }, breath: { total: 7, active: 6 }, meditation: { total: 5, active: 5 } });
 });
 
-test('25 protected runtime/UI/reading/Safety/Session sources and 211 inventoried assets remain byte-equivalent', () => {
+test('protected sources match their original or explicit Q-05 repair baseline; all 211 assets remain byte-equivalent', () => {
   for (const [path, expected] of Object.entries(before.protectedSourceHashes)) {
     let source = readFileSync(path, 'utf8').replace(/\r\n/g, '\n');
     // Allow exactly the tree read adapter, retaining the original baseline hash.
     if (path === 'src/lib/asanaCueBuilder.ts') source = source
       .replace("import { defineTreePractice } from './practiceDefinition';\n", '')
       .replace('return defineTreePractice(entry, cues).guide.cues;', 'return cues;');
-    assert.equal(hash(source), expected, path);
+    assert.equal(hash(source), (q05Approved as Record<string, string>)[path] ?? expected, path);
   }
   for (const [path, expected] of Object.entries(before.assetHashes)) assert.equal(hash(readFileSync(`public${path}`)), expected, path);
   const inventory = collectPracticeInventory();

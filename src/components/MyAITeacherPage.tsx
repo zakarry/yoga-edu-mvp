@@ -529,6 +529,11 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const simpleTimerTotalRef = useRef<number>(0);
   const ttsAvailable = isTTSAvailable();
   const voiceEngine = getVoiceGuideEngine();
+  useEffect(() => () => {
+    asanaRuntimeRef.current?.dispose();
+    asanaClockRuntimeRef.current?.dispose();
+    voiceEngine.stop();
+  }, [voiceEngine]);
   const [engineType, setEngineType] = useState<EngineType>(voiceEngine.type);
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>('stopped');
   const [voiceName, setVoiceName] = useState<string | null>(null);

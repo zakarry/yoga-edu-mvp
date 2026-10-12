@@ -55,3 +55,6 @@ PR #20は型・Build・全回帰の再実行、24出力/211 asset/保護ソー�
 ## PR #21最終採用と登録検品（2026-10-12）
 main `1cbe4e4b7ff1c4728b26c852258bbf0e6b49eb9b` にPR #21を採用。最終head `0ae7d7363029cb7660b4b2fdd7902b01c81bd657`でnpm ci/型/Build/全回帰を再実行しPASS、GitHub Actions audio/edge-safetyはpush/PR両方SUCCESS。立ち木追加3テストを含む共通契約8件PASS/skip0。24出力/211assetと、元baselineを変更しない保護ソース比較、複数時間ガイド/実runtime模擬transport trace/SSR数値UIの等価性を再確認。実機音声・レイアウト・保存を証明するものではない。
 [登録仕様](PRACTICE_CONTENT_REGISTRATION_V1.md)のG1〜6で証拠種別/環境/commit/hash/確認者/限界を項目単位に記録。次対象を1件移行する際のみ必要な実経路テストを追加する。文書だけの変更には仕様文言をなぞるテストを追加しない。今回は既存指定ゲートを全実行。立ち木のガイド丁寧化/左右時間改善はFB-13/14として独立、共通化の等価baselineを更新して隠さない。
+
+## Q-05 共通音声制御回帰（2026-10-12）
+全回帰のtest:practice-coreにQ-05 runtime9件と実エンジン非同期1件を追加。長音声のphase時間AND音声ended条件、停止中終了、反復pause/resume、next/離脱/再開始/古い終了、final400ms、stop済み非同期再開/読込、最大同時音源1を検査する。[証拠と実機未確認](Q05_AUDIO_CONTROL_FIX.md)を参照。24出力・211assetの元fixtureは保持、3修復ソースの限定hashのみ別fixture。Mock PASSをGalaxy/LINE実機PASSとしない。

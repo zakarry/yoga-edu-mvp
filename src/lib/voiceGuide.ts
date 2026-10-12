@@ -72,8 +72,10 @@ export function getVoiceStatus(): { status: VoiceStatus; voiceName: string | nul
 
 export function speak(text: string): void {
   if (!isTTSAvailable()) return;
+  currentUtterance = null;
   window.speechSynthesis.cancel();
   window.speechSynthesis.resume();
+  const completion = cueEndCallback;
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'ja-JP';
   u.rate = 0.9;
@@ -82,7 +84,7 @@ export function speak(text: string): void {
   const v = ensureVoice();
   if (v) u.voice = v;
   u.onstart = () => { lastError = null; };
-  u.onend = () => { if (currentUtterance === u) { currentUtterance = null; if (cueEndCallback) cueEndCallback(); } };
+  u.onend = () => { if (currentUtterance === u) { currentUtterance = null; completion?.(); } };
   u.onerror = (e) => {
     lastError = (e as SpeechSynthesisErrorEvent).error || 'unknown';
     if (currentUtterance === u) currentUtterance = null;
@@ -365,26 +367,69 @@ class AudioFileEngine implements VoiceGuideEngine {
   readonly available = true;
   private currentSource: AudioBufferSourceNode | null = null;
   private fallbackAudio: HTMLAudioElement | null = null;
-  private pendingSpeak: { key: string; text?: string } | null = null;
+  private pendingSpeak: { key: string; text?: string; requestId: number } | null = null;
+  private paused = false;
+  private suspension: Promise<void> | null = null;
+  private loadingRequestId: number | null = null;
   private isResuming = false;
   private activeRequestId = 0;
   private usingTTS = false;
 
   unlock(): void {
+    this.resumeContext();
+  }
+
+  private suspendContext(ctx: AudioContext): void {
+    const suspension = ctx.suspend().catch(() => {}).then(() => {
+      if (this.suspension !== suspension) return;
+      this.suspension = null;
+      if (!this.paused) { this.resumeContext(); this.startPending(); }
+    });
+    this.suspension = suspension;
+  }
+
+  private resumeContext(): void {
+    if (this.suspension) return;
     const ctx = getAudioContext();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') {
-      this.isResuming = true;
-      ctx.resume().then(() => {
-        this.isResuming = false;
-        lastDiagnostic.contextState = ctx.state;
-        if (this.pendingSpeak) {
-          const pending = this.pendingSpeak;
-          this.pendingSpeak = null;
-          this.speakByKey(pending.key, pending.text);
-        }
-      }).catch(() => { this.isResuming = false; });
+    if (!ctx || ctx.state !== 'suspended' || this.isResuming) return;
+    this.isResuming = true;
+    ctx.resume().then(() => {
+      this.isResuming = false;
+      lastDiagnostic.contextState = ctx.state;
+      if (this.paused) { this.suspendContext(ctx); return; }
+      this.startPending();
+    }).catch(() => { this.isResuming = false; });
+  }
+
+  private startPending(): void {
+    const pending = this.pendingSpeak;
+    if (this.suspension) return;
+    if (!pending || this.paused || pending.requestId !== this.activeRequestId) return;
+    const { key, text, requestId } = pending;
+    const ctx = getAudioContext();
+    if (ctx?.state === 'suspended') { this.resumeContext(); return; }
+    if (!ctx) {
+      this.pendingSpeak = null;
+      this.playFallback(key, text, requestId);
+      return;
     }
+    const buffer = audioBufferCache.get(key);
+    if (buffer) {
+      this.pendingSpeak = null;
+      this.playBuffer(buffer, requestId, key);
+      return;
+    }
+    if (this.loadingRequestId === requestId) return;
+    this.loadingRequestId = requestId;
+    fetchAndDecode(key).then((buf) => {
+      if (this.loadingRequestId === requestId) this.loadingRequestId = null;
+      if (requestId !== this.activeRequestId || this.pendingSpeak !== pending) return;
+      if (this.paused) return;
+      if (getAudioContext()?.state === 'suspended') { this.startPending(); return; }
+      this.pendingSpeak = null;
+      if (buf) this.playBuffer(buf, requestId, key);
+      else this.playFallback(key, text, requestId);
+    });
   }
 
   speak(text: string): void {
@@ -401,45 +446,13 @@ class AudioFileEngine implements VoiceGuideEngine {
     this.stop();
     const requestId = ++this.activeRequestId;
     lastDiagnostic.lastCue = key;
-    const ctx = getAudioContext();
-    if (!ctx) {
-      this.playFallback(key, fallbackText, requestId);
-      return;
-    }
-
-    if (ctx.state === 'suspended') {
-      if (this.isResuming) {
-        this.pendingSpeak = { key, text: fallbackText };
-        return;
-      }
-      this.isResuming = true;
-      ctx.resume().then(() => {
-        this.isResuming = false;
-        lastDiagnostic.contextState = ctx.state;
-        if (this.pendingSpeak) {
-          const pending = this.pendingSpeak;
-          this.pendingSpeak = null;
-          this.speakByKey(pending.key, pending.text);
-        } else {
-          this.speakByKey(key, fallbackText);
-        }
-      }).catch(() => { this.isResuming = false; });
-      return;
-    }
-
-    const buffer = audioBufferCache.get(key);
-    if (!buffer) {
-      fetchAndDecode(key).then((buf) => {
-        if (requestId !== this.activeRequestId) return;
-        if (buf) this.playBuffer(buf, requestId, key);
-        else this.playFallback(key, fallbackText, requestId);
-      });
-      return;
-    }
-    this.playBuffer(buffer, requestId, key);
+    this.pendingSpeak = { key, text: fallbackText, requestId };
+    this.startPending();
   }
 
   private playBuffer(buffer: AudioBuffer, requestId: number, key: string): void {
+    if (requestId !== this.activeRequestId || this.paused) return;
+    const completion = cueEndCallback;
     const ctx = getAudioContext();
     if (!ctx) return;
     const source = ctx.createBufferSource();
@@ -447,8 +460,10 @@ class AudioFileEngine implements VoiceGuideEngine {
     if (key.startsWith('voice-nidra')) source.playbackRate.value = 1.08;
     source.connect(ctx.destination);
     source.onended = () => {
-      if (this.currentSource === source) this.currentSource = null;
-      if (requestId === this.activeRequestId && cueEndCallback) cueEndCallback();
+      if (this.currentSource !== source || requestId !== this.activeRequestId) return;
+      this.currentSource = null;
+      source.onended = null;
+      completion?.();
     };
     source.start();
     this.currentSource = source;
@@ -457,6 +472,8 @@ class AudioFileEngine implements VoiceGuideEngine {
   }
 
   private playFallback(key: string, fallbackText?: string, requestId: number = 0): void {
+    if (requestId !== this.activeRequestId || this.paused) return;
+    const completion = cueEndCallback;
     if (fallbackText && isTTSAvailable()) {
       this.usingTTS = true;
       speak(fallbackText);
@@ -468,8 +485,10 @@ class AudioFileEngine implements VoiceGuideEngine {
     audio.currentTime = 0;
     audio.playbackRate = key.startsWith('voice-nidra') ? 1.08 : 1.0;
     audio.onended = () => {
-      if (this.fallbackAudio === audio) this.fallbackAudio = null;
-      if (requestId === this.activeRequestId && cueEndCallback) cueEndCallback();
+      if (this.fallbackAudio !== audio || requestId !== this.activeRequestId) return;
+      this.fallbackAudio = null;
+      audio.onended = null;
+      completion?.();
     };
     audio.play().catch(() => {
       lastDiagnostic.lastPlayResult = 'failed';
@@ -482,12 +501,16 @@ class AudioFileEngine implements VoiceGuideEngine {
   stop(): void {
     this.activeRequestId++;
     this.pendingSpeak = null;
+    this.paused = false;
+    this.loadingRequestId = null;
     this.usingTTS = false;
     if (this.currentSource) {
+      this.currentSource.onended = null;
       try { this.currentSource.stop(); } catch { /* already stopped */ }
       this.currentSource = null;
     }
     if (this.fallbackAudio) {
+      this.fallbackAudio.onended = null;
       this.fallbackAudio.pause();
       this.fallbackAudio.currentTime = 0;
       this.fallbackAudio = null;
@@ -496,27 +519,17 @@ class AudioFileEngine implements VoiceGuideEngine {
   }
 
   pause(): void {
+    this.paused = true;
     const ctx = getAudioContext();
-    if (ctx) ctx.suspend().catch(() => {});
+    if (ctx) this.suspendContext(ctx);
     if (this.fallbackAudio) this.fallbackAudio.pause();
     if (this.usingTTS && isTTSAvailable()) pauseSpeech();
   }
 
   resume(): void {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') {
-      this.isResuming = true;
-      ctx.resume().then(() => {
-        this.isResuming = false;
-        lastDiagnostic.contextState = ctx.state;
-        if (this.pendingSpeak) {
-          const pending = this.pendingSpeak;
-          this.pendingSpeak = null;
-          this.speakByKey(pending.key, pending.text);
-        }
-      }).catch(() => { this.isResuming = false; });
-    }
+    this.paused = false;
+    this.resumeContext();
+    this.startPending();
     if (this.fallbackAudio) this.fallbackAudio.play().catch(() => {});
     if (this.usingTTS && isTTSAvailable()) resumeSpeech();
   }
@@ -528,6 +541,7 @@ class AudioFileEngine implements VoiceGuideEngine {
   }
 
   isPlaying(): boolean {
+    if (this.pendingSpeak) return true;
     if (this.currentSource) return true;
     if (this.fallbackAudio && !this.fallbackAudio.ended) return true;
     if (this.usingTTS && isTTSAvailable() && window.speechSynthesis.speaking) return true;
