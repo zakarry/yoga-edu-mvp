@@ -67,7 +67,8 @@ for (const name of ['box', 'abdominal', 'tree', 'susokukan'] as const) {
         trace.push({ t: (Date.now() - begin) / 1000, text: 'completed', media: [] });
         done = true; break;
       }
-      const text = await area.innerText();
+      // Completion can unmount the active area between two browser calls.
+      const text = await page.evaluate(selector => document.querySelector<HTMLElement>(selector)?.innerText ?? '', scope(name));
       if (text !== previous) {
         const media = await page.evaluate(() => (window as unknown as { audioObservation: () => { media: { time: number; duration: number; ended: boolean }[] } }).audioObservation().media);
         trace.push({ t: (Date.now() - begin) / 1000, text, media }); previous = text;
@@ -145,7 +146,8 @@ for (const width of [320, 390, 430]) {
         const fixedNav = await page.locator('.mobile-bottom-nav').boundingBox();
         if (positioned && positioned.y >= 0) expect(positioned.y + positioned.height).toBeLessThanOrEqual(fixedNav!.y + 1);
       }
-      const buttons = page.locator(scope(name)).getByRole('button');
+      // Include parent completion/abort actions as well as the inner player.
+      const buttons = page.locator(`${scope(name)} button, .practice-active-actions button`);
       expect(await buttons.count()).toBeGreaterThan(0);
       for (const button of await buttons.all()) {
         await button.evaluate(el => el.scrollIntoView({ block: 'center' }));
