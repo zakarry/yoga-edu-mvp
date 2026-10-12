@@ -1,5 +1,7 @@
 # User Feedback Batch #1 — 品質バックログ
 
+最新再監査（2026-10-13、main `93eef8446e635b821ed537836f8b4129c5bd907e`）は[Batch #1再監査](FEEDBACK_BATCH1_REAUDIT.md)を参照。以下は履歴。先生アカウント別永続化/本人編集/対話focus改善は未導入、立ち木FB-13/14は独立未実装。安全な統合受入は[staging設計](STAGING_INTEGRATION_DESIGN.md)、新規1件は[追加検品計画](NEW_ASANA_PILOT_ACCEPTANCE.md)へ分離する。
+
 更新2026-10-10。39件のLINE登録というイベント集計と、以下の発言は別。全39名が同じ指摘をしたと扱わない。状態はlatest main ac06d945 + GitHub実照会PR #10〜#14 + 指示書/続きと照合。
 
 | ID/優先 | 実ユーザーの指摘・要求 | 状態 / 証拠 / 次の受入 |
