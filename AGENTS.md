@@ -19,6 +19,7 @@
 - イベントデモと公式LINE主入口、Pro Yogaのスマホ表示・公開文言を維持する（仕様ID参照）。
 - 製品コードへ未定義 `test` や配信を誘発するコメント・マーカー・ダミー処理を追加しない。Secretを表示・ログ保存・commitしない。
 - `npm ci` → `npm run typecheck` → `npm run test:regression` → `npm run build`。Edge関連は `deno test --node-modules-dir=none --allow-env --allow-read tests/ai-teacher-release.test.ts` も実行する。変更領域の実機/統合確認は回帰表に従う。
+- アーサナ・呼吸法・瞑想の追加/変更と実践UI変更では、Build後に `npm run test:browser` の17件も標準回帰として実行する。CIのbrowser-practice成功を必須確認し、既存test:regressionとは別に結果を記録する。[運用・検品境界](docs/BROWSER_PRACTICE_ACCEPTANCE.md)と[実機検品票](docs/GALAXY_LINE_ACCEPTANCE.md)を参照。Box固有のpause/resume経路は未確定のまま維持する。
 - 模擬音声・模擬ログイン・ローカルPASSを本番/Android/実LLM PASSと書かない。未確認と失敗を明示する。テスト失敗を期待値変更だけで隠さない。
 
 ## PR・公開ゲート

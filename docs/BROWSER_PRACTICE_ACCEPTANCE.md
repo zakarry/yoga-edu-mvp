@@ -33,4 +33,6 @@ Galaxy ChromeとLINE内ブラウザで「はきます」の発音、最後の言
 
 ## 公開防止
 
-今回の作業ブランチqa/practice-browser-regressionだけをvercel.jsonのgit.deploymentEnabled=falseで除外する（Vercel公式Git Configuration）。他ブランチ/mainの設定を変更しない。PR/Actionsは許可されているが、merge、新規Vercelデプロイ、Bolt Publish、DNS/DB/Edge/Secret/認証変更は未承認。自動公開が抑止される指定をpush前に確認する。
+vercel.jsonのgit.deploymentEnabled=falseでmainと今回の作業ブランチqa/practice-browser-regressionを除外する（Vercel公式Git Configuration）。PR #25の正式採用はユーザー承認済みだが、新規公開とは分離する。mainへのmergeでVercel本番が自動更新されないようにし、既存Readyは維持する。他ブランチは既定の公開動作を維持するため、将来の作業ブランチpush前にも必ず公開条件を確認する。新規Vercelデプロイ、Bolt Publish、DNS/DB/Edge/Secret/認証変更は今回行わない。
+
+PR #25採用時から、17件を今後のコンテンツ追加・移行と実践UI変更の標準回帰とする。AGENTS.md、PRODUCT_REQUIREMENTS.md、REGRESSION_TESTS.mdのゲートを一致させる。認証・AI先生・カルテ・管理画面の統合は独立stagingと書込み境界の確定後に別検品する。
