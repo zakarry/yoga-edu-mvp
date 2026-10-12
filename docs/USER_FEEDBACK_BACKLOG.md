@@ -61,3 +61,6 @@ PR #20は型・Build・全回帰の再実行、24出力/211 asset/保護ソー�
 | FB-14 P1 | 「左右時間を改善」 | 未実装。現在1分設定の左右各30秒＋案内時間は維持。希望する保持長/切替余裕/画面説明をまず特定し、均等保持・案内が保持を消費しない・予定数値/残秒を必須条件として別仕様合意と独立PR。実機で案内/右保持/切替/左保持を分離して録画。既存左右不均等修正FB-05の履歴と混同しない |
 
 PR #21はmain `1cbe4e4b7ff1c4728b26c852258bbf0e6b49eb9b` に採用済み。登録/検品仕様は[PRACTICE_CONTENT_REGISTRATION_V1.md](PRACTICE_CONTENT_REGISTRATION_V1.md)。共通化後の腹式/立ち木の実機発音・完全同期・390px・LINE・クラウド保存受入は未確認。Knowledge出典の独立照合も別検品。実装内容を変更しない状態でこれらのPASSを作らない。
+
+## Q-05（2026-10-12、修復PR用）
+Boxの長音声pause/resumeで次音声要求が先行する原因を特定。再開timeoutの音声ended待ち欠落と、停止後の非同期context.resume再発行を修復。PR #23共通化とは別PR。通常周期/字幕/音声asset/左右時間/数息観時計を維持。自動再現・回帰の証拠と検品境界は[Q-05修復記録](Q05_AUDIO_CONTROL_FIX.md)。修復後Galaxy/390px/LINE/完全同期/発音は未確認。mainへのmerge・Bolt Publish・Edge deploy・DB変更なし。
