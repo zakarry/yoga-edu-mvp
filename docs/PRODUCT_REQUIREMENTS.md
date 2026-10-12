@@ -40,3 +40,9 @@
 ## Core読取契約の採用状態（2026-10-12）
 PR #20（腹式）とPR #21（立ち木）をmain `1cbe4e4b7ff1c4728b26c852258bbf0e6b49eb9b` に採用。上の「Core未実装」は旧監査時点の記録であり、現時点では2件の読取契約だけが実装済み。共通scheduler、全24件移行、新規登録UI/DBは未実装。AUD-01/02、TIME-01/02、SAFE-01、DATA-01、UI-01と数息観専用Sessionは維持。
 今後の登録・移行の必須項目/証拠/公開前検品は[共通コンテンツ登録仕様](PRACTICE_CONTENT_REGISTRATION_V1.md)を参照。仕様整備と実行validatorの実装範囲を区別し、1件ずつ移行する。ガイド丁寧化・左右時間改善はFB-13/14の別改善。今回公開/Edge deploy/DB変更なし。
+
+## PR #25採用時の標準ブラウザ回帰
+
+今後のアーサナ・呼吸法・瞑想追加と実践UI変更は、既存test:regressionに加えtest:browserの17件を必須とする。AUD-02、TIME-01/02、UI-01と数息観のmedia60秒＋240秒静寂を保護する。CIはBuild済みローカルpreviewを検査し、承認済み既存Vercel Readyはcommit照合後の限定検品に継続利用する。自動PASSと人の実機PASSを区別する。
+Q-05のBox停止/再開の元利用者操作経路は未確定。現行Box UIには停止ボタンがなく、模擬runtime再現や立ち木の共有制御PASSでBox固有の実機項目をPASSにしない。
+認証・AI先生・カルテ・管理画面の接続は、独立staging設定・認証戻り先・書込み境界が確定するまで変更しない。GitHub mainを正本とし、Bolt同期不一致が解消するまでPublishしない。mainのVercel自動公開はソース側git.deploymentEnabledで抑止し、今回のmergeを新規公開と混同しない。
