@@ -1,0 +1,749 @@
+{
+  "basis": "b7448f0fcddf3d103b279c9efd2ae61d4ddab27c",
+  "entry": {
+    "id": "box-breathing",
+    "nameJa": "Box Breathing",
+    "nameSanskrit": "Sama Vritti Pranayama",
+    "nameEn": "Box Breathing",
+    "category": "pranayama",
+    "defaultDurationMin": 2,
+    "pattern": {
+      "inhaleSec": 4,
+      "holdAfterInhaleSec": 4,
+      "exhaleSec": 4,
+      "holdAfterExhaleSec": 4,
+      "rounds": 4
+    },
+    "visual": {
+      "type": "phase_animation",
+      "highlightZones": [
+        "belly"
+      ],
+      "arrowDirection": {
+        "inhale": [
+          "expand"
+        ],
+        "exhale": [
+          "contract"
+        ]
+      }
+    },
+    "instructions": {
+      "intro": [
+        "楽な姿勢で座る（椅子でも床でもOK）",
+        "4秒吸う → 4秒止める → 4秒吐く → 4秒止める。これを繰り返す"
+      ],
+      "firstRound": [
+        "4秒吸って、4秒止めて、4秒吐いて、4秒止めます",
+        "無理のない範囲で行いましょう"
+      ],
+      "repeatRound": [
+        "吸います",
+        "止めます",
+        "ゆっくり吐きます",
+        "止めます"
+      ],
+      "completion": [
+        "最後の呼吸です",
+        "お疲れさまでした。自然な呼吸に戻しましょう"
+      ]
+    },
+    "breathing": {
+      "recommendNasalBreathing": true,
+      "nasalCue": "苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。"
+    },
+    "safety": {
+      "beginnerFriendly": true,
+      "gentleAllowed": true
+    },
+    "knowledge": {
+      "knowledgeEntryId": "b4dbb7d1-f1c5-4141-8f6d-398cde68bc8c",
+      "zukanSlug": "box-breathing",
+      "verified": true,
+      "professionalYogaRelated": null
+    },
+    "voiceGuide": {
+      "intro": [
+        {
+          "at": 0,
+          "text": "Box Breathingを始めます。4秒吸って、4秒止めて、4秒吐いて、4秒止めます。",
+          "audioKey": "voice-box-intro"
+        },
+        {
+          "at": 5,
+          "text": "無理のない範囲で行いましょう。",
+          "audioKey": "voice-box-intro-2"
+        }
+      ],
+      "phaseCues": {
+        "吸う": "鼻からゆっくり吸います。",
+        "止める": "息を止めます。",
+        "吐く": "鼻からゆっくり吐きます。"
+      },
+      "phaseAudioKeys": {
+        "吸う": "voice-box-inhale",
+        "止める": "voice-box-hold",
+        "吐く": "voice-box-exhale",
+        "hold-in": "voice-box-hold",
+        "hold-out": "voice-box-hold2"
+      },
+      "repeatCues": [
+        {
+          "at": 0,
+          "text": "鼻からゆっくり吸います。"
+        },
+        {
+          "at": 4,
+          "text": "息を止めます。"
+        },
+        {
+          "at": 8,
+          "text": "鼻からゆっくり吐きます。"
+        },
+        {
+          "at": 12,
+          "text": "息を止めます。"
+        }
+      ],
+      "completion": [
+        {
+          "at": 0,
+          "text": "最後の呼吸です。"
+        },
+        {
+          "at": 3,
+          "text": "お疲れさまでした。自然な呼吸に戻しましょう。"
+        }
+      ]
+    },
+    "status": "active"
+  },
+  "cues": [
+    {
+      "type": "voice",
+      "displayText": "Box Breathingを始めます。4秒吸って、4秒止めて、4秒吐いて、4秒止めます。",
+      "speechText": "Box Breathingを始めます。4秒吸って、4秒止めて、4秒はいて、4秒止めます。",
+      "audioKey": "voice-box-intro",
+      "id": "bw-box-breathing-0"
+    },
+    {
+      "type": "voice",
+      "displayText": "無理のない範囲で行いましょう。",
+      "speechText": "無理のない範囲で行いましょう。",
+      "audioKey": "voice-box-intro-2",
+      "id": "bw-box-breathing-1"
+    },
+    {
+      "type": "voice",
+      "displayText": "鼻からゆっくり吸います。",
+      "speechText": "鼻からゆっくり吸います。",
+      "audioKey": "voice-box-inhale",
+      "phaseDurationSec": 4,
+      "id": "bw-box-breathing-2"
+    },
+    {
+      "type": "voice",
+      "displayText": "息を止めます。",
+      "speechText": "息を止めます。",
+      "audioKey": "voice-box-hold",
+      "phaseDurationSec": 4,
+      "id": "bw-box-breathing-3"
+    },
+    {
+      "type": "voice",
+      "displayText": "鼻からゆっくり吐きます。",
+      "speechText": "鼻からゆっくりはきます。",
+      "audioKey": "voice-box-exhale",
+      "phaseDurationSec": 4,
+      "id": "bw-box-breathing-4"
+    },
+    {
+      "type": "voice",
+      "displayText": "息を止めます。",
+      "speechText": "息を止めます。",
+      "audioKey": "voice-box-hold2",
+      "phaseDurationSec": 4,
+      "id": "bw-box-breathing-5"
+    },
+    {
+      "type": "voice",
+      "displayText": "吸います。",
+      "speechText": "吸います。",
+      "audioKey": "voice-inhale",
+      "phaseDurationSec": 4,
+      "id": "bw-box-breathing-6"
+    },
+    {
+      "type": "voice",
+      "displayText": "止めます。",
+      "speechText": "止めます。",
+      "audioKey": "voice-hold",
+      "phaseDurationSec": 4,
+      "id": "bw-box-breathing-7"
+    },
+    {
+      "type": "voice",
+      "displayText": "鼻から吐きます。",
+      "speechText": "鼻からはきます。",
+      "audioKey": "voice-box-exhale",
+      "phaseDurationSec": 4,
+      "id": "bw-box-breathing-8"
+    },
+    {
+      "type": "voice",
+      "displayText": "止めます。",
+      "speechText": "止めます。",
+      "audioKey": "voice-hold",
+      "phaseDurationSec": 4,
+      "id": "bw-box-breathing-9"
+    },
+    {
+      "type": "voice",
+      "displayText": "吸います。",
+      "speechText": "吸います。",
+      "audioKey": "voice-inhale",
+      "phaseDurationSec": 4,
+      "id": "bw-box-breathing-10"
+    },
+    {
+      "type": "voice",
+      "displayText": "止めます。",
+      "speechText": "止めます。",
+      "audioKey": "voice-hold",
+      "phaseDurationSec": 4,
+      "id": "bw-box-breathing-11"
+    },
+    {
+      "type": "voice",
+      "displayText": "鼻から吐きます。",
+      "speechText": "鼻からはきます。",
+      "audioKey": "voice-box-exhale",
+      "phaseDurationSec": 4,
+      "id": "bw-box-breathing-12"
+    },
+    {
+      "type": "voice",
+      "displayText": "止めます。",
+      "speechText": "止めます。",
+      "audioKey": "voice-hold",
+      "phaseDurationSec": 4,
+      "id": "bw-box-breathing-13"
+    },
+    {
+      "type": "voice",
+      "displayText": "最後の呼吸です。",
+      "speechText": "最後の呼吸です。",
+      "audioKey": "voice-box-final",
+      "displayRound": 4,
+      "id": "bw-box-breathing-14"
+    },
+    {
+      "type": "voice",
+      "displayText": "吸います。",
+      "speechText": "吸います。",
+      "audioKey": "voice-inhale",
+      "phaseDurationSec": 4,
+      "id": "bw-box-breathing-15"
+    },
+    {
+      "type": "voice",
+      "displayText": "止めます。",
+      "speechText": "止めます。",
+      "audioKey": "voice-hold",
+      "phaseDurationSec": 4,
+      "id": "bw-box-breathing-16"
+    },
+    {
+      "type": "voice",
+      "displayText": "鼻から吐きます。",
+      "speechText": "鼻からはきます。",
+      "audioKey": "voice-box-exhale",
+      "phaseDurationSec": 4,
+      "id": "bw-box-breathing-17"
+    },
+    {
+      "type": "voice",
+      "displayText": "止めます。",
+      "speechText": "止めます。",
+      "audioKey": "voice-hold",
+      "phaseDurationSec": 4,
+      "id": "bw-box-breathing-18"
+    },
+    {
+      "type": "voice",
+      "displayText": "お疲れさまでした。自然な呼吸に戻りましょう。",
+      "speechText": "お疲れさまでした。自然な呼吸に戻りましょう。",
+      "audioKey": "voice-box-end",
+      "isFinalCue": true,
+      "id": "bw-box-breathing-19"
+    },
+    {
+      "type": "complete",
+      "displayText": "お疲れさまでした。",
+      "isFinalCue": true,
+      "id": "bw-box-breathing-20"
+    }
+  ],
+  "phases": [
+    {
+      "key": "inhale",
+      "label": "吸う",
+      "seconds": 4
+    },
+    {
+      "key": "hold-in",
+      "label": "止める",
+      "seconds": 4
+    },
+    {
+      "key": "exhale",
+      "label": "吐く",
+      "seconds": 4
+    },
+    {
+      "key": "hold-out",
+      "label": "止める",
+      "seconds": 4
+    }
+  ],
+  "output": {
+    "kind": "breath",
+    "entry": {
+      "id": "box-breathing",
+      "nameJa": "Box Breathing",
+      "nameSanskrit": "Sama Vritti Pranayama",
+      "nameEn": "Box Breathing",
+      "category": "pranayama",
+      "defaultDurationMin": 2,
+      "pattern": {
+        "inhaleSec": 4,
+        "holdAfterInhaleSec": 4,
+        "exhaleSec": 4,
+        "holdAfterExhaleSec": 4,
+        "rounds": 4
+      },
+      "visual": {
+        "type": "phase_animation",
+        "highlightZones": [
+          "belly"
+        ],
+        "arrowDirection": {
+          "inhale": [
+            "expand"
+          ],
+          "exhale": [
+            "contract"
+          ]
+        }
+      },
+      "instructions": {
+        "intro": [
+          "楽な姿勢で座る（椅子でも床でもOK）",
+          "4秒吸う → 4秒止める → 4秒吐く → 4秒止める。これを繰り返す"
+        ],
+        "firstRound": [
+          "4秒吸って、4秒止めて、4秒吐いて、4秒止めます",
+          "無理のない範囲で行いましょう"
+        ],
+        "repeatRound": [
+          "吸います",
+          "止めます",
+          "ゆっくり吐きます",
+          "止めます"
+        ],
+        "completion": [
+          "最後の呼吸です",
+          "お疲れさまでした。自然な呼吸に戻しましょう"
+        ]
+      },
+      "breathing": {
+        "recommendNasalBreathing": true,
+        "nasalCue": "苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。"
+      },
+      "safety": {
+        "beginnerFriendly": true,
+        "gentleAllowed": true
+      },
+      "knowledge": {
+        "knowledgeEntryId": "b4dbb7d1-f1c5-4141-8f6d-398cde68bc8c",
+        "zukanSlug": "box-breathing",
+        "verified": true,
+        "professionalYogaRelated": null
+      },
+      "voiceGuide": {
+        "intro": [
+          {
+            "at": 0,
+            "text": "Box Breathingを始めます。4秒吸って、4秒止めて、4秒吐いて、4秒止めます。",
+            "audioKey": "voice-box-intro"
+          },
+          {
+            "at": 5,
+            "text": "無理のない範囲で行いましょう。",
+            "audioKey": "voice-box-intro-2"
+          }
+        ],
+        "phaseCues": {
+          "吸う": "鼻からゆっくり吸います。",
+          "止める": "息を止めます。",
+          "吐く": "鼻からゆっくり吐きます。"
+        },
+        "phaseAudioKeys": {
+          "吸う": "voice-box-inhale",
+          "止める": "voice-box-hold",
+          "吐く": "voice-box-exhale",
+          "hold-in": "voice-box-hold",
+          "hold-out": "voice-box-hold2"
+        },
+        "repeatCues": [
+          {
+            "at": 0,
+            "text": "鼻からゆっくり吸います。"
+          },
+          {
+            "at": 4,
+            "text": "息を止めます。"
+          },
+          {
+            "at": 8,
+            "text": "鼻からゆっくり吐きます。"
+          },
+          {
+            "at": 12,
+            "text": "息を止めます。"
+          }
+        ],
+        "completion": [
+          {
+            "at": 0,
+            "text": "最後の呼吸です。"
+          },
+          {
+            "at": 3,
+            "text": "お疲れさまでした。自然な呼吸に戻しましょう。"
+          }
+        ]
+      },
+      "status": "active"
+    },
+    "guide": [
+      {
+        "type": "voice",
+        "displayText": "Box Breathingを始めます。4秒吸って、4秒止めて、4秒吐いて、4秒止めます。",
+        "speechText": "Box Breathingを始めます。4秒吸って、4秒止めて、4秒はいて、4秒止めます。",
+        "audioKey": "voice-box-intro",
+        "id": "bw-box-breathing-0"
+      },
+      {
+        "type": "voice",
+        "displayText": "無理のない範囲で行いましょう。",
+        "speechText": "無理のない範囲で行いましょう。",
+        "audioKey": "voice-box-intro-2",
+        "id": "bw-box-breathing-1"
+      },
+      {
+        "type": "voice",
+        "displayText": "鼻からゆっくり吸います。",
+        "speechText": "鼻からゆっくり吸います。",
+        "audioKey": "voice-box-inhale",
+        "phaseDurationSec": 4,
+        "id": "bw-box-breathing-2"
+      },
+      {
+        "type": "voice",
+        "displayText": "息を止めます。",
+        "speechText": "息を止めます。",
+        "audioKey": "voice-box-hold",
+        "phaseDurationSec": 4,
+        "id": "bw-box-breathing-3"
+      },
+      {
+        "type": "voice",
+        "displayText": "鼻からゆっくり吐きます。",
+        "speechText": "鼻からゆっくりはきます。",
+        "audioKey": "voice-box-exhale",
+        "phaseDurationSec": 4,
+        "id": "bw-box-breathing-4"
+      },
+      {
+        "type": "voice",
+        "displayText": "息を止めます。",
+        "speechText": "息を止めます。",
+        "audioKey": "voice-box-hold2",
+        "phaseDurationSec": 4,
+        "id": "bw-box-breathing-5"
+      },
+      {
+        "type": "voice",
+        "displayText": "吸います。",
+        "speechText": "吸います。",
+        "audioKey": "voice-inhale",
+        "phaseDurationSec": 4,
+        "id": "bw-box-breathing-6"
+      },
+      {
+        "type": "voice",
+        "displayText": "止めます。",
+        "speechText": "止めます。",
+        "audioKey": "voice-hold",
+        "phaseDurationSec": 4,
+        "id": "bw-box-breathing-7"
+      },
+      {
+        "type": "voice",
+        "displayText": "鼻から吐きます。",
+        "speechText": "鼻からはきます。",
+        "audioKey": "voice-box-exhale",
+        "phaseDurationSec": 4,
+        "id": "bw-box-breathing-8"
+      },
+      {
+        "type": "voice",
+        "displayText": "止めます。",
+        "speechText": "止めます。",
+        "audioKey": "voice-hold",
+        "phaseDurationSec": 4,
+        "id": "bw-box-breathing-9"
+      },
+      {
+        "type": "voice",
+        "displayText": "吸います。",
+        "speechText": "吸います。",
+        "audioKey": "voice-inhale",
+        "phaseDurationSec": 4,
+        "id": "bw-box-breathing-10"
+      },
+      {
+        "type": "voice",
+        "displayText": "止めます。",
+        "speechText": "止めます。",
+        "audioKey": "voice-hold",
+        "phaseDurationSec": 4,
+        "id": "bw-box-breathing-11"
+      },
+      {
+        "type": "voice",
+        "displayText": "鼻から吐きます。",
+        "speechText": "鼻からはきます。",
+        "audioKey": "voice-box-exhale",
+        "phaseDurationSec": 4,
+        "id": "bw-box-breathing-12"
+      },
+      {
+        "type": "voice",
+        "displayText": "止めます。",
+        "speechText": "止めます。",
+        "audioKey": "voice-hold",
+        "phaseDurationSec": 4,
+        "id": "bw-box-breathing-13"
+      },
+      {
+        "type": "voice",
+        "displayText": "最後の呼吸です。",
+        "speechText": "最後の呼吸です。",
+        "audioKey": "voice-box-final",
+        "displayRound": 4,
+        "id": "bw-box-breathing-14"
+      },
+      {
+        "type": "voice",
+        "displayText": "吸います。",
+        "speechText": "吸います。",
+        "audioKey": "voice-inhale",
+        "phaseDurationSec": 4,
+        "id": "bw-box-breathing-15"
+      },
+      {
+        "type": "voice",
+        "displayText": "止めます。",
+        "speechText": "止めます。",
+        "audioKey": "voice-hold",
+        "phaseDurationSec": 4,
+        "id": "bw-box-breathing-16"
+      },
+      {
+        "type": "voice",
+        "displayText": "鼻から吐きます。",
+        "speechText": "鼻からはきます。",
+        "audioKey": "voice-box-exhale",
+        "phaseDurationSec": 4,
+        "id": "bw-box-breathing-17"
+      },
+      {
+        "type": "voice",
+        "displayText": "止めます。",
+        "speechText": "止めます。",
+        "audioKey": "voice-hold",
+        "phaseDurationSec": 4,
+        "id": "bw-box-breathing-18"
+      },
+      {
+        "type": "voice",
+        "displayText": "お疲れさまでした。自然な呼吸に戻りましょう。",
+        "speechText": "お疲れさまでした。自然な呼吸に戻りましょう。",
+        "audioKey": "voice-box-end",
+        "isFinalCue": true,
+        "id": "bw-box-breathing-19"
+      },
+      {
+        "type": "complete",
+        "displayText": "お疲れさまでした。",
+        "isFinalCue": true,
+        "id": "bw-box-breathing-20"
+      }
+    ],
+    "phases": [
+      {
+        "key": "inhale",
+        "label": "吸う",
+        "seconds": 4
+      },
+      {
+        "key": "hold-in",
+        "label": "止める",
+        "seconds": 4
+      },
+      {
+        "key": "exhale",
+        "label": "吐く",
+        "seconds": 4
+      },
+      {
+        "key": "hold-out",
+        "label": "止める",
+        "seconds": 4
+      }
+    ],
+    "concrete": {
+      "id": "box-breathing",
+      "name": "Box Breathing",
+      "sanskrit": "Sama Vritti Pranayama",
+      "type": "pranayama",
+      "image": "",
+      "startPose": "楽な姿勢で座る（椅子でも床でもOK）",
+      "movement": "4秒吸う → 4秒止める → 4秒吐く → 4秒止める。これを繰り返す",
+      "breathing": "苦しくなければ、鼻からゆっくり吸って、鼻から吐きます。",
+      "durationLabel": "2分",
+      "caution": "",
+      "defaultMinutes": 2,
+      "knowledgeEntryId": "b4dbb7d1-f1c5-4141-8f6d-398cde68bc8c",
+      "knowledgeMasterId": null,
+      "zukanSlug": "box-breathing",
+      "zukanUrl": null,
+      "professionalYogaRelated": null,
+      "professionalYogaSourceLabel": null,
+      "knowledgeVerified": true
+    },
+    "runtime": "PracticeAudioRuntime",
+    "timingMode": "phase_minimum_and_voice_end"
+  },
+  "renders": [
+    {
+      "phase": "inhale",
+      "remaining": 4,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(0.85);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>吸う</strong><span>4</span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top is-active\"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right \"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom \"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left \"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "inhale",
+      "remaining": 3,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(0.8875);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>吸う</strong><span>3</span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top is-active\"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right \"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom \"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left \"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "inhale",
+      "remaining": 1,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(0.9624999999999999);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>吸う</strong><span>1</span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top is-active\"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right \"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom \"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left \"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "inhale",
+      "remaining": 0,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(1);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>吸う</strong><span>0</span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top is-active\"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right \"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom \"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left \"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "hold-in",
+      "remaining": 4,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(1);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>止める</strong><span>4</span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top \"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right is-active\"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom \"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left \"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "hold-in",
+      "remaining": 3,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(1);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>止める</strong><span>3</span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top \"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right is-active\"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom \"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left \"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "hold-in",
+      "remaining": 1,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(1);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>止める</strong><span>1</span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top \"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right is-active\"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom \"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left \"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "hold-in",
+      "remaining": 0,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(1);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>止める</strong><span>0</span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top \"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right is-active\"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom \"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left \"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "exhale",
+      "remaining": 4,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(1);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>吐く</strong><span>4</span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top \"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right \"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom is-active\"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left \"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "exhale",
+      "remaining": 3,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(0.9624999999999999);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>吐く</strong><span>3</span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top \"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right \"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom is-active\"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left \"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "exhale",
+      "remaining": 1,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(0.8875);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>吐く</strong><span>1</span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top \"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right \"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom is-active\"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left \"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "exhale",
+      "remaining": 0,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(0.85);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>吐く</strong><span>0</span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top \"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right \"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom is-active\"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left \"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "hold-out",
+      "remaining": 4,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(0.85);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>止める</strong><span>4</span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top \"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right \"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom \"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left is-active\"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "hold-out",
+      "remaining": 3,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(0.85);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>止める</strong><span>3</span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top \"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right \"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom \"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left is-active\"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "hold-out",
+      "remaining": 1,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(0.85);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>止める</strong><span>1</span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top \"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right \"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom \"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left is-active\"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "hold-out",
+      "remaining": 0,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(0.85);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>止める</strong><span>0</span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top \"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right \"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom \"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left is-active\"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "idle",
+      "remaining": 4,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(0.85);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>準備</strong><span></span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top \"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right \"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom \"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left \"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "idle",
+      "remaining": 3,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(0.85);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>準備</strong><span></span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top \"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right \"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom \"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left \"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "idle",
+      "remaining": 1,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(0.85);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>準備</strong><span></span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top \"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right \"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom \"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left \"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    },
+    {
+      "phase": "idle",
+      "remaining": 0,
+      "html": "<div class=\"breathing-orb-stage\"><div class=\"breathing-orb-halo\"></div><div class=\"breathing-circle is-running \" aria-live=\"polite\" style=\"animation:none;transform:scale(0.85);transition:transform 100ms linear\"><div class=\"breathing-circle-content\"><strong>準備</strong><span></span></div></div><div class=\"bw-box-indicator\" aria-hidden=\"true\"><div class=\"bw-box-side bw-box-top \"><span class=\"bw-box-side-label\">吸う</span></div><div class=\"bw-box-side bw-box-right \"><span class=\"bw-box-side-label\">止める</span></div><div class=\"bw-box-side bw-box-bottom \"><span class=\"bw-box-side-label\">吐く</span></div><div class=\"bw-box-side bw-box-left \"><span class=\"bw-box-side-label\">止める</span></div></div></div>"
+    }
+  ],
+  "sourceHashes": {
+    "src/lib/breathworkCueBuilder.ts": "e9555ed6c6d8c1ce16ceeb9559a65de4f0a81e6bea7b14dffba567e460423671",
+    "src/components/ResultPage.tsx": "12d0dd7bc07bf56437dd775a2cddf6ac86f1d3aec528807397b3fcc43576d425",
+    "src/components/BreathworkVisual.tsx": "fbdef69d8ef6e4f3e5b15b1e23ea456180961d267efc228db4edf33b5eb558c0",
+    "src/components/MyAITeacherPage.tsx": "2297b085bd3f85b935dbb2cd0c531935f6e395143df5e9dd82dba13e32c77461",
+    "src/lib/practiceAudioRuntime.ts": "c8890cbc56731cd385a140846794757859026baf921aa4a6330d039de35a6b3e"
+  }
+}

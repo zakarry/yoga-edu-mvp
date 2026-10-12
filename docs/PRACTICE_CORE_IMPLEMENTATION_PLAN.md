@@ -192,3 +192,10 @@ PR #20は型・Build・全回帰の再実行、24出力/211 asset/保護ソー�
 ## PR #21採用と共通登録仕様（2026-10-12）
 PR #21は最終diff、型/Build/全回帰とGitHub Actions成功を再確認し、main `1cbe4e4b7ff1c4728b26c852258bbf0e6b49eb9b` へmerge。腹式/立ち木の2件は読取契約のみ採用、既存24出力・211asset・専用時計・Safety・Knowledgeの動作は維持。コード採用は公開・実機検品完了を意味しない。
 [共通コンテンツ登録仕様](PRACTICE_CONTENT_REGISTRATION_V1.md)にREG-01〜12、G1〜6、文書登録票、各時間方式、1件ずつの移行を定義。実行型/validatorの現実装と文書必須項目を区別。次候補はBox Breathing、後続は子供のポーズ/1分マインドフルネス、数息観は専用adapterを最後に検証。今回は候補の実装なし、Bolt Publish/Edge deploy/DB変更なし。
+
+## PR #22正式採用後のBox移行（2026-10-12）
+最新main `b7448f0fcddf3d103b279c9efd2ae61d4ddab27c` に登録仕様を採用。次の対象Box Breathingを読取契約へ接続し、21cue、各4秒の吸気/保持/呼気/保持×4周、phase minimum＋voice endedの既存方式を保持。before fixtureは製品変更前にmainから採取。今回の実装は未merge・未公開。
+[Android検品票](ANDROID_PRACTICE_QA_ABDOMINAL_TREE_BOX.md)に腹式/立ち木/Boxの実機確認項目と環境/証拠/未確認を整理。Q-05のpause/resume時の未終了音声は変更前後で同一の模擬FAIL、別修復バックログ。FB-13/14も未実装の別改善。共通化を品質改善済みとして扱わない。
+
+## 2026-10-12 PR #24採用とBox統合検証
+PR #24は単独適用可能で、追加10件・型・Build・全回帰・Actions成功を再確認してmain `89c3ccec6f3116a83eea73781984dd037eb05298` にmerge。PR #23はそのmainを取り込む。競合4件（package/tsconfig/回帰記録/バックログ）は両テスト群・両記録を保持して解消。製品コードの直接競合なし。Boxの旧Q-05観察テストは不具合を保存する条件ではなく、採用済み修復の重複0・ended待ち・旧通知無効をoriginal/contract cue双方で検査する受入へ変更。コンテンツfixtureを更新して失敗を隠していない。両PRの製品変更を独立commitのまま維持し、共通化差分はBox読取契約のみ。公開/Edge deploy/DB変更なし。実機検品は未確認。

@@ -41,6 +41,20 @@ export function defineAbdominalPractice(entry: BreathworkCatalogEntry, cues: Pra
 
 export interface ContractIssue { practiceId: string; code: string; detail: string }
 
+/** Box keeps its phase timer and voice-ended gate in the existing runtime. */
+export function defineBoxPractice(entry: BreathworkCatalogEntry, cues: PracticeCue[]): PracticeDefinition<BreathworkCatalogEntry> {
+  if (entry.id !== 'box-breathing' || !entry.pattern) throw new Error('Box contract requires its existing catalog pattern');
+  return {
+    schemaVersion: 1, practiceId: entry.id, kind: 'breath', contentRevision: 'box-existing-v1',
+    source: { catalogPath: 'src/lib/breathworkCatalog.ts', baselineCommit: 'b7448f0fcddf3d103b279c9efd2ae61d4ddab27c' },
+    content: entry,
+    timing: { mode: 'phase_minimum_and_voice_end', pattern: entry.pattern },
+    guide: { cues, completion: 'required_audio_ended', reading: 'separate_display_and_speech' },
+    knowledge: { catalogReference: entry.knowledge, sourceVerification: 'unconfirmed' },
+    review: { fullAudioCaptionSync: 'unconfirmed', pronunciation: 'unconfirmed', independentSafety: 'unconfirmed' },
+  };
+}
+
 /** Second pilot: retain the already-built tree guide and catalog by reference. */
 export function defineTreePractice(entry: PoseCatalogEntry, cues: PracticeCue[]): PracticeDefinition<PoseCatalogEntry> {
   if (entry.id !== 'vrksasana') throw new Error('Tree contract requires the existing vrksasana catalog');
@@ -86,7 +100,14 @@ export function validatePracticeDefinitions(definitions: PracticeDefinition[]): 
         const actual = d.guide.cues.filter(c => c.type === 'silence').map(c => c.durationSec);
         if (JSON.stringify(actual) !== JSON.stringify(expected) || d.timing.plannedHoldSec !== values.reduce((a, b) => a + b, 0) * p.rounds || d.timing.narrationConsumesHold !== false) add('hold-order', 'Narration must not consume planned holds; preserve phase order and rounds');
       }
+      if (d.timing.mode === 'phase_minimum_and_voice_end') {
+        const roundCount = Number.isInteger(p.rounds) && p.rounds > 0 ? Math.min(p.rounds, 1000) : 0;
+        const expected = Array.from({ length: roundCount }, () => values.filter(v => v > 0)).flat();
+        const actual = d.guide.cues.filter(c => c.type === 'voice' && c.phaseDurationSec !== undefined).map(c => c.phaseDurationSec);
+        if (JSON.stringify(actual) !== JSON.stringify(expected) || d.guide.cues.some(c => c.type === 'silence')) add('phase-guide', 'Keep phase minimums on voice cues, phase order and round count');
+      }
     }
+    if (d.practiceId === 'box-breathing' && d.timing.mode !== 'phase_minimum_and_voice_end') add('box-clock', 'Box must retain phase minimum and voice-ended timing');
     if (d.timing.mode === 'narration_then_hold') {
       const holds = d.timing.holds;
       if (holds.length !== 2 || holds[0].side !== 'right' || holds[1].side !== 'left' || holds.some(h => !Number.isFinite(h.seconds) || h.seconds <= 0) || holds[0].seconds !== holds[1].seconds || d.timing.narrationConsumesHold !== false) add('bilateral', 'Right and left holds must be equal and exclude guidance');
