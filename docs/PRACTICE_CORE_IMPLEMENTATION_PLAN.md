@@ -115,3 +115,67 @@ PR #17はmain c4ffbccへmerge済み。Build/型/主要回帰・CI PASSの記録�
 最新main `e6e3958654ce9e01587023fa5ce1427dc82771a4` と照合。PR #17の製品ソースを維持し、公開更新を確認済み。添付689件の内容は改行正規化後にmainと一致（平坦な添付から元のディレクトリ構造まで証明したものではない）。
 ユーザーがAndroid（Galaxy）で数息観を最後まで実践し、5分間の完走を確認したため、**数息観の5分完走のみPASS（ユーザー実測）**と更新する。音声・字幕の完全同期、「はきます」の発音、LINE内蔵ブラウザ、全端末等価性は未確認のまま。端末型番・OS・ブラウザ版・時刻付き録画は未提供。完走確認を発音や同期のPASSへ拡張しない。
 数息観専用Session（60秒audio.currentTime→ended→240秒静寂）、5:00の初期表示、案内終了待ち、字幕/読み分離、左右均等保持、Safety基準を維持する。ユーザーはPR #16の正式採用と、別作業ブランチで1実践の共通データ契約の実装・テスト・PR作成を明示承認。本設計採用PRは文書のみ。新規大量追加、DB変更、Edge deploy、Bolt Publishは今回行わない。
+
+
+## 2026-10-12 棚卸しと最初の実装PR
+
+PR #16をユーザー承認で正式採用したmain `05666f44134f5116998dc31d622e0830ef5ed599` を基準とする。ブランチ `codex/practice-core-abdominal-contract-20261012`。新規コンテンツ追加・DB照会/変更・Edge deploy・Bolt Publishなし。
+
+### ローカル棚卸し
+`npm run audit:practice-core`で[全行・asset hash・時計・出典/安全の確認限界](practice-core-inventory-20261012.json)を再生成できる。catalog上の24定義（active22）に加え、別sequence catalogの太陽礼拝1件/12ステップ/左右/3tempoを棚卸しした。参照assetは重複除去211個、欠損0。WAVはヘッダ長を測定、MP3長・音声原稿/生成の来歴・発音/末尾の試聴は未確認。画像は存在/hashの確認で、解剖・描写の正確性PASSではない。DB実在、出典の版/査読、医学的安全性をcatalog verifiedやvalidator成功だけで確認済みにしない。
+
+| 種別 | ID | 名前 | status | 実経路/時計 |
+| --- | --- | --- | --- | --- |
+| asana | `tadasana` | 山のポーズ | active | `AsanaClockRuntime` / `wall_clock_with_voice_drain` |
+| asana | `vrksasana` | 立ち木のポーズ | active | `PracticeAudioRuntime` / `narration_then_hold` |
+| asana | `uttanasana` | やさしい前屈 | active | `PracticeAudioRuntime` / `narration_then_hold` |
+| asana | `balasana` | チャイルドポーズ | active | `PracticeAudioRuntime` / `narration_then_hold` |
+| asana | `catcow` | 猫と牛のポーズ | active | `AsanaClockRuntime` / `wall_clock_with_voice_drain` |
+| asana | `paschimottanasana` | 座って前屈 | active | `PracticeAudioRuntime` / `narration_then_hold` |
+| asana | `savasana` | 休息のポーズ | active | `PracticeAudioRuntime` / `narration_then_hold` |
+| asana | `setu-bandhasana` | セツ・バンダーサナ（橋のポーズ） | active | `PracticeAudioRuntime` / `narration_then_hold` |
+| asana | `bhujangasana` | ブジャンガーサナ（コブラのポーズ） | active | `PracticeAudioRuntime` / `narration_then_hold` |
+| asana | `test-pose` | テストポーズ | draft | `PracticeAudioRuntime` / `narration_then_hold` |
+| asana | `trikonasana` | 三角のポーズ | active | `PracticeAudioRuntime` / `narration_then_hold` |
+| asana | `vajrasana` | 金剛座（正座） | active | `PracticeAudioRuntime` / `narration_then_hold` |
+| breath | `box-breathing` | Box Breathing | active | `PracticeAudioRuntime` / `phase_minimum_and_voice_end` |
+| breath | `abdominal-breathing` | 腹式呼吸 | active | `PracticeAudioRuntime` / `narration_then_silence` |
+| breath | `thoracic-breathing` | 胸式呼吸 | active | `PracticeAudioRuntime` / `narration_then_silence` |
+| breath | `complete-yoga-breathing` | 完全なヨガ呼吸 | active | `PracticeAudioRuntime` / `phase_minimum_and_voice_end` |
+| breath | `brahmari` | ブラーマリー（ハチの呼吸） | active | `PracticeAudioRuntime` / `narration_then_silence` |
+| breath | `anuloma-viloma` | ナディー・ショーダナ | active | `PracticeAudioRuntime` / `narration_then_silence` |
+| breath | `test-breathwork` | テスト呼吸法 | draft | `PracticeAudioRuntime` / `narration_then_silence` |
+| meditation | `susokukan-5min` | 数息観 | active | `SusokukanSession` / `media_narration_then_silence` |
+| meditation | `mindfulness-5min` | マインドフルネス瞑想 | active | `PracticeAudioRuntime` / `legacy_meditation_sequence_with_display_clock` |
+| meditation | `yoga-nidra-3m30s` | Yoga Nidra｜3分30秒リラクゼーション | active | `PracticeAudioRuntime` / `legacy_meditation_sequence_with_display_clock` |
+| meditation | `yoga-nidra-10min` | Yoga Nidra｜10分 深いリラクゼーション | active | `PracticeAudioRuntime` / `legacy_meditation_sequence_with_display_clock` |
+| meditation | `mindfulness-1min` | 1分マインドフルネス | active | `PracticeAudioRuntime` / `legacy_meditation_sequence_with_display_clock` |
+
+別枠: `surya-namaskar-ayush`は12ステップ×右/左、標準/ゆっくり/スムーズの予定保持を記録。録音＋保持の実時間を12ステップの予定保持合計に読み替えない。従来legacy実践、standalone入口、STEP6の共有builderへの接続を区別する。
+数息観の古いcatalog timelineは230秒silence＋終盤案内だが、実画面は専用Sessionへ分岐する。棚卸しは**実経路60秒media＋240秒静寂**を採用し、旧timelineを共通化の入力に使わない。`交替鼻呼吸→腹式呼吸`のaliasは別監査残件として維持、今回修正しない。
+
+### 最初の対象と変更境界
+腹式呼吸 `abdominal-breathing`を1件だけ選択。`PracticeDefinition`にschemaVersion、stable ID、contentRevision、catalog/基準commit、時間意味、既存cue/字幕/かな原稿/音声キー、Knowledge参照と未確認状態を持たせる。既存builderが生成した30cueを契約経由で返し、同じ配列を既存runtimeへ渡す。catalogをコピーして二重の原稿/時間定義を作らず、UIやschedulerを置換しない。登録用validatorは開発時の検品で、実行中の安全ゲートの代替ではない。
+
+変更前fixtureは製品変更前にmainから実importして採取した。24定義すべてのcatalog/表示adapter/phase/guide/Visual/Knowledge/安全メタデータの出力hash、太陽礼拝の3tempo出力、25個の保護ソースhash、211個のasset hashを比較する。腹式の変更前cueと変更後cueを**同じ実製品runtime**で実行し、音声遅延、終了待ち、字幕、4/6秒×6周、pause凍結、完了音声drain、完了一度、中止/遅延callbackのtraceを比較する。transport/時計のみmock。実Android等価性や実音声完全同期の新規PASSではない。
+
+### 後続の実装単位と完了条件
+| 順序 | 実装対象 | 具体的な納品/検品 | 次へ進む条件 |
+| --- | --- | --- | --- |
+| 1（今回） | 腹式の読取契約、棚卸し、登録validator、before/after fixture | cue欠落/重複、読み曖昧、保持順/秒/周回変更、左右不均等、数息観の汎用時計化を検出。全既存回帰へ接続 | 型/Build/全回帰＋出力等価、実装PRレビュー。今回はmerge/公開しない |
+| 2 | asset/読み/Knowledge検品レジストリ | key→実path/hash、原稿display/speechのrevision、生成voice/手順、録音長、sourceId/版/箇所、確認者/日付/範囲を分離。未確認の明示。missing/hash不一致や出典なきverifiedを拒否 | まず対象1件のみ。既存asset/key削除なし。実録音と原稿を人が確認 |
+| 3 | 既存単一アーサナの読取adapter | 山/子供候補を時計差で選定。既存builder・数値UI・画像・Safetyを維持し、左右なら各保持と切替をtrace比較 | 390px表示、Android/LINE音声末尾/左右/字幕/予定数値の等価受入を別記録 |
+| 4 | 共通イベントadapter | 既存runtimeにsession/cue/side/round/phase識別とplanned/remaining/elapsedの監査イベントを付ける。start/stop/leave/restart時の古い通知を無効化 | runtimeは1件ずつ。安全blockedで音声/時計/保存0。既存停止/完了一度の回帰保持 |
+| 5 | 数息観の専用adapter（最後） | 汎用phaseへ移さずaudio.currentTime→ended→240秒静寂を包む。buffer/pause/error/stop/restart専用回帰。Galaxy完走PASSを同期/発音へ拡張しない | 録画/実聴で完全同期・発音・末尾を別判定。未測定をPASSにしない |
+| 6 | レビュー済み新規1実践→実践単位の展開 | 追加テンプレート/必須項目/ID衝突/左右/asset原稿来歴/Knowledge/安全レビュー＋対象実機検品 | 新規追加と公開は別承認。大量登録やscheduler一括置換なし |
+
+### 公開前の検品票
+対象ID/revision・基準main/検証head・source/asset hash、本文/画像/かな原稿/録音の対応、実環境/試聴者、音声途中切れ/重複、案内予定数値/保持残秒/左右/切替、字幕/Visual位置、停止再開/音声遅延/離脱/再開始、完了一度/中止保存0、Safety Gate、390px CTA/nav、Knowledge版/根拠/一般注意を確認する。結果はPASS/FAIL/未確認を項目ごとに記録し、全テスト緑のみで全項目PASSにしない。
+公開承認時だけBolt実ソースと最新main全件を比較し、Buildと対象受入後に公開、送信hashと公開後実測を保存。今回はこの工程を実行しない。
+
+rollback: 新規 `practiceDefinition.ts`、腹式builder末尾の契約読取、追加検品/fixture/テスト/文書だけを本PR単位でrevert。旧catalog/runtime/音声/画像/会員記録は残る。fixture再採取をテスト失敗の自動解決にしない。正当な次の仕様変更は比較diff・承認・新基準を別PRで記録する。
+
+
+### このpilotの実行結果
+Windows / Node v24.15.0で`npm ci`成功、`npm run typecheck` / `npm run test:regression` / `npm run build`はすべてexit 0。`test:practice-core`はstrict TypeScriptチェック＋5テストPASS（skip 0）。従来のaudio/quality/camera/directory/breathwork-susokukan/呼吸script/数息観scriptをすべて実行した。Buildの大きいchunk・静的/動的import混在警告は既存のまま、エラーなし。
+今回Edgeソースは変更せず、ローカルDenoはPATHにないためEdge専用suiteのローカル実行は未確認。既存GitHub CIのedge-safety結果を独立確認する。新pilotのAndroid/LINE実機比較・完全同期/発音は未確認、公開していない。Galaxyでの既存数息観5分完走PASSのみ維持する。
