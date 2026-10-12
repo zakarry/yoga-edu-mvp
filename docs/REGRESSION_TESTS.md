@@ -65,3 +65,7 @@ PR #22の名称/難易度/読み/字幕/時計/左右/Visual/安全/Knowledge/�
 
 ## 2026-10-12 Q-05採用後のBox回帰
 PR #24採用main `89c3ccec6f3116a83eea73781984dd037eb05298` 上にBox契約を統合。Q-05追加10テストとBox5テストをすべてtest:practice-coreに保持（計23件）。原cue/contract cueは同じ修復済みruntimeで短音声・長音声・pause・16フェーズ・完了・stopの出力が一致。旧不具合観察は重複0/ended待ち/旧callback無効の受入へ更新。runtime/画面のhashは独立採用Q-05の限定fixtureを参照し、元の24出力・211asset・Box字幕/Visual fixtureは未変更。実機PASSとは区別する。
+
+## ブラウザ回帰の追加（2026-10-13、未採用ブランチ）
+
+既存test:regressionと別にtest:browserを追加し、Actionsのbrowser-practice jobで実行する。4実践の実時間と主要UI、320/390/430px、立ち木の実音声pause/resume/離脱を対象にする。[実行・Q-05経路・検品境界](BROWSER_PRACTICE_ACCEPTANCE.md)を参照。Box画面に存在しない一時停止UIを前提にPASSとしない。Android発音/末尾/LINE/完全同期の人による検品は維持する。UI修正は未公開。

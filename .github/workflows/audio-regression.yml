@@ -26,3 +26,24 @@ jobs:
           deno-version: v2.9.6
       # Actual production/preview entrypoints, local auth stubs. No provider/DB or deploy credentials.
       - run: deno test --node-modules-dir=none --allow-env --allow-read tests/ai-teacher-release.test.ts
+  browser-practice:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: practice-browser-results
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14

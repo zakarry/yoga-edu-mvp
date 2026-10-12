@@ -10867,3 +10867,28 @@ html, body {
 button.top-learning-item { text-align: left !important; justify-content: flex-start; }
 
 .pro-yoga-title-tail { white-space: nowrap; }
+/* Keep practice actions accessible above the existing mobile navigation. */
+@media (max-width: 768px) {
+  html { scroll-padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+  html:has(.practice-active-actions),
+  body:has(.practice-active-actions),
+  #root:has(.practice-active-actions),
+  .page-shell:has(.practice-active-actions),
+  .main-shell:has(.practice-active-actions) {
+    /* Clip horizontal overflow without creating a non-scrolling sticky ancestor. */
+    overflow-x: clip;
+  }
+  .practice-active-actions {
+    position: sticky;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    z-index: 20;
+    background: #fff;
+    padding: 8px 0;
+    flex-wrap: wrap;
+  }
+  .breathwork-active-section button,
+  .practice-active-section button,
+  .meditation-experience button {
+    scroll-margin-block: 84px;
+  }
+}
