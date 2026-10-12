@@ -188,3 +188,7 @@ PR #20は型・Build・全回帰の再実行、24出力/211 asset/保護ソー�
 今回の次対象は立ち木 `vrksasana` 一件。既存cue配列をそのまま返す読取契約。左右各30秒（1分設定）、案内・切替では保持を消費せず音声ended後に開始。予定数値0:30と保持0:30→0:29、pause/stop/遅延callbackを保護。新PRは未merge、DB/Edge/Bolt公開なし。
 
 立ち木移行baselineはmain cabf5e0。変更前に0.1/1/2/3/5/10分のガイドを採取し `tree-before-cabf5e0.json` に保存。新規3テスト: 全時間設定/cueとcatalog/Visual/Safety/Knowledge参照等価、左右guideと契約時間の不一致拒否、実production runtimeのbefore/after時刻付きtraceとSSR数値UI比較（音声は模擬transport）。既存05666f4 fixtureは変更せず、asana builderは承認されたimport/returnのみを除去して元hashと比較。他24保護ソース/211asset/24出力は従来通り固定。独立rollbackは新PR全体のrevertで腹式契約を残す。
+
+## PR #21採用と共通登録仕様（2026-10-12）
+PR #21は最終diff、型/Build/全回帰とGitHub Actions成功を再確認し、main `1cbe4e4b7ff1c4728b26c852258bbf0e6b49eb9b` へmerge。腹式/立ち木の2件は読取契約のみ採用、既存24出力・211asset・専用時計・Safety・Knowledgeの動作は維持。コード採用は公開・実機検品完了を意味しない。
+[共通コンテンツ登録仕様](PRACTICE_CONTENT_REGISTRATION_V1.md)にREG-01〜12、G1〜6、文書登録票、各時間方式、1件ずつの移行を定義。実行型/validatorの現実装と文書必須項目を区別。次候補はBox Breathing、後続は子供のポーズ/1分マインドフルネス、数息観は専用adapterを最後に検証。今回は候補の実装なし、Bolt Publish/Edge deploy/DB変更なし。
