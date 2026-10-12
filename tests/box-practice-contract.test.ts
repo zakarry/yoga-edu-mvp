@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import before from './fixtures/box-before-b7448f0.json';
+import q05Approved from './fixtures/q05-approved-source-hashes.json';
 import { getBreathworkEntry } from '../src/lib/breathworkCatalog';
 import { buildBreathworkCues } from '../src/lib/breathworkCueBuilder';
 import { defineBoxPractice, validatePracticeDefinitions } from '../src/lib/practiceDefinition';
@@ -34,13 +35,13 @@ test('Box contract preserves exact main output, 4/4/4/4 x4, all cues and origina
   assert.deepEqual(entry.pattern,{inhaleSec:4,holdAfterInhaleSec:4,exhaleSec:4,holdAfterExhaleSec:4,rounds:4});
 });
 
-test('Box visual SSR and timer/entrypoint sources equal pre-change main; builder allows only exact read adapter',()=>{
+test('Box visual SSR and protected sources preserve baseline plus independently approved Q-05 repair; builder allows only exact read adapter',()=>{
   for(const [path,expected] of Object.entries(before.sourceHashes)){
     let source=readFileSync(path,'utf8').replace(/\r\n/g,'\n');
     if(path==='src/lib/breathworkCueBuilder.ts') source=source
       .replace('defineAbdominalPractice, defineBoxPractice','defineAbdominalPractice')
       .replace("  if (entry.id === 'box-breathing') return defineBoxPractice(entry, cues).guide.cues;\n",'');
-    assert.equal(hash(source),expected,path);
+    assert.equal(hash(source),(q05Approved as Record<string,string>)[path] ?? expected,path);
   }
   for(const saved of before.renders) assert.equal(renderToStaticMarkup(React.createElement(BreathworkVisual,{breathwork:entry,phase:saved.phase as BreathPhase,remainingSeconds:saved.remaining,isRunning:true,isCompleted:false,phaseDurationSeconds:4})),saved.html);
 });
@@ -95,17 +96,19 @@ test('Box before/after production runtime traces match for short/long audio, 16 
   assert.deepEqual(run(current),run(baseline));assert.deepEqual(run(current,true),run(baseline,true));
 });
 
-test('Q-05 existing long-phase audio after pause/resume overlaps unchanged on both baseline and contract',t=>{
+test('Q-05 repaired long-phase audio waits for ended after pause/resume on both baseline cues and contract',t=>{
   t.mock.timers.enable({apis:['Date','setTimeout','setInterval'],now:100000});
   const run=(cues:PracticeCue[])=>{
     const a=transport(),runtime=new PracticeAudioRuntime(a.engine),phase=cues.findIndex(c=>c.phaseDurationSec);
     runtime.start({practiceId:'box-breathing',cues});
     while(runtime.currentCueIndex<phase) a.finish();
     t.mock.timers.tick(1000);runtime.pause();t.mock.timers.tick(9000);assert.equal(runtime.holdRemainingSeconds,3);runtime.resume();
-    t.mock.timers.tick(3000); // audio is deliberately still playing; existing resume timer advances directly
+    t.mock.timers.tick(3000); // The repaired main runtime must wait for the unfinished voice.
+    assert.equal(runtime.currentCueIndex,phase);assert.equal(a.overlaps,0);
+    const stale=a.playback.ended;a.finish();assert.equal(runtime.currentCueIndex,phase+1);stale?.();assert.equal(runtime.currentCueIndex,phase+1);
     const observed={overlaps:a.overlaps,cue:runtime.currentCueIndex,spoken:a.spoken};runtime.dispose();return observed;
   };
   const original=run(before.cues as PracticeCue[]),current=run(definition().guide.cues);
-  assert.deepEqual(current,original);assert.equal(original.overlaps,1);
-  t.diagnostic('Q-05 behavioral gate FAIL in controlled delayed-audio/pause case before and after; equivalence PASS is not audio-quality PASS. Runtime intentionally unchanged.');
+  assert.deepEqual(current,original);assert.equal(original.overlaps,0);
+  t.diagnostic('Q-05 repaired-main gate PASS for original and contract cues: no overlap, minimum elapsed still waits for ended; old ended cannot advance new cue. Device acceptance remains unconfirmed.');
 });

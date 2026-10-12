@@ -62,3 +62,6 @@ PR #22の名称/難易度/読み/字幕/時計/左右/Visual/安全/Knowledge/�
 
 ## Q-05 共通音声制御回帰（2026-10-12）
 全回帰のtest:practice-coreにQ-05 runtime9件と実エンジン非同期1件を追加。長音声のphase時間AND音声ended条件、停止中終了、反復pause/resume、next/離脱/再開始/古い終了、final400ms、stop済み非同期再開/読込、最大同時音源1を検査する。[証拠と実機未確認](Q05_AUDIO_CONTROL_FIX.md)を参照。24出力・211assetの元fixtureは保持、3修復ソースの限定hashのみ別fixture。Mock PASSをGalaxy/LINE実機PASSとしない。
+
+## 2026-10-12 Q-05採用後のBox回帰
+PR #24採用main `89c3ccec6f3116a83eea73781984dd037eb05298` 上にBox契約を統合。Q-05追加10テストとBox5テストをすべてtest:practice-coreに保持（計23件）。原cue/contract cueは同じ修復済みruntimeで短音声・長音声・pause・16フェーズ・完了・stopの出力が一致。旧不具合観察は重複0/ended待ち/旧callback無効の受入へ更新。runtime/画面のhashは独立採用Q-05の限定fixtureを参照し、元の24出力・211asset・Box字幕/Visual fixtureは未変更。実機PASSとは区別する。

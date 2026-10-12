@@ -69,3 +69,6 @@ PR #21はmain `1cbe4e4b7ff1c4728b26c852258bbf0e6b49eb9b` に採用済み。登�
 
 ## Q-05（2026-10-12、修復PR用）
 Boxの長音声pause/resumeで次音声要求が先行する原因を特定。再開timeoutの音声ended待ち欠落と、停止後の非同期context.resume再発行を修復。PR #23共通化とは別PR。通常周期/字幕/音声asset/左右時間/数息観時計を維持。自動再現・回帰の証拠と検品境界は[Q-05修復記録](Q05_AUDIO_CONTROL_FIX.md)。修復後Galaxy/390px/LINE/完全同期/発音は未確認。mainへのmerge・Bolt Publish・Edge deploy・DB変更なし。
+
+## 2026-10-12 Q-05正式採用
+PR #24をmain `89c3ccec6f3116a83eea73781984dd037eb05298` にmerge済み。直上の「mergeなし」は修復PR作成時点の記録。Q-05は自動再現/修復テストPASS、修復後実機は未確認。PR #23へ最新mainを統合し、修復と共通化を別commitのまま検証。FB-13/14は独立バックログで未実装。Bolt Publish/Edge deploy/DB変更は行っていない。
