@@ -55,3 +55,7 @@ PR #20は型・Build・全回帰の再実行、24出力/211 asset/保護ソー�
 ## PR #21最終採用と登録検品（2026-10-12）
 main `1cbe4e4b7ff1c4728b26c852258bbf0e6b49eb9b` にPR #21を採用。最終head `0ae7d7363029cb7660b4b2fdd7902b01c81bd657`でnpm ci/型/Build/全回帰を再実行しPASS、GitHub Actions audio/edge-safetyはpush/PR両方SUCCESS。立ち木追加3テストを含む共通契約8件PASS/skip0。24出力/211assetと、元baselineを変更しない保護ソース比較、複数時間ガイド/実runtime模擬transport trace/SSR数値UIの等価性を再確認。実機音声・レイアウト・保存を証明するものではない。
 [登録仕様](PRACTICE_CONTENT_REGISTRATION_V1.md)のG1〜6で証拠種別/環境/commit/hash/確認者/限界を項目単位に記録。次対象を1件移行する際のみ必要な実経路テストを追加する。文書だけの変更には仕様文言をなぞるテストを追加しない。今回は既存指定ゲートを全実行。立ち木のガイド丁寧化/左右時間改善はFB-13/14として独立、共通化の等価baselineを更新して隠さない。
+
+## PR #22採用とBox読取契約（2026-10-12）
+PR #22の名称/難易度/読み/字幕/時計/左右/Visual/安全/Knowledge/公開検品と個別時計を確認し、main `b7448f0fcddf3d103b279c9efd2ae61d4ddab27c` に正式採用。Box一件の契約を別ブランチで実装、まだ未merge。既存21cue/4秒×4フェーズ×4周、catalog/Knowledge/Safety/Visualと同じ配列を保持。runtime/画面/音声/画像の変更なし。
+新5テストでmain baselineの全出力/20 SSR Visual状態/entrypointソース比較、契約identity/phase拒否、実runtime短長音声・pause・16phase・完了・stop trace等価、既存Q-05の同一再現を検証。全24出力/211asset/数息観専用Sessionの従来fixtureは変更なし。Q-05の等価再現テストPASSは音声品質FAILの解決ではない。[検品票](ANDROID_PRACTICE_QA_ABDOMINAL_TREE_BOX.md)で未実測を別記録。今回は追加content/DB/Edge/Bolt公開なし。

@@ -61,3 +61,8 @@ PR #20は型・Build・全回帰の再実行、24出力/211 asset/保護ソー�
 | FB-14 P1 | 「左右時間を改善」 | 未実装。現在1分設定の左右各30秒＋案内時間は維持。希望する保持長/切替余裕/画面説明をまず特定し、均等保持・案内が保持を消費しない・予定数値/残秒を必須条件として別仕様合意と独立PR。実機で案内/右保持/切替/左保持を分離して録画。既存左右不均等修正FB-05の履歴と混同しない |
 
 PR #21はmain `1cbe4e4b7ff1c4728b26c852258bbf0e6b49eb9b` に採用済み。登録/検品仕様は[PRACTICE_CONTENT_REGISTRATION_V1.md](PRACTICE_CONTENT_REGISTRATION_V1.md)。共通化後の腹式/立ち木の実機発音・完全同期・390px・LINE・クラウド保存受入は未確認。Knowledge出典の独立照合も別検品。実装内容を変更しない状態でこれらのPASSを作らない。
+
+## Q-05 Boxフェーズのpause/resume＋未終了音声（2026-10-12）
+優先P1、未修復。main `b7448f0fcddf3d103b279c9efd2ae61d4ddab27c` のproduction PracticeAudioRuntimeで模擬時計/transportによる再現。4秒フェーズの声を未終了にし、1秒経過→pause→9秒待機→resume→3秒経過でnext cueへ進み重複1件。resume()の再設定タイマーは直接advanceし、handlePhaseVoiceCueのvoiceEnded/timerFired合流条件を使わない。変更前/Box契約後で同じ結果。音声品質条件は模擬FAIL、等価性はPASS、実機は未確認。今回の共通化ではruntimeを変更しない。
+修復は別PRで、短い声/長い声、pause前後のended、最小時間、複数pause、stop/restart/stale callbackを検証し、音声末尾と残秒を両立させる。新等価テストの既存不具合観測値を、新仕様の基準へ無断変更しない。
+3実践の実機未確認は[Android検品票](ANDROID_PRACTICE_QA_ABDOMINAL_TREE_BOX.md)D01〜12で管理。FB-13/14（立ち木ガイド丁寧化/左右時間改善）は独立未実装のまま維持。

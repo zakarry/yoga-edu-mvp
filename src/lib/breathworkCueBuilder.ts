@@ -1,7 +1,7 @@
 import type { BreathworkCatalogEntry } from './breathworkCatalog';
 import type { PracticeCue } from './practiceAudioRuntime';
 import { buildPhasesFromPattern, type BreathPhase } from '../components/BreathworkVisual';
-import { defineAbdominalPractice } from './practiceDefinition';
+import { defineAbdominalPractice, defineBoxPractice } from './practiceDefinition';
 
 function phaseCuesForRound(
   entry: BreathworkCatalogEntry,
@@ -225,5 +225,6 @@ export function buildBreathworkCues(entry: BreathworkCatalogEntry): PracticeCue[
     add({ type: 'complete', displayText: 'お疲れさまでした。', isFinalCue: true });
   }
 
+  if (entry.id === 'box-breathing') return defineBoxPractice(entry, cues).guide.cues;
   return entry.id === 'abdominal-breathing' ? defineAbdominalPractice(entry, cues).guide.cues : cues;
 }

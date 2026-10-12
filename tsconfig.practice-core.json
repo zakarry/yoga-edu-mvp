@@ -4,6 +4,6 @@
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
-  "include": ["scripts/audit-practice-core.ts", "tests/practice-core-contract.test.ts", "tests/tree-practice-contract.test.ts"],
+  "include": ["scripts/audit-practice-core.ts", "tests/practice-core-contract.test.ts", "tests/tree-practice-contract.test.ts", "tests/box-practice-contract.test.ts"],
   "exclude": []
 }
