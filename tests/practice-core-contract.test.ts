@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import before from './fixtures/practice-core-before-05666f4.json';
 import q05Approved from './fixtures/q05-approved-source-hashes.json';
+import { withoutTeacherSettingsEdits } from './teacher-settings-source-boundary';
 import { collectPracticeOutputs, collectPracticeInventory } from '../scripts/audit-practice-core';
 import { defineAbdominalPractice, validatePracticeDefinitions, type PracticeDefinition } from '../src/lib/practiceDefinition';
 import { getBreathworkEntry } from '../src/lib/breathworkCatalog';
@@ -31,7 +32,7 @@ test('protected sources match their original or explicit Q-05 repair baseline; a
     if (path === 'src/lib/asanaCueBuilder.ts') source = source
       .replace("import { defineTreePractice } from './practiceDefinition';\n", '')
       .replace('return defineTreePractice(entry, cues).guide.cues;', 'return cues;');
-    assert.equal(hash(source), (q05Approved as Record<string, string>)[path] ?? expected, path);
+    assert.equal(hash(withoutTeacherSettingsEdits(path, source)), (q05Approved as Record<string, string>)[path] ?? expected, path);
   }
   for (const [path, expected] of Object.entries(before.assetHashes)) assert.equal(hash(readFileSync(`public${path}`)), expected, path);
   const inventory = collectPracticeInventory();

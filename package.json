@@ -10,13 +10,15 @@
     "test:audio": "tsx --test tests/tree-audio-regression.test.ts",
     "typecheck": "tsc -b",
     "test:contracts": "tsx --test tests/quality-contracts.test.ts",
-    "test:regression": "npm run test:audio && npm run test:contracts && node scripts/test-camera-mirror.mjs && node scripts/test-directory-demo.mjs && npm run test:practice-sessions && npm run test:breathwork && npm run test:susokukan && npm run test:practice-core",
+    "test:regression": "npm run test:audio && npm run test:contracts && node scripts/test-camera-mirror.mjs && node scripts/test-directory-demo.mjs && npm run test:practice-sessions && npm run test:breathwork && npm run test:susokukan && npm run test:practice-core && npm run test:teacher-settings",
     "test:practice-sessions": "tsx --test tests/breathwork-susokukan-regression.test.ts",
     "test:breathwork": "node scripts/test-breathwork.mjs",
     "test:susokukan": "node scripts/test-susokukan.mjs",
     "test:practice-core": "tsc -p tsconfig.practice-core.json && tsx --test tests/practice-core-contract.test.ts tests/tree-practice-contract.test.ts tests/q05-audio-control.test.ts tests/voice-guide-lifecycle.test.ts tests/box-practice-contract.test.ts",
     "audit:practice-core": "tsx scripts/audit-practice-core.ts --write",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "test:teacher-settings": "tsc -p tsconfig.teacher-settings.json && tsx --test tests/teacher-settings.test.ts",
+    "test:teacher-settings:browser": "playwright test --config playwright.teacher-settings.config.ts"
   },
   "dependencies": {
     "@line/liff": "^2.31.0",
@@ -25,6 +27,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.9",
     "@playwright/test": "1.64.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
