@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { settingsToRow, rowToSettings } from '../lib/teacherSettingsRow';
-import { validTeacherSettings, type TeacherSettingsRepository } from '../lib/teacherSettings';
+import { TeacherSettingsConflictError, validTeacherSettings, type TeacherSettingsRepository } from '../lib/teacherSettings';
 
 const columns = 'user_id,teacher_name,avatar,personality,specialty,ui_language,teaching_language,persona_created_at,explanation,cue,praise,revision';
 async function accountClient(userId: string, signal: AbortSignal) {
@@ -22,8 +22,10 @@ export const teacherSettingsRepository: TeacherSettingsRepository = {
     // Insert only after a successful missing-row read; never upsert over an unread row.
     const query = revision === null ? client.from('ai_teacher_settings').insert(row) :
       client.from('ai_teacher_settings').update(Object.fromEntries(Object.entries(row).filter(([key]) => key !== 'user_id'))).eq('user_id', userId).eq('revision', revision);
-    const { data, error } = await query.select(columns).abortSignal(signal).single();
-    if (error || !data) throw new Error('save failed/conflict');
+    const { data, error } = await query.select(columns).abortSignal(signal).maybeSingle();
+    if (error?.code === '23505' || (error?.code === 'PGRST116' && error.details?.includes('0 rows')) || (!error && !data)) throw new TeacherSettingsConflictError('revision conflict');
+    if (error) throw new Error('save failed');
+    if (!data) throw new Error('missing saved row');
     return rowToSettings(data, userId);
   },
 };

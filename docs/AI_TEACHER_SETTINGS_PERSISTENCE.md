@@ -36,3 +36,5 @@ SELECT / INSERT / UPDATE / DELETE各policyで authenticated の `auth.uid() = us
 - rollbackは実装PRをrevertし新テーブルを保持（データ破壊しない）。本番drop/削除は行わない。Vercel当該ブランチとmainの自動deploy抑止を維持する。
 
 参考: https://supabase.com/docs/guides/database/postgres/row-level-security / https://pglite.dev/docs/api
+
+実Supabaseの環境準備・最小スキーマ・受入S-01〜10は[統合検証手順](AI_TEACHER_SUPABASE_STAGING_RUNBOOK.md)。独立project-ref未確認の間は全て未確認。

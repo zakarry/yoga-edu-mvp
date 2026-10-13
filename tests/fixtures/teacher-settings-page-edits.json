@@ -118,5 +118,25 @@
   {
     "before": "    saveGrowth(newGrowth);",
     "after": "    saveGrowth({ ...newGrowth, prefs: auth.user ? loadGrowth().prefs : newGrowth.prefs });"
+  },
+  {
+    "before": "const settingsOwner = auth.authReady && !auth.loading ? auth.user?.id ?? null : undefined;",
+    "after": "// Same-account auth refresh must not replace the revision of an open editor.\n  const settingsOwner = auth.authReady ? auth.user?.id ?? null : undefined;"
+  },
+  {
+    "before": "const [editingPersona, setEditingPersona] = useState(false);",
+    "after": "const [editingPersona, setEditingPersona] = useState(false);\n  const [editingRevision, setEditingRevision] = useState<number | null>(null);"
+  },
+  {
+    "before": "if (await teacherSettings.save(next)) setEditingPersona(false);",
+    "after": "if (await teacherSettings.save(next, editingPersona ? editingRevision : teacherSettings.revision)) setEditingPersona(false);"
+  },
+  {
+    "before": "persona, teacherSettings]);",
+    "after": "persona, teacherSettings, editingPersona, editingRevision]);"
+  },
+  {
+    "before": "onClick={() => setEditingPersona(true)}>変更する",
+    "after": "onClick={() => { setEditingRevision(teacherSettings.revision); setEditingPersona(true); }}>変更する"
   }
 ]

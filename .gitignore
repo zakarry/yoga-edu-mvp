@@ -9,3 +9,6 @@ dist-settings-test/
 
 teacher-settings-report/
 teacher-settings-results/
+
+/.env.supabase-staging.local
+/dist-supabase-staging/

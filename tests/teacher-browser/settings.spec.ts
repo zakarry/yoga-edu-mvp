@@ -49,7 +49,7 @@ async function fixture(page: Page) {
         const id = url.searchParams.get('user_id')?.replace('eq.', ''), revision = Number(url.searchParams.get('revision')?.replace('eq.', ''));
         return (await tx.query(`UPDATE public.ai_teacher_settings SET ${keys.map((key,i) => key+'=$'+(i+1)).join(',')} WHERE user_id=$${values.length+1} AND revision=$${values.length+2} RETURNING *`, [...values, id, revision])).rows;
       });
-      if (result.length !== 1) return respond({ code: 'PGRST116', message: 'revision conflict' }, 406);
+      if (result.length !== 1) return respond({ code: 'PGRST116', message: 'revision conflict', details: 'The result contains 0 rows' }, 406);
       state.writes++; return respond(singular ? result[0] : result);
     } catch { return respond({ code: '42501', message: 'write rejected' }, 403); }
   });
@@ -79,6 +79,28 @@ async function openSettings(page: Page) {
   await page.getByRole('button', { name: 'AI先生設定', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'STEP 4 — AI先生設定' })).toBeVisible();
 }
+
+test('stale editor gets conflict message, keeps draft, and never reports success', async ({ page }) => {
+  const { db } = await fixture(page);
+  try {
+    await page.goto('/?entry=teacher'); await signIn(page, 'a'); await openSettings(page);
+    await page.getByRole('textbox', { name: '先生の名前' }).fill('initial');
+    await page.getByRole('button', { name: '保存する', exact: true }).click();
+    await expect(page.getByRole('status')).toContainText('アカウントに');
+    await page.getByRole('button', { name: '変更する', exact: true }).click();
+    await asUser(db, USER_A, tx => tx.query("UPDATE public.ai_teacher_settings SET teacher_name='other device' WHERE user_id=$1", [USER_A]));
+    await page.getByRole('textbox', { name: '先生の名前' }).fill('stale draft');
+    const staleRequest = page.waitForRequest(request => request.method() === 'PATCH' && new URL(request.url()).pathname === '/rest/v1/ai_teacher_settings');
+    await page.getByRole('button', { name: '保存する', exact: true }).click();
+    expect(new URL((await staleRequest).url()).searchParams.get('revision')).toBe('eq.1');
+    await expect(page.getByRole('status')).toContainText('別の端末で設定が更新されています');
+    await expect(page.getByRole('textbox', { name: '先生の名前' })).toHaveValue('stale draft');
+    const rows = await db.query<{teacher_name:string}>("SELECT teacher_name FROM public.ai_teacher_settings WHERE user_id=$1", [USER_A]);
+    expect(rows.rows[0].teacher_name).toBe('other device');
+    await page.reload(); await openSettings(page);
+    await expect(page.locator('.ai-teacher-persona-fields')).toContainText('other device');
+  } finally { await db.close(); }
+});
 
 test('real settings UI + isolated Postgres: save, reload, logout/relogin, account separation, prefs and deletion', async ({ page }) => {
   const { db, state } = await fixture(page);

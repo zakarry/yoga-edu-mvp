@@ -1,6 +1,7 @@
+import { PGlite } from '@electric-sql/pglite';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TeacherSettingsController, emptyTeacherSettings, validTeacherSettings, copyTeacherSettings, readConfirmedTeacherSettings, type TeacherSettings, type TeacherSettingsRepository } from '../src/lib/teacherSettings';
+import { TeacherSettingsConflictError, TeacherSettingsController, emptyTeacherSettings, validTeacherSettings, copyTeacherSettings, readConfirmedTeacherSettings, type TeacherSettings, type TeacherSettingsRepository } from '../src/lib/teacherSettings';
 import { settingsDatabase, asUser, dbRepository, USER_A, USER_B } from './helpers/teacher-settings-db';
 import { withoutTeacherSettingsEdits } from './teacher-settings-source-boundary';
 import { readFileSync } from 'node:fs';
@@ -108,4 +109,65 @@ test('settings-only page edits preserve original Q-05 source hash and reject unr
   const changed = withoutTeacherSettingsEdits(path, source.replace('createPracticeAudioRuntime()', 'createPracticeAudioRuntime(123)'));
   if (source.includes('createPracticeAudioRuntime()')) assert.notEqual(createHash('sha256').update(changed).digest('hex'), approved[path]);
   else assert.notEqual(createHash('sha256').update(baseline + '\n// unrelated').digest('hex'), approved[path]);
+});
+
+
+test('fresh staging bootstrap: signup profiles, consent RLS, privilege isolation and populated-project refusal', async () => {
+  const db = new PGlite();
+  try {
+    await db.exec(`CREATE SCHEMA auth; CREATE ROLE authenticated NOLOGIN NOSUPERUSER NOBYPASSRLS;
+      CREATE ROLE anon NOLOGIN NOSUPERUSER NOBYPASSRLS; CREATE TABLE auth.users (id uuid PRIMARY KEY);
+      CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS
+        $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+      GRANT USAGE ON SCHEMA public,auth TO authenticated,anon;`);
+    const bootstrap = readFileSync('scripts/staging/bootstrap-teacher-auth.sql','utf8');
+    await db.exec(bootstrap);
+    await db.exec(readFileSync('supabase/migrations/20261013000100_ai_teacher_settings.sql','utf8'));
+    await db.query('INSERT INTO auth.users VALUES ($1),($2)', [USER_A, USER_B]);
+    await asUser(db, USER_A, async tx => {
+      const profiles = await tx.query<{id:string; is_admin:boolean; membership_tier:string}>('SELECT * FROM public.profiles');
+      assert.equal(profiles.rows.length,1); assert.equal(profiles.rows[0].id,USER_A);
+      assert.equal(profiles.rows[0].is_admin,false); assert.equal(profiles.rows[0].membership_tier,'free');
+      const privacy = await tx.query<{allow_ai_memory:boolean}>('SELECT * FROM public.privacy_settings');
+      assert.equal(privacy.rows.length,1); assert.equal(privacy.rows[0].allow_ai_memory,false);
+      await tx.query("INSERT INTO public.user_consents (user_id,terms_version,privacy_version) VALUES ($1,'1.0','1.0')",[USER_A]);
+    });
+    await assert.rejects(asUser(db, USER_A, tx => tx.exec('UPDATE public.profiles SET is_admin=true')),/permission denied/);
+    await assert.rejects(asUser(db, USER_A, tx => tx.exec("UPDATE public.profiles SET membership_tier='paid'")),/permission denied/);
+    await assert.rejects(asUser(db, USER_B, tx => tx.query("INSERT INTO public.user_consents (user_id,terms_version,privacy_version) VALUES ($1,'1.0','1.0')",[USER_A])),/row-level security/);
+    await asUser(db, USER_B, async tx => assert.equal((await tx.query('SELECT * FROM public.user_consents')).rows.length,0));
+    await assert.rejects(asUser(db, null, tx => tx.exec('SELECT * FROM public.profiles')),/permission denied/);
+    await assert.rejects(db.exec(bootstrap),/Refusing non-empty project/);
+    await db.exec('ROLLBACK');
+    assert.equal((await db.query('SELECT * FROM public.profiles')).rows.length,2);
+  } finally { await db.close(); }
+});
+
+
+test('editor revision stays stale after reload; conflict never confirms an old draft', async () => {
+ const db=await settingsDatabase(), repo=dbRepository(db,()=>USER_A), c=new TeacherSettingsController(repo,guest);
+ try {
+  await c.switchOwner(USER_A); assert.equal(await c.save(settings('initial')),true);
+  const editorRevision=c.snapshot().revision;
+  await repo.save(USER_A,settings('other device'),editorRevision,new AbortController().signal);
+  await c.switchOwner(USER_A);
+  assert.equal(await c.save(settings('old draft'),editorRevision),false);
+  assert.ok(c.snapshot().message?.includes('\u5225\u306e\u7aef\u672b\u3067\u8a2d\u5b9a\u304c\u66f4\u65b0\u3055\u308c\u3066\u3044\u307e\u3059'));
+  assert.equal(c.snapshot().settings.persona?.name,'other device');
+  assert.equal((await repo.load(USER_A,new AbortController().signal))?.settings.persona?.name,'other device');
+ } finally {c.dispose();await db.close();}
+});
+
+test('same revision simultaneous writers have one winner, followed by relogin restoration',async()=>{
+ const db=await settingsDatabase(), repo=dbRepository(db,()=>USER_A), signal=new AbortController().signal;
+ try {
+  const initial=await repo.save(USER_A,settings('initial'),null,signal);
+  const results=await Promise.allSettled([repo.save(USER_A,settings('writer1'),initial.revision,signal),repo.save(USER_A,settings('writer2'),initial.revision,signal)]);
+  assert.equal(results.filter(x=>x.status==='fulfilled').length,1);
+  const loser=results.find(x=>x.status==='rejected');assert.ok(loser?.status==='rejected' && loser.reason instanceof TeacherSettingsConflictError);
+  const winner=results.find(x=>x.status==='fulfilled');assert.ok(winner?.status==='fulfilled');
+  const c=new TeacherSettingsController(repo,guest);await c.switchOwner(null);await c.switchOwner(USER_A);
+  assert.equal(c.snapshot().settings.persona?.name,winner.value.settings.persona?.name);
+  assert.equal(await c.save(settings('nonconflicting')),true);assert.equal(c.snapshot().revision,3);c.dispose();
+ } finally {await db.close();}
 });

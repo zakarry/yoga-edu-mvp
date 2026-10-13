@@ -1,3 +1,4 @@
+import { TeacherSettingsConflictError } from '../../src/lib/teacherSettings';
 import { PGlite } from '@electric-sql/pglite';
 import { readFileSync } from 'node:fs';
 import { settingsToRow, rowToSettings } from '../../src/lib/teacherSettingsRow';
@@ -47,7 +48,7 @@ export async function saveSettingsRow(tx: PGlite, userId: string, settings: Teac
   const sql = revision === null ? `INSERT INTO public.ai_teacher_settings (${keys.join(',')}) VALUES (${keys.map((_, i) => '$'+(i+1)).join(',')}) RETURNING *` :
     `UPDATE public.ai_teacher_settings SET ${keys.slice(1).map((key, i) => key+'=$'+(i+2)).join(',')} WHERE user_id=$1 AND revision=$${values.length+1} RETURNING *`;
   const result = await tx.query<Record<string, unknown>>(sql, revision === null ? values : [...values, revision]);
-  if (result.rows.length !== 1) throw new Error('revision conflict');
+  if (result.rows.length !== 1) throw new TeacherSettingsConflictError('revision conflict');
   // PGlite returns timestamptz as Date while PostgREST returns ISO text.
   return decodeDbRow(result.rows[0], userId);
 }

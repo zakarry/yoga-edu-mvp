@@ -402,7 +402,8 @@ function resolvePosesFromProgram(prog: TodayProgram | null): ConcretePose[] {
 export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onOpenProYoga, latestDiagnosis, initialMinutes, initialPoseId, initialKnowledgeContext, entryTarget }: MyAITeacherPageProps) {
   const auth = useAuth();
   const [step, setStep] = useState<StepId>('home');
-  const settingsOwner = auth.authReady && !auth.loading ? auth.user?.id ?? null : undefined;
+  // Same-account auth refresh must not replace the revision of an open editor.
+  const settingsOwner = auth.authReady ? auth.user?.id ?? null : undefined;
   const teacherSettings = useTeacherSettings(settingsOwner);
   const persona = teacherSettings.settings.persona;
   const settingsOwnerRef = useRef(settingsOwner);
@@ -503,6 +504,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
   // Persona form state
   const [editingPersona, setEditingPersona] = useState(false);
+  const [editingRevision, setEditingRevision] = useState<number | null>(null);
   const [formName, setFormName] = useState('');
   const [formAvatar, setFormAvatar] = useState('🧘');
   const [formPersonality, setFormPersonality] = useState('gentle');
@@ -820,8 +822,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     const next = { persona: newPersona, prefs: teacherSettings.settings.prefs };
     if (!validTeacherSettings(next)) { setPersonaInputError('先生の名前は80文字以内で入力してください。設定内容を確認してください。'); return; }
     setPersonaInputError(null);
-    if (await teacherSettings.save(next)) setEditingPersona(false);
-  }, [formName, formAvatar, formPersonality, formSpecialty, formUiLang, formTeachingLang, persona, teacherSettings]);
+    if (await teacherSettings.save(next, editingPersona ? editingRevision : teacherSettings.revision)) setEditingPersona(false);
+  }, [formName, formAvatar, formPersonality, formSpecialty, formUiLang, formTeachingLang, persona, teacherSettings, editingPersona, editingRevision]);
 
   const handleDryRun = useCallback(async () => {
     if (!dryRunInput.trim()) return;
@@ -1962,7 +1964,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 <div><strong>指導言語</strong><span>{persona.teachingLanguage === 'ja' ? '日本語' : 'English'}</span></div>
               </div>
               <div className="ai-teacher-persona-actions">
-                <button className="secondary-button" disabled={teacherSettings.status !== 'ready'} onClick={() => setEditingPersona(true)}>変更する</button>
+                <button className="secondary-button" disabled={teacherSettings.status !== 'ready'} onClick={() => { setEditingRevision(teacherSettings.revision); setEditingPersona(true); }}>変更する</button>
                 <button className="ghost-button" disabled={teacherSettings.status !== 'ready'} onClick={async () => {
                   if (await teacherSettings.save({ persona: null, prefs: teacherSettings.settings.prefs })) setEditingPersona(true);
                 }}>削除する</button>

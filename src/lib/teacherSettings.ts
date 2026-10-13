@@ -28,6 +28,7 @@ export function copyTeacherSettings(value: TeacherSettings): TeacherSettings {
     uiLanguage: p.uiLanguage, teachingLanguage: p.teachingLanguage, createdAt: p.createdAt } : null,
     prefs: { explanation: value.prefs.explanation, cue: value.prefs.cue, praise: value.prefs.praise } };
 }
+export class TeacherSettingsConflictError extends Error {}
 export interface TeacherSettingsRepository {
   load(userId: string, signal: AbortSignal): Promise<StoredTeacherSettings | null>;
   save(userId: string, settings: TeacherSettings, revision: number | null, signal: AbortSignal): Promise<StoredTeacherSettings>;
@@ -68,22 +69,22 @@ export class TeacherSettingsController {
       if (generation === this.generation) this.publish({ status: 'error', message: '先生設定を読み込めませんでした。再読み込みしてください。既存の設定は上書きしません。' });
     }
   }
-  async save(settings: TeacherSettings): Promise<boolean> {
+  async save(settings: TeacherSettings, expectedRevision: number | null = this.state.revision): Promise<boolean> {
     if (this.state.status !== 'ready' || !validTeacherSettings(settings)) return false;
     const generation = this.generation, owner = this.state.owner;
     if (owner === undefined) return false;
     const safe = copyTeacherSettings(settings);
     this.publish({ status: 'saving', message: null });
     try {
-      const saved = owner ? await this.repository.save(owner, safe, this.state.revision, this.abort.signal) : (this.guest.save(safe), { settings: safe, revision: 0 });
+      const saved = owner ? await this.repository.save(owner, safe, expectedRevision, this.abort.signal) : (this.guest.save(safe), { settings: safe, revision: 0 });
       if (generation !== this.generation) return false;
       if (!validTeacherSettings(saved.settings)) throw new Error('invalid settings');
       this.confirm(saved.settings);
       this.publish({ settings: copyTeacherSettings(saved.settings), revision: owner ? saved.revision : null, status: 'ready',
         message: owner ? 'アカウントに先生設定を保存しました。' : 'このブラウザに保存しました。アカウントへの自動移行は行いません。' });
       return true;
-    } catch {
-      if (generation === this.generation) this.publish({ status: 'ready', message: '先生設定を保存できませんでした。入力を保持しています。再試行してください。別画面で変更した場合は再読み込みしてください。' });
+    } catch (error) {
+      if (generation === this.generation) this.publish({ status: 'ready', message: error instanceof TeacherSettingsConflictError ? '別の端末で設定が更新されています。再読み込みしてから変更してください。' : '先生設定を保存できませんでした。入力を保持しています。再試行してください。別画面で変更した場合は再読み込みしてください。' });
       return false;
     }
   }

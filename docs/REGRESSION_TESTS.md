@@ -73,3 +73,5 @@ PR #24採用main `89c3ccec6f3116a83eea73781984dd037eb05298` 上にBox契約を�
 
 ## AI先生設定（DATA-02 / FB-01、実装PR）
 標準全回帰に `npm run test:teacher-settings` を追加し、隔離PostgreSQLのRLS・保存/復元・アカウント分離・読込/保存失敗・古い要求無効化・revision競合を実行する。`npm run test:teacher-settings:browser` は390px実UI＋合成認証＋隔離DBを別jobで実行。標準実践Playwright17件は継続し、件数を混ぜない。実Google/LINE、remote Supabase RLS/PostgREST、別端末、Galaxy/LINEは独立staging未作成のため未確認。[詳細](AI_TEACHER_SETTINGS_PERSISTENCE.md)。
+
+実Supabaseの検品表は[PR #27 staging手順](AI_TEACHER_SUPABASE_STAGING_RUNBOOK.md)。追加bootstrap回帰は空環境のsignup/profile/consent/RLS、自己昇格禁止、非空環境での実行拒否をローカルPostgreSQLで検証する。実GoTrue/PostgRESTの結果とは分ける。
