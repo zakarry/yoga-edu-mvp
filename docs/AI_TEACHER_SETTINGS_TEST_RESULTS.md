@@ -16,6 +16,6 @@
 
 新規保存、再読込、logout/relogin相当、A/B分離、指導言語/Personality/prefs復元、削除、読込失敗時保存禁止、保存失敗時入力保持をUI検証。RLSは他人のSELECT/INSERT/UPDATE/DELETE、anon、owner/revision列の直接変更を拒否。旧local自動移行なし、stale応答/duplicate保存/revision競合を制御テストで確認。
 
-失敗履歴：初回の画面テストはスマホで非表示のdesktopログインボタン、次は同名設定ボタンの複数一致で失敗。実モバイルメニューと一意の設定タブへテスト導線を修正後PASS。期待値や製品機能を変更して隠していない。依存関係再現は起動中esbuildのWindowsロックで一度失敗、テスト終了後のnpm ciでPASS。
+失敗履歴：初回の画面テストはスマホで非表示のdesktopログインボタン、次は同名設定ボタンの複数一致で失敗。実モバイルメニューと一意の設定タブへテスト導線を修正後PASS。CI初回は再ログインdialog描画前のisVisible判定でメール切替を飛ばし、入力欄待ちがtimeoutした。dialog表示とlogout応答を明示的に待つテスト修正を追加し、製品コードは変更していない。期待値や製品機能を変更して隠していない。依存関係再現は起動中esbuildのWindowsロックで一度失敗、テスト終了後のnpm ciでPASS。
 
 本記録は本番での永続化完了を意味しない。実装PR未merge、remote DB/認証/Edge/DNS/Secret変更なし、Publishなし。

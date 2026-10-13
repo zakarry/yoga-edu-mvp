@@ -59,6 +59,7 @@ async function signIn(page: Page, account: 'a' | 'b') {
   await page.getByRole('button', { name: 'メニューを開く', exact: true }).click();
   await page.getByRole('button', { name: 'ログイン / 無料会員登録', exact: true }).click();
   const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
   if (await dialog.getByRole('button', { name: 'メールアドレスで続ける' }).isVisible()) await dialog.getByRole('button', { name: 'メールアドレスで続ける' }).click();
   await dialog.getByPlaceholder('メールアドレス', { exact: true }).fill(account+'@example.test');
   await dialog.getByPlaceholder('パスワード', { exact: true }).fill('fixture-password');
@@ -69,7 +70,10 @@ async function signIn(page: Page, account: 'a' | 'b') {
 }
 async function signOut(page: Page) {
   await page.getByRole('button', { name: 'メニューを開く', exact: true }).click();
+  const loggedOut = page.waitForResponse(response => new URL(response.url()).pathname === '/auth/v1/logout' && response.status() === 200);
   await page.getByRole('button', { name: 'ログアウト', exact: true }).click();
+  await loggedOut;
+  await expect(page.locator('.auth-compact-logout')).toHaveCount(0);
 }
 async function openSettings(page: Page) {
   await page.getByRole('button', { name: 'AI先生設定', exact: true }).click();
