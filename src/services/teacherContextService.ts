@@ -141,7 +141,7 @@ export async function buildTeacherContext(
   sessionIntent?: TeacherContext['sessionIntent'],
   todayContext?: TodayContext,
 ): Promise<TeacherContext> {
-  const persona = loadPersona();
+  const persona = loadPersona(userId);
   const prefs = growth.prefs;
 
   let practiceRecords: PracticeRecord[];

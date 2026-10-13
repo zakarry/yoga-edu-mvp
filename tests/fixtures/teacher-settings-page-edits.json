@@ -1,0 +1,142 @@
+[
+  {
+    "before": "  loadPersona, savePersona, clearPersona,",
+    "after": "  loadPersona,"
+  },
+  {
+    "before": "import { useAuth } from '../lib/auth';",
+    "after": "import { useAuth } from '../lib/auth';\nimport { useTeacherSettings } from '../lib/useTeacherSettings';\nimport { validTeacherSettings } from '../lib/teacherSettings';"
+  },
+  {
+    "before": "function buildLocalContextFast(growth: AITeacherGrowth, sessionIntent?: ConversationContext, todayContext?: TodayContext, userId?: string): TeacherContext {\n  const persona = loadPersona();",
+    "after": "function buildLocalContextFast(growth: AITeacherGrowth, sessionIntent?: ConversationContext, todayContext?: TodayContext, userId?: string): TeacherContext {\n  const persona = loadPersona(userId);"
+  },
+  {
+    "before": "  const [persona, setPersona] = useState<AITeacherPersona | null>(null);",
+    "after": "  const settingsOwner = auth.authReady && !auth.loading ? auth.user?.id ?? null : undefined;\n  const teacherSettings = useTeacherSettings(settingsOwner);\n  const persona = teacherSettings.settings.persona;\n  const [personaInputError, setPersonaInputError] = useState<string | null>(null);"
+  },
+  {
+    "before": "  const [growth, setGrowth] = useState<AITeacherGrowth>(loadGrowth());",
+    "after": "  const [growthHistory, setGrowth] = useState<AITeacherGrowth>(loadGrowth());\n  const growth = useMemo(() => ({ ...growthHistory, prefs: teacherSettings.settings.prefs }), [growthHistory, teacherSettings.settings.prefs]);"
+  },
+  {
+    "before": "    const p = loadPersona();\n    setPersona(p);\n    if (p) {\n      setFormName(p.name);\n      setFormAvatar(p.avatar);\n      setFormPersonality(p.personality);\n      setFormSpecialty(p.specialty);\n      setFormUiLang(p.uiLanguage);\n      setFormTeachingLang(p.teachingLanguage);\n    }\n    const savedSession = loadTodayContextSession<TodayContext>();",
+    "after": "    const savedSession = loadTodayContextSession<TodayContext>();"
+  },
+  {
+    "before": "  const safetyBlocked = isSafetyBlocked(latestDiagnosis?.safety_state) || sessionSafetyBlocked;",
+    "after": "  useEffect(() => {\n    setFormName(persona?.name ?? '');\n    setFormAvatar(persona?.avatar ?? '🧘‍♀️');\n    setFormPersonality(persona?.personality ?? 'gentle');\n    setFormSpecialty(persona?.specialty ?? 'pranayama');\n    setFormUiLang(persona?.uiLanguage ?? 'ja');\n    setFormTeachingLang(persona?.teachingLanguage ?? 'ja');\n    setEditingPersona(false);\n    setPersonaInputError(null);\n  }, [settingsOwner, persona]);\n\n  useEffect(() => {\n    setTeacherContext(null);\n    setChatMessages([]);\n    setConversationContext({});\n  }, [settingsOwner, persona, teacherSettings.settings.prefs]);\n\n  const safetyBlocked = isSafetyBlocked(latestDiagnosis?.safety_state) || sessionSafetyBlocked;"
+  },
+  {
+    "before": "  const handleSavePersona = useCallback(() => {",
+    "after": "  const handleSavePersona = useCallback(async () => {"
+  },
+  {
+    "before": "      name: formName || 'MAYA',",
+    "after": "      name: formName.trim() || 'MAYA',"
+  },
+  {
+    "before": "    savePersona(newPersona);\n    setPersona(newPersona);\n    setEditingPersona(false);\n  }, [formName, formAvatar, formPersonality, formSpecialty, formUiLang, formTeachingLang, persona]);",
+    "after": "    const next = { persona: newPersona, prefs: teacherSettings.settings.prefs };\n    if (!validTeacherSettings(next)) { setPersonaInputError('先生の名前は80文字以内で入力してください。設定内容を確認してください。'); return; }\n    setPersonaInputError(null);\n    if (await teacherSettings.save(next)) setEditingPersona(false);\n  }, [formName, formAvatar, formPersonality, formSpecialty, formUiLang, formTeachingLang, persona, teacherSettings]);"
+  },
+  {
+    "before": "          <p className=\"ai-teacher-camera-hint-home\">お手本や呼吸ガイドを見ながら、カメラを鏡として自分の姿勢も確認できます。</p>",
+    "after": "          <p className=\"ai-teacher-camera-hint-home\">お手本や呼吸ガイドを見ながら、カメラを鏡として自分の姿勢も確認できます。</p>\n          {teacherSettings.message && <p role=\"status\">{teacherSettings.message}</p>}\n          {teacherSettings.status === 'error' && <button className=\"secondary-button\" onClick={() => void teacherSettings.reload()}>先生設定を再読み込み</button>}"
+  },
+  {
+    "before": "          {persona && !editingPersona ? (\n            <div className=\"ai-teacher-persona-display\">",
+    "after": "          <p>{settingsOwner ? 'このアカウントの先生設定を保存します。以前のブラウザ設定は自動移行しません。' : '未ログインの設定はこのブラウザだけに保存します。'}</p>\n          <p>会話や身体情報は先生設定に保存しません。My Yoga Memoryは別の同意・管理対象です。</p>\n          {personaInputError && <p role=\"alert\">{personaInputError}</p>}\n          {teacherSettings.status === 'loading' || teacherSettings.status === 'error' ? (\n            <p>{teacherSettings.status === 'loading' ? '先生設定を読み込み中…' : '設定の読み込み後に編集できます。'}</p>\n          ) : persona && !editingPersona ? (\n            <div className=\"ai-teacher-persona-display\">"
+  },
+  {
+    "before": "                <button className=\"secondary-button\" onClick={() => setEditingPersona(true)}>変更する</button>\n                <button className=\"ghost-button\" onClick={() => {\n                  clearPersona();\n                  setPersona(null);\n                  setEditingPersona(true);\n                  setFormName('');\n                  setFormAvatar('🧘‍♀️');\n                  setFormPersonality('gentle');\n                  setFormSpecialty('pranayama');\n                }}>削除する</button>",
+    "after": "                <button className=\"secondary-button\" disabled={teacherSettings.status !== 'ready'} onClick={() => setEditingPersona(true)}>変更する</button>\n                <button className=\"ghost-button\" disabled={teacherSettings.status !== 'ready'} onClick={async () => {\n                  if (await teacherSettings.save({ persona: null, prefs: teacherSettings.settings.prefs })) setEditingPersona(true);\n                }}>削除する</button>"
+  },
+  {
+    "before": "<input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder=\"MAYA\" />",
+    "after": "<input aria-label=\"先生の名前\" maxLength={80} value={formName} onChange={(e) => setFormName(e.target.value)} placeholder=\"MAYA\" />"
+  },
+  {
+    "before": "<select value={formPersonality} onChange={(e) => setFormPersonality(e.target.value)}>",
+    "after": "<select aria-label=\"Teacher Personality\" value={formPersonality} onChange={(e) => setFormPersonality(e.target.value)}>"
+  },
+  {
+    "before": "<select value={formTeachingLang} onChange={(e) => setFormTeachingLang(e.target.value as LangCode)}>",
+    "after": "<select aria-label=\"指導言語\" value={formTeachingLang} onChange={(e) => setFormTeachingLang(e.target.value as LangCode)}>"
+  },
+  {
+    "before": "<button className=\"primary-button\" onClick={handleSavePersona}>保存する</button>",
+    "after": "<button className=\"primary-button\" disabled={teacherSettings.status !== 'ready'} onClick={() => void handleSavePersona()}>{teacherSettings.status === 'saving' ? '保存中…' : '保存する'}</button>"
+  },
+  {
+    "before": "                      onClick={() => {\n                        const ng = { ...growth, prefs: { ...growth.prefs, explanation: o.v } };\n                        saveGrowth(ng); setGrowth(ng);\n                      }}>{o.label}</button>",
+    "after": "                      disabled={teacherSettings.status !== 'ready'} onClick={() => {\n                        void teacherSettings.save({ persona, prefs: { ...teacherSettings.settings.prefs, explanation: o.v } });\n                      }}>{o.label}</button>"
+  },
+  {
+    "before": "                      onClick={() => {\n                        const ng = { ...growth, prefs: { ...growth.prefs, cue: o.v } };\n                        saveGrowth(ng); setGrowth(ng);\n                      }}>{o.label}</button>",
+    "after": "                      disabled={teacherSettings.status !== 'ready'} onClick={() => {\n                        void teacherSettings.save({ persona, prefs: { ...teacherSettings.settings.prefs, cue: o.v } });\n                      }}>{o.label}</button>"
+  },
+  {
+    "before": "                      onClick={() => {\n                        const ng = { ...growth, prefs: { ...growth.prefs, praise: o.v } };\n                        saveGrowth(ng); setGrowth(ng);\n                      }}>{o.label}</button>",
+    "after": "                      disabled={teacherSettings.status !== 'ready'} onClick={() => {\n                        void teacherSettings.save({ persona, prefs: { ...teacherSettings.settings.prefs, praise: o.v } });\n                      }}>{o.label}</button>"
+  },
+  {
+    "before": "  const persona = teacherSettings.settings.persona;",
+    "after": "  const persona = teacherSettings.settings.persona;\n  const settingsOwnerRef = useRef(settingsOwner);\n  settingsOwnerRef.current = settingsOwner;"
+  },
+  {
+    "before": "  useEffect(() => {\n    setTeacherContext(null);\n    setChatMessages([]);\n    setConversationContext({});\n  }, [settingsOwner, persona, teacherSettings.settings.prefs]);",
+    "after": "  useEffect(() => {\n    setTeacherContext(null);\n  }, [settingsOwner, persona, teacherSettings.settings.prefs]);\n\n  useEffect(() => {\n    setChatMessages([]);\n    setChatInput('');\n    setChatTyping(false);\n    setConversationContext({});\n  }, [settingsOwner]);"
+  },
+  {
+    "before": "    const ctx = await buildTeacherContext(auth.user?.id ?? null, growth, conversationContext, effectiveToday);\n    setTeacherContext(ctx);",
+    "after": "    const requestedOwner = settingsOwner;\n    const ctx = await buildTeacherContext(auth.user?.id ?? null, growth, conversationContext, effectiveToday);\n    if (settingsOwnerRef.current !== requestedOwner) return;\n    setTeacherContext(ctx);"
+  },
+  {
+    "before": "    if (!chatInput.trim() || chatTyping) return;",
+    "after": "    if (!chatInput.trim() || chatTyping || teacherSettings.status !== 'ready') return;\n    const requestedOwner = settingsOwner;"
+  },
+  {
+    "before": "    setTimeout(async () => {\n      // Never reuse a context",
+    "after": "    setTimeout(async () => {\n      if (settingsOwnerRef.current !== requestedOwner) return;\n      // Never reuse a context"
+  },
+  {
+    "before": "        const response = await generateTeacherResponse(ctx, userMsg.text, contextWithSafety, turns);",
+    "after": "        const response = await generateTeacherResponse(ctx, userMsg.text, contextWithSafety, turns);\n        if (settingsOwnerRef.current !== requestedOwner) return;"
+  },
+  {
+    "before": "      } catch {\n        const name = persona?.name ?? 'AI先生';",
+    "after": "      } catch {\n        if (settingsOwnerRef.current !== requestedOwner) return;\n        const name = persona?.name ?? 'AI先生';"
+  },
+  {
+    "before": "sessionSafetyBlocked, auth.user, auth.profile?.is_admin]);",
+    "after": "sessionSafetyBlocked, auth.user, auth.profile?.is_admin, settingsOwner, teacherSettings.status]);"
+  },
+  {
+    "before": "<button className=\"primary-button\" onClick={handleSendChat} disabled={chatTyping}>",
+    "after": "<button className=\"primary-button\" onClick={handleSendChat} disabled={chatTyping || teacherSettings.status !== 'ready'}>"
+  },
+  {
+    "before": "    saveGrowth(newGrowth);",
+    "after": "    saveGrowth({ ...newGrowth, prefs: auth.user ? loadGrowth().prefs : newGrowth.prefs });"
+  },
+  {
+    "before": "const settingsOwner = auth.authReady && !auth.loading ? auth.user?.id ?? null : undefined;",
+    "after": "// Same-account auth refresh must not replace the revision of an open editor.\n  const settingsOwner = auth.authReady ? auth.user?.id ?? null : undefined;"
+  },
+  {
+    "before": "const [editingPersona, setEditingPersona] = useState(false);",
+    "after": "const [editingPersona, setEditingPersona] = useState(false);\n  const [editingRevision, setEditingRevision] = useState<number | null>(null);"
+  },
+  {
+    "before": "if (await teacherSettings.save(next)) setEditingPersona(false);",
+    "after": "if (await teacherSettings.save(next, editingPersona ? editingRevision : teacherSettings.revision)) setEditingPersona(false);"
+  },
+  {
+    "before": "persona, teacherSettings]);",
+    "after": "persona, teacherSettings, editingPersona, editingRevision]);"
+  },
+  {
+    "before": "onClick={() => setEditingPersona(true)}>変更する",
+    "after": "onClick={() => { setEditingRevision(teacherSettings.revision); setEditingPersona(true); }}>変更する"
+  }
+]

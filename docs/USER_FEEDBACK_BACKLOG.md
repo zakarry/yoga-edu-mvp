@@ -74,3 +74,6 @@ Boxの長音声pause/resumeで次音声要求が先行する原因を特定。�
 
 ## 2026-10-12 Q-05正式採用
 PR #24をmain `89c3ccec6f3116a83eea73781984dd037eb05298` にmerge済み。直上の「mergeなし」は修復PR作成時点の記録。Q-05は自動再現/修復テストPASS、修復後実機は未確認。PR #23へ最新mainを統合し、修復と共通化を別commitのまま検証。FB-13/14は独立バックログで未実装。Bolt Publish/Edge deploy/DB変更は行っていない。
+
+## FB-01最小実装（2026-10-13、作業ブランチ）
+先生設定のuser ID別保存・復元とlocal自動移行防止を実装PRへ分離。ローカル隔離PostgreSQL/RLSと合成認証UIを検証、実OAuth/remote stagingは未確認。Memory・対話UI改善・本人講師編集・立ち木FB-13/14は今回対象外。[設計と検品境界](AI_TEACHER_SETTINGS_PERSISTENCE.md)。
