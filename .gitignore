@@ -13,3 +13,5 @@ teacher-settings-results/
 /.env.supabase-staging.local
 /dist-supabase-staging/
 /dist-teacher-acceptance/
+/dist-isolated-staging/
+/staging-isolation-results/
