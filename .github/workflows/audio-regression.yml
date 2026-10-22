@@ -14,6 +14,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
+      - run: node node_modules/typescript/bin/tsc --noEmit --skipLibCheck --target ES2022 --module ESNext --moduleResolution bundler --types vite/client scripts/staging/acceptance.ts
       - run: npm run test:regression
       - run: npm run build
   edge-safety:

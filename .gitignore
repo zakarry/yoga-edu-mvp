@@ -12,3 +12,4 @@ teacher-settings-results/
 
 /.env.supabase-staging.local
 /dist-supabase-staging/
+/dist-teacher-acceptance/
