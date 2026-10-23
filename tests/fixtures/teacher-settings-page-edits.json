@@ -138,5 +138,21 @@
   {
     "before": "onClick={() => setEditingPersona(true)}>変更する",
     "after": "onClick={() => { setEditingRevision(teacherSettings.revision); setEditingPersona(true); }}>変更する"
+  },
+  {
+    "before": "  const [personaInputError, setPersonaInputError] = useState<string | null>(null);",
+    "after": "  const [personaInputError, setPersonaInputError] = useState<string | null>(null);\n  const settingsFeedbackRef = useRef<HTMLParagraphElement>(null);\n  useEffect(() => {\n    if (step === 'step4' && teacherSettings.message) settingsFeedbackRef.current?.scrollIntoView({ block: 'center' });\n  }, [step, teacherSettings.message]);"
+  },
+  {
+    "before": "{teacherSettings.message && <p role=\"status\">{teacherSettings.message}</p>}",
+    "after": "{step !== 'step4' && teacherSettings.message && <p role=\"status\">{teacherSettings.message}</p>}"
+  },
+  {
+    "before": "{teacherSettings.status === 'error' && <button className=\"secondary-button\" onClick={() => void teacherSettings.reload()}>先生設定を再読み込み</button>}",
+    "after": "{step !== 'step4' && teacherSettings.status === 'error' && <button className=\"secondary-button\" onClick={() => void teacherSettings.reload()}>先生設定を再読み込み</button>}"
+  },
+  {
+    "before": "          )}\n        </section>\n      )}\n\n      {/* STEP 5: Chat */}",
+    "after": "          )}\n          {teacherSettings.message && <p ref={settingsFeedbackRef} role=\"status\">{teacherSettings.message}</p>}\n          {teacherSettings.status === 'error' && <button className=\"secondary-button\" onClick={() => void teacherSettings.reload()}>先生設定を再読み込み</button>}\n        </section>\n      )}\n\n      {/* STEP 5: Chat */}"
   }
 ]

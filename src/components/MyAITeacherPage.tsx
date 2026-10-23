@@ -409,6 +409,10 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   const settingsOwnerRef = useRef(settingsOwner);
   settingsOwnerRef.current = settingsOwner;
   const [personaInputError, setPersonaInputError] = useState<string | null>(null);
+  const settingsFeedbackRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (step === 'step4' && teacherSettings.message) settingsFeedbackRef.current?.scrollIntoView({ block: 'center' });
+  }, [step, teacherSettings.message]);
   const [program, setProgram] = useState<TodayProgram | null>(null);
   const [growthHistory, setGrowth] = useState<AITeacherGrowth>(loadGrowth());
   const growth = useMemo(() => ({ ...growthHistory, prefs: teacherSettings.settings.prefs }), [growthHistory, teacherSettings.settings.prefs]);
@@ -1465,8 +1469,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           <p>AI先生が、今日の状態に合わせてヨガ・呼吸・瞑想を一緒にガイドします。</p>
           <p className="ai-teacher-brand-note">Yoga Knowledgeを基礎に、アーサナ・呼吸法・瞑想を流れとして分かりやすくガイドするAI先生です。使うほど、あなたの好みや継続傾向を覚えていきます。</p>
           <p className="ai-teacher-camera-hint-home">お手本や呼吸ガイドを見ながら、カメラを鏡として自分の姿勢も確認できます。</p>
-          {teacherSettings.message && <p role="status">{teacherSettings.message}</p>}
-          {teacherSettings.status === 'error' && <button className="secondary-button" onClick={() => void teacherSettings.reload()}>先生設定を再読み込み</button>}
+          {step !== 'step4' && teacherSettings.message && <p role="status">{teacherSettings.message}</p>}
+          {step !== 'step4' && teacherSettings.status === 'error' && <button className="secondary-button" onClick={() => void teacherSettings.reload()}>先生設定を再読み込み</button>}
           {persona && (
             <div className="ai-teacher-hero-teacher">
               <span className="ai-teacher-hero-avatar">{persona.avatar}</span>
@@ -2016,6 +2020,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               <button className="primary-button" disabled={teacherSettings.status !== 'ready'} onClick={() => void handleSavePersona()}>{teacherSettings.status === 'saving' ? '保存中…' : '保存する'}</button>
             </div>
           )}
+          {teacherSettings.message && <p ref={settingsFeedbackRef} role="status">{teacherSettings.message}</p>}
+          {teacherSettings.status === 'error' && <button className="secondary-button" onClick={() => void teacherSettings.reload()}>先生設定を再読み込み</button>}
         </section>
       )}
 

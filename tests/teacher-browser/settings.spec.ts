@@ -94,6 +94,11 @@ test('stale editor gets conflict message, keeps draft, and never reports success
     await page.getByRole('button', { name: '保存する', exact: true }).click();
     expect(new URL((await staleRequest).url()).searchParams.get('revision')).toBe('eq.1');
     await expect(page.getByRole('status')).toContainText('別の端末で設定が更新されています');
+    await expect(page.getByRole('status')).toBeInViewport({ ratio: 1 });
+    const feedbackBox = await page.getByRole('status').boundingBox();
+    const navigationBox = await page.locator('.mobile-bottom-nav').boundingBox();
+    expect(feedbackBox!.y + feedbackBox!.height).toBeLessThanOrEqual(navigationBox!.y);
+    await expect(page.getByRole('status')).not.toContainText('保存しました');
     await expect(page.getByRole('textbox', { name: '先生の名前' })).toHaveValue('stale draft');
     const rows = await db.query<{teacher_name:string}>("SELECT teacher_name FROM public.ai_teacher_settings WHERE user_id=$1", [USER_A]);
     expect(rows.rows[0].teacher_name).toBe('other device');
@@ -158,6 +163,7 @@ test('read failure blocks writes; failed save keeps typed inputs and supports re
     await page.getByRole('textbox', { name: '先生の名前' }).fill('Unsaved input');
     state.failSave = true; await page.getByRole('button', { name: '保存する', exact: true }).click();
     await expect(page.getByRole('status')).toContainText('保存できません');
+    await expect(page.getByRole('status')).toBeInViewport();
     await expect(page.getByRole('textbox', { name: '先生の名前' })).toHaveValue('Unsaved input'); expect(state.writes).toBe(0);
     state.failSave = false; await page.getByRole('button', { name: '保存する', exact: true }).click();
     await expect(page.locator('.ai-teacher-persona-fields')).toContainText('Unsaved input'); expect(state.writes).toBe(1);
