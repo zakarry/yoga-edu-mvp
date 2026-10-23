@@ -36,3 +36,12 @@ staging専用CSPをHTMLとレスポンスへ適用する。外部script/image/me
 - 検証前の不備は配信しない。配信後に制限不備があれば新stagingだけを停止し、本番には触れない。先生設定データは削除しない。
 
 今回の実測結果・公開URL・各テストの最終成否はPR #27の更新コメントとローカル配信記録へ記載する。未確認はPASSにしない。
+
+
+## Google検証の準備更新（2026-10-23）
+
+ユーザーの「Google・LINE認証の検証を進めて。本番は変更せず」の依頼に基づく独立staging限定の準備。Google Cloudの専用project `yoga-ai-staging-auth`、専用Web clientを作成。ユーザー報告では対象は外部・公開状態はテスト・本人をテストユーザーに追加、AI agent分類はオフ。Google callbackは `https://htnouayipmqvpckppbzv.supabase.co/auth/v1/callback`。資格情報の値は記録しない。ユーザーが検証Supabaseへ入力しGoogleを有効化したと報告。Site URLと追加redirectは `https://yoga-ai-teacher-staging.vercel.app`。これは設定操作の報告であり、OAuth完了や保存復元のPASSではない。
+
+独立builderの明示 `--google-oauth` のみでGoogleを有効にする。通常の検証Buildは引き続きメールのみ。接続先が指定の独立backendであることもGoogle gateの条件にする。LINE/Apple/LIFF/Edge/LLMは無効のまま。CSP/fetch/外部リンク拒否/Vercelアクセス制限を緩和せず、SDKのトップレベル遷移で独立Supabaseのauthorizeへ向かう。Googleでの操作は外部認証画面への遷移として必要だが、Google APIをサイトのfetch許可先に追加しない。
+
+Playwrightは両Buildを検証し、Google opt-in時のみ有効・LINE無効、独立authorizeのproviderと戻り先originを通信遮断下で検査。実Googleとの認証は人による別検品。Googleログインの利用者はメールA/Bと同じ利用者とは仮定せず、その認証利用者で設定保存→logout→Google再login→名前/性格/指導言語復元を確認する。Vercel保護で復帰できなければ保護を解除せず原因調査する。LINEの専用channel/Secret/許可origin/Edge配置は未完了・未実測。本番・main変更なし、PR27 Draft、本番導入保留を維持。

@@ -68,6 +68,13 @@ jobs:
           VITE_SUPABASE_URL: https://htnouayipmqvpckppbzv.supabase.co
           VITE_SUPABASE_ANON_KEY: sb_publishable_staging_isolation_fixture
       - run: npx playwright test --config playwright.staging-isolation.config.ts
+      - run: node scripts/staging/build-site.mjs --google-oauth
+        env:
+          VITE_SUPABASE_URL: https://htnouayipmqvpckppbzv.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_staging_isolation_fixture
+      - run: npx playwright test --config playwright.staging-isolation.config.ts
+        env:
+          STAGING_GOOGLE_TEST: 'true'
       - uses: actions/upload-artifact@v4
         if: always()
         with:

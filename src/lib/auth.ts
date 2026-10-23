@@ -29,7 +29,8 @@ export interface PrivacySettings {
 type OAuthProvider = 'google' | 'apple' | 'line';
 
 export const OAUTH_PROVIDERS = {
-  google: { enabled: import.meta.env.VITE_STAGING_EMAIL_ONLY !== 'true', label: 'Googleで続ける' },
+  google: { enabled: import.meta.env.VITE_STAGING_EMAIL_ONLY !== 'true' ||
+    (import.meta.env.VITE_SUPABASE_URL === 'https://htnouayipmqvpckppbzv.supabase.co' && import.meta.env.VITE_STAGING_GOOGLE_ENABLED === 'true'), label: 'Googleで続ける' },
   apple: { enabled: false, label: 'Appleで続ける' },
   line: { enabled: import.meta.env.VITE_STAGING_EMAIL_ONLY !== 'true', label: 'LINEで続ける' },
 } as const;
