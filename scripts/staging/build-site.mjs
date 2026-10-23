@@ -5,6 +5,7 @@ import { resolve, relative } from 'node:path';
 import { createHash } from 'node:crypto';
 
 const googleEnabled = process.argv.includes('--google-oauth');
+const lineEnabled = process.argv.includes('--line-oauth');
 const backend = 'https://htnouayipmqvpckppbzv.supabase.co';
 const settings = loadEnv('supabase-staging', process.cwd(), 'VITE_');
 if (settings.VITE_SUPABASE_URL !== backend || !settings.VITE_SUPABASE_ANON_KEY?.startsWith('sb_publishable_')) {
@@ -13,7 +14,7 @@ if (settings.VITE_SUPABASE_URL !== backend || !settings.VITE_SUPABASE_ANON_KEY?.
 // Explicitly define the whole environment; no production .env or ambient VITE values reach the bundle.
 const environment = { MODE: 'isolated-staging', DEV: false, PROD: true, BASE_URL: '/', SSR: false,
   VITE_SUPABASE_URL: backend, VITE_SUPABASE_ANON_KEY: settings.VITE_SUPABASE_ANON_KEY,
-  VITE_STAGING_EMAIL_ONLY: 'true', VITE_STAGING_GOOGLE_ENABLED: String(googleEnabled), VITE_LINE_LIFF_ID: '', VITE_GOOGLE_MAPS_API_KEY: '',
+  VITE_STAGING_EMAIL_ONLY: 'true', VITE_STAGING_GOOGLE_ENABLED: String(googleEnabled), VITE_STAGING_LINE_ENABLED: String(lineEnabled), VITE_LINE_LIFF_ID: '', VITE_GOOGLE_MAPS_API_KEY: '',
   VITE_AI_TEACHER_LLM_ENABLED: 'false', VITE_AI_TEACHER_TEST_FUNCTION: '' };
 const output = resolve('dist-isolated-staging');
 const csp = `default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; connect-src 'self' ${backend}/auth/v1/ ${backend}/rest/v1/ ${backend}/storage/v1/; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; worker-src 'none'`;
@@ -23,7 +24,8 @@ await build({ configFile: false, envFile: false, envDir: false, envPrefix: [], p
 });
 const htmlPath = resolve(output, 'scripts/staging/site.html');
 let html = await readFile(htmlPath, 'utf8');
-if (googleEnabled) html = html.replace('検証専用 — メールログインのみ・外部リンクは無効', '検証専用 — Google・メールログイン／LINEは無効');
+if (lineEnabled) html = html.replace('検証専用 — メールログインのみ・外部リンクは無効', googleEnabled ? '検証専用 — Google・LINE・メールログイン' : '検証専用 — LINE・メールログイン／Googleは無効');
+else if (googleEnabled) html = html.replace('検証専用 — メールログインのみ・外部リンクは無効', '検証専用 — Google・メールログイン／LINEは無効');
 html = html.replace('<head>', `<head><meta http-equiv="Content-Security-Policy" content="${csp.replace(/; frame-ancestors 'none'/, '')}">`);
 await writeFile(htmlPath, html);
 await rename(htmlPath, resolve(output, 'index.html'));
@@ -62,6 +64,6 @@ const scriptContents = await Promise.all(scripts.map(entry => readFile(resolve(o
 if (!scriptContents.some(text => text.includes(backend) && text.includes(settings.VITE_SUPABASE_ANON_KEY))) {
   throw new Error('Staging backend configuration missing from artifact');
 }
-await writeFile(resolve(output, 'staging-build.json'), JSON.stringify({ backend, emailOnly: !googleEnabled, googleEnabled, lineEnabled: false,
+await writeFile(resolve(output, 'staging-build.json'), JSON.stringify({ backend, emailOnly: !googleEnabled && !lineEnabled, googleEnabled, lineEnabled,
   llm: false, liff: false, edgeDeployed: false, files: manifest }, null, 2));
-console.log(`Isolated staging artifact verified: ${manifest.length} files; Google OAuth opt-in: ${googleEnabled}; LINE disabled; no Edge deployment`);
+console.log(`Isolated staging artifact verified: ${manifest.length} files; Google OAuth opt-in: ${googleEnabled}; LINE OAuth opt-in: ${lineEnabled}; no Edge deployment`);

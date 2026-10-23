@@ -62,6 +62,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       # Separate loopback-only fixture build, synthetic auth + real isolated PostgreSQL RLS.
+      - run: npx tsx --test tests/line-staging-bootstrap.test.ts
       - run: npm run test:teacher-settings:browser
       - run: node scripts/staging/build-site.mjs
         env:
@@ -75,6 +76,14 @@ jobs:
       - run: npx playwright test --config playwright.staging-isolation.config.ts
         env:
           STAGING_GOOGLE_TEST: 'true'
+      - run: node scripts/staging/build-site.mjs --google-oauth --line-oauth
+        env:
+          VITE_SUPABASE_URL: https://htnouayipmqvpckppbzv.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_staging_isolation_fixture
+      - run: npx playwright test --config playwright.staging-isolation.config.ts
+        env:
+          STAGING_GOOGLE_TEST: 'true'
+          STAGING_LINE_TEST: 'true'
       - uses: actions/upload-artifact@v4
         if: always()
         with:

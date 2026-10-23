@@ -45,3 +45,16 @@ staging専用CSPをHTMLとレスポンスへ適用する。外部script/image/me
 独立builderの明示 `--google-oauth` のみでGoogleを有効にする。通常の検証Buildは引き続きメールのみ。接続先が指定の独立backendであることもGoogle gateの条件にする。LINE/Apple/LIFF/Edge/LLMは無効のまま。CSP/fetch/外部リンク拒否/Vercelアクセス制限を緩和せず、SDKのトップレベル遷移で独立Supabaseのauthorizeへ向かう。Googleでの操作は外部認証画面への遷移として必要だが、Google APIをサイトのfetch許可先に追加しない。
 
 Playwrightは両Buildを検証し、Google opt-in時のみ有効・LINE無効、独立authorizeのproviderと戻り先originを通信遮断下で検査。実Googleとの認証は人による別検品。Googleログインの利用者はメールA/Bと同じ利用者とは仮定せず、その認証利用者で設定保存→logout→Google再login→名前/性格/指導言語復元を確認する。Vercel保護で復帰できなければ保護を解除せず原因調査する。LINEの専用channel/Secret/許可origin/Edge配置は未完了・未実測。本番・main変更なし、PR27 Draft、本番導入保留を維持。
+
+
+## LINE配置前の具体案（2026-10-24・未実行）
+
+専用provider 2005669880、channel 2012182245（Yoga AI Staging）。ユーザーがWeb app/2FA、callback、本人Adminを確認。専用SupabaseでLINE_CHANNEL_ID/LINE_AUTH_REDIRECT_ORIGINS/LINE_CHANNEL_SECRETを保存したと報告。値は取得・記録しない。チャネルDevelopingの読み戻しは未確認、公開しない。
+
+2026-10-24の独立API読取: LINE2表はPGRST205/404（APIに未検出。SQL catalog確認とは別）、line-authはNOT_FOUND/404。`scripts/staging/prepare-line-auth.sql`は既存bootstrap確認・LINE表が既存なら停止・transactionで新規2表だけ作成・RLS/anon/authenticated/PUBLIC権限剥奪・service_role限定。SQL Editorの対象project-refがhtnouayipmqvpckppbzvであることを必ず照合してから適用。実行前のcatalog確認で既存ならこのscriptを実行せず差分調査。
+
+承認対象: (1)独立DBの上記2表のみ新設、(2)同projectのline-authだけを配置、(3)独立VercelだけLINE opt-inへ更新。Edge配置は `supabase functions deploy line-auth --project-ref htnouayipmqvpckppbzv --no-verify-jwt`（CLIが認証済みの場合。未認証なら秘密値をチャットに出さずユーザーがログイン）。全Function deploy/全migration push/link済みproject暗黙指定は禁止。SUPABASE_URL/ANON_KEY/SERVICE_ROLE_KEYはこのprojectのplatform既定だけを使用、他環境からコピーしない。deploy前にentrypointと_shared/lineRedirect.tsのhashを保存し、本番変更なしを確認する。
+
+配置後は許可外redirectが400・Locationなし、token/session発行なしを安全な拒否ケースで確認。許可startは302と専用channel/callback/stateを確認、raw state/URL/tokenを記録しない。匿名/通常JWTで2表の直接アクセス禁止を検品する。LINEのDeveloping利用者限定とVercel All Deploymentsを維持。Googleは既存stagingのみ維持、OAuthの利用者はGoogle/メールとは別accountであり自動結合しない。
+
+LINEボタンは明示 `--line-oauth` と独立backend一致でのみ有効。CSP/fetchのEdge禁止は緩和しない（トップレベルstart遷移のみ）。模擬通信による遷移テストは実LINEログインPASSではない。未承認のためDB/Edge/公開は実行していない。rollbackは独立staging frontendを直前Googleのみ版へ戻し、LINEを無効化、DB2表・利用者設定を保持する。本番の変更・merge・公開は引き続き禁止。
