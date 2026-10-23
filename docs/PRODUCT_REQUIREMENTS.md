@@ -46,3 +46,6 @@ PR #20（腹式）とPR #21（立ち木）をmain `1cbe4e4b7ff1c4728b26c852258bb
 今後のアーサナ・呼吸法・瞑想追加と実践UI変更は、既存test:regressionに加えtest:browserの17件を必須とする。AUD-02、TIME-01/02、UI-01と数息観のmedia60秒＋240秒静寂を保護する。CIはBuild済みローカルpreviewを検査し、承認済み既存Vercel Readyはcommit照合後の限定検品に継続利用する。自動PASSと人の実機PASSを区別する。
 Q-05のBox停止/再開の元利用者操作経路は未確定。現行Box UIには停止ボタンがなく、模擬runtime再現や立ち木の共有制御PASSでBox固有の実機項目をPASSにしない。
 認証・AI先生・カルテ・管理画面の接続は、独立staging設定・認証戻り先・書込み境界が確定するまで変更しない。GitHub mainを正本とし、Bolt同期不一致が解消するまでPublishしない。mainのVercel自動公開はソース側git.deploymentEnabledで抑止し、今回のmergeを新規公開と混同しない。
+
+## DATA-02 AI先生の設定永続化（2026-10-13、実装PRの受入仕様）
+利用者承認によりFB-01の最小実装を作業ブランチで導入する。user ID別に先生・指導言語・Personality・選択prefsを保存/復元し、旧local設定の自動移行を禁止する。Memoryは別同意対象。詳細と未公開/未確認境界は[永続化設計](AI_TEACHER_SETTINGS_PERSISTENCE.md)。本節は過去の「本タスク製品コード変更禁止」に対する今回の承認範囲を明示するもので、既存実践仕様/認証設定を変更しない。remote migration未適用、mainへの実装merge未実施。
