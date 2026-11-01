@@ -1,4 +1,6 @@
-# PR #27 本番導入前レビュー（2026-10-22）
+# PR #27 本番導入前レビュー
+
+最新更新: 2026-11-02。Larinの10/24正式回答（利用者提示要約）を反映。[本番復旧手順](PRODUCTION_RECOVERY_RUNBOOK.md)を運用上の正とする。**HOLD・Draft維持**。下の依存監査は10/22時点の履歴であり、11/02の再監査0件を意味しない。
 
 再開基準main: `e213cbd0381ed4de904fa4474af06d23af25a87f`。レビュー開始head: `bf438d3f05e448bfd20d82aea8ca0f1c7b37675b`。GitHubでDraft/open、mergeableを確認。AGENTS.md、PRODUCT_REQUIREMENTS.md、REGRESSION_TESTS.md、USER_FEEDBACK_BACKLOG.mdに従う。DATA-01/02・FB-01を対象に、AUD-01/02、TIME-01/02、SAFE-01、数息観専用時計を維持する。
 
@@ -19,23 +21,26 @@
 
 更新後の`npm audit`は全重大度0件。package.jsonはViteの範囲だけ変更し、React・Supabase・LIFF・SWCのバージョンは変えていない。lockfileの差分は上記更新、Viteの新しいglob依存とesbuildの各OS版に限定。実BuildのRollup module graphでは上記6パッケージとLINE bot SDKはいずれも配信用JSのmodule数0。これは静的配信版の到達性の証拠であり、開発サーバーの安全やLINE実動作の証明ではない。脆弱性0も将来の安全保証ではない。
 
-## 製品UIと外部環境の受入
+## 11/02の新規依存勧告と限定修正
 
-独立Supabase `htnouayipmqvpckppbzv` への接続を固定したローカルBuildを使用。LLM・LIFF・地図は無効。テストAの既存セッションから製品画面の「変更する」を開き、名前を`製品UI検証A先生`、性格を`明るく励ます`、指導言語を`日本語`へ変更。「アカウントに先生設定を保存しました」の表示と設定欄の3値を実測した。その後、製品のログアウトボタンでアカウント表示と設定が消え、未ログイン表示になることを確認した。
+クリーンinstallでHigh1件を新たに検出。`follow-redirects`1.16.1に対する[GHSA-mrwp-f3q8-3g9p](https://github.com/advisories/GHSA-mrwp-f3q8-3g9p)は10/25公表の別勧告で、10/22の0件記録を取り消すものではない。cross-realmのsensitiveHeaders配列が捨てられるNode処理の問題。LIFF→send-messages→LINE bot SDK→Axiosのoptional間接依存で、勧告自体もAxios正規化経路の再現を主張していない。製品の実漏えいを観測したとは扱わない。
 
-本書作成時点の再ログインは、人によるテストAのパスワード入力待ちで未確認。実施後の最新結果はPRの受入コメントに記録する。パスワードをチャット・ログ・ファイルへ保存しない。
+修正版1.16.2へlockfileの該当packageのversion/resolved/integrity3行だけ更新。package.json/他package/認証コードは変更なし。本番・stagingへ再配信していない。更新後の監査/型/全回帰/BuildとCIは、今回の結果記録に成否を分けて記載する。
 
-| 対象 | 現時点の証拠・制約 |
+## 製品UIと外部環境の受入（11/02の証拠整理）
+
+| 対象 | 証拠と判定範囲 |
 | --- | --- |
-| 実GoTrue/PostgRESTのRLS・再ログイン | 先行検品18/18 PASS。サーバーgetUserで本人確認、他人SELECT/UPDATEは0件、INSERTは42501、設定/revision不変、A/B再ログイン復元。製品UIの新しい再ログイン確認とは別 |
-| 製品UIでの保存 | 今回実測PASS（上記3値）。再ログインは上記の操作待ち |
-| 競合防止 | 実Supabaseの二つの編集タブで古い入力の拒否・入力保持・同時更新の一方だけ成功・勝者の再読込を先行実測PASS。回帰テストで継続保護 |
-| Google | 検証Authの公開settingsを読取確認: HTTP200、email=true、google=false、anonymous=false。実Googleログインは未確認。テスト用OAuth client・callback・担当テスト利用者の準備が必要 |
-| LINE | 検証LIFF IDを空に固定、検証line-auth Edge/channel/LIFFは未整備。実LINEログインは未確認。未設定ボタンのエラーを製品永続化のFAIL/PASSへ置き換えない |
-| 別ブラウザ | 前回Chromeでの復元は履歴としてPASS。今回の依存更新後の別ブラウザ・別端末は未確認 |
-| Android・LINE内 | 操作可能なAndroid端末と限定HTTPS stagingがなく未確認。PCの390pxやUA偽装を代替PASSにしない。スマホの127.0.0.1はPCを指さない |
+| 実JWT/RLS | 先行18/18 PASS。本人・他人拒否・0行/42501・A/B復元。実DELETE未実測 |
+| 製品UI | メールAの保存/logout/relogin3値復元は先行PASS。Google/LINEの実機結果とは別 |
+| 競合 | 実Supabase CAS/同時更新の先行PASS。修正版PC/Galaxyでメッセージ表示・入力保持・勝者保護・reload復元は利用者報告PASS |
+| Google | 10/24 PCでGoogle login/save/logout/relogin3値復元、同アカウントGalaxy Chrome復元PASS（利用者報告）。11/02設定読取で有効。11/02実ログインを再実行した証拠ではない |
+| LINE | 10/24専用channel/Edge/独立DBでPC/Chrome Galaxy/LINE内実LINE login、PCとLINE内logout/relogin、3値復元PASS（利用者報告）。11/02許可外redirect400/Locationなし |
+| 独立配信 | 11/02配信source ca4d930、匿名SSO302、独立backend継続。最新の文書だけを同じBuildに再配信したとは扱わない |
+| 本番公開経路 | 11/02 HTML/JS/CSS fingerprintは10/24と一致。完全artifact/固定commit対応・安全なfrontend rollbackの実証は未確認 |
+| Bolt同期 | 10/24の単一session714ファイル一致は当時のソース限定PASS。Version Historyとmain保護の同期不一致はFB-15として維持 |
 
-本番認証・LINEチャネル・既存Vercel環境変数は変更しない。OAuth検品は専用のテストoriginとテスト用provider設定を準備する別工程。同じproviderかどうかではなく同じSupabase user IDで設定が復元されることを検証する。別IDをメール類似で自動統合しない。
+Google/LINEを自動統合せず同一認証利用者での復元が基準。Google OAuthのLINE内経路・LINE内自動入力・製品全体のMemory隔離等を未確認のままPASSにしない。詳細/証拠リンクは[本番復旧手順](PRODUCTION_RECOVERY_RUNBOOK.md)参照。
 
 ## 最終差分レビュー
 
@@ -46,20 +51,18 @@
 - 既存24コンテンツ・211素材・音声・実践タイマー・数息観Session・Knowledge・DBの既存テーブルの変更はない。保護fixtureの元hashは維持し、先生設定に関する限定差分の逆適用で元画面hashを検証する。
 - 今回の追加修正は依存2ファイルとレビュー文書のみ。migration、Authコード、RLS、音声などの製品ロジックを追加変更していない。Vercelのmain/当該branch自動deploy抑止を保持する。
 
-## 判定
+## 判定（11/02）
 
-**本番導入は保留。** 依存監査の既知6件は解消したが、製品UI再ログインの完了記録、OAuth・実機の受入範囲の決定、Bolt同期復旧または承認された公開経路とrollback可能性の確認が必要。PRをDraftに保ち、以下の手順は計画としてレビューする。未検品のproviderや端末を無条件にGOにしない。
+**本番導入HOLD。PR #27はDraft維持。** 認証/端末の確認済み範囲は上表の通り。DBのバックアップは毎日約08:24 JST・30日保持・Postgres全体だが、現在の最新成功日時は未確認。復旧はサポートによる本番全DB置換で、復旧点後の全書込み消失とDB停止を伴う。個別表/隔離復元/PITRは不可。Storage実ファイル・Edge・Secrets・認証設定・ソースは別保全が必要。正式回答は本番変更や損失の承認ではない。
 
-## 本番導入・rollback手順（今回実行しない）
+## 本番導入・rollback手順（未実行）
 
-1. **承認とfreeze**: 最新main・PR head・CI・監査結果を再確認し、導入責任者と対象リリースcommitを固定する。個別にDB適用・merge・公開の承認を得る。本番backendのproject-refを管理者が確認し、検証projectと異なること、既存Auth/Edge/会員設定を変えないことを照合する。バックアップ/PITRの可用性と、直前の安定frontend artifactを確認する。
-2. **DB事前確認**: read-onlyでauth.users、既存のpublic.ai_teacher_settings有無、同名関数・trigger・migration履歴を確認する。既存オブジェクトがあれば停止して差分調査し、DROPやCREATE IF NOT EXISTSで不一致を隠さない。書込み経路のある本番データをstagingへコピーしない。
-3. **追加DBだけ先行**: 承認された`20261013000100_ai_teacher_settings.sql`一件の内容とhashを確認し、BEGIN/COMMITで一括適用する。失敗時はROLLBACK。既存profiles/privacy/consentsは触らない。`scripts/staging/bootstrap-teacher-auth.sql`は本番禁止。全migration一括pushは、本番UUIDを前提とする過去migrationを含むので禁止。この一件を適用したことをmigration履歴・担当者・時刻とともに記録する。履歴登録方式は管理者と事前に確定する。
-4. **DB単独検品**: table列・制約・RLS・列grant・triggerを照合し、承認済み本番検品アカウントだけで本人の設定読書き、他人アクセス拒否、競合を確認する。一般会員IDを検品に流用しない。旧frontendは新しいテーブルを参照しないため、DB先行でfrontend未公開の状態を保てる。
-5. **GitHub採用**: DB・受入ゲート完了後に別承認でDraftを解除し、最新mainとの最終差分・CIを確認してPRをmergeする。main直接push・force pushは行わない。自動deploy抑止は維持する。mergeのcommit IDを記録する。
-6. **公開前照合**: 固定commitからクリーンBuildし、成果物と設定名の一覧を記録する。公開先の実ソース全内容がそのcommitと一致することを確認する。BoltのSynced表示だけでは公開しない。Bolt同期が未復旧なら公開を止め、GitHub直結方式は別承認でproduction backend/認証/アクセス制御/rollbackを先に設計する。今回のlocalhostや未接続Readyを本番として使わない。
-7. **明示承認後の公開**: 既存の承認済みフロント公開経路だけを使う。DB/Edge/Secret/認証/DNS変更を同時に混ぜない。少数の担当検品アカウントで保存、再ログイン、他人分離、競合、Google/LINEの同一ID復元、既存実践・管理/MFA等の主要導線を実測し、判定と担当者を記録する。検品範囲外をPASSにしない。
-8. **障害時の判断**: データ漏えい・他人設定の更新・再ログインでの消失・重大な既存機能破壊なら公開拡大を止める。即時に直前の安定artifactを同じ承認済み経路で復旧する。frontend rollbackでは追加テーブル・設定データ・RLSを保持し、DROP/CASCADEを行わない。DB自身のアクセス制御に欠陥がある場合はfrontend rollbackだけで止まらないため、事故対応責任者の承認下でこの新テーブルのクライアント書込み/アクセスを遮断する別DB対応を行う。auth.usersや既存会員・Edgeを巻き込まない。
-9. **DB適用後・公開前の中止**: 新テーブルはRLS付きで保持し、旧frontendを続行する。修正版をstagingで再検証し、再承認を待つ。既存設定の復旧は本人所有権とrevisionを照合し、ブラウザ保存を推測で一括取り込まない。
+1. 最新成功backup ID/完了・復旧点日時/保持期限を管理元に確認し、失われ得る全会員更新と停止許容を責任者が明示承認。日次予定を成功証拠にしない。対象外資産と公開正常artifactの保全台帳を確定する。
+2. 本番table/trigger/migration履歴との衝突を読取確認し、**DB適用の別承認**後に設定専用migration一件だけ適用。staging bootstrap/LINE新設SQL/全migration pushを本番へ使わない。既存会員/認証設定に触れない。
+3. DB単独検品・最新CI・独立staging受入後、**別のmerge承認**で保護mainへ採用。今はDraftのまま。
+4. GitHub main固定のBuild/source/artifact/設定を照合し、**別の公開承認**で承認済み経路だけへ公開。DNS/Edge/Secret/Auth変更はさらに個別承認。本番経路が未検証なら停止。
+5. frontend rollbackは最新mainから専用branch/対象frontendだけの復旧PRを作り、型/全回帰/Build/Playwrightを検品→別merge承認→固定mainから別公開承認。DB・新表・保存設定・RLS・依存脆弱性修正を一括revertしない。Bolt Version Historyでmainを古い内容へ戻さない。
+6. 本番DB全置換は通常のrollbackに使わない。必要な事故時だけ、特定backup ID・全置換・書込み損失・DB停止を責任者が別承認しサポートへ依頼。隔離復元やPITRを可能な選択肢にしない。復旧後はDBと対象外資産の整合・本人分離・既存認証/実践を検品する。
+7. DB適用後に公開を中止した場合は新先生表/データ/RLSを保持し旧frontendを継続。DROP/CASCADE・ブラウザ設定の推測移行は禁止。
 
-検証結果の最新追記はPRの受入コメントに記録する。ソース・依存が変われば型・Build・全回帰・実践17件・設定3件とActionsを再実行し、今回は依存更新後の全項目を確認する。
+具体的な承認境界、release台帳、Storage/Edge/Secret/Auth別復旧、RPO/RTO評価は[PRODUCTION_RECOVERY_RUNBOOK.md](PRODUCTION_RECOVERY_RUNBOOK.md)に定義。今回実行するのは文書更新・読取・必須検査だけ。

@@ -77,3 +77,13 @@ PR #24をmain `89c3ccec6f3116a83eea73781984dd037eb05298` にmerge済み。直上
 
 ## FB-01最小実装（2026-10-13、作業ブランチ）
 先生設定のuser ID別保存・復元とlocal自動移行防止を実装PRへ分離。ローカル隔離PostgreSQL/RLSと合成認証UIを検証、実OAuth/remote stagingは未確認。Memory・対話UI改善・本人講師編集・立ち木FB-13/14は今回対象外。[設計と検品境界](AI_TEACHER_SETTINGS_PERSISTENCE.md)。
+
+
+## 本番導入の継続課題（2026-11-02）
+
+| ID | 課題 | 現状と終了条件 |
+| --- | --- | --- |
+| FB-15 P0 | Boltの複数session/Version Historyと保護mainの同期不一致 | OPEN。10/24単一session714件一致・サポート説明あり。今回のDB回答で解決扱いしない。安全な単一session運用と公開source/artifact/main対応、保護維持の復旧経路を確認する |
+| REC-01 P0 | 全DB置換しかない本番復旧と対象外資産 | OPEN/HOLD。日次/30日/Postgres全体の正式回答を反映。最新成功日時・許容損失/停止・別資産の実保全・frontend復旧実証は未完了。[手順](PRODUCTION_RECOVERY_RUNBOOK.md)参照 |
+
+PR27のGoogle/LINE、Galaxy、LINE内の先生3値再ログイン復元は10/24に確認した範囲でPASS。LINE内password managerとGoogle-in-LINE等は別の未確認/未解決であり全面完了にしない。本番は未変更、Draft維持。
