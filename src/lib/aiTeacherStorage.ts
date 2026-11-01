@@ -1,6 +1,7 @@
 // AI Teacher persona + program + growth + local practice fallback
 // All keys are namespaced to avoid collision with existing localStorage keys.
 
+import { readConfirmedTeacherSettings } from './teacherSettings';
 const TEACHER_KEY = 'yogaTeacher';
 const TODAY_YOGA_KEY = 'todayYoga';
 const GROWTH_KEY = 'yogaGrowth';
@@ -18,7 +19,8 @@ export interface AITeacherPersona {
   createdAt: string;
 }
 
-export function loadPersona(): AITeacherPersona | null {
+export function loadPersona(userId?: string | null): AITeacherPersona | null {
+  if (userId) return readConfirmedTeacherSettings(userId)?.persona ?? null;
   try {
     const raw = localStorage.getItem(TEACHER_KEY);
     if (!raw) return null;

@@ -14,6 +14,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
+      - run: node node_modules/typescript/bin/tsc --noEmit --skipLibCheck --target ES2022 --module ESNext --moduleResolution bundler --types vite/client scripts/staging/acceptance.ts
       - run: npm run test:regression
       - run: npm run build
   edge-safety:
@@ -26,6 +27,7 @@ jobs:
           deno-version: v2.9.6
       # Actual production/preview entrypoints, local auth stubs. No provider/DB or deploy credentials.
       - run: deno test --node-modules-dir=none --allow-env --allow-read tests/ai-teacher-release.test.ts
+      - run: deno test --node-modules-dir=none --allow-env --allow-read tests/line-redirect.test.ts
   browser-practice:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -46,4 +48,47 @@ jobs:
           path: |
             playwright-report/
             test-results/
+          retention-days: 14
+
+  browser-teacher-settings:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # Separate loopback-only fixture build, synthetic auth + real isolated PostgreSQL RLS.
+      - run: npx tsx --test tests/line-staging-bootstrap.test.ts
+      - run: npm run test:teacher-settings:browser
+      - run: node scripts/staging/build-site.mjs
+        env:
+          VITE_SUPABASE_URL: https://htnouayipmqvpckppbzv.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_staging_isolation_fixture
+      - run: npx playwright test --config playwright.staging-isolation.config.ts
+      - run: node scripts/staging/build-site.mjs --google-oauth
+        env:
+          VITE_SUPABASE_URL: https://htnouayipmqvpckppbzv.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_staging_isolation_fixture
+      - run: npx playwright test --config playwright.staging-isolation.config.ts
+        env:
+          STAGING_GOOGLE_TEST: 'true'
+      - run: node scripts/staging/build-site.mjs --google-oauth --line-oauth
+        env:
+          VITE_SUPABASE_URL: https://htnouayipmqvpckppbzv.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_staging_isolation_fixture
+      - run: npx playwright test --config playwright.staging-isolation.config.ts
+        env:
+          STAGING_GOOGLE_TEST: 'true'
+          STAGING_LINE_TEST: 'true'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: teacher-settings-browser-results
+          path: |
+            teacher-settings-report/
+            teacher-settings-results/
           retention-days: 14

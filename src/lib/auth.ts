@@ -29,9 +29,11 @@ export interface PrivacySettings {
 type OAuthProvider = 'google' | 'apple' | 'line';
 
 export const OAUTH_PROVIDERS = {
-  google: { enabled: true, label: 'Googleで続ける' },
+  google: { enabled: import.meta.env.VITE_STAGING_EMAIL_ONLY !== 'true' ||
+    (import.meta.env.VITE_SUPABASE_URL === 'https://htnouayipmqvpckppbzv.supabase.co' && import.meta.env.VITE_STAGING_GOOGLE_ENABLED === 'true'), label: 'Googleで続ける' },
   apple: { enabled: false, label: 'Appleで続ける' },
-  line: { enabled: true, label: 'LINEで続ける' },
+  line: { enabled: import.meta.env.VITE_STAGING_EMAIL_ONLY !== 'true' ||
+    (import.meta.env.VITE_SUPABASE_URL === 'https://htnouayipmqvpckppbzv.supabase.co' && import.meta.env.VITE_STAGING_LINE_ENABLED === 'true'), label: 'LINEで続ける' },
 } as const;
 
 interface AuthState {
@@ -76,6 +78,7 @@ const initialAuthState: AuthState = {
 
 let authState: AuthState = initialAuthState;
 let lastAuthEvent: string | null = null;
+let authGeneration = 0;
 const listeners = new Set<() => void>();
 
 export function getLastAuthEvent(): string | null {
@@ -111,13 +114,15 @@ async function fetchProfileAndPrivacy(userId: string) {
 
 if (supabase && isSupabaseConfigured) {
   supabase.auth.onAuthStateChange((event, session) => {
+    const generation = ++authGeneration;
     lastAuthEvent = event;
     notify();
     (async () => {
       if (session?.user) {
-        setAuthState({ loading: true });
+        setAuthState({ user: session.user, profile: null, privacy: null, consentVerified: false, loading: true });
         const { profile, privacy } = await fetchProfileAndPrivacy(session.user.id);
         const verified = await hasCurrentConsent(session.user.id);
+        if (generation !== authGeneration) return;
         setAuthState({
           user: session.user,
           profile,
@@ -196,20 +201,23 @@ const signInWithOAuth = async (provider: OAuthProvider) => {
 
 const signOut = async () => {
   if (!supabase) return;
-  await supabase.auth.signOut();
+  authGeneration++;
   setAuthState({ user: null, profile: null, privacy: null, consentVerified: false });
+  await supabase.auth.signOut();
 };
 
 const refreshProfile = async () => {
   if (!supabase || !authState.user) return;
-  const { profile, privacy } = await fetchProfileAndPrivacy(authState.user.id);
-  setAuthState({ profile, privacy });
+  const owner = authState.user.id, generation = authGeneration;
+  const { profile, privacy } = await fetchProfileAndPrivacy(owner);
+  if (generation === authGeneration && authState.user?.id === owner) setAuthState({ profile, privacy });
 };
 
 const refreshConsent = async () => {
   if (!supabase || !authState.user) return;
-  const verified = await hasCurrentConsent(authState.user.id);
-  setAuthState({ consentVerified: verified });
+  const owner = authState.user.id, generation = authGeneration;
+  const verified = await hasCurrentConsent(owner);
+  if (generation === authGeneration && authState.user?.id === owner) setAuthState({ consentVerified: verified });
 };
 
 // Columns a user is allowed to change on their own profile. Privileged columns

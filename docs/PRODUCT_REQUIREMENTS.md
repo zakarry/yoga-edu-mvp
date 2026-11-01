@@ -46,3 +46,11 @@ PR #20（腹式）とPR #21（立ち木）をmain `1cbe4e4b7ff1c4728b26c852258bb
 今後のアーサナ・呼吸法・瞑想追加と実践UI変更は、既存test:regressionに加えtest:browserの17件を必須とする。AUD-02、TIME-01/02、UI-01と数息観のmedia60秒＋240秒静寂を保護する。CIはBuild済みローカルpreviewを検査し、承認済み既存Vercel Readyはcommit照合後の限定検品に継続利用する。自動PASSと人の実機PASSを区別する。
 Q-05のBox停止/再開の元利用者操作経路は未確定。現行Box UIには停止ボタンがなく、模擬runtime再現や立ち木の共有制御PASSでBox固有の実機項目をPASSにしない。
 認証・AI先生・カルテ・管理画面の接続は、独立staging設定・認証戻り先・書込み境界が確定するまで変更しない。GitHub mainを正本とし、Bolt同期不一致が解消するまでPublishしない。mainのVercel自動公開はソース側git.deploymentEnabledで抑止し、今回のmergeを新規公開と混同しない。
+
+## DATA-02 AI先生の設定永続化（2026-10-13、実装PRの受入仕様）
+利用者承認によりFB-01の最小実装を作業ブランチで導入する。user ID別に先生・指導言語・Personality・選択prefsを保存/復元し、旧local設定の自動移行を禁止する。Memoryは別同意対象。詳細と未公開/未確認境界は[永続化設計](AI_TEACHER_SETTINGS_PERSISTENCE.md)。本節は過去の「本タスク製品コード変更禁止」に対する今回の承認範囲を明示するもので、既存実践仕様/認証設定を変更しない。remote migration未適用、mainへの実装merge未実施。
+
+
+## REC-01 本番復旧の制約（2026-11-02・本番未適用）
+
+[本番復旧手順](PRODUCTION_RECOVERY_RUNBOOK.md)をDATA-01の保護条件として採用。Larin10/24正式回答（利用者提示）: DBは日次約08:24 JST/30日保持/Postgres全体。復旧はサポートによる本番全置換で、復旧点後の書込み消失・復旧中停止。表単独/隔離/PITR不可。Storage実ファイル・Edge・Secrets・認証設定・ソースをDB snapshotで保全済み扱いしない。最新成功日時は未確認。frontend rollbackはGitHub保護main正本・専用PR・新表/既存データ/RLS保持。Version History/main保護の同期不一致は別課題として維持。DB変更/merge/Publish/各設定変更はそれぞれ別承認、現在HOLD/Draft。

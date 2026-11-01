@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ]
+  },
+  "include": [
+    "tests/teacher-settings.test.ts",
+    "tests/helpers/teacher-settings-db.ts",
+    "tests/teacher-browser/settings.spec.ts",
+    "playwright.teacher-settings.config.ts"
+  ],
+  "exclude": []
+}

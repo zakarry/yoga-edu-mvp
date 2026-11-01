@@ -4,7 +4,8 @@
     "deploymentEnabled": {
       "main": false,
       "qa/practice-browser-regression": false,
-      "qa/staging-feedback-plan": false
+      "qa/staging-feedback-plan": false,
+      "fix/account-teacher-settings": false
     }
   }
 }

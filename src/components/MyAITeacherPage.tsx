@@ -2,9 +2,11 @@ import { CameraMirrorStatus, useCameraMirror } from './CameraMirrorStatus';
 import { TreeHoldTimer } from './TreeHoldTimer';
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '../lib/auth';
+import { useTeacherSettings } from '../lib/useTeacherSettings';
+import { validTeacherSettings } from '../lib/teacherSettings';
 import { savePracticeLog, getPracticeLogs, syncPendingLog, type PracticeLog } from '../services/practiceLogService';
 import {
-  loadPersona, savePersona, clearPersona,
+  loadPersona,
   loadTodayProgram, saveTodayProgram,
   loadGrowth, saveGrowth,
   saveLocalPracticeLog, loadLocalPracticeLogs,
@@ -324,7 +326,7 @@ interface ChatMessage {
 }
 
 function buildLocalContextFast(growth: AITeacherGrowth, sessionIntent?: ConversationContext, todayContext?: TodayContext, userId?: string): TeacherContext {
-  const persona = loadPersona();
+  const persona = loadPersona(userId);
   const localLogs = loadLocalPracticeLogs();
   const records = localLogs.map((l) => ({
     practice_type: l.practice_type,
@@ -400,9 +402,20 @@ function resolvePosesFromProgram(prog: TodayProgram | null): ConcretePose[] {
 export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onOpenProYoga, latestDiagnosis, initialMinutes, initialPoseId, initialKnowledgeContext, entryTarget }: MyAITeacherPageProps) {
   const auth = useAuth();
   const [step, setStep] = useState<StepId>('home');
-  const [persona, setPersona] = useState<AITeacherPersona | null>(null);
+  // Same-account auth refresh must not replace the revision of an open editor.
+  const settingsOwner = auth.authReady ? auth.user?.id ?? null : undefined;
+  const teacherSettings = useTeacherSettings(settingsOwner);
+  const persona = teacherSettings.settings.persona;
+  const settingsOwnerRef = useRef(settingsOwner);
+  settingsOwnerRef.current = settingsOwner;
+  const [personaInputError, setPersonaInputError] = useState<string | null>(null);
+  const settingsFeedbackRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (step === 'step4' && teacherSettings.message) settingsFeedbackRef.current?.scrollIntoView({ block: 'center' });
+  }, [step, teacherSettings.message]);
   const [program, setProgram] = useState<TodayProgram | null>(null);
-  const [growth, setGrowth] = useState<AITeacherGrowth>(loadGrowth());
+  const [growthHistory, setGrowth] = useState<AITeacherGrowth>(loadGrowth());
+  const growth = useMemo(() => ({ ...growthHistory, prefs: teacherSettings.settings.prefs }), [growthHistory, teacherSettings.settings.prefs]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [practiceActive, setPracticeActive] = useState(false);
@@ -495,6 +508,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
 
   // Persona form state
   const [editingPersona, setEditingPersona] = useState(false);
+  const [editingRevision, setEditingRevision] = useState<number | null>(null);
   const [formName, setFormName] = useState('');
   const [formAvatar, setFormAvatar] = useState('🧘');
   const [formPersonality, setFormPersonality] = useState('gentle');
@@ -582,16 +596,6 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   }, []);
 
   useEffect(() => {
-    const p = loadPersona();
-    setPersona(p);
-    if (p) {
-      setFormName(p.name);
-      setFormAvatar(p.avatar);
-      setFormPersonality(p.personality);
-      setFormSpecialty(p.specialty);
-      setFormUiLang(p.uiLanguage);
-      setFormTeachingLang(p.teachingLanguage);
-    }
     const savedSession = loadTodayContextSession<TodayContext>();
     const savedTodayCtx = savedSession?.todayContext ?? null;
     const restoredCheckResult = savedSession?.todayCheckResult ?? null;
@@ -622,6 +626,28 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   useEffect(() => {
     saveTodayContextSession(todayContext, todayCheckResult);
   }, [todayContext, todayCheckResult]);
+
+  useEffect(() => {
+    setFormName(persona?.name ?? '');
+    setFormAvatar(persona?.avatar ?? '🧘‍♀️');
+    setFormPersonality(persona?.personality ?? 'gentle');
+    setFormSpecialty(persona?.specialty ?? 'pranayama');
+    setFormUiLang(persona?.uiLanguage ?? 'ja');
+    setFormTeachingLang(persona?.teachingLanguage ?? 'ja');
+    setEditingPersona(false);
+    setPersonaInputError(null);
+  }, [settingsOwner, persona]);
+
+  useEffect(() => {
+    setTeacherContext(null);
+  }, [settingsOwner, persona, teacherSettings.settings.prefs]);
+
+  useEffect(() => {
+    setChatMessages([]);
+    setChatInput('');
+    setChatTyping(false);
+    setConversationContext({});
+  }, [settingsOwner]);
 
   const safetyBlocked = isSafetyBlocked(latestDiagnosis?.safety_state) || sessionSafetyBlocked;
   const safetyCautioned = isSafetyCautioned(latestDiagnosis?.safety_state);
@@ -728,7 +754,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       selectionResolved: effectiveToday.selectionResolved,
     });
     if (!gateVerdictAllowsGeneration(verdict)) return;
+    const requestedOwner = settingsOwner;
     const ctx = await buildTeacherContext(auth.user?.id ?? null, growth, conversationContext, effectiveToday);
+    if (settingsOwnerRef.current !== requestedOwner) return;
     setTeacherContext(ctx);
     let plan;
     if (testPlanMode) {
@@ -785,9 +813,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setStep('step2');
   }, [safetyBlocked, auth.user, growth, conversationContext, testPlanMode, testPlanCompositeMode, todayContext, todayCheckResult]);
 
-  const handleSavePersona = useCallback(() => {
+  const handleSavePersona = useCallback(async () => {
     const newPersona: AITeacherPersona = {
-      name: formName || 'MAYA',
+      name: formName.trim() || 'MAYA',
       avatar: formAvatar,
       personality: formPersonality,
       specialty: formSpecialty,
@@ -795,10 +823,11 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       teachingLanguage: formTeachingLang,
       createdAt: persona?.createdAt ?? new Date().toISOString(),
     };
-    savePersona(newPersona);
-    setPersona(newPersona);
-    setEditingPersona(false);
-  }, [formName, formAvatar, formPersonality, formSpecialty, formUiLang, formTeachingLang, persona]);
+    const next = { persona: newPersona, prefs: teacherSettings.settings.prefs };
+    if (!validTeacherSettings(next)) { setPersonaInputError('先生の名前は80文字以内で入力してください。設定内容を確認してください。'); return; }
+    setPersonaInputError(null);
+    if (await teacherSettings.save(next, editingPersona ? editingRevision : teacherSettings.revision)) setEditingPersona(false);
+  }, [formName, formAvatar, formPersonality, formSpecialty, formUiLang, formTeachingLang, persona, teacherSettings, editingPersona, editingRevision]);
 
   const handleDryRun = useCallback(async () => {
     if (!dryRunInput.trim()) return;
@@ -834,7 +863,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
   }, [dryRunInput, auth.user, persona, growth, conversationContext]);
 
   const handleSendChat = useCallback(() => {
-    if (!chatInput.trim() || chatTyping) return;
+    if (!chatInput.trim() || chatTyping || teacherSettings.status !== 'ready') return;
+    const requestedOwner = settingsOwner;
     const userMsg: ChatMessage = { role: 'user', text: chatInput };
     // Build conversation turns from existing chat history (before adding new message)
     const turns = buildConversationTurns(chatMessages);
@@ -843,6 +873,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
     setChatTyping(true);
     const delay = 150 + Math.random() * 150;
     setTimeout(async () => {
+      if (settingsOwnerRef.current !== requestedOwner) return;
       // Never reuse a context made before login or for a previous account.
       const ctx = teacherContext?.userId === auth.user?.id
         ? (teacherContext ?? buildLocalContextFast(growth, conversationContext, todayContext, auth.user?.id))
@@ -854,6 +885,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           safetyActiveSignals: sessionSafetyBlocked ? (loadSessionSafety()?.activeSignals ?? conversationContext.safetyActiveSignals ?? ['pain']) : conversationContext.safetyActiveSignals,
         };
         const response = await generateTeacherResponse(ctx, userMsg.text, contextWithSafety, turns);
+        if (settingsOwnerRef.current !== requestedOwner) return;
         const dbg = getLastBM5Debug();
         const routerDbg = getLastRouterDebug();
         if (auth.profile?.is_admin && dbg) {
@@ -886,6 +918,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           clearSessionSafety();
         }
       } catch {
+        if (settingsOwnerRef.current !== requestedOwner) return;
         const name = persona?.name ?? 'AI先生';
         const reply: ChatMessage = {
           role: 'teacher',
@@ -895,7 +928,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
         setChatTyping(false);
       }
     }, delay);
-  }, [chatInput, chatTyping, chatMessages, persona, teacherContext, growth, conversationContext, todayContext, sessionSafetyBlocked, auth.user, auth.profile?.is_admin]);
+  }, [chatInput, chatTyping, chatMessages, persona, teacherContext, growth, conversationContext, todayContext, sessionSafetyBlocked, auth.user, auth.profile?.is_admin, settingsOwner, teacherSettings.status]);
 
   const handlePracticeAction = useCallback((action: TeacherResponseAction) => {
     if (!action.targetId) return;
@@ -1254,7 +1287,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       streakDays: updateStreak(growth.streakDays, growth.lastPracticeDate),
       lastPracticeDate: new Date().toISOString().slice(0, 10),
     };
-    saveGrowth(newGrowth);
+    saveGrowth({ ...newGrowth, prefs: auth.user ? loadGrowth().prefs : newGrowth.prefs });
     setGrowth(newGrowth);
     setLocalLogs(loadLocalPracticeLogs());
 
@@ -1436,6 +1469,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
           <p>AI先生が、今日の状態に合わせてヨガ・呼吸・瞑想を一緒にガイドします。</p>
           <p className="ai-teacher-brand-note">Yoga Knowledgeを基礎に、アーサナ・呼吸法・瞑想を流れとして分かりやすくガイドするAI先生です。使うほど、あなたの好みや継続傾向を覚えていきます。</p>
           <p className="ai-teacher-camera-hint-home">お手本や呼吸ガイドを見ながら、カメラを鏡として自分の姿勢も確認できます。</p>
+          {step !== 'step4' && teacherSettings.message && <p role="status">{teacherSettings.message}</p>}
+          {step !== 'step4' && teacherSettings.status === 'error' && <button className="secondary-button" onClick={() => void teacherSettings.reload()}>先生設定を再読み込み</button>}
           {persona && (
             <div className="ai-teacher-hero-teacher">
               <span className="ai-teacher-hero-avatar">{persona.avatar}</span>
@@ -1917,7 +1952,12 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
       {step === 'step4' && (
         <section className="panel ai-teacher-step-panel">
           <h3>STEP 4 — AI先生設定</h3>
-          {persona && !editingPersona ? (
+          <p>{settingsOwner ? 'このアカウントの先生設定を保存します。以前のブラウザ設定は自動移行しません。' : '未ログインの設定はこのブラウザだけに保存します。'}</p>
+          <p>会話や身体情報は先生設定に保存しません。My Yoga Memoryは別の同意・管理対象です。</p>
+          {personaInputError && <p role="alert">{personaInputError}</p>}
+          {teacherSettings.status === 'loading' || teacherSettings.status === 'error' ? (
+            <p>{teacherSettings.status === 'loading' ? '先生設定を読み込み中…' : '設定の読み込み後に編集できます。'}</p>
+          ) : persona && !editingPersona ? (
             <div className="ai-teacher-persona-display">
               <span className="ai-teacher-avatar-lg">{persona.avatar}</span>
               <div className="ai-teacher-persona-fields">
@@ -1928,15 +1968,9 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 <div><strong>指導言語</strong><span>{persona.teachingLanguage === 'ja' ? '日本語' : 'English'}</span></div>
               </div>
               <div className="ai-teacher-persona-actions">
-                <button className="secondary-button" onClick={() => setEditingPersona(true)}>変更する</button>
-                <button className="ghost-button" onClick={() => {
-                  clearPersona();
-                  setPersona(null);
-                  setEditingPersona(true);
-                  setFormName('');
-                  setFormAvatar('🧘‍♀️');
-                  setFormPersonality('gentle');
-                  setFormSpecialty('pranayama');
+                <button className="secondary-button" disabled={teacherSettings.status !== 'ready'} onClick={() => { setEditingRevision(teacherSettings.revision); setEditingPersona(true); }}>変更する</button>
+                <button className="ghost-button" disabled={teacherSettings.status !== 'ready'} onClick={async () => {
+                  if (await teacherSettings.save({ persona: null, prefs: teacherSettings.settings.prefs })) setEditingPersona(true);
                 }}>削除する</button>
               </div>
               <p className="ai-teacher-memory-note">
@@ -1947,7 +1981,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
             <div className="ai-teacher-persona-form">
               <div className="field">
                 <label>先生の名前</label>
-                <input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="MAYA" />
+                <input aria-label="先生の名前" maxLength={80} value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="MAYA" />
               </div>
               <div className="field">
                 <label>見た目（アバター）</label>
@@ -1959,7 +1993,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
               </div>
               <div className="field">
                 <label>性格</label>
-                <select value={formPersonality} onChange={(e) => setFormPersonality(e.target.value)}>
+                <select aria-label="Teacher Personality" value={formPersonality} onChange={(e) => setFormPersonality(e.target.value)}>
                   {PERSONALITY_OPTIONS.map((p) => <option key={p.v} value={p.v}>{p.label}</option>)}
                 </select>
               </div>
@@ -1978,14 +2012,16 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 </div>
                 <div className="field">
                   <label>指導言語</label>
-                  <select value={formTeachingLang} onChange={(e) => setFormTeachingLang(e.target.value as LangCode)}>
+                  <select aria-label="指導言語" value={formTeachingLang} onChange={(e) => setFormTeachingLang(e.target.value as LangCode)}>
                     {LANG_OPTIONS.map((l) => <option key={l.v} value={l.v}>{l.label}</option>)}
                   </select>
                 </div>
               </div>
-              <button className="primary-button" onClick={handleSavePersona}>保存する</button>
+              <button className="primary-button" disabled={teacherSettings.status !== 'ready'} onClick={() => void handleSavePersona()}>{teacherSettings.status === 'saving' ? '保存中…' : '保存する'}</button>
             </div>
           )}
+          {teacherSettings.message && <p ref={settingsFeedbackRef} role="status">{teacherSettings.message}</p>}
+          {teacherSettings.status === 'error' && <button className="secondary-button" onClick={() => void teacherSettings.reload()}>先生設定を再読み込み</button>}
         </section>
       )}
 
@@ -2041,7 +2077,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 onKeyDown={(e) => { if (e.key === 'Enter') handleSendChat(); }}
                 placeholder="メッセージを入力…"
               />
-              <button className="primary-button" onClick={handleSendChat} disabled={chatTyping}>{chatTyping ? '…' : '送信'}</button>
+              <button className="primary-button" onClick={handleSendChat} disabled={chatTyping || teacherSettings.status !== 'ready'}>{chatTyping ? '…' : '送信'}</button>
             </div>
             <p className="ai-teacher-safety-note">
               痛み・怪我・妊娠・既往症などについては個別提案を行いません。専門家にご相談ください。
@@ -3126,9 +3162,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 <div className="chip-grid">
                   {PREF_EXPLANATION_OPTIONS.map((o) => (
                     <button key={o.v} className={`select-chip ${growth.prefs.explanation === o.v ? 'active' : ''}`}
-                      onClick={() => {
-                        const ng = { ...growth, prefs: { ...growth.prefs, explanation: o.v } };
-                        saveGrowth(ng); setGrowth(ng);
+                      disabled={teacherSettings.status !== 'ready'} onClick={() => {
+                        void teacherSettings.save({ persona, prefs: { ...teacherSettings.settings.prefs, explanation: o.v } });
                       }}>{o.label}</button>
                   ))}
                 </div>
@@ -3138,9 +3173,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 <div className="chip-grid">
                   {PREF_CUE_OPTIONS.map((o) => (
                     <button key={o.v} className={`select-chip ${growth.prefs.cue === o.v ? 'active' : ''}`}
-                      onClick={() => {
-                        const ng = { ...growth, prefs: { ...growth.prefs, cue: o.v } };
-                        saveGrowth(ng); setGrowth(ng);
+                      disabled={teacherSettings.status !== 'ready'} onClick={() => {
+                        void teacherSettings.save({ persona, prefs: { ...teacherSettings.settings.prefs, cue: o.v } });
                       }}>{o.label}</button>
                   ))}
                 </div>
@@ -3150,9 +3184,8 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 <div className="chip-grid">
                   {PREF_PRAISE_OPTIONS.map((o) => (
                     <button key={o.v} className={`select-chip ${growth.prefs.praise === o.v ? 'active' : ''}`}
-                      onClick={() => {
-                        const ng = { ...growth, prefs: { ...growth.prefs, praise: o.v } };
-                        saveGrowth(ng); setGrowth(ng);
+                      disabled={teacherSettings.status !== 'ready'} onClick={() => {
+                        void teacherSettings.save({ persona, prefs: { ...teacherSettings.settings.prefs, praise: o.v } });
                       }}>{o.label}</button>
                   ))}
                 </div>

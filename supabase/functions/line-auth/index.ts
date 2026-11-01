@@ -1,4 +1,5 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { allowedLineRedirect } from "../_shared/lineRedirect.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,7 +40,7 @@ function generateState(): string {
 // Shared helper: look up or create a Supabase user from a verified LINE sub,
 // then generate a session. Used by both the OAuth callback and LIFF paths.
 async function getOrCreateLineSession(
-  adminClient: ReturnType<typeof createClient>,
+  adminClient: SupabaseClient,
   lineSub: string,
   displayName: string | null,
   supabaseUrl: string,
@@ -139,6 +140,7 @@ Deno.serve(async (req: Request) => {
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
   const channelId = (Deno.env.get("LINE_CHANNEL_ID") || "").trim();
   const channelSecret = (Deno.env.get("LINE_CHANNEL_SECRET") || "").trim();
+  const redirectOrigins = Deno.env.get("LINE_AUTH_REDIRECT_ORIGINS");
 
   if (!supabaseUrl || !serviceRoleKey || !anonKey || !channelId || !channelSecret) {
     console.error("line-auth: missing required env vars", {
@@ -157,12 +159,13 @@ Deno.serve(async (req: Request) => {
   try {
     // ── START (LINE Login OAuth redirect) ─────────────────
     if (path === "start" || path === "" || path === "/") {
-      const redirectTo = url.searchParams.get("redirect_to") || url.origin;
+      const redirectTo = allowedLineRedirect(url.searchParams.get("redirect_to"), redirectOrigins);
+      if (!redirectTo) return jsonResponse({ error: "invalid_redirect" }, 400);
       const state = generateState();
 
       const { error: insertError } = await adminClient
         .from("line_auth_states")
-        .insert({ state, redirect_to: redirectTo, consumed: false });
+        .insert({ state, redirect_to: redirectTo.toString(), consumed: false });
 
       if (insertError) {
         console.error("line-auth: failed to insert state");
@@ -206,6 +209,10 @@ Deno.serve(async (req: Request) => {
         return redirectToAppWithError(url.origin, "line_auth_failed");
       }
 
+      // Recheck stored states against current policy before token exchange or session creation.
+      const verifiedRedirect = allowedLineRedirect(stateRow.redirect_to, redirectOrigins);
+      if (!verifiedRedirect) return jsonResponse({ error: "invalid_redirect" }, 400);
+
       if (stateRow.consumed) {
         return redirectToAppWithError(url.origin, "line_auth_failed");
       }
@@ -215,10 +222,14 @@ Deno.serve(async (req: Request) => {
         return redirectToAppWithError(url.origin, "line_auth_failed");
       }
 
-      await adminClient
+      const { data: consumedState, error: consumeError } = await adminClient
         .from("line_auth_states")
         .update({ consumed: true })
-        .eq("id", stateRow.id);
+        .eq("id", stateRow.id)
+        .eq("consumed", false)
+        .select("id");
+      if (consumeError || !Array.isArray(consumedState) || consumedState.length !== 1 ||
+          consumedState[0].id !== stateRow.id) return jsonResponse({ error: "invalid_state" }, 400);
 
       const callbackUrl = `${supabaseUrl}/functions/v1/line-auth/callback`;
       const tokenRes = await fetch(LINE_TOKEN_URL, {
@@ -273,7 +284,7 @@ Deno.serve(async (req: Request) => {
         return redirectToAppWithError(stateRow.redirect_to, "line_auth_failed");
       }
 
-      const finalRedirect = new URL(stateRow.redirect_to);
+      const finalRedirect = verifiedRedirect;
       finalRedirect.hash =
         `access_token=${encodeURIComponent(session.access_token)}` +
         `&refresh_token=${encodeURIComponent(session.refresh_token)}` +

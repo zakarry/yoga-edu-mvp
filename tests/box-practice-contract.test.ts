@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { withoutTeacherSettingsEdits } from './teacher-settings-source-boundary';
 import assert from 'node:assert/strict';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -41,7 +42,7 @@ test('Box visual SSR and protected sources preserve baseline plus independently 
     if(path==='src/lib/breathworkCueBuilder.ts') source=source
       .replace('defineAbdominalPractice, defineBoxPractice','defineAbdominalPractice')
       .replace("  if (entry.id === 'box-breathing') return defineBoxPractice(entry, cues).guide.cues;\n",'');
-    assert.equal(hash(source),(q05Approved as Record<string,string>)[path] ?? expected,path);
+    assert.equal(hash(withoutTeacherSettingsEdits(path,source)),(q05Approved as Record<string,string>)[path] ?? expected,path);
   }
   for(const saved of before.renders) assert.equal(renderToStaticMarkup(React.createElement(BreathworkVisual,{breathwork:entry,phase:saved.phase as BreathPhase,remainingSeconds:saved.remaining,isRunning:true,isCompleted:false,phaseDurationSeconds:4})),saved.html);
 });

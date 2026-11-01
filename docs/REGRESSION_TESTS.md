@@ -70,3 +70,23 @@ PR #24採用main `89c3ccec6f3116a83eea73781984dd037eb05298` 上にBox契約を�
 
 既存test:regressionと別にtest:browserを追加し、Actionsのbrowser-practice jobで実行する。4実践の実時間と主要UI、320/390/430px、立ち木の実音声pause/resume/離脱を対象にする。[実行・Q-05経路・検品境界](BROWSER_PRACTICE_ACCEPTANCE.md)を参照。Box画面に存在しない一時停止UIを前提にPASSとしない。Android発音/末尾/LINE/完全同期の人による検品は維持する。UI修正は未公開。
 今後のアーサナ・呼吸法・瞑想追加/変更と実践UI変更では17件すべてを標準ゲートとして実行する。新しい実践固有の条件は必要なテストを追加し、既存17件を削減・skipしてPASSにしない。実機記録は[Galaxy/LINE検品票](GALAXY_LINE_ACCEPTANCE.md)に分離する。
+
+## AI先生設定（DATA-02 / FB-01、実装PR）
+標準全回帰に `npm run test:teacher-settings` を追加し、隔離PostgreSQLのRLS・保存/復元・アカウント分離・読込/保存失敗・古い要求無効化・revision競合を実行する。`npm run test:teacher-settings:browser` は390px実UI＋合成認証＋隔離DBを別jobで実行。標準実践Playwright17件は継続し、件数を混ぜない。実Google/LINE、remote Supabase RLS/PostgREST、別端末、Galaxy/LINEは独立staging未作成のため未確認。[詳細](AI_TEACHER_SETTINGS_PERSISTENCE.md)。
+
+実Supabaseの検品表は[PR #27 staging手順](AI_TEACHER_SUPABASE_STAGING_RUNBOOK.md)。追加bootstrap回帰は空環境のsignup/profile/consent/RLS、自己昇格禁止、非空環境での実行拒否をローカルPostgreSQLで検証する。実GoTrue/PostgRESTの結果とは分ける。
+
+
+## REC-01 運用受入（2026-11-02）
+
+自動コード回帰の成功で本番復旧をPASSにしない。[復旧手順](PRODUCTION_RECOVERY_RUNBOOK.md)の次を別検品する。
+
+| 検品 | 必須証拠/判定 |
+| --- | --- |
+| 最新backup | 対象project/backup ID/成功完了・復旧点日時/timezone/保持期限。日次約08:24から推測禁止。現状未確認 |
+| DB復旧制約 | 全DB置換・復旧点後全書込み消失・停止・サポート依頼を責任者が了承。表単独/隔離/PITRは非対応として明記 |
+| frontend復旧 | GitHub main履歴と正常artifact対応・対象だけ復旧PR・独立検品・別merge/公開承認。DB/認証/Edge/Secretを巻き込まない。実復旧未確認 |
+| 対象外資産 | Storage実バイナリ/Edge配信source/Secret vault参照/外部認証設定の実保全と整合検品。文書整備≠バックアップ実在 |
+| Bolt同期 | 10/24作業ソース714件一致は履歴。複数session/Version History/main保護の問題は継続。公開前の適用SHA/source/artifact照合が別途必要 |
+
+本番DB復元の自動テストや本番データの隔離コピーは実行しない。Google/LINE PC/Galaxy/LINE内の3値復元は10/24の利用者報告として維持し、文書変更で新しい実機PASSを増やさない。
