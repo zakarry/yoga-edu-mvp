@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { jawRelease } from './lib/jawRelease';
+import introUrl from './assets/jaw-release/intro.wav?url';
+import practiceUrl from './assets/jaw-release/practice.wav?url';
+import timing from './assets/jaw-release/timing.json';
 
 const [intro, ...remaining] = jawRelease.guide.cues;
 const phases = remaining.filter(cue => cue.type === 'silence');
@@ -12,27 +15,32 @@ function JawReleasePreview() {
   const [ready, setReady] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const generation = useRef(0);
-  const audio = useRef<SpeechSynthesisUtterance | null>(null);
-  const deadline = useRef<number | undefined>(undefined);
+  const playback = useRef(0);
+  const audio = useRef<HTMLAudioElement | null>(null);
   const frame = useRef(0);
-  const startTime = useRef(0);
-  const progress = useRef(0);
+  const deadline = useRef<number | undefined>(undefined);
 
-  function stopWork() {
-    generation.current++;
+  function releaseAudio() {
+    playback.current++;
     cancelAnimationFrame(frame.current);
     clearTimeout(deadline.current);
-    if (audio.current) {
-      audio.current.onend = null;
-      audio.current.onerror = null;
-      audio.current = null;
-      window.speechSynthesis.cancel();
+    const track = audio.current;
+    audio.current = null;
+    if (track) {
+      track.pause();
+      track.removeAttribute('src');
+      track.load();
     }
   }
 
+  function stopWork() {
+    generation.current++;
+    releaseAudio();
+  }
+
   useEffect(() => {
-    const hide = () => { if (document.hidden) { stopWork(); setStatus('idle'); setElapsed(0); } };
     const leave = () => { stopWork(); setStatus('idle'); setElapsed(0); };
+    const hide = () => { if (document.hidden) leave(); };
     document.addEventListener('visibilitychange', hide);
     window.addEventListener('pagehide', leave);
     return () => {
@@ -42,57 +50,93 @@ function JawReleasePreview() {
     };
   }, []);
 
-  function run() {
+  function play(track: HTMLAudioElement, isPractice: boolean) {
     const current = generation.current;
-    startTime.current = performance.now() - progress.current;
-    setStatus('running');
-    function tick(now: number) {
-      if (current !== generation.current) return;
-      progress.current = Math.min(totalMs, now - startTime.current);
-      setElapsed(progress.current);
-      if (progress.current === totalMs) setStatus('completed');
-      else frame.current = requestAnimationFrame(tick);
+    const active = () => generation.current === current && audio.current === track;
+    const fail = () => {
+      if (!active()) return;
+      stopWork();
+      setStatus('error');
+    };
+    const attempt = ++playback.current;
+    clearTimeout(deadline.current);
+    let lastMediaTime = track.currentTime;
+    const armDeadline = () => {
+      clearTimeout(deadline.current);
+      deadline.current = window.setTimeout(fail, 8000);
+    };
+    function sync() {
+      if (!active() || playback.current !== attempt || track.paused || track.ended) return;
+      const mediaTime = track.currentTime;
+      if (mediaTime !== lastMediaTime) {
+        lastMediaTime = mediaTime;
+        armDeadline();
+      }
+      if (isPractice) setElapsed(Math.min(totalMs, mediaTime * 1000));
+      frame.current = requestAnimationFrame(sync);
     }
-    frame.current = requestAnimationFrame(tick);
+    armDeadline();
+    setStatus(isPractice ? 'running' : 'intro');
+    track.play().then(() => {
+      if (active() && playback.current === attempt && !track.paused) frame.current = requestAnimationFrame(sync);
+    }).catch(() => { if (playback.current === attempt) fail(); });
+  }
+
+  function openTrack(isPractice: boolean) {
+    const track = new Audio(isPractice ? practiceUrl : introUrl);
+    const current = generation.current;
+    audio.current = track;
+    const active = () => generation.current === current && audio.current === track;
+    const expected = isPractice ? totalMs / 1000 : timing.introFrames / timing.sampleRate;
+    const fail = () => {
+      if (!active()) return;
+      stopWork();
+      setStatus('error');
+    };
+    track.addEventListener('error', fail);
+    track.addEventListener('loadedmetadata', () => {
+      if (active() && Math.abs(track.duration - expected) > 0.01) fail();
+    });
+    track.addEventListener('ended', () => {
+      if (!active()) return;
+      if (!track.ended || !Number.isFinite(track.duration) ||
+          Math.abs(track.duration - expected) > 0.01 || track.currentTime < expected - 0.01) {
+        fail();
+        return;
+      }
+      releaseAudio();
+      if (isPractice) {
+        setElapsed(totalMs);
+        setStatus('completed');
+      } else {
+        openTrack(true);
+      }
+    });
+    play(track, isPractice);
   }
 
   function start() {
     if (!ready || audio.current) return;
     stopWork();
-    progress.current = 0;
     setElapsed(0);
-    const current = generation.current;
-    const fail = () => {
-      if (generation.current !== current) return;
-      stopWork();
-      setStatus('error');
-    };
-    try {
-      const synth = window.speechSynthesis;
-      const voice = synth.getVoices().find(candidate => candidate.localService && /^ja(?:-|$)/i.test(candidate.lang));
-      if (!voice) { fail(); return; }
-      const utterance = new SpeechSynthesisUtterance(intro.speechText);
-      utterance.voice = voice;
-      utterance.lang = voice.lang;
-      let started = false;
-      utterance.onstart = () => { started = true; };
-      utterance.onend = () => {
-        if (generation.current !== current || audio.current !== utterance) return;
-        if (!started) { fail(); return; }
-        clearTimeout(deadline.current);
-        audio.current = null;
-        run();
-      };
-      utterance.onerror = fail;
-      audio.current = utterance;
-      setStatus('intro');
-      deadline.current = window.setTimeout(fail, 45000);
-      synth.speak(utterance);
-    } catch {
-      fail();
-    }
+    openTrack(false);
   }
 
+  function pause() {
+    const track = audio.current;
+    if (!track || track.paused || track.ended) return;
+    track.pause();
+    playback.current++;
+    cancelAnimationFrame(frame.current);
+    clearTimeout(deadline.current);
+    setElapsed(Math.min(totalMs, track.currentTime * 1000));
+    setStatus('paused');
+  }
+
+  function resume() {
+    const track = audio.current;
+    if (track?.paused && !track.ended) play(track, true);
+  }
   let phaseStart = 0;
   const phase = phases.find(cue => {
     const end = phaseStart + cue.durationSec! * 1000;
@@ -102,6 +146,13 @@ function JawReleasePreview() {
   });
   const practicing = status === 'running' || status === 'paused';
   const holding = phase?.id.startsWith('hold-');
+  const spokenCue = timing.segments.find(cue =>
+    elapsed >= cue.start * 1000 && elapsed < (cue.start + cue.frames / timing.sampleRate) * 1000);
+  const cueOffset = spokenCue ? spokenCue.start % 9 : null;
+  const cueCaption = cueOffset === null ? null
+    : cueOffset < 5 ? String(5 - cueOffset)
+    : cueOffset === 5 ? 'ゆるめて。'
+    : spokenCue!.start < 42 ? '次は' + (Math.floor(spokenCue!.start / 9) + 2) + '回目。' : 'お疲れさまでした。';
   const seconds = Math.ceil((totalMs - elapsed) / 1000);
 
   return <main style={{ maxWidth: 540, margin: 'auto', padding: 20, fontFamily: 'sans-serif', lineHeight: 1.65 }}>
@@ -115,11 +166,12 @@ function JawReleasePreview() {
       <path d={practicing && holding ? 'M64 76h32m-28 8h24' : 'M64 78q16 6 32 0'} fill="none" stroke="#254438" strokeWidth="3" strokeLinecap="round" />
     </svg>
     <p><output aria-label="実践残り秒数">{Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, '0')}</output></p>
-    <p role="status">{status === 'intro' ? intro.displayText : status === 'completed' ? '実践を終了しました。' : status === 'error' ? '音声を再生できませんでした。端末の日本語音声を確認して、もう一度お試しください。' : practicing ? phase?.displayText : '説明のあとに45秒実践します。'}</p>
+    <p role="status">{status === 'intro' ? intro.displayText : status === 'completed' ? '実践を終了しました。' : status === 'error' ? '音声を再生できませんでした。もう一度お試しください。' : practicing ? phase?.displayText : '説明のあとに45秒実践します。'}</p>
+    {practicing && <p data-testid="spoken-cue" style={{ minHeight: "1.65em" }}>{cueCaption}</p>}
     {practicing && phase && <p>{phase.displayRound} / 5 回 · {Math.ceil((phaseStart + phase.durationSec! * 1000 - elapsed) / 1000)} 秒</p>}
     {(status === 'idle' || status === 'error' || status === 'completed') && <button disabled={!ready} onClick={start}>説明から開始</button>}
-    {status === 'running' && <button onClick={() => { stopWork(); setStatus('paused'); }}>一時停止</button>}
-    {status === 'paused' && <button onClick={run}>再開</button>}
+    {status === 'running' && <button onClick={pause}>一時停止</button>}
+    {status === 'paused' && <button onClick={resume}>再開</button>}
     {(status === 'intro' || practicing) && <button onClick={() => { stopWork(); setElapsed(0); setStatus('idle'); }}>停止</button>}
   </main>;
 }

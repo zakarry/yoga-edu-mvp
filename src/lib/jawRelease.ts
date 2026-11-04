@@ -1,3 +1,4 @@
+import audioTiming from '../assets/jaw-release/timing.json';
 import type { PracticeDefinition } from './practiceDefinition';
 import type { PracticeCue } from './practiceAudioRuntime';
 
@@ -20,8 +21,8 @@ export const jawRelease = {
     cues: [
       {
         id: 'intro', type: 'voice',
-        displayText: '唇を軽く閉じ、上下の歯を少し離します。舌先は上の前歯のすぐ後ろに軽く置きます。鼻で自然に呼吸し、顎の力みを5秒観察してから4秒休みます。',
-        speechText: 'くちびるを軽く閉じ、上下の歯を少し離します。したさきは、上の前歯のすぐ後ろに軽く置きます。鼻で自然に呼吸し、あごの力みをごびょう観察してから、よんびょう休みます。',
+        displayText: '唇を軽く閉じ、上下の歯を少し離します。舌先は上の前歯のすぐ後ろに軽く置きます。鼻で自然に呼吸し、顎の力みを5秒観察してから4秒休みます。1回目を始めます。',
+        speechText: audioTiming.introReading, audioKey: 'jaw-release-intro',
       },
       ...rounds.flat(),
       { id: 'complete', type: 'complete' },
