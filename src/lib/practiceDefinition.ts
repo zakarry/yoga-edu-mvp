@@ -3,6 +3,7 @@ import type { KnowledgeLink, PoseCatalogEntry } from './poseCatalog';
 import type { PracticeCue } from './practiceAudioRuntime';
 
 export type PracticeTiming =
+  | { mode: 'narration_then_repeated_hold'; plannedSec: number }
   | { mode: 'narration_then_silence'; pattern: BreathworkPattern; plannedHoldSec: number; narrationConsumesHold: false }
   | { mode: 'narration_then_hold'; holds: { side: 'right' | 'left'; seconds: number }[]; narrationConsumesHold: false }
   | { mode: 'phase_minimum_and_voice_end'; pattern: BreathworkPattern }
@@ -13,7 +14,7 @@ export type PracticeTiming =
 export interface PracticeDefinition<TContent = unknown> {
   schemaVersion: 1;
   practiceId: string;
-  kind: 'asana' | 'breath' | 'meditation';
+  kind: 'asana' | 'breath' | 'meditation' | 'face';
   contentRevision: string;
   source: { catalogPath: string; baselineCommit: string };
   content: TContent;
