@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { jawRelease } from '../../src/lib/jawRelease';
 import { validatePracticeDefinitions } from '../../src/lib/practiceDefinition';
-import timing from '../../src/assets/jaw-release/timing.json';
+import timing from '../../src/assets/jaw-release/timing.json' with { type: 'json' };
 
 test('registration and rendered audio fit all 35 cue slots', () => {
   expect(validatePracticeDefinitions([jawRelease])).toEqual([]);

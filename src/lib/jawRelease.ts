@@ -1,4 +1,4 @@
-import audioTiming from '../assets/jaw-release/timing.json';
+import audioTiming from '../assets/jaw-release/timing.json' with { type: 'json' };
 import type { PracticeDefinition } from './practiceDefinition';
 import type { PracticeCue } from './practiceAudioRuntime';
 
