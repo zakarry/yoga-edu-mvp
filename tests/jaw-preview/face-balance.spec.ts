@@ -53,20 +53,20 @@ for (const [id, item] of Object.entries(timing)) {
     const format = (seconds: number) => Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
     await page.getByRole('button', { name: '説明から開始' }).click();
     await expect(clock).toHaveText(format(item.practiceSec));
-    await expect(page.getByRole('status')).toHaveText(item.intro);
+    await expect(page.locator('p[role=status]')).toHaveText(item.intro);
     expect(await page.evaluate(() => window.faceTracks.length)).toBe(1);
-    await expect(page.getByRole('status')).toHaveText(item.segments[0].caption, { timeout: 18000 });
+    await expect(page.locator('p[role=status]')).toHaveText(item.segments[0].caption, { timeout: 18000 });
     await page.getByRole('button', { name: '一時停止' }).click();
     const second = item.segments[1];
     await page.evaluate(start => { window.faceTracks[1].currentTime = start; }, second.start);
     await page.getByRole('button', { name: '再開' }).click();
-    await expect(page.getByRole('status')).toHaveText(second.caption);
+    await expect(page.locator('p[role=status]')).toHaveText(second.caption);
     await expect(page.getByRole('img', { name: second.caption })).toBeVisible();
     await expect(clock).toHaveText(format(item.practiceSec - second.start));
     await page.evaluate(() => { const track = window.faceTracks[1]; track.currentTime = track.duration - 0.2; });
-    await expect(page.getByRole('status')).toHaveText(item.transitionCaption);
+    await expect(page.locator('p[role=status]')).toHaveText(item.transitionCaption);
     await expect(clock).toHaveText('0:00');
-    await expect(page.getByRole('status')).toHaveText('検品再生が終了しました。');
+    await expect(page.locator('p[role=status]')).toHaveText('検品再生が終了しました。');
     expect(await page.evaluate(() => ({ tracks: window.faceTracks.length, overlap: window.faceOverlap }))).toEqual({ tracks: 3, overlap: false });
   });
 }
