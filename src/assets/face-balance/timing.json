@@ -1,0 +1,934 @@
+{
+  "kapola": {
+    "name": "Kapola Awareness｜頬",
+    "classification": "伝統の応用",
+    "intro": "カポーラの動作確認です。呼吸指示は監修待ちです。",
+    "introReading": "かぽーらのどうさかくにんです。こきゅうしじはかんしゅうまちです。",
+    "breath": "監修待ち。呼吸の実践指示を収録していません。",
+    "review": "頬をふくらませる動作と呼吸の組み合わせ",
+    "sampleRate": 16000,
+    "introFrames": 68000,
+    "segments": [
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "両頬をふくらませる段階",
+        "reading": "りょうほおのだんかい。",
+        "visual": "cheeks",
+        "start": 0,
+        "frames": 24160,
+        "round": 1
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 9,
+        "caption": "解除・観察の段階",
+        "reading": "かいじょとかんさつ。",
+        "visual": "rest",
+        "start": 3,
+        "frames": 24080,
+        "round": 1
+      },
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "両頬をふくらませる段階",
+        "reading": "りょうほおのだんかい。",
+        "visual": "cheeks",
+        "start": 12,
+        "frames": 24160,
+        "round": 2
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 9,
+        "caption": "解除・観察の段階",
+        "reading": "かいじょとかんさつ。",
+        "visual": "rest",
+        "start": 15,
+        "frames": 24080,
+        "round": 2
+      },
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "両頬をふくらませる段階",
+        "reading": "りょうほおのだんかい。",
+        "visual": "cheeks",
+        "start": 24,
+        "frames": 24160,
+        "round": 3
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 9,
+        "caption": "解除・観察の段階",
+        "reading": "かいじょとかんさつ。",
+        "visual": "rest",
+        "start": 27,
+        "frames": 24080,
+        "round": 3
+      },
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "両頬をふくらませる段階",
+        "reading": "りょうほおのだんかい。",
+        "visual": "cheeks",
+        "start": 36,
+        "frames": 24160,
+        "round": 4
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 9,
+        "caption": "解除・観察の段階",
+        "reading": "かいじょとかんさつ。",
+        "visual": "rest",
+        "start": 39,
+        "frames": 24080,
+        "round": 4
+      },
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "両頬をふくらませる段階",
+        "reading": "りょうほおのだんかい。",
+        "visual": "cheeks",
+        "start": 48,
+        "frames": 24160,
+        "round": 5
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 9,
+        "caption": "解除・観察の段階",
+        "reading": "かいじょとかんさつ。",
+        "visual": "rest",
+        "start": 51,
+        "frames": 24080,
+        "round": 5
+      }
+    ],
+    "practiceSec": 60,
+    "transitionFrames": 41440,
+    "transitionCaption": "ここで、この種目を終わります。",
+    "transitionReading": "ここで、このしゅもくをおわります。"
+  },
+  "simhasana": {
+    "name": "Simhasana Face｜ライオンの顔",
+    "classification": "伝統の応用",
+    "intro": "シンハーサナの段階確認です。開口範囲と呼気音は監修待ちです。",
+    "introReading": "しんはーさなのだんかいかくにんです。かいこうはんいとこきおんは、かんしゅうまちです。",
+    "breath": "鼻から吸う → 口から吐く → 鼻で2呼吸休む。段階表示用の仮配分。",
+    "review": "開口範囲・呼気音・原典との差",
+    "sampleRate": 16000,
+    "introFrames": 91200,
+    "segments": [
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "鼻から吸う段階",
+        "reading": "はなからすうだんかい。",
+        "visual": "rest",
+        "start": 0,
+        "frames": 27680,
+        "round": 1
+      },
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "口から吐く段階・開口範囲は監修待ち",
+        "reading": "くちからはくだんかい。",
+        "visual": "lion",
+        "start": 4,
+        "frames": 26800,
+        "round": 1
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 12,
+        "caption": "鼻で2呼吸休む段階",
+        "reading": "はなで、にこきゅうやすむだんかい。",
+        "visual": "rest",
+        "start": 8,
+        "frames": 43520,
+        "round": 1
+      },
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "鼻から吸う段階",
+        "reading": "はなからすうだんかい。",
+        "visual": "rest",
+        "start": 20,
+        "frames": 27680,
+        "round": 2
+      },
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "口から吐く段階・開口範囲は監修待ち",
+        "reading": "くちからはくだんかい。",
+        "visual": "lion",
+        "start": 24,
+        "frames": 26800,
+        "round": 2
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 12,
+        "caption": "鼻で2呼吸休む段階",
+        "reading": "はなで、にこきゅうやすむだんかい。",
+        "visual": "rest",
+        "start": 28,
+        "frames": 43520,
+        "round": 2
+      },
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "鼻から吸う段階",
+        "reading": "はなからすうだんかい。",
+        "visual": "rest",
+        "start": 40,
+        "frames": 27680,
+        "round": 3
+      },
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "口から吐く段階・開口範囲は監修待ち",
+        "reading": "くちからはくだんかい。",
+        "visual": "lion",
+        "start": 44,
+        "frames": 26800,
+        "round": 3
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 12,
+        "caption": "鼻で2呼吸休む段階",
+        "reading": "はなで、にこきゅうやすむだんかい。",
+        "visual": "rest",
+        "start": 48,
+        "frames": 43520,
+        "round": 3
+      }
+    ],
+    "practiceSec": 60,
+    "transitionFrames": 41440,
+    "transitionCaption": "ここで、この種目を終わります。",
+    "transitionReading": "ここで、このしゅもくをおわります。"
+  },
+  "tongue": {
+    "name": "Tongue Mobility｜舌",
+    "classification": "現代",
+    "intro": "舌を前、右、左へ動かす段階を確認します。顎は動かさず、鼻で自然に呼吸します。",
+    "introReading": "したを、まえ、みぎ、ひだりへうごかすだんかいをかくにんします。あごはうごかさず、はなでしぜんにこきゅうします。",
+    "breath": "鼻で自然に呼吸",
+    "review": "上あごへの抵抗運動の採否",
+    "sampleRate": 16000,
+    "introFrames": 136000,
+    "segments": [
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "舌を前へ",
+        "reading": "したをまえへ。",
+        "visual": "tongue-front",
+        "start": 0,
+        "frames": 19840,
+        "round": 1
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 3,
+        "caption": "舌を戻して休む。",
+        "reading": "したをもどしてやすむ。",
+        "visual": "rest",
+        "start": 3,
+        "frames": 27680,
+        "round": 1
+      },
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "舌を前へ",
+        "reading": "したをまえへ。",
+        "visual": "tongue-front",
+        "start": 6,
+        "frames": 19840,
+        "round": 2
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 3,
+        "caption": "舌を戻して休む。",
+        "reading": "したをもどしてやすむ。",
+        "visual": "rest",
+        "start": 9,
+        "frames": 27680,
+        "round": 2
+      },
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "舌を前へ",
+        "reading": "したをまえへ。",
+        "visual": "tongue-front",
+        "start": 12,
+        "frames": 19840,
+        "round": 3
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 3,
+        "caption": "舌を戻して休む。",
+        "reading": "したをもどしてやすむ。",
+        "visual": "rest",
+        "start": 15,
+        "frames": 27680,
+        "round": 3
+      },
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "舌先を右へ",
+        "reading": "したさきをみぎへ。",
+        "visual": "tongue-right",
+        "start": 18,
+        "frames": 24880,
+        "round": 4
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 3,
+        "caption": "中央へ戻す。",
+        "reading": "ちゅうおうへもどす。",
+        "visual": "rest",
+        "start": 21,
+        "frames": 22800,
+        "round": 4
+      },
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "舌先を左へ",
+        "reading": "したさきをひだりへ。",
+        "visual": "tongue-left",
+        "start": 24,
+        "frames": 26080,
+        "round": 4
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 5,
+        "caption": "中央へ戻して休む。",
+        "reading": "ちゅうおうへもどしてやすむ。",
+        "visual": "rest",
+        "start": 27,
+        "frames": 29360,
+        "round": 4
+      },
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "舌先を右へ",
+        "reading": "したさきをみぎへ。",
+        "visual": "tongue-right",
+        "start": 32,
+        "frames": 24880,
+        "round": 5
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 3,
+        "caption": "中央へ戻す。",
+        "reading": "ちゅうおうへもどす。",
+        "visual": "rest",
+        "start": 35,
+        "frames": 22800,
+        "round": 5
+      },
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "舌先を左へ",
+        "reading": "したさきをひだりへ。",
+        "visual": "tongue-left",
+        "start": 38,
+        "frames": 26080,
+        "round": 5
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 5,
+        "caption": "中央へ戻して休む。",
+        "reading": "ちゅうおうへもどしてやすむ。",
+        "visual": "rest",
+        "start": 41,
+        "frames": 29360,
+        "round": 5
+      },
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "舌先を右へ",
+        "reading": "したさきをみぎへ。",
+        "visual": "tongue-right",
+        "start": 46,
+        "frames": 24880,
+        "round": 6
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 3,
+        "caption": "中央へ戻す。",
+        "reading": "ちゅうおうへもどす。",
+        "visual": "rest",
+        "start": 49,
+        "frames": 22800,
+        "round": 6
+      },
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "舌先を左へ",
+        "reading": "したさきをひだりへ。",
+        "visual": "tongue-left",
+        "start": 52,
+        "frames": 26080,
+        "round": 6
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 5,
+        "caption": "中央へ戻して休む。",
+        "reading": "ちゅうおうへもどしてやすむ。",
+        "visual": "rest",
+        "start": 55,
+        "frames": 29360,
+        "round": 6
+      }
+    ],
+    "practiceSec": 60,
+    "transitionFrames": 41440,
+    "transitionCaption": "ここで、この種目を終わります。",
+    "transitionReading": "ここで、このしゅもくをおわります。"
+  },
+  "lip": {
+    "name": "Lip O–Smile｜口元の切替",
+    "classification": "現代",
+    "intro": "歯を噛み合わせず、オの形から小さな笑顔へ切り替えます。鼻で自然に呼吸します。",
+    "introReading": "はをかみあわせず、おのかたちから、ちいさなえがおへきりかえます。はなでしぜんにこきゅうします。",
+    "breath": "鼻で自然に呼吸",
+    "review": "安全文言",
+    "sampleRate": 16000,
+    "introFrames": 108000,
+    "segments": [
+      {
+        "phase": "実践",
+        "seconds": 2,
+        "caption": "「オ」の形",
+        "reading": "おのかたち。",
+        "visual": "o",
+        "start": 0,
+        "frames": 18960,
+        "round": 1
+      },
+      {
+        "phase": "実践",
+        "seconds": 2,
+        "caption": "小さな笑顔",
+        "reading": "ちいさなえがお。",
+        "visual": "smile",
+        "start": 2,
+        "frames": 21200,
+        "round": 1
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 8,
+        "caption": "力を抜いて休みます。",
+        "reading": "ちからをぬいて、やすみます。",
+        "visual": "rest",
+        "start": 4,
+        "frames": 38160,
+        "round": 1
+      },
+      {
+        "phase": "実践",
+        "seconds": 2,
+        "caption": "「オ」の形",
+        "reading": "おのかたち。",
+        "visual": "o",
+        "start": 12,
+        "frames": 18960,
+        "round": 2
+      },
+      {
+        "phase": "実践",
+        "seconds": 2,
+        "caption": "小さな笑顔",
+        "reading": "ちいさなえがお。",
+        "visual": "smile",
+        "start": 14,
+        "frames": 21200,
+        "round": 2
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 8,
+        "caption": "力を抜いて休みます。",
+        "reading": "ちからをぬいて、やすみます。",
+        "visual": "rest",
+        "start": 16,
+        "frames": 38160,
+        "round": 2
+      },
+      {
+        "phase": "実践",
+        "seconds": 2,
+        "caption": "「オ」の形",
+        "reading": "おのかたち。",
+        "visual": "o",
+        "start": 24,
+        "frames": 18960,
+        "round": 3
+      },
+      {
+        "phase": "実践",
+        "seconds": 2,
+        "caption": "小さな笑顔",
+        "reading": "ちいさなえがお。",
+        "visual": "smile",
+        "start": 26,
+        "frames": 21200,
+        "round": 3
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 8,
+        "caption": "力を抜いて休みます。",
+        "reading": "ちからをぬいて、やすみます。",
+        "visual": "rest",
+        "start": 28,
+        "frames": 38160,
+        "round": 3
+      },
+      {
+        "phase": "実践",
+        "seconds": 2,
+        "caption": "「オ」の形",
+        "reading": "おのかたち。",
+        "visual": "o",
+        "start": 36,
+        "frames": 18960,
+        "round": 4
+      },
+      {
+        "phase": "実践",
+        "seconds": 2,
+        "caption": "小さな笑顔",
+        "reading": "ちいさなえがお。",
+        "visual": "smile",
+        "start": 38,
+        "frames": 21200,
+        "round": 4
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 8,
+        "caption": "力を抜いて休みます。",
+        "reading": "ちからをぬいて、やすみます。",
+        "visual": "rest",
+        "start": 40,
+        "frames": 38160,
+        "round": 4
+      },
+      {
+        "phase": "実践",
+        "seconds": 2,
+        "caption": "「オ」の形",
+        "reading": "おのかたち。",
+        "visual": "o",
+        "start": 48,
+        "frames": 18960,
+        "round": 5
+      },
+      {
+        "phase": "実践",
+        "seconds": 2,
+        "caption": "小さな笑顔",
+        "reading": "ちいさなえがお。",
+        "visual": "smile",
+        "start": 50,
+        "frames": 21200,
+        "round": 5
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 8,
+        "caption": "力を抜いて休みます。",
+        "reading": "ちからをぬいて、やすみます。",
+        "visual": "rest",
+        "start": 52,
+        "frames": 38160,
+        "round": 5
+      }
+    ],
+    "practiceSec": 60,
+    "transitionFrames": 41440,
+    "transitionCaption": "ここで、この種目を終わります。",
+    "transitionReading": "ここで、このしゅもくをおわります。"
+  },
+  "smile": {
+    "name": "Smile Balance｜笑顔の左右",
+    "classification": "現代",
+    "intro": "両方の口角をゆっくり上げ、小さな笑顔を観察します。左右を無理にそろえません。",
+    "introReading": "りょうほうのこうかくをゆっくりあげ、ちいさなえがおをかんさつします。さゆうをむりにそろえません。",
+    "breath": "鼻で自然に呼吸",
+    "review": "安全文言・緊急案内",
+    "sampleRate": 16000,
+    "introFrames": 103920,
+    "segments": [
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "小さな笑顔",
+        "reading": "ちいさなえがお。",
+        "visual": "smile",
+        "start": 0,
+        "frames": 21200,
+        "round": 1
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 12,
+        "caption": "力を抜き、左右の動き方を観察。",
+        "reading": "ちからをぬき、さゆうのうごきかたをかんさつ。",
+        "visual": "rest",
+        "start": 3,
+        "frames": 55280,
+        "round": 1
+      },
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "小さな笑顔",
+        "reading": "ちいさなえがお。",
+        "visual": "smile",
+        "start": 15,
+        "frames": 21200,
+        "round": 2
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 12,
+        "caption": "力を抜き、左右の動き方を観察。",
+        "reading": "ちからをぬき、さゆうのうごきかたをかんさつ。",
+        "visual": "rest",
+        "start": 18,
+        "frames": 55280,
+        "round": 2
+      },
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "小さな笑顔",
+        "reading": "ちいさなえがお。",
+        "visual": "smile",
+        "start": 30,
+        "frames": 21200,
+        "round": 3
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 12,
+        "caption": "力を抜き、左右の動き方を観察。",
+        "reading": "ちからをぬき、さゆうのうごきかたをかんさつ。",
+        "visual": "rest",
+        "start": 33,
+        "frames": 55280,
+        "round": 3
+      },
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "小さな笑顔",
+        "reading": "ちいさなえがお。",
+        "visual": "smile",
+        "start": 45,
+        "frames": 21200,
+        "round": 4
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 12,
+        "caption": "力を抜き、左右の動き方を観察。",
+        "reading": "ちからをぬき、さゆうのうごきかたをかんさつ。",
+        "visual": "rest",
+        "start": 48,
+        "frames": 55280,
+        "round": 4
+      },
+      {
+        "phase": "実践",
+        "seconds": 3,
+        "caption": "小さな笑顔",
+        "reading": "ちいさなえがお。",
+        "visual": "smile",
+        "start": 60,
+        "frames": 21200,
+        "round": 5
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 12,
+        "caption": "力を抜き、左右の動き方を観察。",
+        "reading": "ちからをぬき、さゆうのうごきかたをかんさつ。",
+        "visual": "rest",
+        "start": 63,
+        "frames": 55280,
+        "round": 5
+      }
+    ],
+    "practiceSec": 75,
+    "transitionFrames": 41440,
+    "transitionCaption": "ここで、この種目を終わります。",
+    "transitionReading": "ここで、このしゅもくをおわります。"
+  },
+  "griva": {
+    "name": "Griva Gentle｜首",
+    "classification": "原本では伝統・分類は監修待ち",
+    "intro": "首の向きを確認します。原典の一部を参照した段階見本です。",
+    "introReading": "くびのむきをかくにんします。げんてんのいちぶをさんしょうした、だんかいみほんです。",
+    "breath": "吐きながら向く・吸いながら正面に戻る",
+    "review": "分類・首の安全文言",
+    "sampleRate": 16000,
+    "introFrames": 88880,
+    "segments": [
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "吐きながら右へ",
+        "reading": "はきながらみぎへ。",
+        "visual": "neck-right",
+        "start": 0,
+        "frames": 23440,
+        "round": 1
+      },
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "吸いながら正面へ",
+        "reading": "すいながらしょうめんへ。",
+        "visual": "rest",
+        "start": 4,
+        "frames": 26240,
+        "round": 1
+      },
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "吐きながら左へ",
+        "reading": "はきながらひだりへ。",
+        "visual": "neck-left",
+        "start": 8,
+        "frames": 24880,
+        "round": 1
+      },
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "吸いながら正面へ",
+        "reading": "すいながらしょうめんへ。",
+        "visual": "rest",
+        "start": 12,
+        "frames": 26240,
+        "round": 1
+      },
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "吐きながら右へ",
+        "reading": "はきながらみぎへ。",
+        "visual": "neck-right",
+        "start": 16,
+        "frames": 23440,
+        "round": 2
+      },
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "吸いながら正面へ",
+        "reading": "すいながらしょうめんへ。",
+        "visual": "rest",
+        "start": 20,
+        "frames": 26240,
+        "round": 2
+      },
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "吐きながら左へ",
+        "reading": "はきながらひだりへ。",
+        "visual": "neck-left",
+        "start": 24,
+        "frames": 24880,
+        "round": 2
+      },
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "吸いながら正面へ",
+        "reading": "すいながらしょうめんへ。",
+        "visual": "rest",
+        "start": 28,
+        "frames": 26240,
+        "round": 2
+      },
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "吐きながら右へ",
+        "reading": "はきながらみぎへ。",
+        "visual": "neck-right",
+        "start": 32,
+        "frames": 23440,
+        "round": 3
+      },
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "吸いながら正面へ",
+        "reading": "すいながらしょうめんへ。",
+        "visual": "rest",
+        "start": 36,
+        "frames": 26240,
+        "round": 3
+      },
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "吐きながら左へ",
+        "reading": "はきながらひだりへ。",
+        "visual": "neck-left",
+        "start": 40,
+        "frames": 24880,
+        "round": 3
+      },
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "吸いながら正面へ",
+        "reading": "すいながらしょうめんへ。",
+        "visual": "rest",
+        "start": 44,
+        "frames": 26240,
+        "round": 3
+      },
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "吐きながら前屈",
+        "reading": "はきながらまえへ。",
+        "visual": "neck-down",
+        "start": 48,
+        "frames": 22480,
+        "round": 4
+      },
+      {
+        "phase": "実践",
+        "seconds": 4,
+        "caption": "吸いながら戻る",
+        "reading": "すいながらもどります。",
+        "visual": "rest",
+        "start": 52,
+        "frames": 26080,
+        "round": 4
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 4,
+        "caption": "力を抜いて休みます。",
+        "reading": "ちからをぬいて、やすみます。",
+        "visual": "rest",
+        "start": 56,
+        "frames": 38160,
+        "round": 4
+      }
+    ],
+    "practiceSec": 60,
+    "transitionFrames": 41440,
+    "transitionCaption": "ここで、この種目を終わります。",
+    "transitionReading": "ここで、このしゅもくをおわります。"
+  },
+  "relax": {
+    "name": "Face Relax｜顔の脱力",
+    "classification": "伝統の応用",
+    "intro": "椅子に座ったまま、顔の力みに順番に気づきます。呼吸は自然なペースです。",
+    "introReading": "いすにすわったまま、かおのちからみにじゅんばんにきづきます。こきゅうはしぜんなぺーすです。",
+    "breath": "鼻で自然に呼吸。回数は原本内で3回と3～4回が併記。",
+    "review": "自然呼吸の回数・安全文言",
+    "sampleRate": 16000,
+    "introFrames": 97440,
+    "segments": [
+      {
+        "phase": "実践",
+        "seconds": 8,
+        "caption": "額と眉間",
+        "reading": "ひたいとみけん。",
+        "visual": "brow",
+        "start": 0,
+        "frames": 20240,
+        "round": 1
+      },
+      {
+        "phase": "実践",
+        "seconds": 8,
+        "caption": "目元と頬",
+        "reading": "めもととほお。",
+        "visual": "cheeks",
+        "start": 8,
+        "frames": 20800,
+        "round": 1
+      },
+      {
+        "phase": "実践",
+        "seconds": 8,
+        "caption": "顎と舌",
+        "reading": "あごとした。",
+        "visual": "tongue-front",
+        "start": 16,
+        "frames": 17520,
+        "round": 1
+      },
+      {
+        "phase": "実践",
+        "seconds": 28,
+        "caption": "自然な呼吸",
+        "reading": "しぜんなこきゅう。",
+        "visual": "rest",
+        "start": 24,
+        "frames": 22720,
+        "round": 1
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 8,
+        "caption": "楽な表情を観察",
+        "reading": "らくなひょうじょうをかんさつ。",
+        "visual": "rest",
+        "start": 52,
+        "frames": 29920,
+        "round": 1
+      }
+    ],
+    "practiceSec": 60,
+    "transitionFrames": 41440,
+    "transitionCaption": "ここで、この種目を終わります。",
+    "transitionReading": "ここで、このしゅもくをおわります。"
+  }
+}
