@@ -92,6 +92,16 @@ export function validatePracticeDefinitions(definitions: PracticeDefinition[]): 
     }
     if (d.guide.completion !== 'required_audio_ended' || d.guide.reading !== 'separate_display_and_speech') add('audio-gate', 'Keep completion after required audio and separate readings');
     if (d.guide.cues.filter(c => c.type === 'complete').length !== 1 || d.guide.cues[d.guide.cues.length - 1]?.type !== 'complete') add('completion', 'One completion cue must follow the complete guide');
+    if (d.timing.mode === 'narration_then_repeated_hold') {
+      const [intro, ...rest] = d.guide.cues;
+      const phases = rest.slice(0, -1);
+      const duration = phases.reduce((sum, phase) => sum + (phase.durationSec ?? 0), 0);
+      if (intro?.type !== 'voice' || phases.length === 0 || phases.length % 2 !== 0 ||
+          phases.some((phase, index) => phase.type !== 'silence' || !phase.durationSec ||
+            phase.displayRound !== Math.floor(index / 2) + 1) || duration !== d.timing.plannedSec) {
+        add('repeated-hold', 'Require an explanation followed by timed hold/rest pairs matching the planned duration');
+      }
+    }
     if (d.timing.mode === 'narration_then_silence' || d.timing.mode === 'phase_minimum_and_voice_end') {
       const p = d.timing.pattern, values = [p.inhaleSec, p.holdAfterInhaleSec, p.exhaleSec, p.holdAfterExhaleSec];
       if (values.some(v => !Number.isFinite(v) || v < 0) || !Number.isInteger(p.rounds) || p.rounds < 1) add('pattern', 'Nonnegative phase seconds and positive integer rounds are required');

@@ -16,13 +16,16 @@ test.beforeEach(async ({ page }) => {
   await page.clock.install();
   await page.addInitScript(() => {
     const state = window.jawSpeech = { count: 0, end: () => {}, fail: () => {} };
+    Object.defineProperty(window, 'SpeechSynthesisUtterance', { value: class {
+      onstart?: () => void;
+    } });
     Object.defineProperties(window.speechSynthesis, {
       getVoices: { value: () => [{ lang: 'ja-JP', localService: true }] },
       speak: { value: (utterance: SpeechSynthesisUtterance) => {
         state.count++;
         const end = utterance.onend;
         const fail = utterance.onerror;
-        utterance.dispatchEvent(new Event('start'));
+        (utterance.onstart as (() => void) | null)?.();
         state.end = () => end?.call(utterance, new Event('end') as SpeechSynthesisEvent);
         state.fail = () => fail?.call(utterance, new Event('error') as SpeechSynthesisErrorEvent);
       } },
