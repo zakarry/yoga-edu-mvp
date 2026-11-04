@@ -1,0 +1,183 @@
+{
+  "sampleRate": 48000,
+  "introFrames": 754320,
+  "introReading": "くちびるを軽く閉じ、上下の歯を少し離します。したさきは、上の前歯のすぐ後ろに軽く置きます。鼻で自然に呼吸し、あごの力みをごびょう観察してから、よんびょう休みます。いっかいめを始めます。",
+  "practiceFrames": 2160000,
+  "segments": [
+    {
+      "start": 0,
+      "frames": 35280,
+      "reading": "ご。"
+    },
+    {
+      "start": 1,
+      "frames": 30960,
+      "reading": "よん。"
+    },
+    {
+      "start": 2,
+      "frames": 39120,
+      "reading": "さん。"
+    },
+    {
+      "start": 3,
+      "frames": 33360,
+      "reading": "に。"
+    },
+    {
+      "start": 4,
+      "frames": 38880,
+      "reading": "いち。"
+    },
+    {
+      "start": 5,
+      "frames": 46560,
+      "reading": "ゆるめて。"
+    },
+    {
+      "start": 6,
+      "frames": 46800,
+      "reading": "にかいめ。"
+    },
+    {
+      "start": 9,
+      "frames": 35280,
+      "reading": "ご。"
+    },
+    {
+      "start": 10,
+      "frames": 30960,
+      "reading": "よん。"
+    },
+    {
+      "start": 11,
+      "frames": 39120,
+      "reading": "さん。"
+    },
+    {
+      "start": 12,
+      "frames": 33360,
+      "reading": "に。"
+    },
+    {
+      "start": 13,
+      "frames": 38880,
+      "reading": "いち。"
+    },
+    {
+      "start": 14,
+      "frames": 46560,
+      "reading": "ゆるめて。"
+    },
+    {
+      "start": 15,
+      "frames": 53280,
+      "reading": "さんかいめ。"
+    },
+    {
+      "start": 18,
+      "frames": 35280,
+      "reading": "ご。"
+    },
+    {
+      "start": 19,
+      "frames": 30960,
+      "reading": "よん。"
+    },
+    {
+      "start": 20,
+      "frames": 39120,
+      "reading": "さん。"
+    },
+    {
+      "start": 21,
+      "frames": 33360,
+      "reading": "に。"
+    },
+    {
+      "start": 22,
+      "frames": 38880,
+      "reading": "いち。"
+    },
+    {
+      "start": 23,
+      "frames": 46560,
+      "reading": "ゆるめて。"
+    },
+    {
+      "start": 24,
+      "frames": 49920,
+      "reading": "よんかいめ。"
+    },
+    {
+      "start": 27,
+      "frames": 35280,
+      "reading": "ご。"
+    },
+    {
+      "start": 28,
+      "frames": 30960,
+      "reading": "よん。"
+    },
+    {
+      "start": 29,
+      "frames": 39120,
+      "reading": "さん。"
+    },
+    {
+      "start": 30,
+      "frames": 33360,
+      "reading": "に。"
+    },
+    {
+      "start": 31,
+      "frames": 38880,
+      "reading": "いち。"
+    },
+    {
+      "start": 32,
+      "frames": 46560,
+      "reading": "ゆるめて。"
+    },
+    {
+      "start": 33,
+      "frames": 45360,
+      "reading": "ごかいめ。"
+    },
+    {
+      "start": 36,
+      "frames": 35280,
+      "reading": "ご。"
+    },
+    {
+      "start": 37,
+      "frames": 30960,
+      "reading": "よん。"
+    },
+    {
+      "start": 38,
+      "frames": 39120,
+      "reading": "さん。"
+    },
+    {
+      "start": 39,
+      "frames": 33360,
+      "reading": "に。"
+    },
+    {
+      "start": 40,
+      "frames": 38880,
+      "reading": "いち。"
+    },
+    {
+      "start": 41,
+      "frames": 46560,
+      "reading": "ゆるめて。"
+    },
+    {
+      "start": 42,
+      "frames": 69360,
+      "reading": "お疲れさまでした。"
+    }
+  ]
+}
