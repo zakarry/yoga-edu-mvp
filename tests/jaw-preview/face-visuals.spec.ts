@@ -73,7 +73,7 @@ test('Lip follows instruction, hold, smile, release and rounds three to five wit
   await page.getByRole('button', { name: '一時停止' }).click();
   const position = await page.locator('video').evaluate(video => video.currentTime);
   const countdown = await page.getByLabel('実践残り秒数').textContent();
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(9000);
   expect(await page.locator('video').evaluate(video => video.currentTime)).toBe(position);
   await expect(page.getByLabel('実践残り秒数')).toHaveText(countdown!);
   await page.getByTestId('face-animation').screenshot({ path: info.outputPath('lip-o.png') });
