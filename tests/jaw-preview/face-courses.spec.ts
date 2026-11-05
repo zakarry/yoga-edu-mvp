@@ -38,11 +38,11 @@ async function drain(page: Page, count: number, file: string) {
 }
 
 const courses = [
-  { index: '0', ids: ['jaw', 'lip', 'smile'], practice: 180, total: '217.255' },
+  { index: '0', ids: ['jaw', 'lip', 'smile'], practice: 180, total: '239.435' },
   { index: '1', ids: ['kapola', 'simhasana', 'tongue'], practice: 180, total: '223.140' },
   { index: '2', ids: ['jaw', 'griva', 'relax'], practice: 165, total: '199.195' },
   { index: '3', ids: ['jaw', 'kapola', 'tongue', 'smile', 'relax'], practice: 300, total: '354.630' },
-  { index: '4', ids: ['jaw', 'kapola', 'simhasana', 'tongue', 'lip', 'smile', 'griva', 'relax'], practice: 480, total: '577.220' },
+  { index: '4', ids: ['jaw', 'kapola', 'simhasana', 'tongue', 'lip', 'smile', 'griva', 'relax'], practice: 480, total: '599.400' },
 ];
 
 for (const course of courses) {

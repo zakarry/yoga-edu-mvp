@@ -16,7 +16,7 @@ test('all seven audio timelines preserve complete non-overlapping cue windows', 
     };
     wav('intro', item.introFrames);
     wav('transition', item.transitionFrames);
-    const practice = wav('practice', item.practiceSec * item.sampleRate);
+    const practice = wav('practice', item.practiceAudioSec * item.sampleRate);
     let start = 0;
     for (const cue of item.segments) {
       expect(cue.start).toBe(start);
@@ -26,7 +26,8 @@ test('all seven audio timelines preserve complete non-overlapping cue windows', 
       expect(practice.subarray(begin + 2 * cue.frames, 44 + 2 * start * item.sampleRate).every(byte => byte === 0)).toBe(true);
       expect(cue.frames).toBeLessThan(cue.seconds * item.sampleRate);
     }
-    expect(start).toBe(item.practiceSec);
+    expect(start).toBe(item.practiceAudioSec);
+    expect(item.segments.reduce((sum, cue) => sum + cue.seconds - cue.narrationSec, 0)).toBe(item.practiceSec);
   }
 });
 
@@ -63,7 +64,7 @@ for (const [id, item] of Object.entries(timing)) {
     await page.getByRole('button', { name: '再開' }).click();
     await expect(page.locator('p[role=status]')).toHaveText(second.caption);
     await expect(page.getByRole('img', { name: second.caption })).toBeVisible();
-    await expect(clock).toHaveText(format(item.practiceSec - second.start));
+    await expect(clock).toHaveText(format(item.practiceSec - item.segments[0].seconds + item.segments[0].narrationSec));
     await page.evaluate(() => { const track = window.faceTracks[1]; track.currentTime = track.duration - 0.2; });
     await expect(page.locator('p[role=status]')).toHaveText(item.transitionCaption);
     await expect(clock).toHaveText('0:00');
@@ -71,3 +72,32 @@ for (const [id, item] of Object.entries(timing)) {
     expect(await page.evaluate(() => ({ tracks: window.faceTracks.length, overlap: window.faceOverlap }))).toEqual({ tracks: 3, overlap: false });
   });
 }
+
+test('long lip instruction finishes before the two-second practice hold begins', async ({ page }) => {
+  await page.addInitScript(() => {
+    const Original = window.Audio;
+    window.faceTracks = [];
+    window.Audio = function (url?: string) {
+      const track = new Original(url);
+      window.faceTracks.push(track);
+      return track;
+    } as typeof Audio;
+  });
+  await page.goto('/face-balance.html');
+  await page.getByRole('combobox', { name: '種目', exact: true }).selectOption('lip');
+  await page.getByRole('checkbox').check();
+  await page.getByRole('button', { name: '説明から開始' }).click();
+  await expect(page.locator('p[role=status]')).toHaveText(timing.lip.segments[0].caption, { timeout: 20000 });
+  await page.getByRole('button', { name: '一時停止' }).click();
+  const first = timing.lip.segments[0];
+  expect(first.seconds - first.narrationSec).toBe(2);
+  expect(first.frames / timing.lip.sampleRate).toBeLessThan(first.narrationSec);
+  await page.evaluate(seconds => { window.faceTracks[1].currentTime = seconds; }, first.narrationSec - 0.3);
+  await page.getByRole('button', { name: '再開' }).click();
+  await expect(page.getByLabel('実践残り秒数')).toHaveText('1:00');
+  await page.getByRole('button', { name: '一時停止' }).click();
+  await page.evaluate(seconds => { window.faceTracks[1].currentTime = seconds; }, first.narrationSec + 1.1);
+  await page.getByRole('button', { name: '再開' }).click();
+  await expect(page.getByLabel('実践残り秒数')).toHaveText('0:59');
+  await page.getByRole('button', { name: '停止', exact: true }).click();
+});

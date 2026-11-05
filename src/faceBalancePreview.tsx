@@ -6,6 +6,7 @@ import jawTiming from './assets/jaw-release/timing.json';
 import jawIntro from './assets/jaw-release/intro.wav?url';
 import jawPractice from './assets/jaw-release/practice.wav?url';
 import { jawRelease } from './lib/jawRelease';
+import { practiceElapsedSeconds } from './lib/facePracticeClock';
 
 type Key = keyof typeof timing;
 const audio = import.meta.glob<string>('./assets/face-balance/*.wav', { eager: true, query: '?url', import: 'default' });
@@ -47,7 +48,7 @@ function tracksFor(id: ExerciseKey, step: number): CourseTrack[] {
   });
   return [
     track('intro', item.introFrames / item.sampleRate),
-    track('practice', item.practiceSec),
+    track('practice', item.practiceAudioSec),
     track('transition', item.transitionFrames / item.sampleRate),
   ];
 }
@@ -62,8 +63,9 @@ function PreviewSession({ order }: { order: readonly ExerciseKey[] }) {
   const practiceSeconds = item?.practiceSec ?? jawTiming.practiceFrames / jawTiming.sampleRate;
   const active = track.phase === 'practice' && (status === 'running' || status === 'paused');
   const busy = status === 'running' || status === 'paused' || status === 'intro' || status === 'transition';
+  const consumedPractice = item ? practiceElapsedSeconds(item.segments, elapsed / 1000) : elapsed / 1000;
   const seconds = status === 'completed' || track.phase === 'transition' ? 0
-    : Math.max(0, Math.ceil(practiceSeconds - (active ? elapsed / 1000 : 0)));
+    : Math.max(0, Math.ceil(practiceSeconds - (active ? consumedPractice : 0)));
   const cue = active ? item?.segments.find(segment =>
     elapsed >= segment.start * 1000 && elapsed < (segment.start + segment.seconds) * 1000) : undefined;
   const jawSecond = Math.floor(elapsed / 1000);
@@ -99,7 +101,7 @@ function PreviewSession({ order }: { order: readonly ExerciseKey[] }) {
     </div>
     <output aria-label="実践残り秒数">{Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, '0')}</output>
     <p role="status">{caption}</p>
-    {cue && item && <p>{cue.phase} · {cue.round} / {item.segments[item.segments.length - 1].round} 周</p>}
+    {cue && item && <p>{elapsed < (cue.start + cue.narrationSec) * 1000 ? '案内中・残秒は待機' : cue.phase} · {cue.round} / {item.segments[item.segments.length - 1].round} 周</p>}
     {!item && active && <p>{Math.min(5, Math.floor(jawSecond / 9) + 1)} / 5 回 {jawCue?.reading}</p>}
     {!busy && <button disabled={!ready} onClick={start}>説明から開始</button>}
     {busy && status !== 'paused' && <button onClick={pause}>一時停止</button>}
@@ -123,11 +125,11 @@ function FaceBalancePreview() {
     </select></label></div>
     <PreviewSession key={courseIndex < 0 ? id : 'course-' + courseIndex} order={courseIndex < 0 ? [id] : courses[courseIndex].order} />
     <h2>コース尺</h2>
-    <p>8分フルの総所要時間は約9分37秒です。表示は音源実尺の合計で、読み込み・一時停止の時間は別です。</p>
+    <p>8分フルの総所要時間は約9分59秒です。表示は音源実尺の合計で、読み込み・一時停止の時間は別です。</p>
     <ul>{courses.map(course => {
       const tracks = course.order.flatMap(tracksFor);
       const totals = {
-        practice: tracks.filter(track => track.phase === 'practice').reduce((sum, track) => sum + track.seconds, 0),
+        practice: course.order.reduce((sum, id) => sum + (id === 'jaw' ? 45 : timing[id].practiceSec), 0),
         total: tracks.reduce((sum, track) => sum + track.seconds, 0),
       };
       return <li key={course.name}>{course.name} · 実践 {totals.practice}秒 ／ 総尺 {totals.total.toFixed(3)}秒</li>;

@@ -1,4 +1,5 @@
 import json
+import math
 import wave
 from pathlib import Path
 
@@ -45,21 +46,21 @@ items = {
         [[move(3, "舌先を右へ", "したさきをみぎへ。", "tongue-right"), rest(3, "中央へ戻す。", "ちゅうおうへもどす。"),
           move(3, "舌先を左へ", "したさきをひだりへ。", "tongue-left"), rest(5, "中央へ戻して休む。", "ちゅうおうへもどしてやすむ。")]] * 3),
     "lip": draft("Lip O–Smile｜口元の切替", "現代",
-        "歯を噛み合わせず、オの形から、小さくほほえんでみましょう。鼻で自然に呼吸します。",
-        "はをかみあわせず、おのかたちから、ちいさくほほえんでみましょう。はなでしぜんにこきゅうします。",
+        "歯を噛み合わせず、唇を「オ」の形にしてとがらせて、小さくほほえんでみましょう。鼻で自然に呼吸します。",
+        "はをかみあわせず、くちびるを、おのかたちにして、とがらせて、ちいさくほほえんでみましょう。はなでしぜんにこきゅうします。",
         "鼻で自然に呼吸", "安全文言",
-        [[move(2, "「オ」の形", "おのかたち。", "o"), move(2, "小さくほほえんで。", "ちいさくほほえんで。", "smile"), rest(8)]] * 5),
+        [[dict(move(2, "唇を「オ」の形にしてとがらせて。", "くちびるを、おのかたちにして、とがらせて。", "o"), narrationBeforeHold=True), move(2, "小さくほほえんで。", "ちいさくほほえんで。", "smile"), rest(8)]] * 5),
     "smile": draft("Smile Balance｜笑顔の左右", "現代",
         "口の両端をゆっくり上げ、小さくほほえんでみましょう。鏡で動きを見てみます。左右を無理にそろえません。",
         "くちのりょうはしをゆっくりあげ、ちいさくほほえんでみましょう。かがみでうごきをみてみます。さゆうをむりにそろえません。",
         "鼻で自然に呼吸", "安全文言・緊急案内",
-        [[move(3, "小さくほほえんで。", "ちいさくほほえんで。", "smile"), rest(12, "鏡で、口の両端の動きを見てみましょう。そのあと力を抜いて休みます。", "かがみで、くちのりょうはしのうごきをみてみましょう。そのあと、ちからをぬいてやすみます。")]] * 5),
+        [[move(3, "小さくほほえんで。", "ちいさくほほえんで。", "smile"), rest(12, "鏡で、左右どちらの口角が先に上がるか確かめます。違いがあっても無理にそろえず、口元の力を抜いて休みます。", "かがみで、さゆうどちらのこうかくがさきにあがるかたしかめます。ちがいがあってもむりにそろえず、くちもとのちからをぬいてやすみます。")]] * 5),
     "griva": draft("Griva Gentle｜首", "原本では伝統・分類は監修待ち",
         "首の向きを確認します。原典の一部を参照した段階見本です。",
         "くびのむきをかくにんします。げんてんのいちぶをさんしょうした、だんかいみほんです。",
         "吐きながら向く・吸いながら正面に戻る", "分類・首の安全文言",
-        [[move(4, "吐きながら右へ", "はきながらみぎへ。", "neck-right"), move(4, "吸いながら正面へ", "すいながらしょうめんへ。", "rest"),
-          move(4, "吐きながら左へ", "はきながらひだりへ。", "neck-left"), move(4, "吸いながら正面へ", "すいながらしょうめんへ。", "rest")]] * 3 +
+        [[move(4, "吐きながら右を向いて。", "はきながらみぎをむいて。", "neck-right"), move(4, "吸いながら正面へ戻して。", "すいながらしょうめんへもどして。", "rest"),
+          move(4, "吐きながら左を向いて。", "はきながらひだりをむいて。", "neck-left"), move(4, "吸いながら正面へ戻して。", "すいながらしょうめんへもどして。", "rest")]] * 3 +
         [[move(4, "吐きながら前屈", "はきながらまえへ。", "neck-down"), move(4, "吸いながら戻る", "すいながらもどります。", "rest"), rest(4)]]),
     "relax": draft("Face Relax｜顔の脱力", "伝統の応用",
         "椅子に座ったまま、顔の力みに順番に気づきます。呼吸は自然なペースです。",
@@ -87,15 +88,23 @@ for key, item in items.items():
     item["introFrames"] = len(intro)
     item["segments"] = []
     item["practiceSec"] = sum(c["seconds"] for r in item["rounds"] for c in r)
-    practice = np.zeros(item["practiceSec"] * RATE, dtype="<i2")
+    blocks = []
     start = 0
     for number, row in enumerate(item.pop("rounds"), 1):
         for phase in row:
+            phase = phase.copy()
             clip = render(phase["reading"])
-            assert 0 < len(clip) < phase["seconds"] * RATE, (key, phase, len(clip) / RATE)
-            practice[start * RATE:start * RATE + len(clip)] = clip
-            item["segments"].append(dict(phase, start=start, frames=len(clip), round=number))
-            start += phase["seconds"]
+            narration_sec = math.ceil(len(clip) / RATE) if phase.pop("narrationBeforeHold", False) else 0
+            duration = phase["seconds"] + narration_sec
+            assert 0 < len(clip) < (narration_sec or duration) * RATE, (key, phase, len(clip) / RATE)
+            block = np.zeros(duration * RATE, dtype="<i2")
+            block[:len(clip)] = clip
+            blocks.append(block)
+            item["segments"].append(dict(phase, seconds=duration, narrationSec=narration_sec,
+                                         start=start, frames=len(clip), round=number))
+            start += duration
+    practice = np.concatenate(blocks)
+    item["practiceAudioSec"] = start
     transition = render("ここで、このしゅもくをおわります。")
     item["transitionFrames"] = len(transition)
     item["transitionCaption"] = "ここで、この種目を終わります。"

@@ -15,6 +15,7 @@
         "caption": "両方のほっぺたをふくらませます。",
         "reading": "りょうほうの、ほっぺたをふくらませます。",
         "visual": "cheeks",
+        "narrationSec": 0,
         "start": 0,
         "frames": 46160,
         "round": 1
@@ -25,6 +26,7 @@
         "caption": "両方のほっぺたをゆるめます。",
         "reading": "りょうほうの、ほっぺたをゆるめます。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 3,
         "frames": 41680,
         "round": 1
@@ -35,6 +37,7 @@
         "caption": "両方のほっぺたをふくらませます。",
         "reading": "りょうほうの、ほっぺたをふくらませます。",
         "visual": "cheeks",
+        "narrationSec": 0,
         "start": 12,
         "frames": 46160,
         "round": 2
@@ -45,6 +48,7 @@
         "caption": "両方のほっぺたをゆるめます。",
         "reading": "りょうほうの、ほっぺたをゆるめます。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 15,
         "frames": 41680,
         "round": 2
@@ -55,6 +59,7 @@
         "caption": "両方のほっぺたをふくらませます。",
         "reading": "りょうほうの、ほっぺたをふくらませます。",
         "visual": "cheeks",
+        "narrationSec": 0,
         "start": 24,
         "frames": 46160,
         "round": 3
@@ -65,6 +70,7 @@
         "caption": "両方のほっぺたをゆるめます。",
         "reading": "りょうほうの、ほっぺたをゆるめます。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 27,
         "frames": 41680,
         "round": 3
@@ -75,6 +81,7 @@
         "caption": "両方のほっぺたをふくらませます。",
         "reading": "りょうほうの、ほっぺたをふくらませます。",
         "visual": "cheeks",
+        "narrationSec": 0,
         "start": 36,
         "frames": 46160,
         "round": 4
@@ -85,6 +92,7 @@
         "caption": "両方のほっぺたをゆるめます。",
         "reading": "りょうほうの、ほっぺたをゆるめます。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 39,
         "frames": 41680,
         "round": 4
@@ -95,6 +103,7 @@
         "caption": "両方のほっぺたをふくらませます。",
         "reading": "りょうほうの、ほっぺたをふくらませます。",
         "visual": "cheeks",
+        "narrationSec": 0,
         "start": 48,
         "frames": 46160,
         "round": 5
@@ -105,12 +114,14 @@
         "caption": "両方のほっぺたをゆるめます。",
         "reading": "りょうほうの、ほっぺたをゆるめます。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 51,
         "frames": 41680,
         "round": 5
       }
     ],
     "practiceSec": 60,
+    "practiceAudioSec": 60,
     "transitionFrames": 41440,
     "transitionCaption": "ここで、この種目を終わります。",
     "transitionReading": "ここで、このしゅもくをおわります。"
@@ -131,6 +142,7 @@
         "caption": "鼻から楽に息を吸います。",
         "reading": "はなかららくにいきをすいます。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 0,
         "frames": 33760,
         "round": 1
@@ -141,6 +153,7 @@
         "caption": "口を開けて舌を出し、息を吐きます。",
         "reading": "くちをあけてしたをだし、いきをはきます。",
         "visual": "lion",
+        "narrationSec": 0,
         "start": 4,
         "frames": 50080,
         "round": 1
@@ -151,6 +164,7 @@
         "caption": "舌を戻して口を閉じ、鼻から吸って吐く呼吸を2回くり返します。",
         "reading": "したをもどして、くちをとじ、はなからすってはくこきゅうを、にかいくりかえします。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 8,
         "frames": 96080,
         "round": 1
@@ -161,6 +175,7 @@
         "caption": "鼻から楽に息を吸います。",
         "reading": "はなかららくにいきをすいます。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 20,
         "frames": 33760,
         "round": 2
@@ -171,6 +186,7 @@
         "caption": "口を開けて舌を出し、息を吐きます。",
         "reading": "くちをあけてしたをだし、いきをはきます。",
         "visual": "lion",
+        "narrationSec": 0,
         "start": 24,
         "frames": 50080,
         "round": 2
@@ -181,6 +197,7 @@
         "caption": "舌を戻して口を閉じ、鼻から吸って吐く呼吸を2回くり返します。",
         "reading": "したをもどして、くちをとじ、はなからすってはくこきゅうを、にかいくりかえします。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 28,
         "frames": 96080,
         "round": 2
@@ -191,6 +208,7 @@
         "caption": "鼻から楽に息を吸います。",
         "reading": "はなかららくにいきをすいます。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 40,
         "frames": 33760,
         "round": 3
@@ -201,6 +219,7 @@
         "caption": "口を開けて舌を出し、息を吐きます。",
         "reading": "くちをあけてしたをだし、いきをはきます。",
         "visual": "lion",
+        "narrationSec": 0,
         "start": 44,
         "frames": 50080,
         "round": 3
@@ -211,12 +230,14 @@
         "caption": "舌を戻して口を閉じ、鼻から吸って吐く呼吸を2回くり返します。",
         "reading": "したをもどして、くちをとじ、はなからすってはくこきゅうを、にかいくりかえします。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 48,
         "frames": 96080,
         "round": 3
       }
     ],
     "practiceSec": 60,
+    "practiceAudioSec": 60,
     "transitionFrames": 41440,
     "transitionCaption": "ここで、この種目を終わります。",
     "transitionReading": "ここで、このしゅもくをおわります。"
@@ -237,6 +258,7 @@
         "caption": "舌を前へ",
         "reading": "したをまえへ。",
         "visual": "tongue-front",
+        "narrationSec": 0,
         "start": 0,
         "frames": 19840,
         "round": 1
@@ -247,6 +269,7 @@
         "caption": "舌を戻して休む。",
         "reading": "したをもどしてやすむ。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 3,
         "frames": 27680,
         "round": 1
@@ -257,6 +280,7 @@
         "caption": "舌を前へ",
         "reading": "したをまえへ。",
         "visual": "tongue-front",
+        "narrationSec": 0,
         "start": 6,
         "frames": 19840,
         "round": 2
@@ -267,6 +291,7 @@
         "caption": "舌を戻して休む。",
         "reading": "したをもどしてやすむ。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 9,
         "frames": 27680,
         "round": 2
@@ -277,6 +302,7 @@
         "caption": "舌を前へ",
         "reading": "したをまえへ。",
         "visual": "tongue-front",
+        "narrationSec": 0,
         "start": 12,
         "frames": 19840,
         "round": 3
@@ -287,6 +313,7 @@
         "caption": "舌を戻して休む。",
         "reading": "したをもどしてやすむ。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 15,
         "frames": 27680,
         "round": 3
@@ -297,6 +324,7 @@
         "caption": "舌先を右へ",
         "reading": "したさきをみぎへ。",
         "visual": "tongue-right",
+        "narrationSec": 0,
         "start": 18,
         "frames": 24880,
         "round": 4
@@ -307,6 +335,7 @@
         "caption": "中央へ戻す。",
         "reading": "ちゅうおうへもどす。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 21,
         "frames": 22800,
         "round": 4
@@ -317,6 +346,7 @@
         "caption": "舌先を左へ",
         "reading": "したさきをひだりへ。",
         "visual": "tongue-left",
+        "narrationSec": 0,
         "start": 24,
         "frames": 26080,
         "round": 4
@@ -327,6 +357,7 @@
         "caption": "中央へ戻して休む。",
         "reading": "ちゅうおうへもどしてやすむ。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 27,
         "frames": 29360,
         "round": 4
@@ -337,6 +368,7 @@
         "caption": "舌先を右へ",
         "reading": "したさきをみぎへ。",
         "visual": "tongue-right",
+        "narrationSec": 0,
         "start": 32,
         "frames": 24880,
         "round": 5
@@ -347,6 +379,7 @@
         "caption": "中央へ戻す。",
         "reading": "ちゅうおうへもどす。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 35,
         "frames": 22800,
         "round": 5
@@ -357,6 +390,7 @@
         "caption": "舌先を左へ",
         "reading": "したさきをひだりへ。",
         "visual": "tongue-left",
+        "narrationSec": 0,
         "start": 38,
         "frames": 26080,
         "round": 5
@@ -367,6 +401,7 @@
         "caption": "中央へ戻して休む。",
         "reading": "ちゅうおうへもどしてやすむ。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 41,
         "frames": 29360,
         "round": 5
@@ -377,6 +412,7 @@
         "caption": "舌先を右へ",
         "reading": "したさきをみぎへ。",
         "visual": "tongue-right",
+        "narrationSec": 0,
         "start": 46,
         "frames": 24880,
         "round": 6
@@ -387,6 +423,7 @@
         "caption": "中央へ戻す。",
         "reading": "ちゅうおうへもどす。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 49,
         "frames": 22800,
         "round": 6
@@ -397,6 +434,7 @@
         "caption": "舌先を左へ",
         "reading": "したさきをひだりへ。",
         "visual": "tongue-left",
+        "narrationSec": 0,
         "start": 52,
         "frames": 26080,
         "round": 6
@@ -407,12 +445,14 @@
         "caption": "中央へ戻して休む。",
         "reading": "ちゅうおうへもどしてやすむ。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 55,
         "frames": 29360,
         "round": 6
       }
     ],
     "practiceSec": 60,
+    "practiceAudioSec": 60,
     "transitionFrames": 41440,
     "transitionCaption": "ここで、この種目を終わります。",
     "transitionReading": "ここで、このしゅもくをおわります。"
@@ -420,21 +460,22 @@
   "lip": {
     "name": "Lip O–Smile｜口元の切替",
     "classification": "現代",
-    "intro": "歯を噛み合わせず、オの形から、小さくほほえんでみましょう。鼻で自然に呼吸します。",
-    "introReading": "はをかみあわせず、おのかたちから、ちいさくほほえんでみましょう。はなでしぜんにこきゅうします。",
+    "intro": "歯を噛み合わせず、唇を「オ」の形にしてとがらせて、小さくほほえんでみましょう。鼻で自然に呼吸します。",
+    "introReading": "はをかみあわせず、くちびるを、おのかたちにして、とがらせて、ちいさくほほえんでみましょう。はなでしぜんにこきゅうします。",
     "breath": "鼻で自然に呼吸",
     "review": "安全文言",
     "sampleRate": 16000,
-    "introFrames": 106320,
+    "introFrames": 141200,
     "segments": [
       {
         "phase": "実践",
-        "seconds": 2,
-        "caption": "「オ」の形",
-        "reading": "おのかたち。",
+        "seconds": 6,
+        "caption": "唇を「オ」の形にしてとがらせて。",
+        "reading": "くちびるを、おのかたちにして、とがらせて。",
         "visual": "o",
+        "narrationSec": 4,
         "start": 0,
-        "frames": 18960,
+        "frames": 58320,
         "round": 1
       },
       {
@@ -443,7 +484,8 @@
         "caption": "小さくほほえんで。",
         "reading": "ちいさくほほえんで。",
         "visual": "smile",
-        "start": 2,
+        "narrationSec": 0,
+        "start": 6,
         "frames": 24400,
         "round": 1
       },
@@ -453,49 +495,21 @@
         "caption": "力を抜いて休みます。",
         "reading": "ちからをぬいて、やすみます。",
         "visual": "rest",
-        "start": 4,
+        "narrationSec": 0,
+        "start": 8,
         "frames": 38160,
         "round": 1
       },
       {
         "phase": "実践",
-        "seconds": 2,
-        "caption": "「オ」の形",
-        "reading": "おのかたち。",
+        "seconds": 6,
+        "caption": "唇を「オ」の形にしてとがらせて。",
+        "reading": "くちびるを、おのかたちにして、とがらせて。",
         "visual": "o",
-        "start": 12,
-        "frames": 18960,
-        "round": 2
-      },
-      {
-        "phase": "実践",
-        "seconds": 2,
-        "caption": "小さくほほえんで。",
-        "reading": "ちいさくほほえんで。",
-        "visual": "smile",
-        "start": 14,
-        "frames": 24400,
-        "round": 2
-      },
-      {
-        "phase": "解除・休息",
-        "seconds": 8,
-        "caption": "力を抜いて休みます。",
-        "reading": "ちからをぬいて、やすみます。",
-        "visual": "rest",
+        "narrationSec": 4,
         "start": 16,
-        "frames": 38160,
+        "frames": 58320,
         "round": 2
-      },
-      {
-        "phase": "実践",
-        "seconds": 2,
-        "caption": "「オ」の形",
-        "reading": "おのかたち。",
-        "visual": "o",
-        "start": 24,
-        "frames": 18960,
-        "round": 3
       },
       {
         "phase": "実践",
@@ -503,9 +517,10 @@
         "caption": "小さくほほえんで。",
         "reading": "ちいさくほほえんで。",
         "visual": "smile",
-        "start": 26,
+        "narrationSec": 0,
+        "start": 22,
         "frames": 24400,
-        "round": 3
+        "round": 2
       },
       {
         "phase": "解除・休息",
@@ -513,19 +528,21 @@
         "caption": "力を抜いて休みます。",
         "reading": "ちからをぬいて、やすみます。",
         "visual": "rest",
-        "start": 28,
+        "narrationSec": 0,
+        "start": 24,
         "frames": 38160,
-        "round": 3
+        "round": 2
       },
       {
         "phase": "実践",
-        "seconds": 2,
-        "caption": "「オ」の形",
-        "reading": "おのかたち。",
+        "seconds": 6,
+        "caption": "唇を「オ」の形にしてとがらせて。",
+        "reading": "くちびるを、おのかたちにして、とがらせて。",
         "visual": "o",
-        "start": 36,
-        "frames": 18960,
-        "round": 4
+        "narrationSec": 4,
+        "start": 32,
+        "frames": 58320,
+        "round": 3
       },
       {
         "phase": "実践",
@@ -533,8 +550,42 @@
         "caption": "小さくほほえんで。",
         "reading": "ちいさくほほえんで。",
         "visual": "smile",
+        "narrationSec": 0,
         "start": 38,
         "frames": 24400,
+        "round": 3
+      },
+      {
+        "phase": "解除・休息",
+        "seconds": 8,
+        "caption": "力を抜いて休みます。",
+        "reading": "ちからをぬいて、やすみます。",
+        "visual": "rest",
+        "narrationSec": 0,
+        "start": 40,
+        "frames": 38160,
+        "round": 3
+      },
+      {
+        "phase": "実践",
+        "seconds": 6,
+        "caption": "唇を「オ」の形にしてとがらせて。",
+        "reading": "くちびるを、おのかたちにして、とがらせて。",
+        "visual": "o",
+        "narrationSec": 4,
+        "start": 48,
+        "frames": 58320,
+        "round": 4
+      },
+      {
+        "phase": "実践",
+        "seconds": 2,
+        "caption": "小さくほほえんで。",
+        "reading": "ちいさくほほえんで。",
+        "visual": "smile",
+        "narrationSec": 0,
+        "start": 54,
+        "frames": 24400,
         "round": 4
       },
       {
@@ -543,18 +594,20 @@
         "caption": "力を抜いて休みます。",
         "reading": "ちからをぬいて、やすみます。",
         "visual": "rest",
-        "start": 40,
+        "narrationSec": 0,
+        "start": 56,
         "frames": 38160,
         "round": 4
       },
       {
         "phase": "実践",
-        "seconds": 2,
-        "caption": "「オ」の形",
-        "reading": "おのかたち。",
+        "seconds": 6,
+        "caption": "唇を「オ」の形にしてとがらせて。",
+        "reading": "くちびるを、おのかたちにして、とがらせて。",
         "visual": "o",
-        "start": 48,
-        "frames": 18960,
+        "narrationSec": 4,
+        "start": 64,
+        "frames": 58320,
         "round": 5
       },
       {
@@ -563,7 +616,8 @@
         "caption": "小さくほほえんで。",
         "reading": "ちいさくほほえんで。",
         "visual": "smile",
-        "start": 50,
+        "narrationSec": 0,
+        "start": 70,
         "frames": 24400,
         "round": 5
       },
@@ -573,12 +627,14 @@
         "caption": "力を抜いて休みます。",
         "reading": "ちからをぬいて、やすみます。",
         "visual": "rest",
-        "start": 52,
+        "narrationSec": 0,
+        "start": 72,
         "frames": 38160,
         "round": 5
       }
     ],
     "practiceSec": 60,
+    "practiceAudioSec": 80,
     "transitionFrames": 41440,
     "transitionCaption": "ここで、この種目を終わります。",
     "transitionReading": "ここで、このしゅもくをおわります。"
@@ -599,6 +655,7 @@
         "caption": "小さくほほえんで。",
         "reading": "ちいさくほほえんで。",
         "visual": "smile",
+        "narrationSec": 0,
         "start": 0,
         "frames": 24400,
         "round": 1
@@ -606,11 +663,12 @@
       {
         "phase": "解除・休息",
         "seconds": 12,
-        "caption": "鏡で、口の両端の動きを見てみましょう。そのあと力を抜いて休みます。",
-        "reading": "かがみで、くちのりょうはしのうごきをみてみましょう。そのあと、ちからをぬいてやすみます。",
+        "caption": "鏡で、左右どちらの口角が先に上がるか確かめます。違いがあっても無理にそろえず、口元の力を抜いて休みます。",
+        "reading": "かがみで、さゆうどちらのこうかくがさきにあがるかたしかめます。ちがいがあってもむりにそろえず、くちもとのちからをぬいてやすみます。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 3,
-        "frames": 104480,
+        "frames": 147680,
         "round": 1
       },
       {
@@ -619,6 +677,7 @@
         "caption": "小さくほほえんで。",
         "reading": "ちいさくほほえんで。",
         "visual": "smile",
+        "narrationSec": 0,
         "start": 15,
         "frames": 24400,
         "round": 2
@@ -626,11 +685,12 @@
       {
         "phase": "解除・休息",
         "seconds": 12,
-        "caption": "鏡で、口の両端の動きを見てみましょう。そのあと力を抜いて休みます。",
-        "reading": "かがみで、くちのりょうはしのうごきをみてみましょう。そのあと、ちからをぬいてやすみます。",
+        "caption": "鏡で、左右どちらの口角が先に上がるか確かめます。違いがあっても無理にそろえず、口元の力を抜いて休みます。",
+        "reading": "かがみで、さゆうどちらのこうかくがさきにあがるかたしかめます。ちがいがあってもむりにそろえず、くちもとのちからをぬいてやすみます。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 18,
-        "frames": 104480,
+        "frames": 147680,
         "round": 2
       },
       {
@@ -639,6 +699,7 @@
         "caption": "小さくほほえんで。",
         "reading": "ちいさくほほえんで。",
         "visual": "smile",
+        "narrationSec": 0,
         "start": 30,
         "frames": 24400,
         "round": 3
@@ -646,11 +707,12 @@
       {
         "phase": "解除・休息",
         "seconds": 12,
-        "caption": "鏡で、口の両端の動きを見てみましょう。そのあと力を抜いて休みます。",
-        "reading": "かがみで、くちのりょうはしのうごきをみてみましょう。そのあと、ちからをぬいてやすみます。",
+        "caption": "鏡で、左右どちらの口角が先に上がるか確かめます。違いがあっても無理にそろえず、口元の力を抜いて休みます。",
+        "reading": "かがみで、さゆうどちらのこうかくがさきにあがるかたしかめます。ちがいがあってもむりにそろえず、くちもとのちからをぬいてやすみます。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 33,
-        "frames": 104480,
+        "frames": 147680,
         "round": 3
       },
       {
@@ -659,6 +721,7 @@
         "caption": "小さくほほえんで。",
         "reading": "ちいさくほほえんで。",
         "visual": "smile",
+        "narrationSec": 0,
         "start": 45,
         "frames": 24400,
         "round": 4
@@ -666,11 +729,12 @@
       {
         "phase": "解除・休息",
         "seconds": 12,
-        "caption": "鏡で、口の両端の動きを見てみましょう。そのあと力を抜いて休みます。",
-        "reading": "かがみで、くちのりょうはしのうごきをみてみましょう。そのあと、ちからをぬいてやすみます。",
+        "caption": "鏡で、左右どちらの口角が先に上がるか確かめます。違いがあっても無理にそろえず、口元の力を抜いて休みます。",
+        "reading": "かがみで、さゆうどちらのこうかくがさきにあがるかたしかめます。ちがいがあってもむりにそろえず、くちもとのちからをぬいてやすみます。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 48,
-        "frames": 104480,
+        "frames": 147680,
         "round": 4
       },
       {
@@ -679,6 +743,7 @@
         "caption": "小さくほほえんで。",
         "reading": "ちいさくほほえんで。",
         "visual": "smile",
+        "narrationSec": 0,
         "start": 60,
         "frames": 24400,
         "round": 5
@@ -686,15 +751,17 @@
       {
         "phase": "解除・休息",
         "seconds": 12,
-        "caption": "鏡で、口の両端の動きを見てみましょう。そのあと力を抜いて休みます。",
-        "reading": "かがみで、くちのりょうはしのうごきをみてみましょう。そのあと、ちからをぬいてやすみます。",
+        "caption": "鏡で、左右どちらの口角が先に上がるか確かめます。違いがあっても無理にそろえず、口元の力を抜いて休みます。",
+        "reading": "かがみで、さゆうどちらのこうかくがさきにあがるかたしかめます。ちがいがあってもむりにそろえず、くちもとのちからをぬいてやすみます。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 63,
-        "frames": 104480,
+        "frames": 147680,
         "round": 5
       }
     ],
     "practiceSec": 75,
+    "practiceAudioSec": 75,
     "transitionFrames": 41440,
     "transitionCaption": "ここで、この種目を終わります。",
     "transitionReading": "ここで、このしゅもくをおわります。"
@@ -712,121 +779,133 @@
       {
         "phase": "実践",
         "seconds": 4,
-        "caption": "吐きながら右へ",
-        "reading": "はきながらみぎへ。",
+        "caption": "吐きながら右を向いて。",
+        "reading": "はきながらみぎをむいて。",
         "visual": "neck-right",
+        "narrationSec": 0,
         "start": 0,
-        "frames": 23440,
+        "frames": 28240,
         "round": 1
       },
       {
         "phase": "実践",
         "seconds": 4,
-        "caption": "吸いながら正面へ",
-        "reading": "すいながらしょうめんへ。",
+        "caption": "吸いながら正面へ戻して。",
+        "reading": "すいながらしょうめんへもどして。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 4,
-        "frames": 26240,
+        "frames": 33200,
         "round": 1
       },
       {
         "phase": "実践",
         "seconds": 4,
-        "caption": "吐きながら左へ",
-        "reading": "はきながらひだりへ。",
+        "caption": "吐きながら左を向いて。",
+        "reading": "はきながらひだりをむいて。",
         "visual": "neck-left",
+        "narrationSec": 0,
         "start": 8,
-        "frames": 24880,
+        "frames": 29760,
         "round": 1
       },
       {
         "phase": "実践",
         "seconds": 4,
-        "caption": "吸いながら正面へ",
-        "reading": "すいながらしょうめんへ。",
+        "caption": "吸いながら正面へ戻して。",
+        "reading": "すいながらしょうめんへもどして。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 12,
-        "frames": 26240,
+        "frames": 33200,
         "round": 1
       },
       {
         "phase": "実践",
         "seconds": 4,
-        "caption": "吐きながら右へ",
-        "reading": "はきながらみぎへ。",
+        "caption": "吐きながら右を向いて。",
+        "reading": "はきながらみぎをむいて。",
         "visual": "neck-right",
+        "narrationSec": 0,
         "start": 16,
-        "frames": 23440,
+        "frames": 28240,
         "round": 2
       },
       {
         "phase": "実践",
         "seconds": 4,
-        "caption": "吸いながら正面へ",
-        "reading": "すいながらしょうめんへ。",
+        "caption": "吸いながら正面へ戻して。",
+        "reading": "すいながらしょうめんへもどして。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 20,
-        "frames": 26240,
+        "frames": 33200,
         "round": 2
       },
       {
         "phase": "実践",
         "seconds": 4,
-        "caption": "吐きながら左へ",
-        "reading": "はきながらひだりへ。",
+        "caption": "吐きながら左を向いて。",
+        "reading": "はきながらひだりをむいて。",
         "visual": "neck-left",
+        "narrationSec": 0,
         "start": 24,
-        "frames": 24880,
+        "frames": 29760,
         "round": 2
       },
       {
         "phase": "実践",
         "seconds": 4,
-        "caption": "吸いながら正面へ",
-        "reading": "すいながらしょうめんへ。",
+        "caption": "吸いながら正面へ戻して。",
+        "reading": "すいながらしょうめんへもどして。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 28,
-        "frames": 26240,
+        "frames": 33200,
         "round": 2
       },
       {
         "phase": "実践",
         "seconds": 4,
-        "caption": "吐きながら右へ",
-        "reading": "はきながらみぎへ。",
+        "caption": "吐きながら右を向いて。",
+        "reading": "はきながらみぎをむいて。",
         "visual": "neck-right",
+        "narrationSec": 0,
         "start": 32,
-        "frames": 23440,
+        "frames": 28240,
         "round": 3
       },
       {
         "phase": "実践",
         "seconds": 4,
-        "caption": "吸いながら正面へ",
-        "reading": "すいながらしょうめんへ。",
+        "caption": "吸いながら正面へ戻して。",
+        "reading": "すいながらしょうめんへもどして。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 36,
-        "frames": 26240,
+        "frames": 33200,
         "round": 3
       },
       {
         "phase": "実践",
         "seconds": 4,
-        "caption": "吐きながら左へ",
-        "reading": "はきながらひだりへ。",
+        "caption": "吐きながら左を向いて。",
+        "reading": "はきながらひだりをむいて。",
         "visual": "neck-left",
+        "narrationSec": 0,
         "start": 40,
-        "frames": 24880,
+        "frames": 29760,
         "round": 3
       },
       {
         "phase": "実践",
         "seconds": 4,
-        "caption": "吸いながら正面へ",
-        "reading": "すいながらしょうめんへ。",
+        "caption": "吸いながら正面へ戻して。",
+        "reading": "すいながらしょうめんへもどして。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 44,
-        "frames": 26240,
+        "frames": 33200,
         "round": 3
       },
       {
@@ -835,6 +914,7 @@
         "caption": "吐きながら前屈",
         "reading": "はきながらまえへ。",
         "visual": "neck-down",
+        "narrationSec": 0,
         "start": 48,
         "frames": 22480,
         "round": 4
@@ -845,6 +925,7 @@
         "caption": "吸いながら戻る",
         "reading": "すいながらもどります。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 52,
         "frames": 26080,
         "round": 4
@@ -855,12 +936,14 @@
         "caption": "力を抜いて休みます。",
         "reading": "ちからをぬいて、やすみます。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 56,
         "frames": 38160,
         "round": 4
       }
     ],
     "practiceSec": 60,
+    "practiceAudioSec": 60,
     "transitionFrames": 41440,
     "transitionCaption": "ここで、この種目を終わります。",
     "transitionReading": "ここで、このしゅもくをおわります。"
@@ -881,6 +964,7 @@
         "caption": "額と眉間",
         "reading": "ひたいとみけん。",
         "visual": "brow",
+        "narrationSec": 0,
         "start": 0,
         "frames": 20240,
         "round": 1
@@ -891,6 +975,7 @@
         "caption": "目元と頬",
         "reading": "めもととほお。",
         "visual": "cheeks",
+        "narrationSec": 0,
         "start": 8,
         "frames": 20800,
         "round": 1
@@ -901,6 +986,7 @@
         "caption": "顎と舌",
         "reading": "あごとした。",
         "visual": "tongue-front",
+        "narrationSec": 0,
         "start": 16,
         "frames": 17520,
         "round": 1
@@ -911,6 +997,7 @@
         "caption": "自然な呼吸",
         "reading": "しぜんなこきゅう。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 24,
         "frames": 22720,
         "round": 1
@@ -921,12 +1008,14 @@
         "caption": "ゆっくり目を開けて、鏡でいまの表情を見てみましょう。",
         "reading": "ゆっくりめをあけて、かがみでいまのひょうじょうをみてみましょう。",
         "visual": "rest",
+        "narrationSec": 0,
         "start": 52,
         "frames": 65680,
         "round": 1
       }
     ],
     "practiceSec": 60,
+    "practiceAudioSec": 60,
     "transitionFrames": 41440,
     "transitionCaption": "ここで、この種目を終わります。",
     "transitionReading": "ここで、このしゅもくをおわります。"
