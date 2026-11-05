@@ -12,6 +12,6 @@
 
 ## 音源
 
-説明 15.715秒、実践 45.000秒。48 kHz、モノラルPCM。35キューの実尺は0.645～1.445秒。保持カウントの最長は0.815秒で、次の秒境界までに収まる。各キューのサンプル数と開始秒を timing.json に記録。生成時にクリップが割当枠に収まることを検査し、ブラウザ回帰でWAVヘッダとキュー間の無音を検査する。
+説明 17.370秒、実践 45.000秒。48 kHz、モノラルPCM。35キューの実尺は0.645～1.445秒。保持カウントの最長は0.815秒で、次の秒境界までに収まる。各キューのサンプル数と開始秒を timing.json に記録。生成時にクリップが割当枠に収まることを検査し、ブラウザ回帰でWAVヘッダとキュー間の無音を検査する。
 
 音声モデルは HTS Voice “Mei” © 2009–2013 Nagoya Institute of Technology, MMDAgent Project Team。[CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)。[モデルのライセンス](https://github.com/r9y9/pyopenjtalk/blob/master/pyopenjtalk/htsvoice/LICENSE_mei_normal.htsvoice)。pyopenjtalk-plus 0.4.1.post10 を使い、日本語原稿を合成して45秒の実践トラックに編集した。生成コマンドは python scripts/generate-jaw-release-audio.py。アプリの依存追加はなし。

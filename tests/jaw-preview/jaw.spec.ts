@@ -8,6 +8,8 @@ test('registration and rendered audio fit all 35 cue slots', () => {
   expect(validatePracticeDefinitions([jawRelease])).toEqual([]);
   expect(jawRelease.guide.cues.filter(cue => cue.type === 'silence').map(cue => cue.durationSec))
     .toEqual([5, 4, 5, 4, 5, 4, 5, 4, 5, 4]);
+  expect(timing.introReading).toContain('うえのまえば');
+  expect(timing.introReading).toContain('あごのちからをぬいたまま、ごびょうたもちます。');
   const intro = readFileSync('src/assets/jaw-release/intro.wav');
   const practice = readFileSync('src/assets/jaw-release/practice.wav');
   expect(intro.length).toBe(44 + 2 * timing.introFrames);

@@ -75,7 +75,7 @@ function PreviewSession({ order }: { order: readonly ExerciseKey[] }) {
     : status === 'idle' ? '説明音声の終了後に実践タイマーを開始します。'
     : track.phase === 'intro' ? (item?.intro ?? jawRelease.guide.cues[0].displayText)
     : track.phase === 'transition' ? item?.transitionCaption
-    : cue?.caption ?? (jawClosing ? 'お疲れさまでした。' : jawHolding ? '顎の力みを観察。鼻で自然に呼吸します。' : '顎の力を抜いて休みます。');
+    : cue?.caption ?? (jawClosing ? 'お疲れさまでした。' : jawHolding ? '顎の力を抜いたまま保ちます。鼻で自然に呼吸します。' : '顎の力を抜いて休みます。');
   const jawCue = !item && active ? jawTiming.segments.find(segment =>
     elapsed >= segment.start * 1000 && elapsed < (segment.start + segment.frames / jawTiming.sampleRate) * 1000) : undefined;
   return <section>
@@ -117,7 +117,7 @@ function FaceBalancePreview() {
     </select></label></div>
     <PreviewSession key={courseIndex < 0 ? id : 'course-' + courseIndex} order={courseIndex < 0 ? [id] : courses[courseIndex].order} />
     <h2>コース尺</h2>
-    <p>8分フルの総所要時間は約9分17秒です。表示は音源実尺の合計で、読み込み・一時停止の時間は別です。</p>
+    <p>8分フルの総所要時間は約9分19秒です。表示は音源実尺の合計で、読み込み・一時停止の時間は別です。</p>
     <ul>{courses.map(course => {
       const tracks = course.order.flatMap(tracksFor);
       const totals = {
