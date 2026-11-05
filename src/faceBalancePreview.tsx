@@ -72,6 +72,11 @@ function PreviewSession({ order }: { order: readonly ExerciseKey[] }) {
   const jawSecond = Math.floor(elapsed / 1000);
   const jawHolding = jawSecond % 9 < 5;
   const jawClosing = !item && active && jawSecond >= 42;
+  const visualCue = cue ?? (!item && active ? {
+    visual: jawHolding ? 'hold' : 'rest',
+    start: Math.floor(jawSecond / 9) * 9 + (jawHolding ? 0 : 5),
+    seconds: jawHolding ? 5 : 4, narrationSec: 0, round: Math.floor(jawSecond / 9) + 1,
+  } : undefined);
   const stage = jawClosing ? '切替（実践枠内）' : track.phase === 'intro' ? '説明' : track.phase === 'transition' ? '切替' : '実践';
   const caption = status === 'error' ? '音声を再生できませんでした。'
     : status === 'completed' ? '検品再生が終了しました。'
@@ -94,7 +99,9 @@ function PreviewSession({ order }: { order: readonly ExerciseKey[] }) {
     <p>監修待ち項目　{item?.review ?? '顎の開口範囲'}、共通安全文言</p>
     <label><input type="checkbox" checked={ready} disabled={busy} onChange={event => setReady(event.target.checked)} /> 検品用の再生であることを確認しました</label>
     <div>
-      <FacePracticeVisual id={track.id} cue={cue} cueIndex={cue && item ? item.segments.indexOf(cue) : -1} elapsedMs={elapsed} label={cue?.caption ?? name}>
+      <FacePracticeVisual id={track.id} cue={visualCue}
+        finished={track.phase === 'transition' || status === 'completed'}
+        cueIndex={cue && item ? item.segments.indexOf(cue) : -1} elapsedMs={elapsed} label={cue?.caption ?? name}>
       <svg viewBox="0 0 160 120" width="160" role="img" aria-label={cue?.caption ?? '開始・終了の模式図'}>
         <ellipse cx="80" cy="58" rx="44" ry="49" fill="#e2f1e7" stroke="#254438" strokeWidth="3" />
         <path d="M60 47h8m24 0h8m-24 13h8" stroke="#254438" strokeWidth="3" strokeLinecap="round" />
@@ -114,12 +121,13 @@ function PreviewSession({ order }: { order: readonly ExerciseKey[] }) {
 }
 
 function FaceBalancePreview() {
-  const [id, setId] = useState<Key>('kapola');
+  const [id, setId] = useState<ExerciseKey>('kapola');
   const [courseIndex, setCourseIndex] = useState(-1);
   return <main style={{ maxWidth: 720, margin: 'auto', padding: 20, fontFamily: 'sans-serif', lineHeight: 1.65 }}>
     <h1>FACE BALANCE YOGA v0.5</h1>
-    <p><strong>開発検品用・公開不可</strong>。監修前の音声と模式図を、動作を行わず確認する画面です。</p>
-    <label>種目 <select disabled={courseIndex >= 0} value={id} onChange={event => setId(event.target.value as Key)}>
+    <p><strong>開発検品用・公開不可</strong>。監修前の音声・映像・模式図を、動作を行わず確認する画面です。</p>
+    <label>種目 <select disabled={courseIndex >= 0} value={id} onChange={event => setId(event.target.value as ExerciseKey)}>
+      <option value="jaw">{jawRelease.content.name}</option>
       {keys.map(key => <option key={key} value={key}>{timing[key].name}</option>)}
     </select></label>
     <div><label>連続再生コース <select value={courseIndex} onChange={event => setCourseIndex(Number(event.target.value))}>
@@ -137,7 +145,6 @@ function FaceBalancePreview() {
       };
       return <li key={course.name}>{course.name} · 実践 {totals.practice}秒 ／ 総尺 {totals.total.toFixed(3)}秒</li>;
     })}</ul>
-    <a href="/jaw-release.html">Jaw Releaseの検品へ</a>
   </main>;
 }
 

@@ -7,12 +7,13 @@ interface Props {
   cueIndex: number;
   elapsedMs: number;
   label: string;
+  finished?: boolean;
   children: ReactNode;
 }
 
-export function FacePracticeVisual({ id, cue, cueIndex, elapsedMs, label, children }: Props) {
+export function FacePracticeVisual({ id, cue, cueIndex, elapsedMs, label, finished, children }: Props) {
   const asset = faceVisualAssets[id];
-  const frame = faceVisualFrame(id, cue, cueIndex, elapsedMs);
+  const frame = faceVisualFrame(id, cue, cueIndex, elapsedMs, finished);
   if (!asset || frame === null) return <>{children}</>;
   return <FrameVideo key={id} asset={asset} frame={frame} label={label}>{children}</FrameVideo>;
 }
@@ -79,7 +80,7 @@ function FrameVideo({ asset, frame, label, children }: {
   }, [asset, frame, failed]);
 
   const ready = !failed && shownFrame === frame;
-  const visibleHeight = asset.height - asset.cropTop;
+  const visibleHeight = asset.height - asset.cropTop - (asset.cropBottom ?? 0);
   return <figure style={{ margin: '12px 0', maxWidth: 'min(100%, 320px)' }}
     data-testid="face-animation" data-frame={frame}
     data-visual-status={failed ? 'fallback' : ready ? 'ready' : 'loading'}>
@@ -97,6 +98,7 @@ function FrameVideo({ asset, frame, label, children }: {
     </div>
     <figcaption style={{ fontSize: 13 }}>
       {failed ? '映像を読み込めないため模式図を表示しています。' : '試作映像・動作と左右は監修待ちです。'}
+    {asset.review && <span> {asset.review}</span>}
     </figcaption>
   </figure>;
 }
