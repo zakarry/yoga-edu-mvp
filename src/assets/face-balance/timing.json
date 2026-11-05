@@ -909,36 +909,25 @@
         "round": 3
       },
       {
-        "phase": "実践",
-        "seconds": 4,
-        "caption": "吐きながら前屈",
-        "reading": "はきながらまえへ。",
-        "visual": "neck-down",
+        "phase": "解除・休息",
+        "seconds": 8,
+        "caption": "正面で、鼻から自然に呼吸します。",
+        "reading": "しょうめんで、はなからしぜんにこきゅうします。",
+        "visual": "rest",
         "narrationSec": 0,
         "start": 48,
-        "frames": 22480,
+        "frames": 52400,
         "round": 4
       },
       {
         "phase": "実践",
         "seconds": 4,
-        "caption": "吸いながら戻る",
-        "reading": "すいながらもどります。",
-        "visual": "rest",
-        "narrationSec": 0,
-        "start": 52,
-        "frames": 26080,
-        "round": 4
-      },
-      {
-        "phase": "解除・休息",
-        "seconds": 4,
-        "caption": "力を抜いて休みます。",
-        "reading": "ちからをぬいて、やすみます。",
-        "visual": "rest",
+        "caption": "吐きながら、顔を下へ向けて。",
+        "reading": "はきながら、かおをしたへむけて。",
+        "visual": "neck-down",
         "narrationSec": 0,
         "start": 56,
-        "frames": 38160,
+        "frames": 40640,
         "round": 4
       }
     ],

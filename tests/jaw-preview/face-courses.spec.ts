@@ -57,6 +57,7 @@ for (const course of courses) {
       await expect(step).toHaveText(prefix + '説明');
       await drain(page, ++count, id === 'jaw' ? '/jaw-release/intro.wav' : id + '-intro.wav');
       await expect(step).toHaveText(prefix + '実践');
+      await expect(page.getByTestId('face-animation')).toHaveAttribute('data-visual-status', 'ready');
       if (id === 'jaw') {
         await expect.poll(() => page.evaluate(() => window.courseTracks.at(-1)?.currentTime ?? 0)).toBeGreaterThan(0);
         await page.evaluate(() => { window.courseTracks.at(-1)!.currentTime = 42.2; });
