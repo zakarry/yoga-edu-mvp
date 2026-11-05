@@ -46,7 +46,7 @@ for (const [id, item] of Object.entries(timing)) {
       } as typeof Audio;
     });
     await page.goto('/face-balance.html');
-    await page.getByLabel('種目').selectOption(id);
+    await page.getByRole('combobox', { name: '種目', exact: true }).selectOption(id);
     await expect(page.getByText('開発検品用・公開不可')).toBeVisible();
     await page.getByRole('checkbox').check();
     const clock = page.getByLabel('実践残り秒数');

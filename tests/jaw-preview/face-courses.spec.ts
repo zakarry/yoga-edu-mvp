@@ -85,7 +85,7 @@ test('pauses and resumes a transition, and ignores old notifications after stop 
   expect(await page.evaluate(() => window.courseTracks[2].currentTime)).toBe(paused);
   await page.getByRole('button', { name: '再開' }).click();
   await expect.poll(() => page.evaluate(() => window.courseTracks[2].currentTime)).toBeGreaterThan(paused);
-  await page.getByRole('button', { name: '停止' }).click();
+  await page.getByRole('button', { name: '停止', exact: true }).click();
   await page.evaluate(() => window.courseTracks[2].dispatchEvent(new Event('ended')));
   await expect(page.getByTestId('course-step')).toHaveText('1 / 3 種目 · 待機');
   await page.getByRole('button', { name: '説明から開始' }).click();
