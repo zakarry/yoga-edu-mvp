@@ -49,7 +49,7 @@ async function openPractice(page: Page, id: keyof typeof timing) {
   await page.getByRole('combobox', { name: '種目', exact: true }).selectOption(id);
   await page.getByRole('checkbox').check();
   await page.getByRole('button', { name: '説明から開始' }).click();
-  await expect(page.locator('p[role=status]')).toHaveText(timing[id].segments[0].caption, { timeout: 20000 });
+  await expect(page.locator('p[role=status]')).toHaveText(timing[id].segments[0].caption, { timeout: Math.ceil(timing[id].introFrames / timing[id].sampleRate * 1000) + 10000 });
 }
 
 async function seekPractice(page: Page, seconds: number) {
