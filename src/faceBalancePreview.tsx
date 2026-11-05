@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FacePracticeVisual } from './components/faceBalance/FacePracticeVisual';
 import { createRoot } from 'react-dom/client';
 import { usePracticeMedia, type MediaTrack } from './lib/usePracticeMedia';
 import timing from './assets/face-balance/timing.json';

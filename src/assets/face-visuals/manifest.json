@@ -1,0 +1,90 @@
+[
+  {
+    "id": "01_jaw_release",
+    "label": "Jaw Release｜顎の脱力",
+    "gif": "gif/01_jaw_release.gif",
+    "mp4": "mp4/01_jaw_release.mp4",
+    "animation_frames": 6,
+    "gif_duration_seconds": 4.2,
+    "mp4_duration_seconds": 4.2,
+    "dimensions_px": "414x610",
+    "sha256_gif": "574455a47be8af519fa8eea1e7839c3dc2d921b8369daa8052ba2610d14396b3"
+  },
+  {
+    "id": "02_kapola_awareness",
+    "label": "Kapola Awareness｜頬",
+    "gif": "gif/02_kapola_awareness.gif",
+    "mp4": "mp4/02_kapola_awareness.mp4",
+    "animation_frames": 6,
+    "gif_duration_seconds": 3.9,
+    "mp4_duration_seconds": 3.9,
+    "dimensions_px": "337x764",
+    "sha256_gif": "dc4f8f788ad65613efb46d87f883344ed40026162c032a33a9f5d9a529f388f3"
+  },
+  {
+    "id": "03_simhasana_face",
+    "label": "Simhasana Face｜ライオンの顔",
+    "gif": "gif/03_simhasana_face.gif",
+    "mp4": "mp4/03_simhasana_face.mp4",
+    "animation_frames": 6,
+    "gif_duration_seconds": 3.9,
+    "mp4_duration_seconds": 3.9,
+    "dimensions_px": "337x763",
+    "sha256_gif": "38800c424f353fa25578f17b4455aa2a40f5cc7f6333fe4783b687389d82a668"
+  },
+  {
+    "id": "04_tongue_mobility",
+    "label": "Tongue Mobility｜舌",
+    "gif": "gif/04_tongue_mobility.gif",
+    "mp4": "mp4/04_tongue_mobility.mp4",
+    "animation_frames": 6,
+    "gif_duration_seconds": 3.9,
+    "mp4_duration_seconds": 3.9,
+    "dimensions_px": "337x764",
+    "sha256_gif": "be0cb7e5340b71c869709c13bd78dc583dd5dfd21db79278cdeaaf028252c6c7"
+  },
+  {
+    "id": "05_lip_o_smile",
+    "label": "Lip O–Smile｜口元の切替",
+    "gif": "gif/05_lip_o_smile.gif",
+    "mp4": "mp4/05_lip_o_smile.mp4",
+    "animation_frames": 12,
+    "gif_duration_seconds": 6.0,
+    "mp4_duration_seconds": 6.0,
+    "dimensions_px": "358x344",
+    "sha256_gif": "2373fd17e28af4202e1a5e56fbdecdd3bf0f37f3381733da7cbb1f5183bbf8f8"
+  },
+  {
+    "id": "06_smile_balance",
+    "label": "Smile Balance｜笑顔の左右",
+    "gif": "gif/06_smile_balance.gif",
+    "mp4": "mp4/06_smile_balance.mp4",
+    "animation_frames": 6,
+    "gif_duration_seconds": 3.9,
+    "mp4_duration_seconds": 3.9,
+    "dimensions_px": "337x764",
+    "sha256_gif": "74f563061ead817fb5a42d9b9e566ffbe72bfa625e46ce66923380eeeab76c3e"
+  },
+  {
+    "id": "07_griva_gentle_corrected",
+    "label": "Griva Gentle｜首（修正版）",
+    "gif": "gif/07_griva_gentle_corrected.gif",
+    "mp4": "mp4/07_griva_gentle_corrected.mp4",
+    "animation_frames": 14,
+    "gif_duration_seconds": 6.3,
+    "mp4_duration_seconds": 6.3,
+    "dimensions_px": "276x346",
+    "sha256_gif": "3b656b7fc1392ddc538e692f1a8235617fe0be60a6e7c5c875750f0761fa7b6f"
+  },
+  {
+    "id": "08_face_relax",
+    "label": "Face Relax｜顔の脱力",
+    "gif": "gif/08_face_relax.gif",
+    "mp4": "mp4/08_face_relax.mp4",
+    "animation_frames": 6,
+    "gif_duration_seconds": 4.2,
+    "mp4_duration_seconds": 4.2,
+    "dimensions_px": "337x764",
+    "sha256_gif": "dd1f8b15818a109849d11222d96706c3c06806d4a431fa53999d2e0c7987d053"
+  }
+]
