@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FacePracticeVisual } from './components/faceBalance/FacePracticeVisual';
 import { createRoot } from 'react-dom/client';
 import { usePracticeMedia, type MediaTrack } from './lib/usePracticeMedia';
 import timing from './assets/face-balance/timing.json';
@@ -93,11 +94,13 @@ function PreviewSession({ order }: { order: readonly ExerciseKey[] }) {
     <p>監修待ち項目　{item?.review ?? '顎の開口範囲'}、共通安全文言</p>
     <label><input type="checkbox" checked={ready} disabled={busy} onChange={event => setReady(event.target.checked)} /> 検品用の再生であることを確認しました</label>
     <div>
+      <FacePracticeVisual id={track.id} cue={cue} cueIndex={cue && item ? item.segments.indexOf(cue) : -1} elapsedMs={elapsed} label={cue?.caption ?? name}>
       <svg viewBox="0 0 160 120" width="160" role="img" aria-label={cue?.caption ?? '開始・終了の模式図'}>
         <ellipse cx="80" cy="58" rx="44" ry="49" fill="#e2f1e7" stroke="#254438" strokeWidth="3" />
         <path d="M60 47h8m24 0h8m-24 13h8" stroke="#254438" strokeWidth="3" strokeLinecap="round" />
         <path d={(!item && active && jawHolding ? 'M64 76h32m-28 8h24' : visualPaths[cue?.visual ?? 'rest'])} fill="none" stroke="#254438" strokeWidth="3" strokeLinecap="round" />
       </svg>
+      </FacePracticeVisual>
     </div>
     <output aria-label="実践残り秒数">{Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, '0')}</output>
     <p role="status">{caption}</p>
