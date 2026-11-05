@@ -11,10 +11,11 @@ const phases = remaining.filter(cue => cue.type === 'silence');
 const totalMs = jawRelease.timing.plannedSec * 1000;
 function JawReleasePreview() {
   const [ready, setReady] = useState(false);
-  const { status, elapsed, start, pause, resume, stop } = usePracticeMedia([
-    { url: introUrl, seconds: timing.introFrames / timing.sampleRate },
-    { url: practiceUrl, seconds: totalMs / 1000 },
+  const { status, elapsed: mediaElapsed, start, pause, resume, stop } = usePracticeMedia([
+    { url: introUrl, phase: 'intro', seconds: timing.introFrames / timing.sampleRate },
+    { url: practiceUrl, phase: 'practice', seconds: totalMs / 1000 },
   ]);
+  const elapsed = status === 'intro' ? 0 : mediaElapsed;
   let phaseStart = 0;
   const phase = phases.find(cue => {
     const end = phaseStart + cue.durationSec! * 1000;

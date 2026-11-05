@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 
-interface MediaTrack { url: string; seconds: number }
+export interface MediaTrack { url: string; seconds: number; phase: 'intro' | 'practice' | 'transition' }
 
 type Status = 'idle' | 'intro' | 'running' | 'paused' | 'transition' | 'error' | 'completed';
 
 export function usePracticeMedia(tracks: readonly MediaTrack[]) {
-  const totalMs = tracks[1].seconds * 1000;
+  const [trackIndex, setTrackIndex] = useState(0);
   const [status, setStatus] = useState<Status>('idle');
   const [elapsed, setElapsed] = useState(0);
   const generation = useRef(0);
@@ -33,7 +33,7 @@ export function usePracticeMedia(tracks: readonly MediaTrack[]) {
   }
 
   useEffect(() => {
-    const leave = () => { stopWork(); setStatus('idle'); setElapsed(0); };
+    const leave = () => { stopWork(); setStatus('idle'); setTrackIndex(0); setElapsed(0); };
     const hide = () => { if (document.hidden) leave(); };
     document.addEventListener('visibilitychange', hide);
     window.addEventListener('pagehide', leave);
@@ -66,11 +66,12 @@ export function usePracticeMedia(tracks: readonly MediaTrack[]) {
         lastMediaTime = mediaTime;
         armDeadline();
       }
-      if (index === 1) setElapsed(Math.min(totalMs, mediaTime * 1000));
+      setElapsed(Math.min(tracks[index].seconds, mediaTime) * 1000);
       frame.current = requestAnimationFrame(sync);
     }
     armDeadline();
-    setStatus(index === 0 ? 'intro' : index === 1 ? 'running' : 'transition');
+    const phase = tracks[index].phase;
+    setStatus(phase === 'practice' ? 'running' : phase);
     track.play().then(() => {
       if (active() && playback.current === attempt && !track.paused) frame.current = requestAnimationFrame(sync);
     }).catch(() => { if (playback.current === attempt) fail(); });
@@ -81,6 +82,8 @@ export function usePracticeMedia(tracks: readonly MediaTrack[]) {
     const track = new Audio(url);
     const current = generation.current;
     audio.current = track;
+    setTrackIndex(index);
+    setElapsed(0);
     const active = () => generation.current === current && audio.current === track;
 
     const fail = () => {
@@ -100,7 +103,7 @@ export function usePracticeMedia(tracks: readonly MediaTrack[]) {
         return;
       }
       releaseAudio();
-      if (index === 1) setElapsed(totalMs);
+      setElapsed(expected * 1000);
       if (index + 1 === tracks.length) {
 
         setStatus('completed');
@@ -125,13 +128,13 @@ export function usePracticeMedia(tracks: readonly MediaTrack[]) {
     playback.current++;
     cancelAnimationFrame(frame.current);
     clearTimeout(deadline.current);
-    setElapsed(Math.min(totalMs, track.currentTime * 1000));
+    setElapsed(Math.min(tracks[trackIndex].seconds, track.currentTime) * 1000);
     setStatus('paused');
   }
 
   function resume() {
     const track = audio.current;
-    if (track?.paused && !track.ended) play(track, 1);
+    if (track?.paused && !track.ended) play(track, trackIndex);
   }
-  return { status, elapsed, start, pause, resume, stop: () => { stopWork(); setElapsed(0); setStatus('idle'); } };
+  return { status, trackIndex, elapsed, start, pause, resume, stop: () => { stopWork(); setTrackIndex(0); setElapsed(0); setStatus('idle'); } };
 }

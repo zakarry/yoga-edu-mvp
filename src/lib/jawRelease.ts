@@ -3,7 +3,7 @@ import type { PracticeDefinition } from './practiceDefinition';
 import type { PracticeCue } from './practiceAudioRuntime';
 
 const rounds = Array.from({ length: 5 }, (_, index): PracticeCue[] => [
-  { id: 'hold-' + index, type: 'silence', durationSec: 5, displayRound: index + 1, displayText: '顎の力みを観察。鼻で自然に呼吸します。' },
+  { id: 'hold-' + index, type: 'silence', durationSec: 5, displayRound: index + 1, displayText: '顎の力を抜いたまま保ちます。鼻で自然に呼吸します。' },
   { id: 'rest-' + index, type: 'silence', durationSec: 4, displayRound: index + 1, displayText: '顎の力を抜いて休みます。' },
 ]);
 
@@ -21,7 +21,7 @@ export const jawRelease = {
     cues: [
       {
         id: 'intro', type: 'voice',
-        displayText: '唇を軽く閉じ、上下の歯を少し離します。舌先は上の前歯のすぐ後ろに軽く置きます。鼻で自然に呼吸し、顎の力みを5秒観察してから4秒休みます。1回目を始めます。',
+        displayText: '唇を軽く閉じ、上下の歯を少し離します。舌先は上の前歯のすぐ後ろに軽く置きます。鼻で自然に呼吸し、顎の力を抜いたまま5秒保ち、そのあと4秒休みます。1回目を始めます。',
         speechText: audioTiming.introReading, audioKey: 'jaw-release-intro',
       },
       ...rounds.flat(),

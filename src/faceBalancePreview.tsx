@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { usePracticeMedia } from './lib/usePracticeMedia';
+import { usePracticeMedia, type MediaTrack } from './lib/usePracticeMedia';
 import timing from './assets/face-balance/timing.json';
 import jawTiming from './assets/jaw-release/timing.json';
+import jawIntro from './assets/jaw-release/intro.wav?url';
+import jawPractice from './assets/jaw-release/practice.wav?url';
+import { jawRelease } from './lib/jawRelease';
+import { practiceElapsedSeconds } from './lib/facePracticeClock';
 
 type Key = keyof typeof timing;
 const audio = import.meta.glob<string>('./assets/face-balance/*.wav', { eager: true, query: '?url', import: 'default' });
@@ -30,41 +34,77 @@ const visualPaths: Record<string, string> = {
   brow: 'M56 38q8-6 16 0m16 0q8-6 16 0',
 };
 
-function PreviewSession({ id }: { id: Key }) {
-  const item = timing[id];
-  const tracks = [
-    { url: audio['./assets/face-balance/' + id + '-intro.wav'], seconds: item.introFrames / item.sampleRate },
-    { url: audio['./assets/face-balance/' + id + '-practice.wav'], seconds: item.practiceSec },
-    { url: audio['./assets/face-balance/' + id + '-transition.wav'], seconds: item.transitionFrames / item.sampleRate },
-  ];
-  const { status, elapsed, start, pause, resume, stop } = usePracticeMedia(tracks);
-  const [ready, setReady] = useState(false);
-  const seconds = Math.ceil(item.practiceSec - elapsed / 1000);
-  const active = status === 'running' || status === 'paused';
-  const busy = active || status === 'intro' || status === 'transition';
-  const cue = active ? item.segments.find(segment =>
-    elapsed >= segment.start * 1000 && elapsed < (segment.start + segment.seconds) * 1000) : undefined;
-  const caption = status === 'intro' ? item.intro : status === 'transition' ? item.transitionCaption
-    : status === 'completed' ? '検品再生が終了しました。' : status === 'error' ? '音声を再生できませんでした。'
-    : cue?.caption ?? '説明音声の終了後に実践タイマーを開始します。';
+type ExerciseKey = Key | 'jaw';
+interface CourseTrack extends MediaTrack { id: ExerciseKey; step: number }
 
+function tracksFor(id: ExerciseKey, step: number): CourseTrack[] {
+  if (id === 'jaw') return [
+    { id, step, phase: 'intro', url: jawIntro, seconds: jawTiming.introFrames / jawTiming.sampleRate },
+    { id, step, phase: 'practice', url: jawPractice, seconds: jawTiming.practiceFrames / jawTiming.sampleRate },
+  ];
+  const item = timing[id];
+  const track = (phase: MediaTrack['phase'], seconds: number): CourseTrack => ({
+    id, step, phase, seconds, url: audio['./assets/face-balance/' + id + '-' + phase + '.wav'],
+  });
+  return [
+    track('intro', item.introFrames / item.sampleRate),
+    track('practice', item.practiceAudioSec),
+    track('transition', item.transitionFrames / item.sampleRate),
+  ];
+}
+
+function PreviewSession({ order }: { order: readonly ExerciseKey[] }) {
+  const tracks = order.flatMap(tracksFor);
+  const { status, trackIndex, elapsed, start, pause, resume, stop } = usePracticeMedia(tracks);
+  const [ready, setReady] = useState(false);
+  const track = tracks[trackIndex];
+  const item = track.id === 'jaw' ? null : timing[track.id];
+  const name = item?.name ?? jawRelease.content.name;
+  const practiceSeconds = item?.practiceSec ?? jawTiming.practiceFrames / jawTiming.sampleRate;
+  const active = track.phase === 'practice' && (status === 'running' || status === 'paused');
+  const busy = status === 'running' || status === 'paused' || status === 'intro' || status === 'transition';
+  const consumedPractice = item ? practiceElapsedSeconds(item.segments, elapsed / 1000) : elapsed / 1000;
+  const seconds = status === 'completed' || track.phase === 'transition' ? 0
+    : Math.max(0, Math.ceil(practiceSeconds - (active ? consumedPractice : 0)));
+  const cue = active ? item?.segments.find(segment =>
+    elapsed >= segment.start * 1000 && elapsed < (segment.start + segment.seconds) * 1000) : undefined;
+  const jawSecond = Math.floor(elapsed / 1000);
+  const jawHolding = jawSecond % 9 < 5;
+  const jawClosing = !item && active && jawSecond >= 42;
+  const stage = jawClosing ? '切替（実践枠内）' : track.phase === 'intro' ? '説明' : track.phase === 'transition' ? '切替' : '実践';
+  const caption = status === 'error' ? '音声を再生できませんでした。'
+    : status === 'completed' ? '検品再生が終了しました。'
+    : status === 'idle' ? '説明音声の終了後に実践タイマーを開始します。'
+    : track.phase === 'intro' ? (item?.intro ?? jawRelease.guide.cues[0].displayText)
+    : track.phase === 'transition' ? item?.transitionCaption
+    : cue?.caption ?? (jawClosing ? 'お疲れさまでした。' : jawHolding ? '顎の力を抜いたまま保ちます。鼻で自然に呼吸します。' : '顎の力を抜いて休みます。');
+  const jawCue = !item && active ? jawTiming.segments.find(segment =>
+    elapsed >= segment.start * 1000 && elapsed < (segment.start + segment.frames / jawTiming.sampleRate) * 1000) : undefined;
   return <section>
-    <h2>{item.name}</h2>
-    <p>{item.classification} ／ {item.breath}</p>
-    <p>監修待ち項目　{item.review}、共通安全文言</p>
+    <h2>{name}</h2>
+    {order.length > 1 && <p data-testid="course-step">{track.step + 1} / {order.length} 種目 · {busy ? stage : status === 'completed' ? '終了' : '待機'}</p>}
+    <p>{item?.classification ?? '現代'} ／ {item?.breath ?? '鼻で自然に呼吸'}</p>
+    {track.id === 'simhasana' && <ol>
+      <li>椅子に座り、手を膝に置いて指を広げます。</li>
+      <li>鼻から息を吸います。</li>
+      <li>口を無理のない範囲で開け、舌を顎の方へ出しながら、口から息を吐きます。声は出しません。</li>
+      <li>舌を戻して口を閉じ、鼻から吸って吐く呼吸を2回くり返します。</li>
+    </ol>}
+    <p>監修待ち項目　{item?.review ?? '顎の開口範囲'}、共通安全文言</p>
     <label><input type="checkbox" checked={ready} disabled={busy} onChange={event => setReady(event.target.checked)} /> 検品用の再生であることを確認しました</label>
     <div>
       <svg viewBox="0 0 160 120" width="160" role="img" aria-label={cue?.caption ?? '開始・終了の模式図'}>
         <ellipse cx="80" cy="58" rx="44" ry="49" fill="#e2f1e7" stroke="#254438" strokeWidth="3" />
         <path d="M60 47h8m24 0h8m-24 13h8" stroke="#254438" strokeWidth="3" strokeLinecap="round" />
-        <path d={visualPaths[cue?.visual ?? 'rest']} fill="none" stroke="#254438" strokeWidth="3" strokeLinecap="round" />
+        <path d={(!item && active && jawHolding ? 'M64 76h32m-28 8h24' : visualPaths[cue?.visual ?? 'rest'])} fill="none" stroke="#254438" strokeWidth="3" strokeLinecap="round" />
       </svg>
     </div>
     <output aria-label="実践残り秒数">{Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, '0')}</output>
     <p role="status">{caption}</p>
-    {cue && <p>{cue.phase} · {cue.round} / {item.segments[item.segments.length - 1].round} 周</p>}
+    {cue && item && <p>{elapsed < (cue.start + cue.narrationSec) * 1000 ? '案内中・残秒は待機' : cue.phase} · {cue.round} / {item.segments[item.segments.length - 1].round} 周</p>}
+    {!item && active && <p>{Math.min(5, Math.floor(jawSecond / 9) + 1)} / 5 回 {jawCue?.reading}</p>}
     {!busy && <button disabled={!ready} onClick={start}>説明から開始</button>}
-    {status === 'running' && <button onClick={pause}>一時停止</button>}
+    {busy && status !== 'paused' && <button onClick={pause}>一時停止</button>}
     {status === 'paused' && <button onClick={resume}>再開</button>}
     {busy && <button onClick={stop}>停止</button>}
   </section>;
@@ -72,21 +112,26 @@ function PreviewSession({ id }: { id: Key }) {
 
 function FaceBalancePreview() {
   const [id, setId] = useState<Key>('kapola');
+  const [courseIndex, setCourseIndex] = useState(-1);
   return <main style={{ maxWidth: 720, margin: 'auto', padding: 20, fontFamily: 'sans-serif', lineHeight: 1.65 }}>
     <h1>FACE BALANCE YOGA v0.5</h1>
     <p><strong>開発検品用・公開不可</strong>。監修前の音声と模式図を、動作を行わず確認する画面です。</p>
-    <label>種目 <select value={id} onChange={event => setId(event.target.value as Key)}>
+    <label>種目 <select disabled={courseIndex >= 0} value={id} onChange={event => setId(event.target.value as Key)}>
       {keys.map(key => <option key={key} value={key}>{timing[key].name}</option>)}
     </select></label>
-    <PreviewSession key={id} id={id} />
+    <div><label>連続再生コース <select value={courseIndex} onChange={event => setCourseIndex(Number(event.target.value))}>
+      <option value={-1}>単独種目を再生</option>
+      {courses.map((course, index) => <option key={course.name} value={index}>{course.name}</option>)}
+    </select></label></div>
+    <PreviewSession key={courseIndex < 0 ? id : 'course-' + courseIndex} order={courseIndex < 0 ? [id] : courses[courseIndex].order} />
     <h2>コース尺</h2>
-    <p>素材実尺の合計。読み込み・一時停止・種目選択の時間は別です。</p>
+    <p>8分フルの総所要時間は約10分4秒です。表示は音源実尺の合計で、読み込み・一時停止の時間は別です。</p>
     <ul>{courses.map(course => {
-      const totals = course.order.reduce((sum, key) => {
-        if (key === 'jaw') return { practice: sum.practice + 45, total: sum.total + 45 + jawTiming.introFrames / jawTiming.sampleRate };
-        const item = timing[key];
-        return { practice: sum.practice + item.practiceSec, total: sum.total + item.practiceSec + (item.introFrames + item.transitionFrames) / item.sampleRate };
-      }, { practice: 0, total: 0 });
+      const tracks = course.order.flatMap(tracksFor);
+      const totals = {
+        practice: course.order.reduce((sum, id) => sum + (id === 'jaw' ? 45 : timing[id].practiceSec), 0),
+        total: tracks.reduce((sum, track) => sum + track.seconds, 0),
+      };
       return <li key={course.name}>{course.name} · 実践 {totals.practice}秒 ／ 総尺 {totals.total.toFixed(3)}秒</li>;
     })}</ul>
     <a href="/jaw-release.html">Jaw Releaseの検品へ</a>
