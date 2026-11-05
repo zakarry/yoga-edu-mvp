@@ -82,6 +82,12 @@ function PreviewSession({ order }: { order: readonly ExerciseKey[] }) {
     <h2>{name}</h2>
     {order.length > 1 && <p data-testid="course-step">{track.step + 1} / {order.length} 種目 · {busy ? stage : status === 'completed' ? '終了' : '待機'}</p>}
     <p>{item?.classification ?? '現代'} ／ {item?.breath ?? '鼻で自然に呼吸'}</p>
+    {track.id === 'simhasana' && <ol>
+      <li>椅子に座り、手を膝に置いて指を広げます。</li>
+      <li>鼻から息を吸います。</li>
+      <li>口を無理のない範囲で開け、舌を顎の方へ出しながら、口から息を吐きます。声は出しません。</li>
+      <li>舌を戻して口を閉じ、鼻から吸って吐く呼吸を2回くり返します。</li>
+    </ol>}
     <p>監修待ち項目　{item?.review ?? '顎の開口範囲'}、共通安全文言</p>
     <label><input type="checkbox" checked={ready} disabled={busy} onChange={event => setReady(event.target.checked)} /> 検品用の再生であることを確認しました</label>
     <div>
@@ -117,7 +123,7 @@ function FaceBalancePreview() {
     </select></label></div>
     <PreviewSession key={courseIndex < 0 ? id : 'course-' + courseIndex} order={courseIndex < 0 ? [id] : courses[courseIndex].order} />
     <h2>コース尺</h2>
-    <p>8分フルの総所要時間は約9分20秒です。表示は音源実尺の合計で、読み込み・一時停止の時間は別です。</p>
+    <p>8分フルの総所要時間は約9分37秒です。表示は音源実尺の合計で、読み込み・一時停止の時間は別です。</p>
     <ul>{courses.map(course => {
       const tracks = course.order.flatMap(tracksFor);
       const totals = {

@@ -32,6 +32,7 @@ test('all seven audio timelines preserve complete non-overlapping cue windows', 
 
 for (const [id, item] of Object.entries(timing)) {
   test(id + ' uses real media, shows phase on its boundary and drains transition', async ({ page }) => {
+    test.setTimeout(Math.ceil(item.introFrames / item.sampleRate) * 1000 + 25000);
     await page.addInitScript(() => {
       const Original = window.Audio;
       window.faceTracks = [];
@@ -55,7 +56,7 @@ for (const [id, item] of Object.entries(timing)) {
     await expect(clock).toHaveText(format(item.practiceSec));
     await expect(page.locator('p[role=status]')).toHaveText(item.intro);
     expect(await page.evaluate(() => window.faceTracks.length)).toBe(1);
-    await expect(page.locator('p[role=status]')).toHaveText(item.segments[0].caption, { timeout: 18000 });
+    await expect(page.locator('p[role=status]')).toHaveText(item.segments[0].caption, { timeout: Math.ceil(item.introFrames / item.sampleRate) * 1000 + 10000 });
     await page.getByRole('button', { name: '一時停止' }).click();
     const second = item.segments[1];
     await page.evaluate(start => { window.faceTracks[1].currentTime = start; }, second.start);
