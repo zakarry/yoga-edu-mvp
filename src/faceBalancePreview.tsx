@@ -117,7 +117,7 @@ function FaceBalancePreview() {
     </select></label></div>
     <PreviewSession key={courseIndex < 0 ? id : 'course-' + courseIndex} order={courseIndex < 0 ? [id] : courses[courseIndex].order} />
     <h2>コース尺</h2>
-    <p>8分フルの総所要時間は約9分19秒です。表示は音源実尺の合計で、読み込み・一時停止の時間は別です。</p>
+    <p>8分フルの総所要時間は約9分20秒です。表示は音源実尺の合計で、読み込み・一時停止の時間は別です。</p>
     <ul>{courses.map(course => {
       const tracks = course.order.flatMap(tracksFor);
       const totals = {

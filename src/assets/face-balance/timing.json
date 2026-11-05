@@ -420,12 +420,12 @@
   "lip": {
     "name": "Lip O–Smile｜口元の切替",
     "classification": "現代",
-    "intro": "歯を噛み合わせず、オの形から小さな笑顔へ切り替えます。鼻で自然に呼吸します。",
-    "introReading": "はをかみあわせず、おのかたちから、ちいさなえがおへきりかえます。はなでしぜんにこきゅうします。",
+    "intro": "歯を噛み合わせず、オの形から、小さくほほえんでみましょう。鼻で自然に呼吸します。",
+    "introReading": "はをかみあわせず、おのかたちから、ちいさくほほえんでみましょう。はなでしぜんにこきゅうします。",
     "breath": "鼻で自然に呼吸",
     "review": "安全文言",
     "sampleRate": 16000,
-    "introFrames": 108000,
+    "introFrames": 106320,
     "segments": [
       {
         "phase": "実践",
@@ -440,11 +440,11 @@
       {
         "phase": "実践",
         "seconds": 2,
-        "caption": "小さな笑顔",
-        "reading": "ちいさなえがお。",
+        "caption": "小さくほほえんで。",
+        "reading": "ちいさくほほえんで。",
         "visual": "smile",
         "start": 2,
-        "frames": 21200,
+        "frames": 24400,
         "round": 1
       },
       {
@@ -470,11 +470,11 @@
       {
         "phase": "実践",
         "seconds": 2,
-        "caption": "小さな笑顔",
-        "reading": "ちいさなえがお。",
+        "caption": "小さくほほえんで。",
+        "reading": "ちいさくほほえんで。",
         "visual": "smile",
         "start": 14,
-        "frames": 21200,
+        "frames": 24400,
         "round": 2
       },
       {
@@ -500,11 +500,11 @@
       {
         "phase": "実践",
         "seconds": 2,
-        "caption": "小さな笑顔",
-        "reading": "ちいさなえがお。",
+        "caption": "小さくほほえんで。",
+        "reading": "ちいさくほほえんで。",
         "visual": "smile",
         "start": 26,
-        "frames": 21200,
+        "frames": 24400,
         "round": 3
       },
       {
@@ -530,11 +530,11 @@
       {
         "phase": "実践",
         "seconds": 2,
-        "caption": "小さな笑顔",
-        "reading": "ちいさなえがお。",
+        "caption": "小さくほほえんで。",
+        "reading": "ちいさくほほえんで。",
         "visual": "smile",
         "start": 38,
-        "frames": 21200,
+        "frames": 24400,
         "round": 4
       },
       {
@@ -560,11 +560,11 @@
       {
         "phase": "実践",
         "seconds": 2,
-        "caption": "小さな笑顔",
-        "reading": "ちいさなえがお。",
+        "caption": "小さくほほえんで。",
+        "reading": "ちいさくほほえんで。",
         "visual": "smile",
         "start": 50,
-        "frames": 21200,
+        "frames": 24400,
         "round": 5
       },
       {
@@ -586,111 +586,111 @@
   "smile": {
     "name": "Smile Balance｜笑顔の左右",
     "classification": "現代",
-    "intro": "両方の口角をゆっくり上げ、小さな笑顔を観察します。左右を無理にそろえません。",
-    "introReading": "りょうほうのこうかくをゆっくりあげ、ちいさなえがおをかんさつします。さゆうをむりにそろえません。",
+    "intro": "口の両端をゆっくり上げ、小さくほほえんでみましょう。鏡で動きを見てみます。左右を無理にそろえません。",
+    "introReading": "くちのりょうはしをゆっくりあげ、ちいさくほほえんでみましょう。かがみでうごきをみてみます。さゆうをむりにそろえません。",
     "breath": "鼻で自然に呼吸",
     "review": "安全文言・緊急案内",
     "sampleRate": 16000,
-    "introFrames": 103920,
+    "introFrames": 128960,
     "segments": [
       {
         "phase": "実践",
         "seconds": 3,
-        "caption": "小さな笑顔",
-        "reading": "ちいさなえがお。",
+        "caption": "小さくほほえんで。",
+        "reading": "ちいさくほほえんで。",
         "visual": "smile",
         "start": 0,
-        "frames": 21200,
+        "frames": 24400,
         "round": 1
       },
       {
         "phase": "解除・休息",
         "seconds": 12,
-        "caption": "力を抜き、左右の動き方を観察。",
-        "reading": "ちからをぬき、さゆうのうごきかたをかんさつ。",
+        "caption": "鏡で、口の両端の動きを見てみましょう。そのあと力を抜いて休みます。",
+        "reading": "かがみで、くちのりょうはしのうごきをみてみましょう。そのあと、ちからをぬいてやすみます。",
         "visual": "rest",
         "start": 3,
-        "frames": 55280,
+        "frames": 104480,
         "round": 1
       },
       {
         "phase": "実践",
         "seconds": 3,
-        "caption": "小さな笑顔",
-        "reading": "ちいさなえがお。",
+        "caption": "小さくほほえんで。",
+        "reading": "ちいさくほほえんで。",
         "visual": "smile",
         "start": 15,
-        "frames": 21200,
+        "frames": 24400,
         "round": 2
       },
       {
         "phase": "解除・休息",
         "seconds": 12,
-        "caption": "力を抜き、左右の動き方を観察。",
-        "reading": "ちからをぬき、さゆうのうごきかたをかんさつ。",
+        "caption": "鏡で、口の両端の動きを見てみましょう。そのあと力を抜いて休みます。",
+        "reading": "かがみで、くちのりょうはしのうごきをみてみましょう。そのあと、ちからをぬいてやすみます。",
         "visual": "rest",
         "start": 18,
-        "frames": 55280,
+        "frames": 104480,
         "round": 2
       },
       {
         "phase": "実践",
         "seconds": 3,
-        "caption": "小さな笑顔",
-        "reading": "ちいさなえがお。",
+        "caption": "小さくほほえんで。",
+        "reading": "ちいさくほほえんで。",
         "visual": "smile",
         "start": 30,
-        "frames": 21200,
+        "frames": 24400,
         "round": 3
       },
       {
         "phase": "解除・休息",
         "seconds": 12,
-        "caption": "力を抜き、左右の動き方を観察。",
-        "reading": "ちからをぬき、さゆうのうごきかたをかんさつ。",
+        "caption": "鏡で、口の両端の動きを見てみましょう。そのあと力を抜いて休みます。",
+        "reading": "かがみで、くちのりょうはしのうごきをみてみましょう。そのあと、ちからをぬいてやすみます。",
         "visual": "rest",
         "start": 33,
-        "frames": 55280,
+        "frames": 104480,
         "round": 3
       },
       {
         "phase": "実践",
         "seconds": 3,
-        "caption": "小さな笑顔",
-        "reading": "ちいさなえがお。",
+        "caption": "小さくほほえんで。",
+        "reading": "ちいさくほほえんで。",
         "visual": "smile",
         "start": 45,
-        "frames": 21200,
+        "frames": 24400,
         "round": 4
       },
       {
         "phase": "解除・休息",
         "seconds": 12,
-        "caption": "力を抜き、左右の動き方を観察。",
-        "reading": "ちからをぬき、さゆうのうごきかたをかんさつ。",
+        "caption": "鏡で、口の両端の動きを見てみましょう。そのあと力を抜いて休みます。",
+        "reading": "かがみで、くちのりょうはしのうごきをみてみましょう。そのあと、ちからをぬいてやすみます。",
         "visual": "rest",
         "start": 48,
-        "frames": 55280,
+        "frames": 104480,
         "round": 4
       },
       {
         "phase": "実践",
         "seconds": 3,
-        "caption": "小さな笑顔",
-        "reading": "ちいさなえがお。",
+        "caption": "小さくほほえんで。",
+        "reading": "ちいさくほほえんで。",
         "visual": "smile",
         "start": 60,
-        "frames": 21200,
+        "frames": 24400,
         "round": 5
       },
       {
         "phase": "解除・休息",
         "seconds": 12,
-        "caption": "力を抜き、左右の動き方を観察。",
-        "reading": "ちからをぬき、さゆうのうごきかたをかんさつ。",
+        "caption": "鏡で、口の両端の動きを見てみましょう。そのあと力を抜いて休みます。",
+        "reading": "かがみで、くちのりょうはしのうごきをみてみましょう。そのあと、ちからをぬいてやすみます。",
         "visual": "rest",
         "start": 63,
-        "frames": 55280,
+        "frames": 104480,
         "round": 5
       }
     ],
