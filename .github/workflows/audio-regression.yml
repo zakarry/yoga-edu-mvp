@@ -28,7 +28,8 @@ jobs:
       - run: deno test --node-modules-dir=none --allow-env --allow-read tests/ai-teacher-release.test.ts
   browser-practice:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Browser/OS dependency setup can take 13 minutes; keep both full suites.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
