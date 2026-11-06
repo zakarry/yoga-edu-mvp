@@ -50,6 +50,7 @@ for(const width of [320,390,430])test('staff review controls fit '+width+'px',as
 
 test('clear next-step guidance and long comments remain a compact LINE reply',async({page})=>{
  await page.goto(path);await page.locator('#next-review').click();await expect(page.locator('#review-status')).toContainText('総合判定を選んで');
+ await page.locator('#verdict').selectOption('OK');await page.locator('#next-review').click();await expect(page.locator('#clip-0')).toHaveAttribute('aria-pressed','true');
  for(let i=0;i<8;i++){await page.locator('#clip-'+i).click();await page.locator('#verdict').selectOption('要修正');await page.locator('#comment').fill('あ'.repeat(300));}
  expect((await page.locator('#output').inputValue()).length).toBeLessThan(4500);
  await page.locator('#clip-0').click();await page.locator('#next-review').click();await expect(page.locator('#clip-1')).toHaveAttribute('aria-pressed','true');

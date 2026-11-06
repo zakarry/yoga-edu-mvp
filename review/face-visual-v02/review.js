@@ -24,6 +24,8 @@ try { const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
   }
  }
 } catch { storageOK = false; }
+const REVIEW_ORDER = [4,0,1,2,3,5,6,7];
+const adjacent = direction => REVIEW_ORDER[REVIEW_ORDER.indexOf(index) + direction];
 let index = 4;
 const video = $('video');
 const selects = criteria.map((text,i)=>{
@@ -60,7 +62,7 @@ function showClip(next,scroll=false){
  $('focus').textContent=focuses[index];$('clip-note').textContent=clip.id.startsWith('07')?'首はコマ切替を含む修正候補です。つながり・本人の左右・最後の下向きを重点確認してください。最初の動きは画面右向き（本人の左向き）に見えます。指定順との一致を確認してください。鏡像補正はしていません。':'AI生成素材の修正候補です。途中の顔・口元のゆがみや、脱力の伝わり方も確認してください。';
  $('rating-for').textContent=clip.title+'への回答';$('verdict').value=a.verdict;$('comment').value=a.comment;selects.forEach((s,i)=>s.value=a.criteria[i]);
  CLIPS.forEach((_,i)=>$('clip-'+i).setAttribute('aria-pressed',String(i===index)));
- $('previous').disabled=index===0;$('next').disabled=index===CLIPS.length-1;$('media-status').textContent='再生ボタンを押してください。自動再生・自動ループはしません。';$('play').disabled=false;
+ $('previous').disabled=adjacent(-1)===undefined;$('next').disabled=adjacent(1)===undefined;$('media-status').textContent='再生ボタンを押してください。自動再生・自動ループはしません。';$('play').disabled=false;
  video.poster='media/'+clip.file.replace('.mp4','_poster.jpg');
  $('next-review').textContent=index===7?'回答まとめへ':'この回答を残して、次の種目へ';$('review-status').textContent='';
  video.src='media/'+clip.file;video.load();refresh();if(scroll)$('current-clip').scrollIntoView({block:'start'});
@@ -70,11 +72,11 @@ video.addEventListener('loadedmetadata',()=>{const c=CLIPS[index];if(Math.abs(vi
 video.addEventListener('play',()=>{$('media-status').textContent='再生中（無音）。動画内の操作で一時停止できます。';});
 video.addEventListener('ended',()=>{$('media-status').textContent='再生が終わりました。下の判定を入力してください。';});
 video.addEventListener('error',()=>{$('media-status').textContent='映像を読み込めませんでした。再読み込みしても開かない場合は依頼者へお知らせください。';$('play').disabled=true;});
-$('previous').addEventListener('click',()=>showClip(index-1,true));$('next').addEventListener('click',()=>showClip(index+1,true));
+$('previous').addEventListener('click',()=>showClip(adjacent(-1),true));$('next').addEventListener('click',()=>showClip(adjacent(1),true));
 $('verdict').addEventListener('change',()=>{state.answers[CLIPS[index].id].verdict=$('verdict').value;save();});
 $('comment').addEventListener('input',()=>{state.answers[CLIPS[index].id].comment=$('comment').value;save();});
 for(const key of ['reviewer','device']){$(key).value=state[key];$(key).addEventListener('input',()=>{state[key]=$(key).value;save();});}
-$('next-review').addEventListener('click',()=>{const a=state.answers[CLIPS[index].id];if(a.verdict==='未確認'){$('review-status').textContent='総合判定を選んでください。分からない場合は判断保留を選べます。';$('verdict').focus();return;}if(a.verdict==='要修正'&&!a.comment.trim()){$('review-status').textContent='気になる点を1つ以上記入してください。';$('comment').focus();return;}if(index===7)$('summary').scrollIntoView();else showClip(index+1,true);});
+$('next-review').addEventListener('click',()=>{const a=state.answers[CLIPS[index].id];if(a.verdict==='未確認'){$('review-status').textContent='総合判定を選んでください。分からない場合は判断保留を選べます。';$('verdict').focus();return;}if(a.verdict==='要修正'&&!a.comment.trim()){$('review-status').textContent='気になる点を1つ以上記入してください。';$('comment').focus();return;}if(adjacent(1)===undefined)$('summary').scrollIntoView();else showClip(adjacent(1),true);});
 $('stamp').addEventListener('click',()=>{const text='['+(Number.isFinite(video.currentTime)?video.currentTime.toFixed(1):'0.0')+'秒] ';const el=$('comment');el.value=(el.value+(el.value?'\n':'')+text).slice(0,300);state.answers[CLIPS[index].id].comment=el.value;save();el.focus();});
 function validate(){
  if(!CLIPS.some(c=>state.answers[c.id].verdict!=='未確認')){$('result-status').textContent='少なくとも1種目の総合判定を選んでください。';return false;}
