@@ -1,0 +1,9 @@
+{
+  "source": "05_Lip_O_Smile_user_approved_4sec.gif",
+  "sourceSHA256": "9a4c4b89bccda681e0fa0582da8e5c2af891cc76e70540bb109c4cd20290ea64",
+  "derived": "05_Lip_O_Smile_reference.mp4",
+  "derivedSHA256": "e443ca9b5337d9ab6728f467a8b009103c4748fb85c253368c02c95b4c51bbf5",
+  "durationSeconds": 4,
+  "changes": "GIF -> H264 30fps yuv420p, no audio; one edge pixel padding for even width; no retiming/caption/motion edits",
+  "tool": "imageio-ffmpeg 0.8.1 bundled ffmpeg; libx264 crf18 faststart"
+}
