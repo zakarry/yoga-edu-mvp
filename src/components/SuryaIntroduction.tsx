@@ -26,9 +26,8 @@ export function SuryaIntroduction({ signedIn, accountAvailable, onOpenAccount, o
 
   return (
     <section className="panel surya-introduction" aria-labelledby="surya-introduction-title">
-      <span className="eyebrow">ミス・ワールド・ジャパン ファイナリストの皆さまへ</span>
       <h2 id="surya-introduction-title">太陽礼拝（スーリヤ・ナマスカーラ）を学ぶ</h2>
-      <p>まずは全日本ヨガ連盟の公式動画で、動きの流れを確認しましょう。紹介・動画の視聴と下の12ステップ練習は、ログインせずに利用できます。</p>
+      <p>まずは全日本ヨガ連盟の公式動画で動きの流れを確認し、12ステップの練習へ進みましょう。</p>
       <h3>公式動画で流れを確認</h3>
       <p>ヨガ検定３級実技試験対策講座「スーリヤ・ナマスカーラ（太陽礼拝）」</p>
       {showVideo ? (
@@ -51,7 +50,7 @@ export function SuryaIntroduction({ signedIn, accountAvailable, onOpenAccount, o
       <p><a href="https://www.youtube.com/watch?v=mRZ6bczpAgA" target="_blank" rel="noopener noreferrer">YouTubeで動画を見る（再生できない場合はこちら）</a></p>
       <div className="surya-next-steps">
         <h3>動画を見たら、練習へ</h3>
-        <p>下の練習では、12ステップを自分のペースで確認できます。大会での実施方法は、主催者からの案内に従ってください。</p>
+        <p>下の練習では、12ステップを自分のペースで確認できます。</p>
         <button type="button" className="primary-button" onClick={openPractice}>12ステップの練習へ進む</button>
         <p>練習記録の確認やAI先生の利用は、Yoga AI会員としてお進みください。下の練習だけでは会員の練習記録に自動保存されません。</p>
         {!signedIn && (

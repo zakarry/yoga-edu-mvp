@@ -1,47 +1,37 @@
 import { test, expect } from '@playwright/test';
 
 for (const width of [320, 390, 1280]) {
-  test(`surya public video and existing practice at ${width}px`, async ({ page }) => {
-    // Third-party availability is checked manually; don't make CI download video.
-    await page.route('https://www.youtube.com/**', route => route.fulfill({ body: '' }));
+  test(`surya requires membership before video and practice at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto('/?entry=surya-namaskar');
-    await expect(page.getByRole('heading', { name: '太陽礼拝（スーリヤ・ナマスカーラ）を学ぶ' })).toBeVisible();
-    const video = page.locator('.surya-official-video');
-    await expect(video).toHaveAttribute('src', 'https://www.youtube.com/embed/mRZ6bczpAgA');
-    await expect(video).toHaveAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
-    await expect(page.getByRole('dialog')).toHaveCount(0);
-    await expect(page.getByRole('link', { name: 'YouTubeで動画を見る（再生できない場合はこちら）' })).toHaveAttribute('href', 'https://www.youtube.com/watch?v=mRZ6bczpAgA');
+    await page.goto('/?entry=surya-namaskar', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('heading', { name: '無料会員登録して、太陽礼拝を始めましょう' })).toBeVisible();
+    await expect(page.locator('.surya-official-video')).toHaveCount(0);
+    await expect(page.locator('.surya-namaskar-experience')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'YouTubeで動画を見る（再生できない場合はこちら）' })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    const box = await video.boundingBox();
-    expect(box!.height).toBeGreaterThanOrEqual(200);
-    expect(box!.width).toBeGreaterThanOrEqual(200);
-    await page.getByRole('button', { name: '12ステップの練習へ進む' }).click();
-    await expect(video).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: '12ステップを練習する' })).toBeFocused();
-    await expect(page.locator('.surya-namaskar-experience')).toBeVisible();
-    await expect(page.getByRole('dialog')).toHaveCount(0);
-    await page.getByRole('button', { name: '公式動画をもう一度表示' }).click();
-    await expect(video).toBeVisible();
+    const signup = page.getByRole('button', { name: '無料会員登録して始める', exact: true });
+    if (await signup.count()) {
+      await signup.click();
+      await expect(page.getByRole('button', { name: 'Googleで続ける' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'LINEで続ける' })).toBeVisible();
+      await page.getByRole('button', { name: '閉じる', exact: true }).click();
+      await expect(page.locator('.surya-official-video')).toHaveCount(0);
+      await expect(page.locator('.surya-namaskar-experience')).toHaveCount(0);
+    } else {
+      await expect(page.getByRole('status')).toContainText('現在、会員機能に接続できません');
+    }
   });
 }
 
-test('surya menu entry and account CTA keep public introduction usable', async ({ page }) => {
-  await page.route('https://www.youtube.com/**', route => route.fulfill({ body: '' }));
+test('menu and direct reload cannot bypass the Surya member gate', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'メニュー', exact: true }).click();
   await page.getByRole('button', { name: '太陽礼拝（スーリヤ・ナマスカーラ）', exact: true }).click();
-  await page.getByRole('button', { name: '無料会員登録・ログイン', exact: true }).click();
-  // The normal CI build intentionally has no cloud configuration.
-  if (await page.getByRole('dialog').count()) {
-    await expect(page.getByRole('button', { name: 'Googleで続ける' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'LINEで続ける' })).toBeVisible();
-    await page.getByRole('button', { name: '閉じる', exact: true }).click();
-  } else {
-    await expect(page.getByRole('status')).toContainText('現在、会員機能に接続できません');
-  }
-  await expect(page.locator('.surya-official-video')).toBeVisible();
-  await page.getByRole('button', { name: '12ステップの練習へ進む' }).click();
-  await expect(page.locator('.surya-namaskar-experience')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '無料会員登録して、太陽礼拝を始めましょう' })).toBeVisible();
+  await expect(page.locator('.surya-namaskar-experience')).toHaveCount(0);
+  await page.goto('/?entry=surya-namaskar#surya-practice', { waitUntil: 'domcontentloaded' });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.locator('.surya-official-video')).toHaveCount(0);
+  await expect(page.locator('.surya-namaskar-experience')).toHaveCount(0);
 });

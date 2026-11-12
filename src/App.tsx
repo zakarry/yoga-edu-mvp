@@ -34,6 +34,7 @@ import { PageHeader } from './components/PageHeader';
 import { MyPage, type DiagnosisHistoryRecord, type WellnessScores } from './components/MyPage';
 import { AuthPanel } from './components/AuthPanel';
 import { SuryaIntroduction } from './components/SuryaIntroduction';
+import { SuryaMemberGate } from './components/SuryaMemberGate';
 import { isSupabaseConfigured } from './lib/supabase';
 import { readSuryaAccountTarget, rememberSuryaAccountTarget, clearSuryaAccountTarget, type SuryaAccountTarget } from './lib/suryaAccountReturn';
 import { CloudDiagnosisSection, CloudPracticeSection } from './components/MyYogaCloudSections';
@@ -2338,6 +2339,12 @@ export default function App() {
                 <p>12ステップを呼吸とともに流れるようにつなぐ代表的なヨガシークエンスです。</p>
               </div>
             </section>
+            <SuryaMemberGate
+              signedIn={!!auth.user}
+              consentVerified={auth.consentVerified}
+              accountAvailable={isSupabaseConfigured}
+              onOpenAccount={() => openSuryaAccount('surya-namaskar')}
+            >
             <SuryaIntroduction
               signedIn={!!auth.user}
               accountAvailable={isSupabaseConfigured}
@@ -2366,6 +2373,7 @@ export default function App() {
               <h3 id="surya-practice-title" tabIndex={-1}>12ステップを練習する</h3>
               <SuryaNamaskarExperience sequenceId="surya-namaskar-ayush" />
             </section>
+            </SuryaMemberGate>
           </div>
         )}
         {page === 'site-map' && (
