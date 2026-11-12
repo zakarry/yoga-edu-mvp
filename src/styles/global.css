@@ -5391,6 +5391,20 @@ h1 {
   color: var(--text-secondary, #555);
   line-height: 1.6;
 }
+.sequence-beginner-intro p + p {
+  margin-top: 16px;
+}
+.sequence-beginner-intro a.primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  max-width: 100%;
+  line-height: 1.6;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
 .sequence-active-section {
   display: grid;
   gap: 16px;
