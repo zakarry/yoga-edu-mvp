@@ -41,6 +41,9 @@ test('Box visual SSR and protected sources preserve baseline plus independently 
     if(path==='src/lib/breathworkCueBuilder.ts') source=source
       .replace('defineAbdominalPractice, defineBoxPractice','defineAbdominalPractice')
       .replace("  if (entry.id === 'box-breathing') return defineBoxPractice(entry, cues).guide.cues;\n",'');
+    // Allow only the user-requested video entrance; keep the original practice baseline.
+    if(path==='src/components/MyAITeacherPage.tsx') source=source.replace(
+      '                  <p><a className="primary-button" href="/?entry=surya-namaskar" target="_blank" rel="noopener noreferrer">練習前に公式動画を見る（別タブ）</a></p>\n','');
     assert.equal(hash(source),(q05Approved as Record<string,string>)[path] ?? expected,path);
   }
   for(const saved of before.renders) assert.equal(renderToStaticMarkup(React.createElement(BreathworkVisual,{breathwork:entry,phase:saved.phase as BreathPhase,remainingSeconds:saved.remaining,isRunning:true,isCompleted:false,phaseDurationSeconds:4})),saved.html);

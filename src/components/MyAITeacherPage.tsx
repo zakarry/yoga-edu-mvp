@@ -2187,6 +2187,7 @@ export function MyAITeacherPage({ onBackHome, onOpenDiagnosis, onOpenMyPage, onO
                 <button className="ghost-button practice-back-btn" onClick={handlePracticeBack}>← 戻る</button>
                 <div className="sequence-beginner-intro">
                   <p>12ステップを連続して行うシークエンスです。初めての場合は、動きを確認しながらゆっくり進めましょう。</p>
+                  <p><a className="primary-button" href="/?entry=surya-namaskar" target="_blank" rel="noopener noreferrer">練習前に公式動画を見る（別タブ）</a></p>
                 </div>
                 <SuryaNamaskarExperience
                   sequenceId="surya-namaskar-ayush"
