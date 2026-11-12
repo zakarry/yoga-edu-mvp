@@ -31,6 +31,9 @@ test('protected sources match their original or explicit Q-05 repair baseline; a
     if (path === 'src/lib/asanaCueBuilder.ts') source = source
       .replace("import { defineTreePractice } from './practiceDefinition';\n", '')
       .replace('return defineTreePractice(entry, cues).guide.cues;', 'return cues;');
+    // User-approved additive video entrance only; preserve the original practice source hash.
+    if (path === 'src/components/MyAITeacherPage.tsx') source = source.replace(
+      '                  <p><a className="primary-button" href="/?entry=surya-namaskar" target="_blank" rel="noopener noreferrer">練習前に公式動画を見る（別タブ）</a></p>\n', '');
     assert.equal(hash(source), (q05Approved as Record<string, string>)[path] ?? expected, path);
   }
   for (const [path, expected] of Object.entries(before.assetHashes)) assert.equal(hash(readFileSync(`public${path}`)), expected, path);
