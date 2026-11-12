@@ -31,6 +31,7 @@ export function SiteMapPage({ onNavigate, onOpenSearchWithType }: SiteMapPagePro
         { label: 'Asana（アーサナ）', page: 'ai-teacher' },
         { label: 'Pranayama（呼吸法）', page: 'ai-teacher' },
         { label: 'Dhyana（瞑想）', page: 'ai-teacher' },
+        { label: '太陽礼拝（スーリヤ・ナマスカーラ）', page: 'surya-namaskar' },
       ],
     },
     {

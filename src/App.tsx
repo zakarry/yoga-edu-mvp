@@ -33,6 +33,9 @@ import { TopBackLink } from './components/TopBackLink';
 import { PageHeader } from './components/PageHeader';
 import { MyPage, type DiagnosisHistoryRecord, type WellnessScores } from './components/MyPage';
 import { AuthPanel } from './components/AuthPanel';
+import { SuryaIntroduction } from './components/SuryaIntroduction';
+import { isSupabaseConfigured } from './lib/supabase';
+import { readSuryaAccountTarget, rememberSuryaAccountTarget, clearSuryaAccountTarget, type SuryaAccountTarget } from './lib/suryaAccountReturn';
 import { CloudDiagnosisSection, CloudPracticeSection } from './components/MyYogaCloudSections';
 import { MyTeachingJourney } from './components/MyTeachingJourney';
 import { MyTeacherSection } from './components/MyTeacherSection';
@@ -1089,7 +1092,10 @@ function MeditationTimer({ seconds }: { seconds: number }) {
 }
 
 export default function App() {
-  const [page, setPage] = useState<PageKey>('home');
+  const [page, setPage] = useState<PageKey>(() =>
+    new URLSearchParams(window.location.search).get('entry') === 'surya-namaskar' || readSuryaAccountTarget()
+      ? 'surya-namaskar' : 'home');
+  const [suryaAccountTarget, setSuryaAccountTarget] = useState<SuryaAccountTarget | null>(() => readSuryaAccountTarget());
   const [breathworkEntryId, setBreathworkEntryId] = useState<string | null>(null);
   const [meditationEntryId, setMeditationEntryId] = useState<string | null>(null);
   const [teacherList, setTeacherList] = useState<Teacher[]>(initialTeachers);
@@ -1176,6 +1182,7 @@ export default function App() {
     learn: 'learn',
     diagnosis: 'diagnosis',
     sacred: 'sacred-sites',
+    'surya-namaskar': 'surya-namaskar',
   };
 
   useEffect(() => {
@@ -1230,6 +1237,10 @@ export default function App() {
   }, [allItems, searchArea, searchFeatures, searchKeyword, searchLevels, searchPurposes, searchType]);
 
   const moveTo = (next: PageKey) => {
+    if (page === 'surya-namaskar' && next !== 'surya-namaskar') {
+      clearSuryaAccountTarget();
+      setSuryaAccountTarget(null);
+    }
     setMobileMenuOpen(false);
     setMobileNavOpen(false);
     setPage(next);
@@ -1240,6 +1251,24 @@ export default function App() {
     setAiTeacherMinutes(minutes);
     moveTo('ai-teacher');
   };
+
+  const openSuryaAccount = (target: SuryaAccountTarget) => {
+    if (auth.user) {
+      moveTo(target);
+      return;
+    }
+    rememberSuryaAccountTarget(target);
+    setSuryaAccountTarget(target);
+    setAuthOpenSignal((v) => v + 1);
+  };
+
+  useEffect(() => {
+    if (!suryaAccountTarget || !auth.user || !auth.consentVerified) return;
+    if (new URLSearchParams(window.location.search).has('entry') && !entryNavigated) return;
+    clearSuryaAccountTarget();
+    setSuryaAccountTarget(null);
+    moveTo(suryaAccountTarget);
+  }, [suryaAccountTarget, auth.user, auth.consentVerified, entryTarget, entryNavigated]);
 
   const dictAccess = getDictionaryAccess(auth.user, auth.profile, auth.consentVerified);
 
@@ -2309,6 +2338,13 @@ export default function App() {
                 <p>12ステップを呼吸とともに流れるようにつなぐ代表的なヨガシークエンスです。</p>
               </div>
             </section>
+            <SuryaIntroduction
+              signedIn={!!auth.user}
+              accountAvailable={isSupabaseConfigured}
+              onOpenAccount={() => openSuryaAccount('surya-namaskar')}
+              onOpenTeacher={() => openSuryaAccount('ai-teacher')}
+              onOpenRecords={() => openSuryaAccount('my-page')}
+            />
             <section className="panel">
               <div className="sequence-select-grid">
                 {getActiveSequences().map((seq) => (
@@ -2326,7 +2362,8 @@ export default function App() {
                 ))}
               </div>
             </section>
-            <section className="panel">
+            <section className="panel" id="surya-practice">
+              <h3 id="surya-practice-title" tabIndex={-1}>12ステップを練習する</h3>
               <SuryaNamaskarExperience sequenceId="surya-namaskar-ayush" />
             </section>
           </div>
