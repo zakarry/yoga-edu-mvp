@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 for (const width of [320, 390, 1280]) {
   test(`surya requires membership before video and practice at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto('/?entry=surya-namaskar');
+    await page.goto('/?entry=surya-namaskar', { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('heading', { name: '無料会員登録して、太陽礼拝を始めましょう' })).toBeVisible();
     await expect(page.locator('.surya-official-video')).toHaveCount(0);
     await expect(page.locator('.surya-namaskar-experience')).toHaveCount(0);
@@ -24,13 +24,14 @@ for (const width of [320, 390, 1280]) {
 }
 
 test('menu and direct reload cannot bypass the Surya member gate', async ({ page }) => {
-  await page.goto('/');
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: 'メニュー', exact: true }).click();
   await page.getByRole('button', { name: '太陽礼拝（スーリヤ・ナマスカーラ）', exact: true }).click();
   await expect(page.getByRole('heading', { name: '無料会員登録して、太陽礼拝を始めましょう' })).toBeVisible();
   await expect(page.locator('.surya-namaskar-experience')).toHaveCount(0);
-  await page.goto('/?entry=surya-namaskar#surya-practice');
-  await page.reload();
+  await page.goto('/?entry=surya-namaskar#surya-practice', { waitUntil: 'domcontentloaded' });
+  await page.reload({ waitUntil: 'domcontentloaded' });
   await expect(page.locator('.surya-official-video')).toHaveCount(0);
   await expect(page.locator('.surya-namaskar-experience')).toHaveCount(0);
 });
