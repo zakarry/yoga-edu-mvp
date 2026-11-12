@@ -27,7 +27,7 @@ export function SuryaIntroduction({ signedIn, accountAvailable, onOpenAccount, o
   return (
     <section className="panel surya-introduction" aria-labelledby="surya-introduction-title">
       <h2 id="surya-introduction-title">太陽礼拝（スーリヤ・ナマスカーラ）を学ぶ</h2>
-      <p>まずは全日本ヨガ連盟の公式動画で、動きの流れを確認しましょう。紹介・動画の視聴と下の12ステップ練習は、ログインせずに利用できます。</p>
+      <p>まずは全日本ヨガ連盟の公式動画で動きの流れを確認し、12ステップの練習へ進みましょう。</p>
       <h3>公式動画で流れを確認</h3>
       <p>ヨガ検定３級実技試験対策講座「スーリヤ・ナマスカーラ（太陽礼拝）」</p>
       {showVideo ? (
